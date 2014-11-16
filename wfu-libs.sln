@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WiFindUs", "WiFindUs\WiFindUs.csproj", "{C861E53E-C50A-41BA-B08C-237F9A2637AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WiFindUs.Eye", "WiFindUs.Eye\WiFindUs.Eye.csproj", "{87C53E35-435B-42A3-9C15-B9AAEC2C8B34}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C861E53E-C50A-41BA-B08C-237F9A2637AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C861E53E-C50A-41BA-B08C-237F9A2637AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C861E53E-C50A-41BA-B08C-237F9A2637AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C861E53E-C50A-41BA-B08C-237F9A2637AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87C53E35-435B-42A3-9C15-B9AAEC2C8B34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87C53E35-435B-42A3-9C15-B9AAEC2C8B34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87C53E35-435B-42A3-9C15-B9AAEC2C8B34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87C53E35-435B-42A3-9C15-B9AAEC2C8B34}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
