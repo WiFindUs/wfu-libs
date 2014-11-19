@@ -50,8 +50,8 @@ namespace WiFindUs
         {
             get
             {
-                List<String> values = kvps[CheckKey(key)];
-                if (values == null)
+                List<String> values;
+                if (!kvps.TryGetValue(CheckKey(key), out values))
                     kvps[key] = values = new List<String>();
                 return values;
             }
@@ -83,6 +83,10 @@ namespace WiFindUs
 			{
 				Read(file);
 			}
+            catch (FileNotFoundException e)
+            {
+                Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
+            }
 			catch (Exception e)
 			{
 				Debugger.E("A " + e.GetType().FullName + " was thrown reading file "
@@ -131,6 +135,10 @@ namespace WiFindUs
 				{
 					Read(file);
 				}
+                catch (FileNotFoundException e)
+                {
+                    Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
+                }
 				catch (Exception e)
 				{
 					Debugger.E("A " + e.GetType().FullName + " was thrown reading file "
