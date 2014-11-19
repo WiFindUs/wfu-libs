@@ -7,12 +7,52 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using System.Drawing;
+using MySql.Data.MySqlClient;
 
 namespace WiFindUs
 {
 	public static class WFUApplication
 	{
-		/// <summary>
+        private static string executablePath = "";
+        private static Version assemblyVersion = null;
+        private static string entryAssemblyName = "";
+        private static AssemblyName entryAssemblyNameObject = null;
+        private static Assembly entryAssembly = null;
+        private static string logPath = "";
+        private static Debugger.Verbosity initialDebugLevel = Debugger.Verbosity.Information;
+        private static bool usesConsoleForm = false;
+        private static bool usesTrayIcon = false;
+        private static bool usesMutex = false;
+        private static bool usesMySQL = false;
+        private static string applicationDescription = "A WiFindUs application.";
+        private static string applicationCompany = "WiFindUs";
+        private static string applicationName = "Program";
+        private static bool running = false;
+        private static bool readOnly = false;
+        private static Type mainFormType = null;
+        private static MainForm mainForm = null;
+        private static string mutexOverride = "";
+        private static string mutexOverrideErrorMessage = "";
+        private static string appDataFolderName = "";
+        private static string executableDirectoryPath = "";
+        private static string configPaths = "";
+        private static Icon hostIcon = null;
+        private static ConfigFile config = null;
+        private static ResourceLoader<Image> imageLoader = new ResourceLoader<Image>(Image.FromFile);
+        private static string mysqlAddress = "";
+        private static int mysqlPort= -1;
+        private static string mysqlUsername = "";
+        private static string mysqlPassword = "";
+        private static string mysqlDatabase = "";
+        private static MySqlConnection mysqlConnection = null;
+        private static Mutex mutex = null;
+
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+        
+        /// <summary>
 		/// Returns if a WFUApplication is already running.
 		/// </summary>
 		public static bool Running
@@ -343,30 +383,96 @@ namespace WiFindUs
 			}
 		}
 
-		private static string executablePath = "";
-		private static Version assemblyVersion = null;
-		private static string entryAssemblyName = "";
-		private static AssemblyName entryAssemblyNameObject = null;
-		private static Assembly entryAssembly = null;
-		private static string logPath = "";
-		private static Debugger.Verbosity initialDebugLevel = Debugger.Verbosity.Information;
-		private static bool usesConsoleForm = false;
-		private static bool usesTrayIcon = false;
-		private static bool usesMutex = false;
-		private static string applicationDescription = "A WiFindUs application.";
-		private static string applicationCompany = "WiFindUs";
-		private static string applicationName = "Program";
-		private static bool running = false;
-		private static bool readOnly = false;
-		private static Type mainFormType = null;
-		private static MainForm mainForm = null;
-		private static string mutexOverride = "";
-		private static string mutexOverrideErrorMessage = "";
-		private static string appDataFolderName = "";
-		private static string executableDirectoryPath = "";
-		private static string configPaths = "wfu.conf";
-		private static Icon hostIcon = null;
-		private static ConfigFile config = null;
+        /// <summary>
+        /// Returns the ImageLoader instance in use by this application.
+        /// </summary>
+        public static ResourceLoader<Image> Images
+        {
+            get { return imageLoader; }
+        }
+
+        /// <summary>
+        /// If true, the application will attempt to connect to a MySQL database upon launching, and will abort if the connection fails.
+        /// </summary>
+        public static bool UsesMySQL
+        {
+            get { return usesMySQL; }
+            set { if (!readOnly) usesMySQL = value; }
+        }
+
+        /// <summary>
+        /// Returns the address on which the MySQL connection will be made. First checks the local override,
+        /// then the local ConfigFile instance at key "mysql.address", then returns "127.0.0.1" as a fallback.
+        /// </summary>
+        public static string MySQLAddress
+        {
+            get
+            {
+                return mysqlAddress.Length > 0 ? mysqlAddress :
+                    (config != null ? config.Get("mysql.address", "127.0.0.1") : "127.0.0.1");
+            }
+            set { if (!readOnly) mysqlAddress = value == null ? "" : value.Trim(); }
+        }
+
+        /// <summary>
+        /// Returns the port on which the MySQL connection will be made. First checks the local override,
+        /// then the local ConfigFile instance at key "mysql.port", then returns 3306 as a fallback.
+        /// </summary>
+        public static int MySQLPort
+        {
+            get
+            {
+                return mysqlPort >= 1024 && mysqlPort <= 65535 ? mysqlPort :
+                    (config != null ? config.Get("mysql.port", 3306) : 3306);
+            }
+            set { if (!readOnly) mysqlPort = value; }
+        }
+
+        /// <summary>
+        /// Returns the username with which the MySQL connection will be made. First checks the local override,
+        /// then the local ConfigFile instance at key "mysql.username", then returns "root" as a fallback.
+        /// </summary>
+        public static string MySQLUsername
+        {
+            get
+            {
+                return mysqlUsername.Length > 0 ? mysqlUsername :
+                    (config != null ? config.Get("mysql.username", "root") : "root");
+            }
+            set { if (!readOnly) mysqlUsername = value == null ? "" : value.Trim(); }
+        }
+
+        /// <summary>
+        /// Returns the database name to which the MySQL connection will be made. First checks the local override,
+        /// then the local ConfigFile instance at key "mysql.database".
+        /// </summary>
+        public static string MySQLDatabase
+        {
+            get
+            {
+                return mysqlDatabase.Length > 0 ? mysqlDatabase :
+                    (config != null ? config.Get("mysql.database", "") : "");
+            }
+            set { if (!readOnly) mysqlDatabase = value == null ? "" : value.Trim(); }
+        }
+
+        /// <summary>
+        /// Returns the password with which the MySQL connection will be made. First checks the local override,
+        /// then the local ConfigFile instance at key "mysql.password".
+        /// </summary>
+        public static string MySQLPassword
+        {
+            get
+            {
+                return mysqlPassword.Length > 0 ? mysqlPassword :
+                    (config != null ? config.Get("mysql.password", "") : "");
+            }
+            set { if (!readOnly) mysqlPassword = value == null ? "" : value.Trim(); }
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // RUN
+        /////////////////////////////////////////////////////////////////////
 
 		public static void Run(String[] args)
 		{
@@ -399,15 +505,13 @@ namespace WiFindUs
 						if (i == args.Length-1)
 							break;
 						string file = args[i+1];
-						if (!File.Exists(file))
-							break;
-						configPaths += "|" + file;
+						if (File.Exists(file))
+						    configPaths += "|" + file;
 						break;
 				}
 			}
 
 			//create mutex if necessary
-			Mutex mutex = null;
 			if (UsesMutex)
 			{
 
@@ -415,6 +519,7 @@ namespace WiFindUs
 				{
 					mutex = Mutex.OpenExisting(MutexName);
 					MessageBox.Show(MutexErrorMessage, Name + " :: Multiple Copies", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Free();
 					return;
 				}
 				catch (WaitHandleCannotBeOpenedException)
@@ -428,7 +533,7 @@ namespace WiFindUs
 				{
 					Debugger.Ex(e);
 					MessageBox.Show("An exception was thrown trying to create the Mutex object;\n\n" + e.Message, "Exception creating Mutex", MessageBoxButtons.OK, MessageBoxIcon.Error);
-					Debugger.Dispose();
+                    Free();
 					return;
 				}
 			}
@@ -449,7 +554,7 @@ namespace WiFindUs
 				{
 					Debugger.Ex(exc);
 					MessageBox.Show(exc.GetType().ToString() + ": \n\n\"" + exc.Message + "\"\n\nThe application will now exit.", "Exception thrown", MessageBoxButtons.OK, MessageBoxIcon.Error);
-					Debugger.Dispose();
+                    Free();
 					return;
 				}
 			}
@@ -461,6 +566,35 @@ namespace WiFindUs
 			String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
 			config = new ConfigFile(files);
 			Debugger.V(config.ToString());
+
+            //do mysql
+            if (UsesMySQL)
+            {
+                try
+                {
+                    mysqlConnection = new MySqlConnection("server=" + MySQLAddress
+                        + ";user=" + MySQLUsername
+                        + ";database=" + MySQLDatabase
+                        + ";port=" + MySQLPort
+                        + ";password=" + MySQLPassword + ";");
+                    mysqlConnection.Open();
+                }
+                catch (MySqlException ex)
+                {
+                    String message = "There was an error establishing the MySQL connection: ";
+                    if (ex.Number == 0)
+                        message += "Cannot connect to server. Contact your administrator.";
+                    else if (ex.Number == 1045)
+                        message += "Invalid username or password.";
+                    else
+                        message += ex.Message;
+                    Debugger.E(message);
+                    MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Free();
+                    return;
+                }
+
+            }
 
 			//initialize form type
 			Type formType = MainFormType;
@@ -485,13 +619,33 @@ namespace WiFindUs
 			running = false;
 
 			//release resources and close debugger
-			if (mutex != null)
-			{
-				Debugger.V("Releasing thread-locking mutex...");
-				mutex.ReleaseMutex();
-				Debugger.V("Released OK.");
-			}
-			Debugger.Dispose();
+            Free();
 		}
+
+        private static void Free()
+        {
+            if (mysqlConnection != null)
+            {
+                mysqlConnection.Close();
+                mysqlConnection.Dispose();
+                mysqlConnection = null;
+            }
+            
+            if (imageLoader != null)
+            {
+                imageLoader.Dispose();
+                imageLoader = null;
+            }
+            
+            if (mutex != null)
+            {
+                Debugger.V("Releasing thread-locking mutex...");
+                mutex.ReleaseMutex();
+                Debugger.V("Released OK.");
+                mutex = null;
+            }
+
+            Debugger.Dispose();
+        }
 	}
 }
