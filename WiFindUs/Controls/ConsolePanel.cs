@@ -14,8 +14,8 @@ namespace WiFindUs
 		private TextBox input;
 
 		private const int MAX_CONSOLE_LINES = 1024;
-		private readonly Color[] colors = new Color[5];
-		private readonly Font[] fonts = new Font[5];
+		private readonly Color[] colors = new Color[6];
+		private readonly Font[] fonts = new Font[6];
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
@@ -105,7 +105,7 @@ namespace WiFindUs
 
 			console.SelectionFont = fonts[(int)level];
 			console.SelectionColor = colors[(int)level];
-			console.AppendText(prefix + text);
+			console.AppendText(prefix + text + "\n");
 			SendMessage(console.Handle, 277, (IntPtr)7, IntPtr.Zero);
 		}
 
