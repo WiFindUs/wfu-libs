@@ -42,27 +42,45 @@ namespace WiFindUs
 			Console = 5
 		};
 		public delegate void LogDelegate(Verbosity level, string prefix, string text);
-		public static event LogDelegate OnDebugOutput;
-		public static DateTime RunningSince
-		{
-			get { return runningSince; }
-		}
-		public static bool Initialized
-		{
-			get
-			{
-				return outFile != null;
-			}
-		}
-		public static float ProcessorUsage { get { return Initialized ? cpuCounter.NextValue() : 0.0f; } }
-		public static float MemoryUsage { get { return Initialized ? ramCounter.NextValue() : 0.0f; } }
-		public static TimeSpan SystemUptime { get { return new TimeSpan(0, 0, 0, 0, Environment.TickCount); } }
 
 		private static Verbosity minLevel;
 		private static StreamWriter outFile = null;
 		private static DateTime runningSince;
 		private static PerformanceCounter cpuCounter;
 		private static PerformanceCounter ramCounter;
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+
+        public static event LogDelegate OnDebugOutput;
+        public static DateTime RunningSince
+        {
+            get { return runningSince; }
+        }
+        public static bool Initialized
+        {
+            get
+            {
+                return outFile != null;
+            }
+        }
+        public static float ProcessorUsage
+        {
+            get { return Initialized ? cpuCounter.NextValue() : 0.0f; }
+        }
+        public static float MemoryUsage
+        {
+            get { return Initialized ? ramCounter.NextValue() : 0.0f; }
+        }
+        public static TimeSpan SystemUptime
+        {
+            get { return new TimeSpan(0, 0, 0, 0, Environment.TickCount); }
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // CONSTRUCTORS
+        /////////////////////////////////////////////////////////////////////
 
 		public static void Initialize(string path, Verbosity minLevel)
 		{
@@ -92,6 +110,10 @@ namespace WiFindUs
 			TimeSpan uptime = SystemUptime;
 			I(String.Format("System uptime: {0} hours, {1} minutes, {2} seconds.", uptime.Hours, uptime.Minutes, uptime.Seconds));
 		}
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
 
 		public static void Dispose()
 		{
@@ -160,6 +182,10 @@ namespace WiFindUs
 		{
 			Log(Verbosity.Console, text);
 		}
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
 
 		private static void Log(Verbosity level, string text)
 		{
