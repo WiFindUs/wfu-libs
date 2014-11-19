@@ -402,14 +402,14 @@ namespace WiFindUs
 
         /// <summary>
         /// Returns the address on which the MySQL connection will be made. First checks the local override,
-        /// then the local ConfigFile instance at key "mysql.address", then returns "127.0.0.1" as a fallback.
+        /// then the local ConfigFile instance at key "mysql.address", then returns "localhost" as a fallback.
         /// </summary>
         public static string MySQLAddress
         {
             get
             {
                 return mysqlAddress.Length > 0 ? mysqlAddress :
-                    (config != null ? config.Get("mysql.address", "127.0.0.1") : "127.0.0.1");
+                    (config != null ? config.Get("mysql.address", "localhost") : "localhost");
             }
             set { if (!readOnly) mysqlAddress = value == null ? "" : value.Trim(); }
         }
@@ -570,13 +570,16 @@ namespace WiFindUs
             //do mysql
             if (UsesMySQL)
             {
-                try
-                {
-                    mysqlConnection = new MySqlConnection("server=" + MySQLAddress
+                String mysqlConnectionString = "server=" + MySQLAddress
                         + ";user=" + MySQLUsername
                         + ";database=" + MySQLDatabase
                         + ";port=" + MySQLPort
-                        + ";password=" + MySQLPassword + ";");
+                        + ";password=" + MySQLPassword + ";";
+                Debugger.V("MySQL connection string: \"" + mysqlConnectionString + "\"");
+                
+                try
+                {
+                    mysqlConnection = new MySqlConnection(mysqlConnectionString);
                     mysqlConnection.Open();
                 }
                 catch (MySqlException ex)
