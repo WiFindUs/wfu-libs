@@ -9,34 +9,99 @@ namespace WiFindUs
     /// <summary>
     /// An immutable packet of data describing a rectangular area bound by GPS coordinates, with the primary purpose of mapping those coordinates to a screen space.
     /// </summary>
-    public class Region : IEquatable<Region>
+    public class Region : ILocation, IEquatable<Region>, IRegion
     {
-        private Location northWest, southWest, northEast, southEast, center;
+        private ILocation northWest, northEast, southWest, southEast, center;
         private double latSpan, longSpan, width, height;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
-        public Location NorthWest
+        
+        /// <summary>
+        /// The north-west corner of this region.
+        /// </summary>
+        public ILocation NorthWest
         {
             get { return northWest;  }
         }
-        public Location NorthEast
+
+        /// <summary>
+        /// The north-east corner of this region.
+        /// </summary>
+        public ILocation NorthEast
         {
             get { return northEast; }
         }
-        public Location SouthWest
-        {
-            get { return southWest; }
-        }
-        public Location SouthEast
+
+        /// <summary>
+        /// The south-east corner of this region.
+        /// </summary>
+        public ILocation SouthEast
         {
             get { return southEast; }
         }
-        public Location Center
+
+        /// <summary>
+        /// The south-west corner of this region.
+        /// </summary>
+        public ILocation SouthWest
+        {
+            get { return southWest; }
+        }
+
+        /// <summary>
+        /// The latitude of the region's exact center.
+        /// </summary>
+        public double Latitude
+        {
+            get { return center.Latitude; }
+        }
+
+        /// <summary>
+        /// The longitude of the region's exact center.
+        /// </summary>
+        public double Longitude
+        {
+            get { return center.Longitude; }
+        }
+
+        /// <summary>
+        /// The mean Accuracy of the region's bounding points, if the data is present.
+        /// </summary>
+        public double? Accuracy
+        {
+            get
+            {
+                return (!northWest.Accuracy.HasValue && !southEast.Accuracy.HasValue ? null :
+                    new double?(((northWest.Accuracy.HasValue ? northWest.Accuracy.Value : 0.0)
+                        + (southEast.Accuracy.HasValue ? southEast.Accuracy.Value : 0.0)) / 2.0)
+                    );
+            }
+        }
+
+        /// <summary>
+        /// The mean Altitude of the region's bounding points, if the data is present.
+        /// </summary>
+        public double? Altitude
+        {
+            get
+            {
+                return (!northWest.Altitude.HasValue && !southEast.Altitude.HasValue ? null :
+                    new double?(((northWest.Altitude.HasValue ? northWest.Altitude.Value : 0.0)
+                        + (southEast.Altitude.HasValue ? southEast.Altitude.Value : 0.0)) / 2.0)
+                    );
+            }
+        }
+
+        /// <summary>
+        /// The center coordinates of this region.
+        /// </summary>
+        public ILocation Center
         {
             get { return center; }
         }
+
         /// <summary>
         /// The longitude range spanned by this region (from west-to-east / left-to-right).
         /// </summary>
@@ -70,7 +135,7 @@ namespace WiFindUs
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public Region(Location northWest, Location southEast)
+        public Region(ILocation northWest, ILocation southEast)
         {
             if (northWest == null)
                 throw new ArgumentNullException("northWest");
@@ -83,13 +148,13 @@ namespace WiFindUs
 
             this.northWest = northWest;
             this.southEast = southEast;
-            northEast = new Location(northWest.Latitude, southEast.Longitude);
-            southWest = new Location(southEast.Latitude, northWest.Longitude);
+            northEast = new StaticLocation(northWest.Latitude, southEast.Longitude);
+            southWest = new StaticLocation(southEast.Latitude, northWest.Longitude);
             latSpan = northWest.Latitude - southEast.Latitude;
             longSpan = southEast.Longitude - northWest.Longitude;
             width = northWest.DistanceTo(northEast);
             height = northWest.DistanceTo(southWest);
-            center = new Location(northWest.Latitude - latSpan / 2.0, northWest.Longitude + longSpan/2.0);
+            center = new StaticLocation(northWest.Latitude - latSpan / 2.0, northWest.Longitude + longSpan / 2.0);
         }
 
         public Region(Location center, double latSpan, double longSpan)
@@ -104,10 +169,10 @@ namespace WiFindUs
             this.center = center;
             this.latSpan = latSpan;
             this.longSpan = longSpan;
-            northWest = new Location(center.Latitude + latSpan / 2.0, center.Longitude - longSpan / 2.0);
-            southEast = new Location(center.Latitude - latSpan / 2.0, center.Longitude + longSpan / 2.0);
-            northEast = new Location(northWest.Latitude, southEast.Longitude);
-            southWest = new Location(southEast.Latitude, northWest.Longitude);
+            northWest = new StaticLocation(center.Latitude + latSpan / 2.0, center.Longitude - longSpan / 2.0);
+            southEast = new StaticLocation(center.Latitude - latSpan / 2.0, center.Longitude + longSpan / 2.0);
+            northEast = new StaticLocation(northWest.Latitude, southEast.Longitude);
+            southWest = new StaticLocation(southEast.Latitude, northWest.Longitude);
             width = northWest.DistanceTo(northEast);
             height = northWest.DistanceTo(southWest);
         }
@@ -166,6 +231,11 @@ namespace WiFindUs
         public Point LocationToScreen(Rectangle screenBounds, Location location)
         {
             return LocationToScreen(screenBounds, location.Latitude, location.Longitude);
+        }
+
+        public double DistanceTo(ILocation other)
+        {
+            throw new NotImplementedException();
         }
     }
 }
