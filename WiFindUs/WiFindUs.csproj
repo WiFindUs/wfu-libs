@@ -31,7 +31,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MySql.Data, Version=6.9.5.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL" />
+    <Reference Include="Devart.Data.Linq, Version=4.4.631.0, Culture=neutral, PublicKeyToken=09af7300eec23701, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -44,9 +44,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Classes\Atmosphere.cs" />
-    <Compile Include="Classes\Region.cs" />
+    <Compile Include="Interfaces\IRegion.cs" />
+    <Compile Include="Classes\Location.cs" />
     <Compile Include="Classes\NumericExtensions.cs" />
+    <Compile Include="Classes\Region.cs" />
+    <Compile Include="Classes\StaticLocation.cs" />
     <Compile Include="HashCode.cs" />
+    <Compile Include="Interfaces\IAtmosphere.cs" />
+    <Compile Include="Interfaces\ILocation.cs" />
     <Compile Include="IO\ConfigFile.cs" />
     <Compile Include="Forms\ConsoleForm.cs">
       <SubType>Form</SubType>
@@ -55,7 +60,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Debugger.cs" />
-    <Compile Include="Classes\Location.cs" />
     <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -63,6 +67,7 @@
     <Compile Include="IO\ResourceLoader.cs" />
     <Compile Include="WFUApplication.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

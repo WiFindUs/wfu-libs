@@ -7,7 +7,7 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using System.Drawing;
-using MySql.Data.MySqlClient;
+using Devart.Data.Linq;
 
 namespace WiFindUs
 {
@@ -44,8 +44,10 @@ namespace WiFindUs
         private static string mysqlUsername = "";
         private static string mysqlPassword = "";
         private static string mysqlDatabase = "";
-        private static MySqlConnection mysqlConnection = null;
+        private static string mysqlCharset = "";
         private static Mutex mutex = null;
+        private static Type mysqlContextType = null;
+        private static DataContext mysqlContext = null;
 
 
         /////////////////////////////////////////////////////////////////////
@@ -470,6 +472,55 @@ namespace WiFindUs
             set { if (!readOnly) mysqlPassword = value == null ? "" : value.Trim(); }
         }
 
+        /// <summary>
+        /// Returns the charset used for the MySQL connection. First checks the local override,
+        /// then the local ConfigFile instance at key "mysql.charset", then returns "utf8" as a fallback.
+        /// </summary>
+        public static string MySQLCharset
+        {
+            get
+            {
+                return mysqlCharset.Length > 0 ? mysqlCharset :
+                    (config != null ? config.Get("mysql.charset", "utf8") : "utf8");
+            }
+            set { if (!readOnly) mysqlCharset = value == null ? "" : value.Trim(); }
+        }
+
+        /// <summary>
+        /// The Context type that will be created when the application is spawned. Must be Devart.Data.Linq.DataContext or a subclass.
+        /// </summary>
+        public static Type MySQLContextType
+        {
+            get { return mysqlContextType; }
+            set { if (!readOnly) mysqlContextType = value; }
+        }
+
+        private static string MySQLConnectionString
+        {
+            get
+            {
+                return "server=" + MySQLAddress
+                        + ";user=" + MySQLUsername
+                        + ";database=" + MySQLDatabase
+                        + ";port=" + MySQLPort
+                        + ";charset=" + MySQLCharset
+                        + ";password=" + MySQLPassword + ";";
+            }
+        }
+
+        private static string LinqConnectionString
+        {
+            get
+            {
+                return "Host=" + MySQLAddress
+                        + ";Port=" + MySQLPort
+                        + ";Persist Security Info=True"
+                        + ";User Id=" + MySQLUsername
+                        + ";Database=" + MySQLDatabase
+                        + ";Password=" + MySQLPassword + ";";
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // RUN
         /////////////////////////////////////////////////////////////////////
@@ -570,27 +621,22 @@ namespace WiFindUs
             //do mysql
             if (UsesMySQL)
             {
-                String mysqlConnectionString = "server=" + MySQLAddress
-                        + ";user=" + MySQLUsername
-                        + ";database=" + MySQLDatabase
-                        + ";port=" + MySQLPort
-                        + ";password=" + MySQLPassword + ";";
-                Debugger.V("MySQL connection string: \"" + mysqlConnectionString + "\"");
+                if (mysqlContextType == null || !mysqlContextType.IsSubclassOf(typeof(DataContext)))
+                {
+                    String message = "The MySQLContextType was missing or invalid!";
+                    Debugger.E(message);
+                    MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Free();
+                    return;
+                }
                 
                 try
                 {
-                    mysqlConnection = new MySqlConnection(mysqlConnectionString);
-                    mysqlConnection.Open();
+                    mysqlContext = (DataContext)mysqlContextType.GetConstructor(new Type[] { typeof(String) }).Invoke(new object[] { LinqConnectionString });
                 }
-                catch (MySqlException ex)
+                catch (Exception ex)
                 {
-                    String message = "There was an error establishing the MySQL connection: ";
-                    if (ex.Number == 0)
-                        message += "Cannot connect to server. Contact your administrator.";
-                    else if (ex.Number == 1045)
-                        message += "Invalid username or password.";
-                    else
-                        message += ex.Message;
+                    String message = "There was an error establishing the MySQL connection: " + ex.Message;
                     Debugger.E(message);
                     MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     Free();
@@ -627,11 +673,10 @@ namespace WiFindUs
 
         private static void Free()
         {
-            if (mysqlConnection != null)
+            if (mysqlContext != null)
             {
-                mysqlConnection.Close();
-                mysqlConnection.Dispose();
-                mysqlConnection = null;
+                mysqlContext.Dispose();
+                mysqlContext = null;
             }
             
             if (imageLoader != null)
