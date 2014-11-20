@@ -83,7 +83,7 @@ namespace WiFindUs
 			{
 				Read(file);
 			}
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
             }
@@ -135,7 +135,7 @@ namespace WiFindUs
 				{
 					Read(file);
 				}
-                catch (FileNotFoundException e)
+                catch (FileNotFoundException)
                 {
                     Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
                 }
