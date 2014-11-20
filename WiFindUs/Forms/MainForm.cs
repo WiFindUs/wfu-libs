@@ -109,6 +109,12 @@ namespace WiFindUs
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
+        protected virtual void OnFirstShown(EventArgs e)
+        {
+            if (WFUApplication.UsesConsoleForm)
+                ShowConsoleForm();
+        }
+
 		protected override void OnShown(EventArgs e)
 		{
 			base.OnShown(e);
@@ -117,8 +123,7 @@ namespace WiFindUs
 			if (!firstShown)
 			{
 				firstShown = true;
-				if (WFUApplication.UsesConsoleForm)
-					ShowConsoleForm();
+                OnFirstShown(e);
 			}
 		}
 
