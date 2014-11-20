@@ -198,7 +198,7 @@ namespace WiFindUs
 				System.Diagnostics.Debugger.Log((int)level, level.ToString(), prefix + text + "\n");
 				if (outFile != null)
 				{
-					outFile.Write(prefix + text + "\n");
+					outFile.WriteLine(prefix + text);
 					outFile.Flush();
 				}
 			}
