@@ -36,6 +36,7 @@
     <StartupObject>WiFindUs.Eye.Dispatcher.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Devart.Data.Linq, Version=4.4.631.0, Culture=neutral, PublicKeyToken=09af7300eec23701, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -56,6 +57,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="DispatcherForm.resx">
+      <DependentUpon>DispatcherForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
