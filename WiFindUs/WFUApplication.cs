@@ -521,6 +521,11 @@ namespace WiFindUs
             }
         }
 
+        public static DataContext MySQLDataContext
+        {
+            get { return mysqlContext;  }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // RUN
         /////////////////////////////////////////////////////////////////////

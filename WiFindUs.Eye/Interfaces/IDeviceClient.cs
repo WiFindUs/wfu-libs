@@ -5,7 +5,8 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public partial class Node
+    public interface IDeviceClient
     {
+        IDevice Device { get; }
     }
 }

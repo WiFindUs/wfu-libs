@@ -46,18 +46,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\Node.cs" />
-    <Compile Include="Classes\User.cs" />
-    <Compile Include="Classes\DeviceAtmosphere.cs" />
-    <Compile Include="Classes\Device.cs" />
-    <Compile Include="Classes\Waypoint.cs" />
-    <Compile Include="Classes\NodeLocation.cs" />
-    <Compile Include="Classes\DeviceLocation.cs" />
-    <Compile Include="EyeContext.Designer.cs">
+    <Compile Include="Atmosphere.cs" />
+    <Compile Include="Interfaces\ICreationTimestamped.cs" />
+    <Compile Include="Interfaces\ILocatable.cs" />
+    <Compile Include="Interfaces\INode.cs" />
+    <Compile Include="Interfaces\IUserClient.cs" />
+    <Compile Include="Interfaces\INodeClient.cs" />
+    <Compile Include="Interfaces\IDeviceClient.cs" />
+    <Compile Include="Interfaces\IIndentifiable.cs" />
+    <Compile Include="Interfaces\IUser.cs" />
+    <Compile Include="Interfaces\IDeviceLogin.cs" />
+    <Compile Include="Location.cs" />
+    <Compile Include="Region.cs" />
+    <Compile Include="Context\DBDeviceLogin.cs" />
+    <Compile Include="Interfaces\IWaypoint.cs" />
+    <Compile Include="Context\DBNode.cs" />
+    <Compile Include="Context\DBUser.cs" />
+    <Compile Include="Context\DBDeviceAtmosphere.cs" />
+    <Compile Include="Context\DBDevice.cs" />
+    <Compile Include="Context\DBWaypoint.cs" />
+    <Compile Include="Context\DBNodeLocation.cs" />
+    <Compile Include="Context\DBDeviceLocation.cs" />
+    <Compile Include="Context\EyeContext.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\IAtmosphere.cs" />
+    <Compile Include="Interfaces\IDevice.cs" />
+    <Compile Include="Interfaces\ILocation.cs" />
+    <Compile Include="Interfaces\IRegion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -67,17 +85,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="EyeContext.MainDiagram.view">
+    <None Include="Context\EyeContext.MainDiagram.view">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </None>
-    <None Include="EyeContext.edps">
+    <None Include="Context\EyeContext.edps">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </None>
-    <None Include="EyeContext.lqml">
+    <None Include="Context\EyeContext.lqml">
       <Generator>DevartLinqToSqlGenerator</Generator>
       <LastGenOutput>EyeContext.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

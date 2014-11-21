@@ -5,7 +5,8 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public partial class NodeLocation : Location
+    public interface IUserClient
     {
+        IUser User { get; }
     }
 }

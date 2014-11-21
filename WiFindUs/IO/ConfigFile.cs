@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Drawing;
-using System.Globalization;
 
 namespace WiFindUs
 {
@@ -149,7 +146,7 @@ namespace WiFindUs
 
 		public override string ToString()
 		{
-			StringBuilder sb = new StringBuilder();
+			System.Text.StringBuilder sb = new System.Text.StringBuilder();
 			sb.Append("ConfigFile[");
 			if (kvps.Count > 0)
 			{
@@ -339,10 +336,10 @@ namespace WiFindUs
 				if (col.Length == 6)
 					col += "FF";
 
-				byte r = Byte.Parse(col.Substring(0, 2), NumberStyles.HexNumber);
-				byte g = Byte.Parse(col.Substring(2, 2), NumberStyles.HexNumber);
-				byte b = Byte.Parse(col.Substring(4, 2), NumberStyles.HexNumber);
-				byte a = Byte.Parse(col.Substring(6, 2), NumberStyles.HexNumber);
+				byte r = Byte.Parse(col.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
+				byte g = Byte.Parse(col.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
+				byte b = Byte.Parse(col.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
+				byte a = Byte.Parse(col.Substring(6, 2), System.Globalization.NumberStyles.HexNumber);
 				return Color.FromArgb(a, r, g, b);
 			}
 

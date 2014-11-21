@@ -5,7 +5,8 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public partial class DeviceAtmosphere : Atmosphere
+    public interface IIndentifiable
     {
+        long ID { get; }
     }
 }

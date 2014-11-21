@@ -5,6 +5,7 @@ SET foreign_key_checks = 0;
 DROP TABLE IF EXISTS Users;
 DROP TABLE IF EXISTS Waypoints;
 DROP TABLE IF EXISTS Devices;
+DROP TABLE IF EXISTS DeviceLogins;
 DROP TABLE IF EXISTS DeviceLocations;
 DROP TABLE IF EXISTS DeviceAtmospheres;
 DROP TABLE IF EXISTS Nodes;
@@ -49,11 +50,18 @@ CREATE TABLE Devices (
 	Updated				datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	Type				varchar(32) NOT NULL DEFAULT 'PHO',
 	IPAddress			int(9) UNSIGNED NOT NULL DEFAULT 0,
-	UserID				int(9) UNSIGNED,
 	WaypointID			int(9) UNSIGNED,
 	PRIMARY KEY (ID),
-	CONSTRAINT `In use by user` FOREIGN KEY `In use by user` (UserID) REFERENCES Users (ID) ON UPDATE CASCADE ON DELETE SET NULL,
 	CONSTRAINT `Heading to waypoint` FOREIGN KEY `Heading to waypoint` (WaypointID) REFERENCES Waypoints (ID) ON UPDATE CASCADE ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE DeviceLogins (
+	DeviceID			int(9) UNSIGNED NOT NULL,
+	UserID				int(9) UNSIGNED,
+	Created				datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (DeviceID, Created),
+	CONSTRAINT `Using device` FOREIGN KEY `Using device` (DeviceID)	REFERENCES Devices (ID) ON UPDATE CASCADE ON DELETE CASCADE,
+	CONSTRAINT `In use by user` FOREIGN KEY `In use by user` (UserID)		REFERENCES Users (ID) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE DeviceLocations (

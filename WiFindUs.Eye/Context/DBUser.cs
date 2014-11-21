@@ -4,10 +4,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 
-namespace WiFindUs.Eye
+namespace WiFindUs.Eye.Context
 {
-    public partial class Device
+    public partial class DBUser : IUser, IIndentifiable
     {
-
+        
     }
 }

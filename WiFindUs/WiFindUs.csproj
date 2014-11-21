@@ -43,15 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Classes\Atmosphere.cs" />
-    <Compile Include="Interfaces\IRegion.cs" />
-    <Compile Include="Classes\Location.cs" />
-    <Compile Include="Classes\NumericExtensions.cs" />
-    <Compile Include="Classes\Region.cs" />
-    <Compile Include="Classes\StaticLocation.cs" />
+    <Compile Include="Extensions\NumericExtensions.cs" />
     <Compile Include="HashCode.cs" />
-    <Compile Include="Interfaces\IAtmosphere.cs" />
-    <Compile Include="Interfaces\ILocation.cs" />
     <Compile Include="IO\ConfigFile.cs" />
     <Compile Include="Forms\ConsoleForm.cs">
       <SubType>Form</SubType>
