@@ -16,7 +16,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return new List<IUser>(ArchivedRespondersDB);
+                return new List<IUser>(DBArchivedResponders);
             }
         }
 
@@ -24,7 +24,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return new List<IDevice>(AssignedDevicesDB);
+                return new List<IDevice>(DBAssignedDevices);
             }
         }
 
@@ -32,18 +32,18 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return NextWaypointDB;
+                return DBNextWaypoint;
             }
             set
             {
                 if (value == null)
-                    NextWaypointDB = null;
+                    DBNextWaypoint = null;
                 else
                 {
                     DBWaypoint waypoint = value as DBWaypoint;
                     if (waypoint == null)
                         throw new InvalidOperationException("You must use the database type when making this assignment!");
-                    NextWaypointDB = waypoint;
+                    DBNextWaypoint = waypoint;
                 }
             }
         }
@@ -52,18 +52,18 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return ReportingUserDB;
+                return DBReportingUser;
             }
             set
             {
                 if (value == null)
-                    ReportingUserDB = null;
+                    DBReportingUser = null;
                 else
                 {
                     DBUser user = value as DBUser;
                     if (user == null)
                         throw new InvalidOperationException("You must use the database type when making this assignment!");
-                    ReportingUserDB = user;
+                    DBReportingUser = user;
                 }
             }
         }

@@ -58,15 +58,13 @@
     <Compile Include="Interfaces\IDeviceLogin.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Region.cs" />
-    <Compile Include="Context\DBDeviceLogin.cs" />
     <Compile Include="Interfaces\IWaypoint.cs" />
     <Compile Include="Context\DBNode.cs" />
     <Compile Include="Context\DBUser.cs" />
-    <Compile Include="Context\DBDeviceAtmosphere.cs" />
     <Compile Include="Context\DBDevice.cs" />
     <Compile Include="Context\DBWaypoint.cs" />
-    <Compile Include="Context\DBNodeLocation.cs" />
-    <Compile Include="Context\DBDeviceLocation.cs" />
+    <Compile Include="Context\DBNodeState.cs" />
+    <Compile Include="Context\DBDeviceState.cs" />
     <Compile Include="Context\EyeContext.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

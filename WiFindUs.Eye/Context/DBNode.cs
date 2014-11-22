@@ -11,7 +11,19 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return new List<ILocation>(LocationsDB);
+                return new List<ILocation>(DBNodeStates);
+            }
+        }
+
+        public DBNodeState CurrentState
+        {
+            get
+            {
+                DBNodeState current = null;
+                foreach (DBNodeState state in DBNodeStates)
+                    if (current == null || state.Created.Ticks > current.Created.Ticks)
+                        current = state;
+                return current;
             }
         }
 
@@ -19,11 +31,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                ICreationTimestamped current = null;
-                foreach (DBNodeLocation location in LocationsDB)
-                    if (current == null || location.Created.Ticks > current.Created.Ticks)
-                        current = location;
-                return current as ILocation;
+                return CurrentState as ILocation;
             }
         }
     }

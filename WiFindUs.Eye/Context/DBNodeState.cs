@@ -5,16 +5,16 @@ using System.Text;
 
 namespace WiFindUs.Eye.Context
 {
-    public partial class DBDeviceLocation : ILocation, IDeviceClient, ICreationTimestamped
+    public partial class DBNodeState : ILocation, INodeClient, ICreationTimestamped
     {
         public double DistanceTo(ILocation other)
         {
             return Location.Distance(this, other);
         }
 
-        public IDevice Device
+        public INode Node
         {
-            get { return DeviceDB; }
+            get { return DBNode; }
         }
     }
 }

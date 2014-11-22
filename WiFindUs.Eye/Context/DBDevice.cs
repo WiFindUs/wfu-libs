@@ -10,18 +10,30 @@ namespace WiFindUs.Eye.Context
     {
         public IWaypoint AssignedWaypoint
         {
-            get { return this.AssignedWaypointDB; }
+            get { return DBAssignedWaypoint; }
             set
             {
                 if (value == null)
-                    AssignedWaypointDB = null;
+                    DBAssignedWaypoint = null;
                 else
                 {
                     DBWaypoint waypoint = value as DBWaypoint;
                     if (waypoint == null)
                         throw new InvalidOperationException("You must use the database type when making this assignment!");
-                    AssignedWaypointDB = waypoint;
+                    DBAssignedWaypoint = waypoint;
                 }
+            }
+        }
+
+        public DBDeviceState CurrentState
+        {
+            get
+            {
+                DBDeviceState current = null;
+                foreach (DBDeviceState state in DBDeviceStates)
+                    if (current == null || state.Created.Ticks > current.Created.Ticks)
+                        current = state;
+                return current;
             }
         }
 
@@ -29,7 +41,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return new List<IAtmosphere>(AtmospheresDB);
+                return new List<IAtmosphere>(DBDeviceStates);
             }
         }
 
@@ -37,11 +49,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                ICreationTimestamped current = null;
-                foreach (DBDeviceAtmosphere atmosphere in AtmospheresDB)
-                    if (current == null || atmosphere.Created.Ticks > current.Created.Ticks)
-                        current = atmosphere;
-                return current as IAtmosphere;
+                return CurrentState as IAtmosphere;
             }
         }
 
@@ -49,7 +57,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return new List<ILocation>(LocationsDB);
+                return new List<ILocation>(DBDeviceStates);
             }
         }
 
@@ -57,11 +65,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                ICreationTimestamped current = null;
-                foreach (DBDeviceLocation location in LocationsDB)
-                    if (current == null || location.Created.Ticks > current.Created.Ticks)
-                        current = location;
-                return current as ILocation;
+                return CurrentState as ILocation;
             }
         }
 
@@ -69,7 +73,7 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                return new List<IDeviceLogin>(LoginsDB);
+                return new List<IDeviceLogin>(DBDeviceStates);
             }
         }
 
@@ -77,11 +81,8 @@ namespace WiFindUs.Eye.Context
         {
             get
             {
-                ICreationTimestamped current = null;
-                foreach (DBDeviceLogin login in LoginsDB)
-                    if (current == null || login.Created.Ticks > current.Created.Ticks)
-                        current = login;
-                return current == null ? null : (current as DBDeviceLogin).UserDB;
+                DBDeviceState current = CurrentState;
+                return current == null ? null : current.DBUser;
             }
         }
     }
