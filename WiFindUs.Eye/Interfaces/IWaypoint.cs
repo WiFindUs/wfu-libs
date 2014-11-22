@@ -19,5 +19,9 @@ namespace WiFindUs.Eye
         int Severity { get; set; }
         string Type { get; set; }
         long ID { get; }
+        double Latitude { get; }
+        double Longitude { get; }
+        double? Accuracy { get; }
+        double? Altitude { get; }
     }
 }
