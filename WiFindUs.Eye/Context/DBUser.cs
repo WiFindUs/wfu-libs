@@ -6,7 +6,7 @@ using System.Text;
 
 namespace WiFindUs.Eye.Context
 {
-    public partial class DBUser : IUser, IIndentifiable
+    public partial class DBUser : IUser, IIndentifiable, ICreationTimestamped
     {
         
     }
