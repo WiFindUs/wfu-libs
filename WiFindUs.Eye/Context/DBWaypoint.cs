@@ -67,5 +67,11 @@ namespace WiFindUs.Eye.Context
                 }
             }
         }
+
+
+        public double? Accuracy
+        {
+            get { return 0.0; }
+        }
     }
 }

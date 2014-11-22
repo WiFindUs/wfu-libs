@@ -34,5 +34,15 @@ namespace WiFindUs.Eye.Context
                 return CurrentState as ILocation;
             }
         }
+
+        public DateTime Updated
+        {
+            get { return CurrentState.Created; }
+        }
+
+        public long Number
+        {
+            get { return CurrentState.Number; }
+        }
     }
 }

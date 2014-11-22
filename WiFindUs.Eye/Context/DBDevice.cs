@@ -85,5 +85,11 @@ namespace WiFindUs.Eye.Context
                 return current == null ? null : current.DBUser;
             }
         }
+
+
+        public DateTime Updated
+        {
+            get { return CurrentState.Created; }
+        }
     }
 }
