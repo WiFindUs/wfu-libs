@@ -7,6 +7,6 @@ namespace WiFindUs.Eye
 {
     public interface INodeClient
     {
-        INode Node { get; }
+        Node Node { get; }
     }
 }

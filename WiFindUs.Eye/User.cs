@@ -5,64 +5,47 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public class User : IUser, IIndentifiable, ICreationTimestamped
+    public partial class User : IIndentifiable, ICreationTimestamped
     {
-        public DateTime Created
+        public delegate void UserEvent(User sender);
+        public static event UserEvent OnUserCreated;
+        public event UserEvent OnUserTypeChanged;
+        public event UserEvent OnUserFirstNameChanged;
+        public event UserEvent OnUserMiddleNameChanged;
+        public event UserEvent OnUserNameLastChanged;
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        partial void OnCreated()
         {
-            get { throw new NotImplementedException(); }
+            if (OnUserCreated != null)
+                OnUserCreated(this);
         }
 
-        public string NameFirst
+        partial void OnNameFirstChanged()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            if (OnUserFirstNameChanged != null)
+                OnUserFirstNameChanged(this);
         }
 
-        public string NameLast
+        partial void OnNameMiddleChanged()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            if (OnUserMiddleNameChanged != null)
+                OnUserMiddleNameChanged(this);
         }
 
-        public string NameMiddle
+        partial void OnNameLastChanged()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            if (OnUserNameLastChanged != null)
+                OnUserNameLastChanged(this);
         }
 
-        public string Type
+        partial void OnTypeChanged()
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public long ID
-        {
-            get { throw new NotImplementedException(); }
+            if (OnUserTypeChanged != null)
+                OnUserTypeChanged(this);
         }
     }
 }

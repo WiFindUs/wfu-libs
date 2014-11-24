@@ -48,32 +48,42 @@
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="EyeContext.Device.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="EyeContext.DeviceState.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="EyeContext.EyeContext.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="EyeContext.Node.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="EyeContext.NodeState.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="EyeContext.User.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="EyeContext.Waypoint.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="Interfaces\IUpdateTimestamped.cs" />
     <Compile Include="Interfaces\ICreationTimestamped.cs" />
     <Compile Include="Interfaces\ILocatable.cs" />
-    <Compile Include="Interfaces\INode.cs" />
+    <Compile Include="Interfaces\IAtmospheric.cs" />
     <Compile Include="Interfaces\IUserClient.cs" />
     <Compile Include="Interfaces\INodeClient.cs" />
     <Compile Include="Interfaces\IDeviceClient.cs" />
     <Compile Include="Interfaces\IIndentifiable.cs" />
-    <Compile Include="Interfaces\IUser.cs" />
     <Compile Include="Interfaces\IDeviceLogin.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Region.cs" />
-    <Compile Include="Interfaces\IWaypoint.cs" />
-    <Compile Include="Context\DBNode.cs" />
-    <Compile Include="Context\DBUser.cs" />
-    <Compile Include="Context\DBDevice.cs" />
-    <Compile Include="Context\DBWaypoint.cs" />
-    <Compile Include="Context\DBNodeState.cs" />
-    <Compile Include="Context\DBDeviceState.cs" />
-    <Compile Include="Context\EyeContext.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>EyeContext.lqml</DependentUpon>
-    </Compile>
+    <Compile Include="NodeState.cs" />
+    <Compile Include="DeviceState.cs" />
     <Compile Include="Interfaces\IAtmosphere.cs" />
-    <Compile Include="Interfaces\IDevice.cs" />
     <Compile Include="Interfaces\ILocation.cs" />
     <Compile Include="Interfaces\IRegion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -87,15 +97,20 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Context\EyeContext.MainDiagram.view">
+    <None Include="EyeContext.info">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </None>
-    <None Include="Context\EyeContext.edps">
+    <None Include="EyeContext.MainDiagram.view">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </None>
-    <None Include="Context\EyeContext.lqml">
+    <None Include="EyeContext.edps">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </None>
+    <None Include="EyeContext.lqml">
       <Generator>DevartLinqToSqlGenerator</Generator>
-      <LastGenOutput>EyeContext.Designer.cs</LastGenOutput>
+      <LastGenOutput>EyeContext.info</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup />

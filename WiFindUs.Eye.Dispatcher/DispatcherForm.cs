@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WiFindUs.Eye;
-using WiFindUs.Eye.Context;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -35,7 +34,7 @@ namespace WiFindUs.Eye.Dispatcher
             InitializeComponent();
             if (DesignMode)
                 return;
-            eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.Context.EyeContext;
+            eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.EyeContext;
         }
 
         /////////////////////////////////////////////////////////////////////

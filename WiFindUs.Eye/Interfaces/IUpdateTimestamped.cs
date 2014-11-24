@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public interface IUserClient
+    public interface IUpdateTimestamped
     {
-        User User { get; }
+        DateTime Updated { get; }
     }
 }

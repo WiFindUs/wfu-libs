@@ -16,7 +16,7 @@ namespace WiFindUs.Eye.Dispatcher
             WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf";
             WFUApplication.UsesMutex = true;
             WFUApplication.UsesMySQL = true;
-            WFUApplication.MySQLContextType = typeof(WiFindUs.Eye.Context.EyeContext);
+            WFUApplication.MySQLContextType = typeof(WiFindUs.Eye.EyeContext);
             WFUApplication.MainFormType = typeof(DispatcherForm);
 #if DEBUG
             WFUApplication.InitialVerbosity = Debugger.Verbosity.Verbose;

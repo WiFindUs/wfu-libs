@@ -73,27 +73,30 @@ namespace WiFindUs.Eye
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
-        public virtual bool Equals(IAtmosphere other)
+        public static bool Equals(IAtmosphere A, IAtmosphere B)
         {
-            if (ReferenceEquals(null, other))
+            if (A == null || B == null)
                 return false;
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(A, B))
                 return true;
 
-            if (!Humidity.Tolerance(other.Humidity, EPSILON_HUMIDITY)
-                || !AirPressure.Tolerance(other.AirPressure, EPSILON_AIR_PRESSURE)
-                || !Temperature.Tolerance(other.Temperature, EPSILON_TEMPERATURE)
-                || !LightLevel.Tolerance(other.LightLevel, EPSILON_LIGHT_LEVEL))
+            if (!A.Humidity.Tolerance(B.Humidity, EPSILON_HUMIDITY)
+                || !A.AirPressure.Tolerance(B.AirPressure, EPSILON_AIR_PRESSURE)
+                || !A.Temperature.Tolerance(B.Temperature, EPSILON_TEMPERATURE)
+                || !A.LightLevel.Tolerance(B.LightLevel, EPSILON_LIGHT_LEVEL))
                 return false;
 
             return true;
         }
 
+        public bool Equals(IAtmosphere other)
+        {
+            return Equals(this, other);
+        }
+
         public override bool Equals(object obj)
         {
-            if (!(obj is IAtmosphere))
-                return false;
-            return Equals((IAtmosphere)obj);
+            return Equals(obj as IAtmosphere);
         }
 
         public override int GetHashCode()

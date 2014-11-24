@@ -7,6 +7,6 @@ namespace WiFindUs.Eye
 {
     public interface IDeviceClient
     {
-        IDevice Device { get; }
+        Device Device { get; }
     }
 }

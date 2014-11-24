@@ -1,7 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <EntityDeveloper Version="5.7.490.0">
   <ModelSettings xmlns:ed="http://devart.com/schemas/EntityDeveloper/1.0" AppConnectionStringName="EyeDBDataContextConnectionString" ConnectionStringInAppConfig="False" TargetFramework="Net40" DetectTPTInheritance="False">
-    <Generation />
+    <Generation>
+      <GeneratedFiles>
+        <File Name="EyeContext.EyeContext.cs" />
+        <File Name="EyeContext.DeviceState.cs" />
+        <File Name="EyeContext.Device.cs" />
+        <File Name="EyeContext.NodeState.cs" />
+        <File Name="EyeContext.Node.cs" />
+        <File Name="EyeContext.User.cs" />
+        <File Name="EyeContext.Waypoint.cs" />
+      </GeneratedFiles>
+    </Generation>
     <DatabaseFirstNamingRules>
       <EntitySet PluralizationName="Pluralize" />
       <Class UseSchemaAsPrefix="False" PluralizeCollectionNavigationPropertyName="True" RemoveUnderscores="True" RemoveInvalidCharacters="True" CodeCase="Unchanged" AddPrefix="" AddSuffix="" RemovePrefixes="" RemoveSuffixes="" PluralizationName="Singularize" />
@@ -26,7 +36,7 @@
           <ValidationErrorMessages xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
         </ed:Property>
         <ed:Property Name="FilePerClass" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <boolean>false</boolean>
+          <boolean>true</boolean>
         </ed:Property>
         <ed:Property Name="ModelNameAsFilesPrefix" Type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <boolean>true</boolean>

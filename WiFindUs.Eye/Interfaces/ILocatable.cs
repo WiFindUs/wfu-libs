@@ -8,7 +8,6 @@ namespace WiFindUs.Eye
 {
     public interface ILocatable
     {
-        List<ILocation> Locations { get; }
-        ILocation CurrentLocation { get; }
+        ILocation Location { get; }
     }
 }

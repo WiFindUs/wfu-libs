@@ -70,27 +70,30 @@ namespace WiFindUs.Eye
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
-        public bool Equals(ILocation other)
+        public static bool Equals(ILocation A, ILocation B)
         {
-            if (ReferenceEquals(null, other))
+            if (A == null || B == null)
                 return false;
-            if (ReferenceEquals(this, other))
+            if (ReferenceEquals(A, B))
                 return true;
 
-            if (!Latitude.Tolerance(other.Latitude, EPSILON_HORIZONTAL)
-                || !Longitude.Tolerance(other.Longitude, EPSILON_HORIZONTAL)
-                || !Accuracy.Tolerance(other.Accuracy, EPSILON_ACCURACY)
-                || !Altitude.Tolerance(other.Altitude, EPSILON_ALTITUDE))
+            if (!A.Latitude.Tolerance(B.Latitude, EPSILON_HORIZONTAL)
+                || !A.Longitude.Tolerance(B.Longitude, EPSILON_HORIZONTAL)
+                || !A.Accuracy.Tolerance(B.Accuracy, EPSILON_ACCURACY)
+                || !A.Altitude.Tolerance(B.Altitude, EPSILON_ALTITUDE))
                 return false;
 
             return true;
         }
 
+        public bool Equals(ILocation other)
+        {
+            return Equals(this, other);
+        }
+
         public override bool Equals(object obj)
         {
-            if (!(obj is ILocation))
-                return false;
-            return Equals((ILocation)obj);
+            return Equals(obj as ILocation);
         }
 
         public override int GetHashCode()
