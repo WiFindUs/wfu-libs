@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using System.Drawing;
 
-namespace WiFindUs
+namespace WiFindUs.IO
 {
 	public class ConfigFile
 	{	

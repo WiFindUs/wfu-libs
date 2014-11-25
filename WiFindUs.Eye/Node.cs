@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
@@ -14,6 +15,7 @@ namespace WiFindUs.Eye
         public event NodeEvent OnVoltageChanged;
         public event NodeEvent OnNumberChanged;
         public event NodeEvent OnLocationChanged;
+        public event NodeEvent OnUpdated;
 
         private const double EPSILON_VOLTAGE = 0.05;
         private NodeState currentState = null;
@@ -57,6 +59,8 @@ namespace WiFindUs.Eye
                     if (!oldState.Voltage.Tolerance(currentState.Voltage, EPSILON_VOLTAGE) && OnVoltageChanged != null)
                         OnVoltageChanged(this);
                 }
+                if (OnUpdated != null)
+                    OnUpdated(this);
             }
         }
 

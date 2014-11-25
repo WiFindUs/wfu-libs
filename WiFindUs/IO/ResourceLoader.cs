@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace WiFindUs
+namespace WiFindUs.IO
 {
     /// <summary>
     /// A generic resource pool class designed to load Disposable resources from disk.

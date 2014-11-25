@@ -5,7 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 
-namespace WiFindUs
+namespace WiFindUs.Forms
 {
 	public class MainForm : Form
 	{

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
@@ -18,6 +19,7 @@ namespace WiFindUs.Eye
         public event DeviceEvent OnBatteryLevelChanged;
         public event DeviceEvent OnChargingChanged;
         public event DeviceEvent OnUserChanged;
+        public event DeviceEvent OnUpdated;
 
         private const double EPSILON_BATTERY_LEVEL = 0.5;
         private DeviceState currentState = null;
@@ -69,6 +71,9 @@ namespace WiFindUs.Eye
                     if (oldState.IPAddressRaw != currentState.IPAddressRaw && OnIPAddressChanged != null)
                         OnIPAddressChanged(this);
                 }
+
+                if (OnUpdated != null)
+                    OnUpdated(this);
             }
         }
 
@@ -114,6 +119,11 @@ namespace WiFindUs.Eye
             {
                 return State == null ? null : new IPAddress(State.IPAddressRaw);
             }
+        }
+
+        public override string ToString()
+        {
+            return String.Format("Device[{0}]", ID);
         }
 
         /////////////////////////////////////////////////////////////////////

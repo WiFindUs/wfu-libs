@@ -8,6 +8,8 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Drawing;
 using Devart.Data.Linq;
+using WiFindUs.IO;
+using WiFindUs.Forms;
 
 namespace WiFindUs
 {

@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WiFindUs.Eye;
+using WiFindUs.Extensions;
+using WiFindUs.Forms;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -57,8 +59,12 @@ namespace WiFindUs.Eye.Dispatcher
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-           // Table<Device> devices = EyeContext.Devices;
-           // EyeContext.
+
+            //load all devices
+            Table<Device> devices = EyeContext.Devices;
+            foreach (Device device in devices)
+                Debugger.I(device.ToString());
+
         }
     }
 }

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using WiFindUs.Controls;
 
-namespace WiFindUs
+namespace WiFindUs.Forms
 {
 	public class ConsoleForm : Form
 	{
