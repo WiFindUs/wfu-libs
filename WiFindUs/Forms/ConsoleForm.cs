@@ -7,7 +7,7 @@ using WiFindUs.Controls;
 
 namespace WiFindUs.Forms
 {
-	public class ConsoleForm : Form
+    public class ConsoleForm : BaseForm
 	{
 		private ConsolePanel console = null;
 
@@ -17,14 +17,10 @@ namespace WiFindUs.Forms
 
 		public ConsoleForm()
 		{
-			if (DesignMode)
+            if (IsDesignMode)
 				return;
 
-			SetStyle(ControlStyles.DoubleBuffer
-			| ControlStyles.AllPaintingInWmPaint
-			| ControlStyles.ResizeRedraw
-			| ControlStyles.OptimizedDoubleBuffer, true);
-
+            ShowInTaskbar = false;
 			Text = WFUApplication.Name + " :: Console";
 
 			Controls.Add(console = new ConsolePanel()
