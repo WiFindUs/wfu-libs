@@ -7,7 +7,7 @@ using System.IO;
 
 namespace WiFindUs.Forms
 {
-	public class MainForm : Form
+    public class MainForm : BaseForm
 	{
 		private ConsoleForm console = null;
 		private NotifyIcon trayIcon = null;
@@ -39,47 +39,33 @@ namespace WiFindUs.Forms
             get { return trayIcon == null ? null : trayIcon.ContextMenuStrip; }
         }
 
+        protected virtual List<Func<bool>> LoadingTasks
+        {
+            get
+            {
+                return new List<Func<bool>>();
+            }
+        }
+
+        protected override bool ShowWithoutActivation
+        {
+            get { return false; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 		
 		public MainForm()
         {
-            if (DesignMode)
+            if (IsDesignMode)
                 return;
 
-			if (WFUApplication.UsesConsoleForm)
-			{
-				Debugger.V("Creating console form...");
-				console = new ConsoleForm();
-				Debugger.V("Created OK.");
-			}
+            ShowInTaskbar = false;
+            WindowState = FormWindowState.Minimized;
 
-			if (WFUApplication.UsesTrayIcon)
-			{
-				Debugger.I("Creating tray icon...");
-				trayIcon = new NotifyIcon();
-				trayIcon.Text = WFUApplication.Name + " v" + WFUApplication.AssemblyVersion;
-				trayIcon.Icon = WFUApplication.Icon;
-
-				exitItem = new ToolStripMenuItem("Exit " + WFUApplication.Name);
-				exitItem.Click += TrayIconCloseClick;
-
-				ContextMenuStrip trayIconMenu = new ContextMenuStrip();
-				trayIconMenu.Items.Add(new ToolStripSeparator());
-				if (WFUApplication.UsesConsoleForm)
-				{
-					consoleItem = new ToolStripMenuItem("Console");
-					consoleItem.Click += TrayIconConsoleClick;
-					trayIconMenu.Items.Add(consoleItem);
-				}
-				trayIconMenu.Items.Add(exitItem);
-				trayIcon.ContextMenuStrip = trayIconMenu;
-
-				trayIcon.Visible = true;
-				trayIcon.DoubleClick += TrayIconDoubleClick;
-				Debugger.V("Tray icon created OK.");
-			}
+            Icon = WFUApplication.Icon;
+            Text = WFUApplication.Name + " v" + WFUApplication.AssemblyVersion;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -88,7 +74,8 @@ namespace WiFindUs.Forms
 
 		public virtual void ShowForm(bool forcerefresh = true)
 		{
-			Show();
+            Visible = true;
+            Show();
 			BringToFront();
 			Focus();
 			if (forcerefresh)
@@ -102,23 +89,59 @@ namespace WiFindUs.Forms
 			Debugger.V("Showing console form...");
 			console.Show();
 			console.BringToFront();
-			console.Focus();
 		}
 
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
+        protected override void SetVisibleCore(bool value)
+        {
+            base.SetVisibleCore(WFUApplication.SplashLoadingFinished ? value : false);
+        }
+
         protected virtual void OnFirstShown(EventArgs e)
         {
             if (WFUApplication.UsesConsoleForm)
+            {
+                Debugger.V("Creating console form...");
+                console = new ConsoleForm();
+                console.Owner = this;
+                Debugger.V("Created OK.");
                 ShowConsoleForm();
+            }
+
+            if (WFUApplication.UsesTrayIcon)
+            {
+                Debugger.I("Creating tray icon...");
+                trayIcon = new NotifyIcon();
+                trayIcon.Text = WFUApplication.Name + " v" + WFUApplication.AssemblyVersion;
+                trayIcon.Icon = WFUApplication.Icon;
+
+                exitItem = new ToolStripMenuItem("Exit " + WFUApplication.Name);
+                exitItem.Click += TrayIconCloseClick;
+
+                ContextMenuStrip trayIconMenu = new ContextMenuStrip();
+                trayIconMenu.Items.Add(new ToolStripSeparator());
+                if (WFUApplication.UsesConsoleForm)
+                {
+                    consoleItem = new ToolStripMenuItem("Console");
+                    consoleItem.Click += TrayIconConsoleClick;
+                    trayIconMenu.Items.Add(consoleItem);
+                }
+                trayIconMenu.Items.Add(exitItem);
+                trayIcon.ContextMenuStrip = trayIconMenu;
+
+                trayIcon.Visible = true;
+                trayIcon.DoubleClick += TrayIconDoubleClick;
+                Debugger.V("Tray icon created OK.");
+            }
         }
 
 		protected override void OnShown(EventArgs e)
 		{
 			base.OnShown(e);
-			if (DesignMode)
+            if (IsDesignMode)
 				return;
 			if (!firstShown)
 			{
@@ -130,11 +153,8 @@ namespace WiFindUs.Forms
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
-			if (DesignMode)
+            if (IsDesignMode)
 				return;
-			Debugger.V("Assigning icon from WFUApplication.Icon...");
-			Icon = WFUApplication.Icon;
-			Text = WFUApplication.Name + " v" + WFUApplication.AssemblyVersion;
 		}
 
         protected virtual void TrayIconDoubleClick(object sender, EventArgs e)
@@ -178,5 +198,9 @@ namespace WiFindUs.Forms
 
 			base.OnFormClosed(e);
 		}
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
 	}
 }

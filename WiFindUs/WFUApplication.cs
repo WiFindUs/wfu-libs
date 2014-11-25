@@ -29,6 +29,7 @@ namespace WiFindUs
         private static string applicationDescription = "A WiFindUs application.";
         private static string applicationCompany = "WiFindUs";
         private static string applicationName = "Program";
+        private static string applicationEdition = "Standard";
         private static bool running = false;
         private static bool readOnly = false;
         private static Type mainFormType = null;
@@ -50,6 +51,9 @@ namespace WiFindUs
         private static Mutex mutex = null;
         private static Type mysqlContextType = null;
         private static DataContext mysqlContext = null;
+        private static List<Func<object, bool>> loadingTasks = new List<Func<object, bool>>();
+        private static SplashForm splashForm = null;
+        private static bool splashLoadingFinished = false;
 
 
         /////////////////////////////////////////////////////////////////////
@@ -104,6 +108,15 @@ namespace WiFindUs
 			get { return applicationName; }
 			set { if (!readOnly) applicationName = value; }
 		}
+
+        /// <summary>
+        /// The edition of the application.
+        /// </summary>
+        public static string Edition
+        {
+            get { return applicationEdition; }
+            set { if (!readOnly) applicationEdition = value; }
+        }
 
 		/// <summary>
 		/// The company owning the application.
@@ -528,8 +541,45 @@ namespace WiFindUs
             get { return mysqlContext;  }
         }
 
+        private static List<Func<bool>> LoadingTasks
+        {
+            get
+            {
+                List<Func<bool>> tasks = new List<Func<bool>>();
+                if (UsesMutex)
+                    tasks.Add(CreateMutex);
+                tasks.Add(InitializeDebugger);
+                tasks.Add(CheckAppDataPath);
+                tasks.Add(LoadConfigFiles);
+                if (UsesMySQL)
+                    tasks.Add(CreateMySQLContext);
+                return tasks;
+            }
+        }
+
+        public static bool SplashLoadingFinished
+        {
+            get { return splashLoadingFinished; }
+            set
+            {
+                if (!value || splashLoadingFinished)
+                    return;
+                splashLoadingFinished = true;
+                mainForm.ShowInTaskbar = true;
+                mainForm.WindowState = FormWindowState.Normal;
+                mainForm.ShowForm();
+                splashForm = null;
+            }
+        }
+
+        public static string SplashStatus
+        {
+            get { return splashForm == null ? "" : splashForm.Status; }
+            set { if (splashForm != null) splashForm.Status = value; }
+        }
+
         /////////////////////////////////////////////////////////////////////
-        // RUN
+        // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
 		public static void Run(String[] args)
@@ -569,89 +619,6 @@ namespace WiFindUs
 				}
 			}
 
-			//create mutex if necessary
-			if (UsesMutex)
-			{
-
-				try
-				{
-					mutex = Mutex.OpenExisting(MutexName);
-					MessageBox.Show(MutexErrorMessage, Name + " :: Multiple Copies", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Free();
-					return;
-				}
-				catch (WaitHandleCannotBeOpenedException)
-				{
-					Debugger.Initialize(LogPath,InitialVerbosity);
-					Debugger.V("Creating new thread-locking mutex...");
-					mutex = new Mutex(true, MutexName);
-					Debugger.V("Mutex created OK.");
-				}
-				catch (Exception e)
-				{
-					Debugger.Ex(e);
-					MessageBox.Show("An exception was thrown trying to create the Mutex object;\n\n" + e.Message, "Exception creating Mutex", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Free();
-					return;
-				}
-			}
-			else
-				Debugger.Initialize(LogPath,InitialVerbosity);
-
-			//check data directory
-			Debugger.V("Testing for presence of DataPath (\"" + DataPath + "\")");
-			if (!Directory.Exists(DataPath))
-			{
-				try
-				{
-					Debugger.W("AppDataPath \"" + DataPath + "\" doesn't exist; creating...");
-					Directory.CreateDirectory(DataPath);
-					Debugger.W("Created OK.");
-				}
-				catch (Exception exc)
-				{
-					Debugger.Ex(exc);
-					MessageBox.Show(exc.GetType().ToString() + ": \n\n\"" + exc.Message + "\"\n\nThe application will now exit.", "Exception thrown", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Free();
-					return;
-				}
-			}
-			else
-				Debugger.V("AppDataPath found OK.");
-
-			//loading config files
-			Debugger.V("Loading config files...");
-			String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-			config = new ConfigFile(files);
-			Debugger.V(config.ToString());
-
-            //do mysql
-            if (UsesMySQL)
-            {
-                if (mysqlContextType == null || !mysqlContextType.IsSubclassOf(typeof(DataContext)))
-                {
-                    String message = "The MySQLContextType was missing or invalid!";
-                    Debugger.E(message);
-                    MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Free();
-                    return;
-                }
-                
-                try
-                {
-                    mysqlContext = (DataContext)mysqlContextType.GetConstructor(new Type[] { typeof(String) }).Invoke(new object[] { LinqConnectionString });
-                }
-                catch (Exception ex)
-                {
-                    String message = "There was an error establishing the MySQL connection: " + ex.Message;
-                    Debugger.E(message);
-                    MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Free();
-                    return;
-                }
-
-            }
-
 			//initialize form type
 			Type formType = MainFormType;
 			Debugger.V("Checking MainFormType...");
@@ -677,6 +644,122 @@ namespace WiFindUs
 			//release resources and close debugger
             Free();
 		}
+
+        public static void StartSplashLoading(List<Func<bool>> tasks)
+        {
+            if (splashForm != null || splashLoadingFinished)
+                return;
+            Debugger.V("Invoking splash form...");
+            List<Func<bool>> allTasks = LoadingTasks;
+            allTasks.AddRange(tasks);
+            splashForm = new SplashForm(allTasks);
+            splashForm.Show();
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        private static bool CreateMutex()
+        {
+            if (!UsesMutex)
+                return true;
+
+            splashForm.Status = "Creating singleton mutex";
+            try
+            {
+                mutex = Mutex.OpenExisting(MutexName);
+                MessageBox.Show(MutexErrorMessage, Name + " :: Multiple Copies", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            catch (WaitHandleCannotBeOpenedException)
+            {
+                mutex = new Mutex(true, MutexName);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("An exception was thrown trying to create the Mutex object;\n\n" + e.Message, "Exception creating Mutex", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            return true;
+        }
+
+        private static bool InitializeDebugger()
+        {
+            splashForm.Status = "Initializing debugger";
+            Debugger.Initialize(LogPath, InitialVerbosity);
+            return true;
+        }
+
+        private static bool CheckAppDataPath()
+        {
+            splashForm.Status = "Verifying file paths";
+            
+            //check data directory
+            Debugger.V("Testing for presence of DataPath (\"" + DataPath + "\")");
+            if (!Directory.Exists(DataPath))
+            {
+                try
+                {
+                    Debugger.W("AppDataPath \"" + DataPath + "\" doesn't exist; creating...");
+                    Directory.CreateDirectory(DataPath);
+                    Debugger.W("Created OK.");
+                }
+                catch (Exception exc)
+                {
+                    Debugger.Ex(exc);
+                    MessageBox.Show(exc.GetType().ToString() + ": \n\n\"" + exc.Message + "\"\n\nThe application will now exit.", "Exception thrown", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+            else
+                Debugger.V("AppDataPath found OK.");
+            
+            return true;
+        }
+
+        private static bool LoadConfigFiles()
+        {
+            splashForm.Status = "Loading configuration files";
+            
+            Debugger.V("Loading config files...");
+            String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+            config = new ConfigFile(files);
+            Debugger.V(config.ToString());
+            Debugger.V("Config files loaded OK.");
+            return true;
+        }
+
+        private static bool CreateMySQLContext()
+        {
+            if (!UsesMySQL)
+                return true;
+
+            splashForm.Status = "Connecting to MySQL server";
+            
+            Debugger.V("Establishing the MySQL connection data context...");
+            if (mysqlContextType == null || !mysqlContextType.IsSubclassOf(typeof(DataContext)))
+            {
+                String message = "The MySQLContextType was missing or invalid!";
+                Debugger.E(message);
+                MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            try
+            {
+                mysqlContext = (DataContext)mysqlContextType.GetConstructor(new Type[] { typeof(String) }).Invoke(new object[] { LinqConnectionString });
+                Debugger.V("MySQL connection created OK.");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                String message = "There was an error establishing the MySQL connection: " + ex.Message;
+                Debugger.E(message);
+                MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
 
         private static void Free()
         {
