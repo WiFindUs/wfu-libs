@@ -72,16 +72,6 @@ namespace WiFindUs.Eye.Dispatcher
             }
         }
 
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-
-            //load all devices
-            //Table<Device> devices = EyeContext.Devices;
-            //foreach (Device device in devices)
-            //    Debugger.I(device.ToString());
-        }
-
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
