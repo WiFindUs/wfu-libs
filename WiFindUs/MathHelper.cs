@@ -17,5 +17,10 @@ namespace WiFindUs
             double prc = (1.0 - Math.Cos(amount * Math.PI)) * 0.5;
             return start * (1.0 - prc) + finish * prc;
         }
+
+        public static int WholePercentage(int current, int max)
+        {
+            return (int)(((double)current / (double)max) * 100.0);
+        }
     }
 }
