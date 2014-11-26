@@ -17,7 +17,6 @@ namespace WiFindUs.Forms
         private Image logo = null;
         private Rectangle activeArea = Rectangle.Empty;
         private string statusString = "";
-        private Thread loadingThread;
         private List<Func<bool>> tasks;
 
         /////////////////////////////////////////////////////////////////////
@@ -54,10 +53,13 @@ namespace WiFindUs.Forms
             if (tasks == null)
                 throw new ArgumentNullException("tasks");
             this.tasks = tasks;
-            progressBar.Maximum = tasks.Count;
             TopMost = true;
             logo = WFUApplication.Images.Resource("wfu_logo_small");
             RecalculateActiveArea();
+
+            loadingWorker.DoWork += LoadingThread;
+            loadingWorker.ProgressChanged += LoadingProgress;
+            loadingWorker.RunWorkerCompleted += LoadingCompeted;
         }
 
         public SplashForm() : this(null) { }
@@ -158,15 +160,14 @@ namespace WiFindUs.Forms
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-            if (IsDesignMode || loadingThread != null)
+            if (IsDesignMode || loadingWorker.IsBusy)
                 return;
-            loadingThread = new Thread(new ThreadStart(LoadingThread));
-            loadingThread.Start();
+            loadingWorker.RunWorkerAsync(tasks);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            if (loadingThread != null && e.CloseReason == CloseReason.UserClosing)
+            if (loadingWorker.IsBusy && e.CloseReason == CloseReason.UserClosing)
                 e.Cancel = true;
             else
                 base.OnFormClosing(e);
@@ -176,36 +177,39 @@ namespace WiFindUs.Forms
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        private void LoadingThread()
+        private void LoadingThread(object sender, DoWorkEventArgs e)
         {
-            bool result = true;
-            foreach (Func<bool> task in tasks)
+            BackgroundWorker worker = (BackgroundWorker)sender;
+            List<Func<bool>> tasks = (List<Func<bool>>)e.Argument;
+
+            for (int i = 0; i < tasks.Count; i++)
             {
-                if (!(result = task()))
+                if (!tasks[i]())
+                {
+                    e.Cancel = true;
                     break;
-                progressBar.IncrementThreadSafe(1);
-                this.RefreshThreadSafe();
+                }
+                worker.ReportProgress(MathHelper.WholePercentage(i + 1, tasks.Count));
 #if DEBUG
                 Thread.Sleep(250);
 #endif
             }
-            ThreadFinished(result);
         }
 
-        private void ThreadFinished(bool result)
+        private void LoadingProgress(object sender, ProgressChangedEventArgs e)
         {
-            if (InvokeRequired)
-                Invoke(new Action<bool>(ThreadFinished), new object[] { result });
+            progressBar.Value = e.ProgressPercentage;
+            Refresh();
+        }
+
+        private void LoadingCompeted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Error != null || e.Cancelled)
+                WFUApplication.MainForm.Close();
             else
             {
-                loadingThread = null;
-                if (!result)
-                    WFUApplication.MainForm.Close();
-                else
-                {
-                    WFUApplication.SplashLoadingFinished = true;
-                    Close();
-                }
+                WFUApplication.SplashLoadingFinished = true;
+                Close();
             }
         }
 

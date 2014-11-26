@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.loadingWorker = new System.ComponentModel.BackgroundWorker();
             this.SuspendLayout();
             // 
             // progressBar
@@ -41,6 +42,11 @@
             this.progressBar.Size = new System.Drawing.Size(400, 23);
             this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar.TabIndex = 0;
+            // 
+            // loadingWorker
+            // 
+            this.loadingWorker.WorkerReportsProgress = true;
+            this.loadingWorker.WorkerSupportsCancellation = true;
             // 
             // SplashForm
             // 
@@ -67,6 +73,7 @@
         #endregion
 
         private System.Windows.Forms.ProgressBar progressBar;
+        private System.ComponentModel.BackgroundWorker loadingWorker;
 
     }
 }
