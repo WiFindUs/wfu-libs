@@ -510,6 +510,9 @@ namespace WiFindUs
             set { if (!readOnly) mysqlContextType = value; }
         }
 
+        /// <summary>
+        /// The string passed to a MySQLConnector data connection to initiate connection to a database.
+        /// </summary>
         private static string MySQLConnectionString
         {
             get
@@ -523,6 +526,9 @@ namespace WiFindUs
             }
         }
 
+        /// <summary>
+        /// The string passed to the LinqConnect DataContext to initiate the MySQL connection.
+        /// </summary>
         private static string LinqConnectionString
         {
             get
@@ -536,18 +542,23 @@ namespace WiFindUs
             }
         }
 
+        /// <summary>
+        /// The global LinqConnect data conext in use by this application.
+        /// </summary>
         public static DataContext MySQLDataContext
         {
             get { return mysqlContext;  }
         }
 
+        /// <summary>
+        /// The base list of tasks passed to the splash screen for application initialization. 
+        /// This is merged with the overridable list from your MainForm(), which is passed via StartSplashLoading().
+        /// </summary>
         private static List<Func<bool>> LoadingTasks
         {
             get
             {
                 List<Func<bool>> tasks = new List<Func<bool>>();
-                if (UsesMutex)
-                    tasks.Add(CreateMutex);
                 tasks.Add(InitializeDebugger);
                 tasks.Add(CheckAppDataPath);
                 tasks.Add(LoadConfigFiles);
@@ -557,6 +568,11 @@ namespace WiFindUs
             }
         }
 
+        /// <summary>
+        /// Gets or sets the splash screen loading completion status.
+        /// This can only be set to true once (the splash form does this itself);
+        /// doing so restores the main form so regular application use may begin.
+        /// </summary>
         public static bool SplashLoadingFinished
         {
             get { return splashLoadingFinished; }
@@ -572,6 +588,9 @@ namespace WiFindUs
             }
         }
 
+        /// <summary>
+        /// Gets or sets the current status string displayed by the splash form.
+        /// </summary>
         public static string SplashStatus
         {
             get { return splashForm == null ? "" : splashForm.Status; }
@@ -582,6 +601,11 @@ namespace WiFindUs
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
+        /// <summary>
+        /// Runs your WFUApplication. Handles parsing of command line arguments, loading of
+        /// config files, and initialization of the main form.
+        /// </summary>
+        /// <param name="args">The command line arguments from Main().</param>
 		public static void Run(String[] args)
 		{
 			if (Running)
@@ -618,6 +642,12 @@ namespace WiFindUs
 						break;
 				}
 			}
+
+            if (UsesMutex && !CreateMutex())
+            {
+                Free();
+                return;
+            }
 
 			//initialize form type
 			Type formType = MainFormType;
@@ -665,7 +695,6 @@ namespace WiFindUs
             if (!UsesMutex)
                 return true;
 
-            splashForm.Status = "Creating singleton mutex";
             try
             {
                 mutex = Mutex.OpenExisting(MutexName);
