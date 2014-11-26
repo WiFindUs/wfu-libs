@@ -12,7 +12,7 @@ namespace WiFindUs.Eye.Dispatcher
         static void Main(String[] args)
         {
             WFUApplication.Name = "Dispatcher";
-            WFUApplication.Description = "An Eye program designed to help first-responders manage their personell.";
+            WFUApplication.Description = "An Eye program designed to help first-responders manage their personnel.";
             WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf";
             WFUApplication.UsesMutex = true;
             WFUApplication.UsesMySQL = true;
