@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using WiFindUs.Eye;
 using WiFindUs.Extensions;
 using WiFindUs.Forms;
+using WiFindUs.Controls;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -25,6 +26,26 @@ namespace WiFindUs.Eye.Dispatcher
         public EyeContext EyeContext
         {
             get { return eyeContext; }
+        }
+
+        protected Panel MapPanel
+        {
+            get { return workingAreaToolStripContainer.ContentPanel; }
+        }
+
+        protected Panel MinimapPanel
+        {
+            get { return controlsOuterSplitter.Panel1; }
+        }
+
+        protected Panel InfoPanel
+        {
+            get { return controlsInnerSplitter.Panel1; }
+        }
+
+        protected Panel CommandsPanel
+        {
+            get { return controlsInnerSplitter.Panel2; }
         }
 
         protected override List<Func<bool>> LoadingTasks
@@ -59,17 +80,12 @@ namespace WiFindUs.Eye.Dispatcher
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
-        protected override void OnFirstShown(EventArgs e)
+        protected override void OnThemeChanged(Theme theme)
         {
-            base.OnFirstShown(e);
-            
-            Screen primary = Screen.PrimaryScreen;
-            Rectangle primaryBounds = primary.WorkingArea;
-            if (WFUApplication.UsesConsoleForm)
-            {
-                Bounds = new Rectangle(primaryBounds.Left, primaryBounds.Top, primaryBounds.Width, 3 * primaryBounds.Height / 4);
-                Console.Bounds = new Rectangle(Bounds.Left, Bounds.Bottom + 3, Bounds.Width, primaryBounds.Height - 6 - Bounds.Height);
-            }
+            base.OnThemeChanged(theme);
+            MapPanel.BackColor = theme.ControlDarkColour;
+            windowStatusStrip.BackColor = theme.ControlMidColour;
+            infoTabs.BackColor = theme.ControlLightColour;
         }
 
         /////////////////////////////////////////////////////////////////////

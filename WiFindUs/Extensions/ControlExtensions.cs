@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -8,6 +9,13 @@ namespace WiFindUs.Extensions
 {
     public static class ControlExtensions
     {
+        public static bool IsDesignMode(this Component comp)
+        {
+            return (comp.Site != null && comp.Site.DesignMode)
+                || LicenseManager.UsageMode == LicenseUsageMode.Designtime
+                || AppDomain.CurrentDomain.FriendlyName.Equals("DefaultDomain");
+        }
+        
         public static void RefreshThreadSafe(this Control control)
         {
             try
@@ -35,6 +43,15 @@ namespace WiFindUs.Extensions
             catch (ObjectDisposedException)
             {
                 return;
+            }
+        }
+
+        public static void RecurseControls(this Control root, Action<Control> action)
+        {
+            foreach (Control child in root.Controls)
+            {
+                action(child);
+                RecurseControls(child, action);
             }
         }
     }

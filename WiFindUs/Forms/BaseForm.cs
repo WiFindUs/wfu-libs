@@ -5,11 +5,15 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using WiFindUs.Extensions;
+using WiFindUs.Controls;
 
 namespace WiFindUs.Forms
 {
-	public class BaseForm : Form
+    public class BaseForm : Form, IThemeable
 	{
+        private Theme theme;
+        private bool firstShown = false;
+        
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
@@ -38,21 +42,104 @@ namespace WiFindUs.Forms
             }
         }
 
+        public Theme Theme
+        {
+            get
+            {
+                return theme;
+            }
+            set
+            {
+                if (value == null || value == theme)
+                    return;
+
+                theme = value;
+                BackColor = theme.ControlLightColour;
+                Font = theme.WindowFont;
+                OnThemeChanged(theme);
+                this.RecurseControls(control =>
+                {
+                    IThemeable themable = control as IThemeable;
+                    if (themable != null)
+                        themable.Theme = value;
+                });
+                Refresh();
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
         public BaseForm()
         {
-            if (!IsDesignMode)
+            AutoScaleMode = AutoScaleMode.None;
+            ShowIcon = true;
+            Icon = WFUApplication.Icon;
+            DoubleBuffered = true;
+            ResizeRedraw = true;
+
+            if (IsDesignMode)
             {
-                DoubleBuffered = true;
-                SetStyle(
-                    System.Windows.Forms.ControlStyles.UserPaint |
-                    System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
-                    System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
-                    true);
+                Theme = new Theme();
+                return;
+            }
+
+            SetStyle(
+                System.Windows.Forms.ControlStyles.UserPaint |
+                System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
+                System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
+                true);
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public virtual void ShowForm(bool forcerefresh = true)
+        {
+            Visible = true;
+            Show();
+            BringToFront();
+            Focus();
+            if (forcerefresh)
+                Refresh();
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PROTECTED METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (IsDesignMode)
+                return;
+
+            Theme = WFUApplication.Theme;
+            Refresh();
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            if (IsDesignMode)
+                return;
+            if (!firstShown)
+            {
+                firstShown = true;
+                OnFirstShown(e);
             }
         }
-	}
+
+        protected virtual void OnFirstShown(EventArgs e)
+        {
+
+        }
+
+        protected virtual void OnThemeChanged(Theme theme)
+        {
+
+        }
+    }
 }

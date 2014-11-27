@@ -43,7 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions\ComponentExtensions.cs" />
+    <Compile Include="Controls\IThemeable.cs" />
+    <Compile Include="Controls\Theme.cs" />
     <Compile Include="Extensions\ControlExtensions.cs" />
     <Compile Include="Forms\BaseForm.cs">
       <SubType>Form</SubType>

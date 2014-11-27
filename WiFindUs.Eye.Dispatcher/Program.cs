@@ -18,12 +18,6 @@ namespace WiFindUs.Eye.Dispatcher
             WFUApplication.UsesMySQL = true;
             WFUApplication.MySQLContextType = typeof(WiFindUs.Eye.EyeContext);
             WFUApplication.MainFormType = typeof(DispatcherForm);
-#if DEBUG
-            WFUApplication.InitialVerbosity = Debugger.Verbosity.Verbose;
-            WFUApplication.UsesConsoleForm = true;
-#else
-            WFUApplication.InitialVerbosity = Debugger.Verbosity.Information;
-#endif
             WFUApplication.Run(args);
         }
     }

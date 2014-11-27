@@ -10,6 +10,7 @@ using System.Drawing;
 using Devart.Data.Linq;
 using WiFindUs.IO;
 using WiFindUs.Forms;
+using WiFindUs.Controls;
 
 namespace WiFindUs
 {
@@ -21,9 +22,12 @@ namespace WiFindUs
         private static AssemblyName entryAssemblyNameObject = null;
         private static Assembly entryAssembly = null;
         private static string logPath = "";
-        private static Debugger.Verbosity initialDebugLevel = Debugger.Verbosity.Information;
-        private static bool usesConsoleForm = false;
-        private static bool usesTrayIcon = false;
+        private static Debugger.Verbosity initialDebugLevel
+#if DEBUG
+            = Debugger.Verbosity.Verbose;
+#else
+            = Debugger.Verbosity.Information;
+#endif
         private static bool usesMutex = false;
         private static bool usesMySQL = false;
         private static string applicationDescription = "A WiFindUs application.";
@@ -54,7 +58,8 @@ namespace WiFindUs
         private static List<Func<object, bool>> loadingTasks = new List<Func<object, bool>>();
         private static SplashForm splashForm = null;
         private static bool splashLoadingFinished = false;
-
+        private static Theme theme = new Theme();
+        private static FormWindowState postLoadWindowState = FormWindowState.Maximized;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -79,6 +84,7 @@ namespace WiFindUs
 				if (readOnly)
 					return;
 				readOnly = value;
+                theme.ReadOnly = value;
 			}
 		}
 
@@ -143,24 +149,6 @@ namespace WiFindUs
 		{
 			get { return usesMutex; }
 			set { if (!readOnly) usesMutex = value; }
-		}
-
-		/// <summary>
-		/// If true, a notify icon will be placed in the system tray. Also causes closing the main form to simply hide it, rather than close the entire application. This is because the notify icon has a right-click menu with an 'Exit' link, which closes the application proper.
-		/// </summary>
-		public static bool UsesTrayIcon
-		{
-			get { return usesTrayIcon; }
-			set { if (!readOnly) usesTrayIcon = value; }
-		}
-
-		/// <summary>
-		/// If True, will generate a console form upon form generation. If UsesTrayIcon is also True, a link to the console window will be added to the right-click menu.
-		/// </summary>
-		public static bool UsesConsoleForm
-		{
-			get { return usesConsoleForm; }
-			set { if (!readOnly) usesConsoleForm = value; }
 		}
 
 		/// <summary>
@@ -582,7 +570,7 @@ namespace WiFindUs
                     return;
                 splashLoadingFinished = true;
                 mainForm.ShowInTaskbar = true;
-                mainForm.WindowState = FormWindowState.Normal;
+                mainForm.WindowState = PostLoadWindowState;
                 mainForm.ShowForm();
                 splashForm = null;
             }
@@ -595,6 +583,31 @@ namespace WiFindUs
         {
             get { return splashForm == null ? "" : splashForm.Status; }
             set { if (splashForm != null) splashForm.Status = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the colour and font theme in use by this application.
+        /// </summary>
+        public static Theme Theme
+        {
+            get { return theme; }
+            set
+            {
+                if (readOnly || value == null || value == theme)
+                    return;
+                if (theme != null)
+                    theme.Dispose();
+                theme = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the window state assigned to the application's main form after the splash loading has finished.
+        /// </summary>
+        public static FormWindowState PostLoadWindowState
+        {
+            get { return postLoadWindowState; }
+            set { if (!readOnly) postLoadWindowState = value; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -627,10 +640,6 @@ namespace WiFindUs
 					case "3":
 					case "4":
 						InitialVerbosity = (Debugger.Verbosity)Int32.Parse(args[i]);
-						break;
-
-					case "console":
-						UsesConsoleForm = true;
 						break;
 
 					case "conf":
@@ -792,6 +801,12 @@ namespace WiFindUs
 
         private static void Free()
         {
+            if (theme != null)
+            {
+                theme.Dispose();
+                theme = null;
+            }
+            
             if (mysqlContext != null)
             {
                 mysqlContext.Dispose();

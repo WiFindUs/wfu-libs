@@ -8,14 +8,36 @@ using System.Runtime.InteropServices;
 
 namespace WiFindUs.Controls
 {
-	public class ConsolePanel : Panel
+	public class ConsolePanel : Panel, IThemeable
 	{
-		private RichTextBox console;
+        private Theme theme;
+        private RichTextBox console;
 		private TextBox input;
 
 		private const int MAX_CONSOLE_LINES = 1024;
 		private readonly Color[] colors = new Color[6];
-		private readonly Font[] fonts = new Font[6];
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+
+        public Theme Theme
+        {
+            get
+            {
+                return theme;
+            }
+            set
+            {
+                if (value == null || value == theme)
+                    return;
+
+                theme = value;
+                BackColor = console.BackColor = input.BackColor = theme.ControlDarkColour;
+                console.Font = input.Font = theme.ConsoleFont;
+                Refresh();
+            }
+        }
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
@@ -47,13 +69,6 @@ namespace WiFindUs.Controls
 			Controls.Add(console);
 
 			//config
-			console.BackColor = input.BackColor
-							=	WFUApplication.Config.Get("console.background",		Color.Black);
-			String font =		WFUApplication.Config.Get("console.font_face",	"Lucida Console");
-			float fontSize =	WFUApplication.Config.Get("console.font_size",	9.0f);
-			fonts[0] = new Font(font, fontSize, FontStyle.Italic);
-            fonts[1] = fonts[2] = fonts[3] = fonts[5] = new Font(font, fontSize);
-			fonts[4] = new Font(font, fontSize, FontStyle.Bold);
 			colors[0] = WFUApplication.Config.Get("console.verbose", Color.Gray);
 			colors[1] = WFUApplication.Config.Get("console.information", Color.White);
 			colors[2] = WFUApplication.Config.Get("console.warning", Color.Yellow);
@@ -103,23 +118,9 @@ namespace WiFindUs.Controls
 				console.Lines = keepLines;
 			}
 
-			console.SelectionFont = fonts[(int)level];
 			console.SelectionColor = colors[(int)level];
 			console.AppendText(prefix + text + "\n");
 			SendMessage(console.Handle, 277, (IntPtr)7, IntPtr.Zero);
-		}
-
-		protected override void Dispose(bool disposing)
-		{
-			for (int i = 0; i < fonts.Length; i++)
-			{
-				if (fonts[i] != null)
-				{
-					fonts[i].Dispose();
-					fonts[i] = null;
-				}
-			}
-			base.Dispose(disposing);
 		}
 
         /////////////////////////////////////////////////////////////////////

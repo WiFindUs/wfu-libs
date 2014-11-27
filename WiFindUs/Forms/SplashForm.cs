@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using WiFindUs.Controls;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Forms
@@ -47,16 +48,27 @@ namespace WiFindUs.Forms
 
         public SplashForm(List<Func<bool>> tasks)
         {
+            //form properties
+            FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ControlBox = false;
+            TopMost = true;
             InitializeComponent();
+
             if (IsDesignMode)
                 return;
+
+            //set tasks
             if (tasks == null)
                 throw new ArgumentNullException("tasks");
             this.tasks = tasks;
-            TopMost = true;
+            
+            //cosmetics
             logo = WFUApplication.Images.Resource("wfu_logo_small");
             RecalculateActiveArea();
 
+            //worker events
             loadingWorker.DoWork += LoadingThread;
             loadingWorker.ProgressChanged += LoadingProgress;
             loadingWorker.RunWorkerCompleted += LoadingCompeted;
@@ -70,11 +82,8 @@ namespace WiFindUs.Forms
 
         protected override void OnResize(EventArgs e)
         {
-            base.OnResize(e);
-            if (IsDesignMode)
-                return;
             RecalculateActiveArea();
-            Refresh();
+            base.OnResize(e);            
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -83,77 +92,70 @@ namespace WiFindUs.Forms
             if (IsDesignMode)
                 return;
 
+            //logo
             if (logo != null)
                 e.Graphics.DrawImage(logo, activeArea.Location);
 
             e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            using (Font font = new Font(Font.FontFamily, 32.0f))
-            {
-                e.Graphics.DrawString(
-                    WFUApplication.Name,
-                    font,
-                    Brushes.White,
-                    new Point(activeArea.Left * 2 + logo.Width, activeArea.Top),
-                    StringFormat.GenericTypographic);
-            }
+            //title
+            e.Graphics.DrawString(
+                WFUApplication.Name,
+                Theme.TitleFont,
+                Theme.TextLightBrush,
+                new Point(activeArea.Left * 2 + logo.Width, activeArea.Top),
+                StringFormat.GenericTypographic);
 
-            int top = activeArea.Top + 2*logo.Height;
-            using (Font font = new Font(Font.FontFamily, 14.0f))
-            {
-                string text = WFUApplication.Edition + " Edition";
+            //edition
+            int top = activeArea.Top + 2 * logo.Height;
+            string text = WFUApplication.Edition + " Edition";
+            SizeF sz = e.Graphics.MeasureString(
+                text,
+                Theme.SubtitleFont,
+                activeArea.Width,
+                StringFormat.GenericTypographic);
+            e.Graphics.DrawString(
+                text,
+                Theme.SubtitleFont,
+                Theme.TextLightBrush,
+                new Point(activeArea.Left, top),
+                StringFormat.GenericTypographic);
 
-                SizeF sz = e.Graphics.MeasureString(
-                    text,
-                    font,
-                    activeArea.Width,
-                    StringFormat.GenericTypographic);
+            //version
+            top += (int)sz.Height;
+            e.Graphics.DrawString(
+                "v" + WFUApplication.AssemblyVersion.ToString(),
+                Theme.SubtitleFont,
+                Theme.TextDarkBrush,
+                new Point(activeArea.Left, top),
+                StringFormat.GenericTypographic);
 
-                e.Graphics.DrawString(
-                    text,
-                    font,
-                    Brushes.White,
-                    new Point(activeArea.Left, top),
-                    StringFormat.GenericTypographic);
-
-                top += (int)sz.Height;
-
-                e.Graphics.DrawString(
-                    "v" + WFUApplication.AssemblyVersion.ToString(),
-                    font,
-                    Brushes.Gray,
-                    new Point(activeArea.Left, top),
-                    StringFormat.GenericTypographic);
+            //debug notice
 #if DEBUG
-                top += (int)sz.Height;
+            top += (int)sz.Height;
 
-                e.Graphics.DrawString(
-                    "[Debug Compilation]",
-                    font,
-                    Brushes.Gray,
-                    new Point(activeArea.Left, top),
-                    StringFormat.GenericTypographic);
+            e.Graphics.DrawString(
+                "[Debug Compilation]",
+                Theme.SubtitleFont,
+                Theme.TextDarkBrush,
+                new Point(activeArea.Left, top),
+                StringFormat.GenericTypographic);
 #endif
-            }
-
-                         
+     
+            //status string
             if (statusString.Length > 0)
             {
-                using (Font font = new Font(Font.FontFamily, 11.0f))
-                { 
-                    SizeF sz = e.Graphics.MeasureString(
-                        statusString,
-                        font,
-                        activeArea.Width,
-                        StringFormat.GenericTypographic);
-
-                    e.Graphics.DrawString(
-                        statusString,
-                        font,
-                        Brushes.Gray,
-                        new PointF(activeArea.Left, progressBar.Top-sz.Height*1.5f),
-                        StringFormat.GenericTypographic);
-                }
+                sz = e.Graphics.MeasureString(
+                    statusString,
+                    Font,
+                    activeArea.Width,
+                    StringFormat.GenericTypographic);
+                e.Graphics.DrawString(
+                    statusString,
+                    Font,
+                    Theme.TextDarkBrush,
+                    new PointF(activeArea.Left, progressBar.Top-sz.Height*1.5f),
+                    StringFormat.GenericTypographic);
             }
         }
 
@@ -173,6 +175,12 @@ namespace WiFindUs.Forms
                 base.OnFormClosing(e);
         }
 
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            RecalculateActiveArea();
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
@@ -190,9 +198,6 @@ namespace WiFindUs.Forms
                     break;
                 }
                 worker.ReportProgress(MathHelper.WholePercentage(i + 1, tasks.Count));
-#if DEBUG
-                Thread.Sleep(250);
-#endif
             }
         }
 
