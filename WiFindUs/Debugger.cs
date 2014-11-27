@@ -48,6 +48,8 @@ namespace WiFindUs
 		private static DateTime runningSince;
 		private static PerformanceCounter cpuCounter;
 		private static PerformanceCounter ramCounter;
+        private static List<object[]> logHistory = new List<object[]>();
+        private static bool initialflush = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -183,9 +185,33 @@ namespace WiFindUs
 			Log(Verbosity.Console, text);
 		}
 
+        public static void FlushToConsoles()
+        {
+            System.Diagnostics.Debugger.Log(0, "", "FlushToConsoles()\n");
+            if (Flush())
+                initialflush = true;
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        private static bool Flush()
+        {
+            if (OnDebugOutput == null)
+                return false;
+
+            foreach (object[] arr in logHistory)
+            {
+                try
+                {
+                    OnDebugOutput((Verbosity)arr[0], arr[1] as string, arr[2] as string);
+                }
+                catch (ObjectDisposedException) { }
+            }
+            logHistory.Clear();
+            return true;
+        }
 
 		private static void Log(Verbosity level, string text)
 		{
@@ -203,14 +229,9 @@ namespace WiFindUs
 				}
 			}
 
-			if (OnDebugOutput != null)
-			{
-				try
-				{
-					OnDebugOutput(level, prefix, text);
-				}
-				catch (ObjectDisposedException) { }
-			}
+            logHistory.Add(new object[] { level, prefix, text });
+            if (initialflush)
+                Flush();
 		}
 	}
 }

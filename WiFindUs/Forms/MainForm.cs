@@ -46,6 +46,12 @@ namespace WiFindUs.Forms
             base.SetVisibleCore(IsDesignMode || WFUApplication.SplashLoadingFinished ? value : false);
         }
 
+        protected override void OnFirstShown(EventArgs e)
+        {
+            base.OnFirstShown(e);
+            Debugger.FlushToConsoles();
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////

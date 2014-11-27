@@ -76,15 +76,15 @@ namespace WiFindUs.Forms
             AutoScaleMode = AutoScaleMode.None;
             ShowIcon = true;
             Icon = WFUApplication.Icon;
-            DoubleBuffered = true;
             ResizeRedraw = true;
 
             if (IsDesignMode)
             {
-                Theme = new Theme();
+                theme = WFUApplication.Theme;
                 return;
             }
 
+            DoubleBuffered = true;
             SetStyle(
                 System.Windows.Forms.ControlStyles.UserPaint |
                 System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |

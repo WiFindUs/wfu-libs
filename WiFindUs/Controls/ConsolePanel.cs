@@ -34,7 +34,16 @@ namespace WiFindUs.Controls
 
                 theme = value;
                 BackColor = console.BackColor = input.BackColor = theme.ControlDarkColour;
-                console.Font = input.Font = theme.ConsoleFont;
+                Font = console.Font = input.Font = theme.ConsoleFont;
+                ForeColor = console.ForeColor = input.ForeColor = theme.TextLightColour;
+
+                colors[0] = theme.TextDarkColour; //verbose
+                colors[1] = theme.TextLightColour; //info
+                colors[2] = theme.WarningColour; //warning
+                colors[3] = theme.ErrorColour; //error
+                colors[4] = theme.ErrorColour; //exception
+                colors[5] = theme.HighlightLightColour; //prompts/console
+
                 Refresh();
             }
         }
@@ -45,8 +54,11 @@ namespace WiFindUs.Controls
 
 		public ConsolePanel()
 		{
-			if (DesignMode)
-				return;
+            if (DesignMode)
+            {
+                theme = WFUApplication.Theme;
+                return;
+            }
 			
 			SuspendLayout();
 
@@ -68,15 +80,6 @@ namespace WiFindUs.Controls
 			console.Bounds = new Rectangle(0,0,ClientRectangle.Width,ClientRectangle.Height - input.Height - 1);
 			Controls.Add(console);
 
-			//config
-			colors[0] = WFUApplication.Config.Get("console.verbose", Color.Gray);
-			colors[1] = WFUApplication.Config.Get("console.information", Color.White);
-			colors[2] = WFUApplication.Config.Get("console.warning", Color.Yellow);
-			colors[3] = WFUApplication.Config.Get("console.error", Color.Red);
-			colors[4] = WFUApplication.Config.Get("console.exception", Color.Red);
-			colors[5] = input.ForeColor
-					  = WFUApplication.Config.Get("console.prompts", Color.Green);
-
 			ResumeLayout(false);
 			PerformLayout();
 	
@@ -96,7 +99,16 @@ namespace WiFindUs.Controls
 
 		protected virtual void input_KeyPress(object sender, KeyPressEventArgs e)
 		{
-			;
+			if (e.KeyChar == '\r' || e.KeyChar == '\n')
+            {
+                string command = input.Text.Trim();
+                if (command.Length > 0)
+                {
+                    input.Text = "";
+                    Debugger.C(">" + command);
+                }
+                e.Handled = true;
+            }
 		}
 
 		protected virtual void OnDebugOutput(Debugger.Verbosity level, string prefix, string text)
@@ -111,16 +123,16 @@ namespace WiFindUs.Controls
 				return;
 			}
 
-			if (console.Lines.Length >= MAX_CONSOLE_LINES)
-			{
-				string[] keepLines = new string[MAX_CONSOLE_LINES / 2 + 1];
-				console.Lines.CopyTo(keepLines, MAX_CONSOLE_LINES / 2);
-				console.Lines = keepLines;
-			}
+            if (console.Lines.Length >= MAX_CONSOLE_LINES)
+            {
+                string[] keepLines = new string[MAX_CONSOLE_LINES / 2 + 1];
+                console.Lines.CopyTo(keepLines, MAX_CONSOLE_LINES / 2);
+                console.Lines = keepLines;
+            }
 
-			console.SelectionColor = colors[(int)level];
-			console.AppendText(prefix + text + "\n");
-			SendMessage(console.Handle, 277, (IntPtr)7, IntPtr.Zero);
+            console.SelectionColor = colors[(int)level];
+            console.AppendText(prefix + text + "\n");
+            SendMessage(console.Handle, 277, (IntPtr)7, IntPtr.Zero);
 		}
 
         /////////////////////////////////////////////////////////////////////

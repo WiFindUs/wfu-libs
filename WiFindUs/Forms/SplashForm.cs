@@ -28,7 +28,7 @@ namespace WiFindUs.Forms
         {
             get
             {
-                return statusString;
+                return IsDesignMode ? "Loading operation status" : statusString;
             }
 
             set
@@ -48,16 +48,17 @@ namespace WiFindUs.Forms
 
         public SplashForm(List<Func<bool>> tasks)
         {
-            //form properties
-            FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ControlBox = false;
-            TopMost = true;
             InitializeComponent();
+            RecalculateActiveArea();
 
             if (IsDesignMode)
+            {
+                logo = new Bitmap(75, 97, PixelFormat.Format24bppRgb);
+                using (Graphics grp = Graphics.FromImage(logo))
+                    grp.FillRectangle(Brushes.White, 0, 0, logo.Width, logo.Height);
+                
                 return;
+            }
 
             //set tasks
             if (tasks == null)
@@ -66,7 +67,6 @@ namespace WiFindUs.Forms
             
             //cosmetics
             logo = WFUApplication.Images.Resource("wfu_logo_small");
-            RecalculateActiveArea();
 
             //worker events
             loadingWorker.DoWork += LoadingThread;
@@ -89,18 +89,19 @@ namespace WiFindUs.Forms
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            if (IsDesignMode)
-                return;
+
+            bool design = IsDesignMode;
 
             //logo
             if (logo != null)
                 e.Graphics.DrawImage(logo, activeArea.Location);
 
-            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
+            if (!design)
+                e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
             //title
             e.Graphics.DrawString(
-                WFUApplication.Name,
+                design ? "Application Name" : WFUApplication.Name,
                 Theme.TitleFont,
                 Theme.TextLightBrush,
                 new Point(activeArea.Left * 2 + logo.Width, activeArea.Top),
@@ -108,7 +109,7 @@ namespace WiFindUs.Forms
 
             //edition
             int top = activeArea.Top + 2 * logo.Height;
-            string text = WFUApplication.Edition + " Edition";
+            string text = (design ? "Application" : WFUApplication.Edition) + " Edition";
             SizeF sz = e.Graphics.MeasureString(
                 text,
                 Theme.SubtitleFont,
@@ -124,7 +125,7 @@ namespace WiFindUs.Forms
             //version
             top += (int)sz.Height;
             e.Graphics.DrawString(
-                "v" + WFUApplication.AssemblyVersion.ToString(),
+                "v" + (design ? "1.0.0.0" : WFUApplication.AssemblyVersion.ToString()),
                 Theme.SubtitleFont,
                 Theme.TextDarkBrush,
                 new Point(activeArea.Left, top),
@@ -143,15 +144,15 @@ namespace WiFindUs.Forms
 #endif
      
             //status string
-            if (statusString.Length > 0)
+            if (Status.Length > 0)
             {
                 sz = e.Graphics.MeasureString(
-                    statusString,
+                    Status,
                     Font,
                     activeArea.Width,
                     StringFormat.GenericTypographic);
                 e.Graphics.DrawString(
-                    statusString,
+                    Status,
                     Font,
                     Theme.TextDarkBrush,
                     new PointF(activeArea.Left, progressBar.Top-sz.Height*1.5f),
@@ -159,9 +160,9 @@ namespace WiFindUs.Forms
             }
         }
 
-        protected override void OnShown(EventArgs e)
+        protected override void OnFirstShown(EventArgs e)
         {
-            base.OnShown(e);
+            base.OnFirstShown(e);
             if (IsDesignMode || loadingWorker.IsBusy)
                 return;
             loadingWorker.RunWorkerAsync(tasks);
