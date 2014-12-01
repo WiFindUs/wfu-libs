@@ -60,6 +60,8 @@ namespace WiFindUs
         private static bool splashLoadingFinished = false;
         private static Theme theme = new Theme();
         private static FormWindowState postLoadWindowState = FormWindowState.Maximized;
+        private static string googleAPIKey = "";
+        private static Action<MainForm> mainLaunchAction = null;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -610,6 +612,21 @@ namespace WiFindUs
             set { if (!readOnly) postLoadWindowState = value; }
         }
 
+        /// <summary>
+        /// Gets or sets the Google API key in use by this application.
+        /// </summary>
+        public static string GoogleAPIKey
+        {
+            get { return googleAPIKey; }
+            set { if (!readOnly) googleAPIKey = value ?? ""; }
+        }
+
+        public static Action<MainForm> MainLaunchAction
+        {
+            get { return mainLaunchAction; }
+            set { if (!readOnly) mainLaunchAction = value; }
+        }            
+
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
@@ -675,8 +692,14 @@ namespace WiFindUs
 			Debugger.V("Setting application visual styles and text rendering properties...");
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-			Debugger.V("Invoking MainForm constructor...");
-			Application.Run(mainForm = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { }));
+            Debugger.V("Invoking MainForm constructor...");
+            mainForm = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { });
+			Debugger.V("Invoking Main() launch action...");
+            if (mainLaunchAction == null)
+                DefaultMainLaunch(mainForm);
+            else
+                mainLaunchAction(mainForm);
+			
 			Debugger.V("Application terminating...");
 			running = false;
 
@@ -698,6 +721,11 @@ namespace WiFindUs
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        private static void DefaultMainLaunch(MainForm mainForm)
+        {
+            Application.Run(mainForm);
+        }
 
         private static bool CreateMutex()
         {

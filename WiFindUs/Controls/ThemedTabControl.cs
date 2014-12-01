@@ -42,7 +42,7 @@ namespace WiFindUs.Controls
                 Font = theme.WindowFont;
                 foreach (TabPage tab in TabPages)
                 {
-                    tab.BackColor = theme.ControlLightColour;
+                    tab.BackColor = theme.ControlMidColour;
                     tab.Font = theme.WindowFont;
                 }
             }

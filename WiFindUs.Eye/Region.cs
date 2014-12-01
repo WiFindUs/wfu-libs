@@ -11,8 +11,14 @@ namespace WiFindUs.Eye
     /// </summary>
     public class Region : ILocation, IEquatable<IRegion>, IRegion
     {
+        public static readonly uint GOOGLE_MAPS_CHUNK_MIN_ZOOM = 15;
+        public static readonly uint GOOGLE_MAPS_CHUNK_MAX_ZOOM = 21;
+
+        private static readonly double GOOGLE_MAPS_CHUNK_RADIUS = 0.01126;
+        private static readonly double GOOGLE_MAPS_CHUNK_LONG_SCALE = 1.22;
         private ILocation northWest, northEast, southWest, southEast, center;
         private double latSpan, longSpan, width, height;
+        private uint googleMapsZoomLevel = 0;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -109,6 +115,7 @@ namespace WiFindUs.Eye
         {
             get { return longSpan; }
         }
+
         /// <summary>
         /// The latitude range spanned by this region (from north-to-south / top-to-bottom).
         /// </summary>
@@ -116,6 +123,7 @@ namespace WiFindUs.Eye
         {
             get { return latSpan; }
         }
+
         /// <summary>
         /// The 'horizontal' distance covered by this region, in meters (as per the haversine formula). 
         /// </summary>
@@ -123,12 +131,21 @@ namespace WiFindUs.Eye
         {
             get { return width; }
         }
+
         /// <summary>
         /// The 'vertical' distance covered by this region, in meters (as per the haversine formula). 
         /// </summary>
         public double Height
         {
             get { return height; }
+        }
+
+        /// <summary>
+        /// The google maps zoom level represented by this region, if it was constructed as one. Meaningless otherwise.
+        /// </summary>
+        public uint GoogleMapsZoomLevel
+        {
+            get { return googleMapsZoomLevel; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -173,6 +190,27 @@ namespace WiFindUs.Eye
             southEast = new Location(center.Latitude - latSpan / 2.0, center.Longitude + longSpan / 2.0);
             northEast = new Location(northWest.Latitude, southEast.Longitude);
             southWest = new Location(southEast.Latitude, northWest.Longitude);
+            width = northWest.DistanceTo(northEast);
+            height = northWest.DistanceTo(southWest);
+        }
+
+        public Region(ILocation center, uint googleMapsZoomLevel)
+        {
+            if (center == null)
+                throw new ArgumentNullException("center");
+            if (googleMapsZoomLevel < GOOGLE_MAPS_CHUNK_MIN_ZOOM || googleMapsZoomLevel > GOOGLE_MAPS_CHUNK_MAX_ZOOM)
+                throw new ArgumentOutOfRangeException("googleMapsZoomLevel", "Zoom level must be between "
+                    + GOOGLE_MAPS_CHUNK_MIN_ZOOM + " and " + GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
+
+            this.googleMapsZoomLevel = googleMapsZoomLevel;
+            double scaledRadius = GOOGLE_MAPS_CHUNK_RADIUS / Math.Pow(2.0, (googleMapsZoomLevel - GOOGLE_MAPS_CHUNK_MIN_ZOOM));
+            this.center = center;
+            northWest = new Location(center.Latitude + scaledRadius, center.Longitude - (scaledRadius * GOOGLE_MAPS_CHUNK_LONG_SCALE));
+            southEast = new Location(center.Latitude - scaledRadius,  center.Longitude + (scaledRadius * GOOGLE_MAPS_CHUNK_LONG_SCALE));
+            northEast = new Location(northWest.Latitude, southEast.Longitude);
+            southWest = new Location(southEast.Latitude, northWest.Longitude);
+            latSpan = northWest.Latitude - southEast.Latitude;
+            longSpan = southEast.Longitude - northWest.Longitude;
             width = northWest.DistanceTo(northEast);
             height = northWest.DistanceTo(southWest);
         }

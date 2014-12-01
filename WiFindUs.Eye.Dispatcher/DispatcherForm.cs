@@ -12,10 +12,11 @@ using WiFindUs.Eye;
 using WiFindUs.Extensions;
 using WiFindUs.Forms;
 using WiFindUs.Controls;
+using WiFindUs.Eye.Wave;
 
 namespace WiFindUs.Eye.Dispatcher
 {
-    public partial class DispatcherForm : MainForm
+    public partial class DispatcherForm : MainForm, IMapForm
     {
         private EyeContext eyeContext = null;
 
@@ -23,14 +24,14 @@ namespace WiFindUs.Eye.Dispatcher
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        public EyeContext EyeContext
+        protected EyeContext EyeContext
         {
             get { return eyeContext; }
         }
 
-        protected Panel MapPanel
+        protected MapControl MapControl
         {
-            get { return workingAreaToolStripContainer.ContentPanel; }
+            get { return mapControl; }
         }
 
         protected Panel MinimapPanel
@@ -77,14 +78,47 @@ namespace WiFindUs.Eye.Dispatcher
         }
 
         /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public void RenderMap()
+        {
+            mapControl.Render();
+        }
+
+        /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
+
+        protected override void OnFirstShown(EventArgs e)
+        {
+            base.OnFirstShown(e);
+            double[] locArray = WFUApplication.Config.Get("map.center");
+            if (locArray == null)
+                Debugger.E("Could not find map.center in config files!");
+            else
+            {
+
+                ILocation location = null;
+                try
+                {
+                    location = new Location(locArray);
+                }
+                catch (Exception)
+                {
+                    Debugger.E("Error parsing config map.center as a Location value");
+                }
+
+                if (location != null)
+                    mapControl.CenterLocation = location;
+            }
+        }
 
         protected override void OnThemeChanged(Theme theme)
         {
             base.OnThemeChanged(theme);
-            MapPanel.BackColor = theme.ControlDarkColour;
-            windowStatusStrip.BackColor = theme.ControlMidColour;
+            MapControl.BackColor = theme.ControlDarkColour;
+            windowStatusStrip.BackColor = theme.ControlLightColour;
             infoTabs.BackColor = theme.ControlLightColour;
         }
 

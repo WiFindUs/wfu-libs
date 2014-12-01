@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using WiFindUs.Eye.Wave;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -18,6 +19,8 @@ namespace WiFindUs.Eye.Dispatcher
             WFUApplication.UsesMySQL = true;
             WFUApplication.MySQLContextType = typeof(WiFindUs.Eye.EyeContext);
             WFUApplication.MainFormType = typeof(DispatcherForm);
+            WFUApplication.GoogleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
+            WFUApplication.MainLaunchAction = MapControl.StartRenderLoop;
             WFUApplication.Run(args);
         }
     }

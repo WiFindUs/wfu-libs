@@ -11,11 +11,11 @@ namespace WiFindUs.Eye
     /// </summary>
     public class Atmosphere : IAtmosphere, IEquatable<IAtmosphere>
     {
-        private const double EPSILON_HUMIDITY = 0.01;
-        private const double EPSILON_AIR_PRESSURE = 0.01;
-        private const double EPSILON_TEMPERATURE = 0.5;
-        private const double EPSILON_LIGHT_LEVEL = 1.0;
-        private const double ABSOLUTE_ZERO = -273.15;
+        private static readonly double EPSILON_HUMIDITY = 0.01;
+        private static readonly double EPSILON_AIR_PRESSURE = 0.01;
+        private static readonly double EPSILON_TEMPERATURE = 0.5;
+        private static readonly double EPSILON_LIGHT_LEVEL = 1.0;
+        private static readonly double ABSOLUTE_ZERO = -273.15;
         private double? humidity = null;
         private double? airPressure = null;
         private double? temperature = null;

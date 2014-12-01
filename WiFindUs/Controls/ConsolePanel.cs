@@ -14,7 +14,7 @@ namespace WiFindUs.Controls
         private RichTextBox console;
 		private TextBox input;
 
-		private const int MAX_CONSOLE_LINES = 1024;
+        private static readonly int MAX_CONSOLE_LINES = 1024;
 		private readonly Color[] colors = new Color[6];
 
         /////////////////////////////////////////////////////////////////////

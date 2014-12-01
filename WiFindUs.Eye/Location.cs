@@ -11,10 +11,10 @@ namespace WiFindUs.Eye
     /// </summary>
     public class Location : ILocation, IEquatable<ILocation>
     {
-        private const double EARTH_RADIUS_MEAN = 6378.1370;
-        private const double EPSILON_HORIZONTAL = 0.000001;
-        private const double EPSILON_ACCURACY = 0.5;
-        private const double EPSILON_ALTITUDE = 1.0;
+        private static readonly double EARTH_RADIUS_MEAN = 6378.1370;
+        private static readonly double EPSILON_HORIZONTAL = 0.000001;
+        private static readonly double EPSILON_ACCURACY = 0.5;
+        private static readonly double EPSILON_ALTITUDE = 1.0;
         private double latitude;
         private double longitude;
         private double? altitude = null;
@@ -54,17 +54,33 @@ namespace WiFindUs.Eye
         /// <param name="altitude">The altitude of of the coordinate, as meters above sea level. Use null for 'no data'.</param>
         public Location(double latitude, double longitude, double? accuracy = null, double? altitude = null)
         {
-            if (latitude > 90.0 || latitude < -90.0)
-                throw new ArgumentOutOfRangeException("latitude", "Latitude must be null or between -90.0 and 90.0 (inclusive).");
-            if (longitude > 180.0 || longitude < -180.0)
-                throw new ArgumentOutOfRangeException("longitude", "Longitude must be null or between -180.0 and 180.0 (inclusive).");
-            if (accuracy != null && accuracy <= 0.0)
-                throw new ArgumentOutOfRangeException("Accuracy must be null or greater than 0m.");
-
             this.latitude = latitude;
             this.longitude = longitude;
             this.altitude = altitude;
             this.accuracy = accuracy;
+
+            CheckAssignedValues();
+        }
+
+        /// <summary>
+        /// Creates a new Location object.
+        /// </summary>
+        /// <param name="values">A double[] parameter list in the following order: Latitude, Longitude, Accuracy, Altutide. Must have at least two elements.</param>
+        public Location(params double[] values)
+        {
+            if (values == null)
+                throw new ArgumentNullException("values");
+            if (values.Length < 2)
+                throw new ArgumentOutOfRangeException("values", "Must provide at least to parameters (lat and long).");
+
+            this.latitude = values[0];
+            this.longitude = values[1];
+            if (values.Length > 2)
+                this.altitude = values[2];
+            if (values.Length > 3)
+                this.accuracy = values[3];
+
+            CheckAssignedValues();
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -141,6 +157,20 @@ namespace WiFindUs.Eye
         public double DistanceTo(ILocation other)
         {
             return Distance(this, other);
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        private void CheckAssignedValues()
+        {
+            if (latitude > 90.0 || latitude < -90.0)
+                throw new ArgumentOutOfRangeException("latitude", "Latitude must be null or between -90.0 and 90.0 (inclusive).");
+            if (longitude > 180.0 || longitude < -180.0)
+                throw new ArgumentOutOfRangeException("longitude", "Longitude must be null or between -180.0 and 180.0 (inclusive).");
+            if (accuracy.HasValue && accuracy.Value <= 0.0)
+                throw new ArgumentOutOfRangeException("Accuracy must be null or greater than 0m.");
         }
     }
 }

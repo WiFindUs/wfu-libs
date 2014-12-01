@@ -17,7 +17,7 @@ namespace WiFindUs.Eye
         public event NodeEvent OnLocationChanged;
         public event NodeEvent OnUpdated;
 
-        private const double EPSILON_VOLTAGE = 0.05;
+        private static readonly double EPSILON_VOLTAGE = 0.05;
         private NodeState currentState = null;
 
         /////////////////////////////////////////////////////////////////////

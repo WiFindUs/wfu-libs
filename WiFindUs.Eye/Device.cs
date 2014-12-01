@@ -21,7 +21,7 @@ namespace WiFindUs.Eye
         public event DeviceEvent OnUserChanged;
         public event DeviceEvent OnUpdated;
 
-        private const double EPSILON_BATTERY_LEVEL = 0.5;
+        private static readonly double EPSILON_BATTERY_LEVEL = 0.5;
         private DeviceState currentState = null;
         
         /////////////////////////////////////////////////////////////////////

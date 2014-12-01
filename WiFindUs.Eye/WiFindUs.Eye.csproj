@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -10,8 +10,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WiFindUs.Eye</RootNamespace>
     <AssemblyName>WiFindUs.Eye</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +22,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +32,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Devart.Data, Version=5.0.1085.0, Culture=neutral, PublicKeyToken=09af7300eec23701, processorArchitecture=MSIL" />
@@ -39,11 +44,16 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WaveEngine.Adapter, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86" />
+    <Reference Include="WaveEngine.Common, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86" />
+    <Reference Include="WaveEngine.Components, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86" />
+    <Reference Include="WaveEngine.Framework, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
@@ -69,6 +79,9 @@
     <Compile Include="EyeContext.Waypoint.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\IAtmosphere.cs" />
+    <Compile Include="Interfaces\ILocation.cs" />
+    <Compile Include="Interfaces\IRegion.cs" />
     <Compile Include="Interfaces\IUpdateTimestamped.cs" />
     <Compile Include="Interfaces\ICreationTimestamped.cs" />
     <Compile Include="Interfaces\ILocatable.cs" />
@@ -79,14 +92,23 @@
     <Compile Include="Interfaces\IIndentifiable.cs" />
     <Compile Include="Interfaces\IDeviceLogin.cs" />
     <Compile Include="Location.cs" />
+    <Compile Include="Wave\IMapForm.cs" />
+    <Compile Include="Wave\MapControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Node.cs" />
+    <Compile Include="Wave\MapApplication.cs" />
+    <Compile Include="Wave\MapGame.cs" />
+    <Compile Include="Wave\MapScene.cs" />
+    <Compile Include="Wave\Plane.cs" />
+    <Compile Include="Wave\Mesh.cs" />
     <Compile Include="Region.cs" />
     <Compile Include="NodeState.cs" />
     <Compile Include="DeviceState.cs" />
-    <Compile Include="Interfaces\IAtmosphere.cs" />
-    <Compile Include="Interfaces\ILocation.cs" />
-    <Compile Include="Interfaces\IRegion.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Wave\TerrainChunk.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="User.cs" />
     <Compile Include="Waypoint.cs" />
   </ItemGroup>
@@ -113,7 +135,9 @@
       <LastGenOutput>EyeContext.info</LastGenOutput>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

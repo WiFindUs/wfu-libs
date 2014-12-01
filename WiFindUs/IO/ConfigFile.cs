@@ -22,13 +22,13 @@ namespace WiFindUs.IO
 			= new Regex(@"^\s*$", RegexOptions.Compiled);
 		protected static readonly Regex TRUE
 			= new Regex("^\\s*(1|TRUE|YES|ON)\\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-		protected const String NUM = "[-+]?[0-9]+(?:[.][0-9]*)?";
-		protected const String NUM_PERCENT = NUM + "[%]";
+        protected static readonly String NUM = "[-+]?[0-9]+(?:[.][0-9]*)?";
+        protected static readonly String NUM_PERCENT = NUM + "[%]";
 		protected static readonly Regex COLOUR_RGBA
-			= new Regex("rgba?\\(\\s*(" + NUM_PERCENT + "?)\\s*,\\s*(" + NUM_PERCENT + "?)\\s*,\\s*(" + NUM_PERCENT + "?)\\s*(?:,\\s*(" + NUM_PERCENT + "?)\\s*)?\\)",
+			= new Regex("rgba?\\s*\\(\\s*(" + NUM_PERCENT + "?)\\s*,\\s*(" + NUM_PERCENT + "?)\\s*,\\s*(" + NUM_PERCENT + "?)\\s*(?:,\\s*(" + NUM_PERCENT + "?)\\s*)?\\)",
 				RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		protected static readonly Regex COLOUR_HSLA
-			= new Regex("hsla?\\(\\s*(" + NUM + ")\\s*,\\s*(" + NUM_PERCENT + ")\\s*,\\s*(" + NUM_PERCENT + ")\\s*(?:,\\s*(" + NUM_PERCENT + "?)\\s*)?\\)",
+			= new Regex("hsla?\\s*\\(\\s*(" + NUM + ")\\s*,\\s*(" + NUM_PERCENT + ")\\s*,\\s*(" + NUM_PERCENT + ")\\s*(?:,\\s*(" + NUM_PERCENT + "?)\\s*)?\\)",
 				RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		protected static readonly Regex COLOUR_HEX
 			= new Regex("#([0-9A-F]{3}(?:[0-9A-F]{3}(?:[0-9A-F]{2})?)?)",
@@ -36,6 +36,9 @@ namespace WiFindUs.IO
 		protected static readonly Regex COLOUR_KEYWORD
 			= new Regex("black|silver|gray|white|maroon|red|purple|fuchsia|green|lime|olive|yellow|navy|blue|teal|aqua|transparent",
 				RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        protected static readonly Regex NUMERIC_LIST
+            = new Regex("(" + NUM + ")(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		private Dictionary<String, List<String>> kvps = new Dictionary<String, List<String>>();
 
@@ -160,7 +163,7 @@ namespace WiFindUs.IO
 						String value = kvp.Value[i];
 						if (value == null || value.Length == 0)
 							continue;
-						sb.Append("    " + kvp.Key + (kvp.Value.Count > 0 ? "[" + i + "]" : "") + ": " + value + "\n");
+						sb.Append("    " + kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value + "\n");
 					}
 				}
 			}
@@ -384,6 +387,36 @@ namespace WiFindUs.IO
 			return Get(key, 0, defaultValue);
 		}
 
+        public double[] Get(String key, int index, params double[] defaultValues)
+        {
+			String result = GetValue(key, index);
+			if (result.Length == 0)
+				return defaultValues;
+            
+            Match match = NUMERIC_LIST.Match(result);
+			if (!match.Success)
+                return defaultValues;
+
+            List<double> doubles = new List<double>();
+            for (int i = 1; i < match.Groups.Count; i++)
+            {
+                if (match.Groups[i] == null || match.Groups[i].Value == null || match.Groups[i].Length == 0)
+                    continue;
+                
+                double parseResult;
+                if (Double.TryParse(match.Groups[i].Value, out parseResult))
+                    doubles.Add(parseResult);
+            }
+
+            return doubles.ToArray();
+        }
+
+        public double[] Get(String key, params double[] defaultValues)
+        {
+            return Get(key, 0, defaultValues);
+
+        }
+
 		/////////////////////////////////////////////////////////////////////
 		// SETTERS
 		/////////////////////////////////////////////////////////////////////
@@ -455,13 +488,30 @@ namespace WiFindUs.IO
 			return Set(key, 0, value);
 		}
 
+        public ConfigFile Set(String key, int index, params double[] values)
+        {
+            if (values == null || values.Length == 0)
+                SetValue(key, index, "");
+
+            string str = "";
+            for (int i = 0; i < values.Length; i++)
+                str += (i > 0 ? ", " : "") + values[i].ToString();
+            SetValue(key, index, str);
+            return this;
+        }
+
+        public ConfigFile Set(String key, params double[] values)
+        {
+            return Set(key, 0, values);
+        }
+
 		/////////////////////////////////////////////////////////////////////
 		// DEFAULTERS
 		/////////////////////////////////////////////////////////////////////
 
 		public ConfigFile Default(String key, int index, int defaultValue, int min, int max)
 		{
-			return Set(key, index, Math.Min(Math.Max(Get(key, defaultValue), min), max));
+			return Set(key, index, Math.Min(Math.Max(Get(key, index, defaultValue), min), max));
 		}
 
 		public ConfigFile Default(String key, int index, int defaultValue)
@@ -476,7 +526,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, float defaultValue, float min, float max)
 		{
-			return Set(key, index, Math.Min(Math.Max(Get(key, defaultValue), min), max));
+            return Set(key, index, Math.Min(Math.Max(Get(key, index, defaultValue), min), max));
 		}
 
 		public ConfigFile Default(String key, int index, float defaultValue)
@@ -491,7 +541,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, double defaultValue, double min, double max)
 		{
-			return Set(key, index, Math.Min(Math.Max(Get(key, defaultValue), min), max));
+            return Set(key, index, Math.Min(Math.Max(Get(key, index, defaultValue), min), max));
 		}
 
 		public ConfigFile Default(String key, int index, double defaultValue)
@@ -506,7 +556,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, String defaultValue)
 		{
-			return Set(key, index, Get(key, defaultValue));
+            return Set(key, index, Get(key, index, defaultValue));
 		}
 
 		public ConfigFile Default(String key, String defaultValue)
@@ -516,7 +566,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, bool defaultValue)
 		{
-			return Set(key, index, Get(key, defaultValue));
+            return Set(key, index, Get(key, index, defaultValue));
 		}
 
 		public ConfigFile Default(String key, bool defaultValue)
@@ -526,13 +576,23 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, Color defaultValue)
 		{
-			return Set(key, index, Get(key, defaultValue));
+            return Set(key, index, Get(key, index, defaultValue));
 		}
 
 		public ConfigFile Default(String key, Color defaultValue)
 		{
 			return Default(key, 0, defaultValue);
 		}
+
+        public ConfigFile Default(String key, int index, params double[] defaultValues)
+        {
+            return Set(key, index, Get(key, index, defaultValues));
+        }
+
+        public ConfigFile Default(String key, params double[] defaultValues)
+        {
+            return Default(key, 0, defaultValues);
+        }
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
