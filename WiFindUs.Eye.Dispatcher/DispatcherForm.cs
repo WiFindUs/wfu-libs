@@ -19,6 +19,7 @@ namespace WiFindUs.Eye.Dispatcher
     public partial class DispatcherForm : MainForm, IMapForm
     {
         private EyeContext eyeContext = null;
+        private EyePacketListener eyeListener = null;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -60,6 +61,7 @@ namespace WiFindUs.Eye.Dispatcher
                 tasks.Add(PreCacheNodes);
                 tasks.Add(PreCacheNodeStates);
                 tasks.Add(PreCacheWaypoints);
+                tasks.Add(StartListener);
                 return tasks;
             }
         }
@@ -122,6 +124,16 @@ namespace WiFindUs.Eye.Dispatcher
             infoTabs.BackColor = theme.ControlLightColour;
         }
 
+        protected override void OnDisposing()
+        {
+            if (eyeListener != null)
+            {
+                eyeListener.Dispose();
+                eyeListener = null;
+            }
+            base.OnDisposing();
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
@@ -172,6 +184,13 @@ namespace WiFindUs.Eye.Dispatcher
             WFUApplication.SplashStatus = "Pre-caching waypoints";
             foreach (Waypoint waypoint in EyeContext.Waypoints)
                 ;
+            return true;
+        }
+
+        private bool StartListener()
+        {
+            WFUApplication.SplashStatus = "Creating UDP listener";
+            eyeListener = new EyePacketListener(WFUApplication.Config.Get("server.udp_port", 33339));
             return true;
         }
     }

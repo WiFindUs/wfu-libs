@@ -141,5 +141,17 @@ namespace WiFindUs.Forms
         {
 
         }
+
+        protected virtual void OnDisposing()
+        {
+
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                OnDisposing();
+            base.Dispose(disposing);
+        }
     }
 }

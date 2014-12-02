@@ -92,7 +92,8 @@ namespace WiFindUs.Eye.Wave
 
         public void Render()
         {
-            mapApp.Render();
+            if (mapApp != null)
+                mapApp.Render();
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -127,17 +128,11 @@ namespace WiFindUs.Eye.Wave
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (input != null)
-            {
-                this.input.MouseState.X = e.X;
-                this.input.MouseState.Y = e.Y;
-            }
-            else
-            {
-                this.input = WaveServices.Input;
-                if (this.input != null)
-                    this.input.IsEnabled = false;
-            }
+
+            if (!CheckInputManager())
+                return;
+            input.MouseState.X = e.X;
+            input.MouseState.Y = e.Y;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -156,6 +151,8 @@ namespace WiFindUs.Eye.Wave
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
+            if (!CheckInputManager())
+                return;
             this.input.MouseState.Wheel += e.Delta > 0 ? 1 : -1;
         }
 
@@ -190,16 +187,22 @@ namespace WiFindUs.Eye.Wave
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        private void SetMouseButtonState(MouseEventArgs e, bool pressed)
+        private bool CheckInputManager()
         {
             if (input == null)
             {
                 input = WaveServices.Input;
                 if (input != null)
                     input.IsEnabled = false;
-                else
-                    return;
             }
+
+            return input != null;
+        }
+
+        private void SetMouseButtonState(MouseEventArgs e, bool pressed)
+        {
+            if (!CheckInputManager())
+                return;
             
             WaveEngine.Common.Input.ButtonState state = pressed ?
                 WaveEngine.Common.Input.ButtonState.Pressed : WaveEngine.Common.Input.ButtonState.Release;
@@ -222,14 +225,8 @@ namespace WiFindUs.Eye.Wave
 
         private void SetKeyboardButtonState(KeyEventArgs e, bool pressed)
         {
-            if (input == null)
-            {
-                input = WaveServices.Input;
-                if (input != null)
-                    input.IsEnabled = false;
-                else
-                    return;
-            }
+            if (!CheckInputManager())
+                return;
 
             WaveEngine.Common.Input.ButtonState state = pressed ?
                 WaveEngine.Common.Input.ButtonState.Pressed : WaveEngine.Common.Input.ButtonState.Release;

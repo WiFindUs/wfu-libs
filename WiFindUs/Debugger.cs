@@ -201,14 +201,19 @@ namespace WiFindUs
             if (OnDebugOutput == null)
                 return false;
 
-            foreach (object[] arr in logHistory)
+            try
             {
-                try
+                foreach (object[] arr in logHistory)
                 {
-                    OnDebugOutput((Verbosity)arr[0], arr[1] as string, arr[2] as string);
+                    try
+                    {
+                        OnDebugOutput((Verbosity)arr[0], arr[1] as string, arr[2] as string);
+                    }
+                    catch (ObjectDisposedException) { }
                 }
-                catch (ObjectDisposedException) { }
+                
             }
+            catch (InvalidOperationException) {  }
             logHistory.Clear();
             return true;
         }

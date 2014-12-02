@@ -85,15 +85,26 @@ namespace WiFindUs.Eye.Wave
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
-        public void SetPosition()
+        public void CalculatePosition()
         {
             if (baseChunk == null)
                 transform3D.Position = new Vector3(0f, 0f, 0f);
             else
             {
-                float start = -(baseChunk.Size / 2.0f) + size / 2.0f;
-                transform3D.Position = new Vector3(start + (column * size), 0.0f, start + (row * size));
+                float start = (baseChunk.Size / -2.0f) + (size / 2.0f);
+                transform3D.Position = new Vector3(
+                    start + (column * size),
+                    0.0f,
+                    start + (row * size));
             }
+        }
+
+        public void CalculateLocation()
+        {
+            if (baseChunk == null)
+                return;
+
+
         }
 
         /////////////////////////////////////////////////////////////////////

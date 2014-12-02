@@ -124,11 +124,7 @@ namespace WiFindUs.Controls
 			}
 
             if (console.Lines.Length >= MAX_CONSOLE_LINES)
-            {
-                string[] keepLines = new string[MAX_CONSOLE_LINES / 2 + 1];
-                console.Lines.CopyTo(keepLines, MAX_CONSOLE_LINES / 2);
-                console.Lines = keepLines;
-            }
+                console.Clear();
 
             console.SelectionColor = colors[(int)level];
             console.AppendText(prefix + text + "\n");
