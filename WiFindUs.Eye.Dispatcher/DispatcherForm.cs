@@ -13,6 +13,8 @@ using WiFindUs.Extensions;
 using WiFindUs.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Eye.Wave;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -20,6 +22,8 @@ namespace WiFindUs.Eye.Dispatcher
     {
         private EyeContext eyeContext = null;
         private EyePacketListener eyeListener = null;
+        protected static readonly Regex PACKET_KVP
+            = new Regex("^([a-zA-Z0-9_\\-.]+)\\s*[:=]\\s*(.+)\\s*$");
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -57,9 +61,9 @@ namespace WiFindUs.Eye.Dispatcher
                 List<Func<bool>> tasks = base.LoadingTasks;
                 tasks.Add(PreCacheUsers);
                 tasks.Add(PreCacheDevices);
-                tasks.Add(PreCacheDeviceStates);
+                tasks.Add(PreCacheDeviceHistories);
                 tasks.Add(PreCacheNodes);
-                tasks.Add(PreCacheNodeStates);
+                tasks.Add(PreCacheNodeHistories);
                 tasks.Add(PreCacheWaypoints);
                 tasks.Add(StartListener);
                 return tasks;
@@ -77,6 +81,7 @@ namespace WiFindUs.Eye.Dispatcher
                 return;
             eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.EyeContext;
             WFUApplication.StartSplashLoading(LoadingTasks);
+            MapScene.SceneStarted += MapScene_SceneStarted;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -88,6 +93,18 @@ namespace WiFindUs.Eye.Dispatcher
             mapControl.Render();
         }
 
+        public void SetApplicationStatus(string text, Color colour)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<string, Color>(SetApplicationStatus), new object[] { text, colour });
+                return;
+            }
+
+            toolStripStatusLabel.Text = text ?? "";
+            windowStatusStrip.BackColor = colour;
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
@@ -95,25 +112,10 @@ namespace WiFindUs.Eye.Dispatcher
         protected override void OnFirstShown(EventArgs e)
         {
             base.OnFirstShown(e);
-            double[] locArray = WFUApplication.Config.Get("map.center");
-            if (locArray == null)
-                Debugger.E("Could not find map.center in config files!");
-            else
-            {
-
-                ILocation location = null;
-                try
-                {
-                    location = new Location(locArray);
-                }
-                catch (Exception)
-                {
-                    Debugger.E("Error parsing config map.center as a Location value");
-                }
-
-                if (location != null)
-                    mapControl.CenterLocation = location;
-            }
+            SetApplicationStatus("Initializing 3D scene...", Theme.WarningColour);
+#if DEBUG
+            infoTabs.SelectedIndex = 1;
+#endif
         }
 
         protected override void OnThemeChanged(Theme theme)
@@ -121,13 +123,21 @@ namespace WiFindUs.Eye.Dispatcher
             base.OnThemeChanged(theme);
             MapControl.BackColor = theme.ControlDarkColour;
             windowStatusStrip.BackColor = theme.ControlLightColour;
+            windowStatusStrip.ForeColor = theme.TextLightColour;
             infoTabs.BackColor = theme.ControlLightColour;
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            updateTimer.Enabled = false;
+            base.OnFormClosed(e);
         }
 
         protected override void OnDisposing()
         {
             if (eyeListener != null)
             {
+                eyeListener.PacketReceived -= eyeListener_PacketReceived;
                 eyeListener.Dispose();
                 eyeListener = null;
             }
@@ -155,10 +165,10 @@ namespace WiFindUs.Eye.Dispatcher
             return true;
         }
 
-        private bool PreCacheDeviceStates()
+        private bool PreCacheDeviceHistories()
         {
             WFUApplication.SplashStatus = "Pre-caching device history";
-            foreach (DeviceState state in EyeContext.DeviceStates)
+            foreach (DeviceHistory history in EyeContext.DeviceHistories)
                 ;
             return true;
         }
@@ -171,10 +181,10 @@ namespace WiFindUs.Eye.Dispatcher
             return true;
         }
 
-        private bool PreCacheNodeStates()
+        private bool PreCacheNodeHistories()
         {
             WFUApplication.SplashStatus = "Pre-caching node history";
-            foreach (NodeState state in EyeContext.NodeStates)
+            foreach (NodeHistory history in EyeContext.NodeHistories)
                 ;
             return true;
         }
@@ -192,6 +202,91 @@ namespace WiFindUs.Eye.Dispatcher
             WFUApplication.SplashStatus = "Creating UDP listener";
             eyeListener = new EyePacketListener(WFUApplication.Config.Get("server.udp_port", 33339));
             return true;
+        }
+
+        private void MapScene_SceneStarted(MapScene obj)
+        {
+            MapScene.SceneStarted -= MapScene_SceneStarted;
+
+            double[] locArray = WFUApplication.Config.Get("map.center");
+            if (locArray == null)
+                Debugger.E("Could not find map.center in config files!");
+            else
+            {
+
+                ILocation location = null;
+                try
+                {
+                    location = new Location(locArray);
+                }
+                catch (Exception)
+                {
+                    Debugger.E("Error parsing config map.center as a Location value");
+                }
+
+                if (location != null)
+                {
+                    Debugger.I("Setting map center to " + location.ToString());
+                    obj.CenterLocation = location;
+                }
+            }
+
+            SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
+            eyeListener.PacketReceived += eyeListener_PacketReceived;
+            updateTimer.Interval = WFUApplication.Config.Get("mysql.submit_rate", 30000);
+            updateTimer.Enabled = true;
+        }
+
+        private void eyeListener_PacketReceived(EyePacket obj)
+        {
+            Debugger.V(obj.ToString());
+
+            if (obj.Type.CompareTo("DEV") == 0)
+            {
+                Device device = EyeContext.Device(obj.ID);
+
+                string[] payloads = obj.Payload.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+                long userID = -1;
+                if (payloads != null)
+                {
+                    foreach (string token in payloads)
+                    {
+                        Match match = PACKET_KVP.Match(token);
+                        if (!match.Success)
+                            continue;
+                        switch (match.Groups[1].Value.ToLower())
+                        {
+                            case "dt": device.Type = match.Groups[2].Value; break;
+                            case "lat": device.Latitude = Double.Parse(match.Groups[2].Value); break;
+                            case "long": device.Longitude = Double.Parse(match.Groups[2].Value); break;
+                            case "acc": device.Accuracy = Double.Parse(match.Groups[2].Value); break;
+                            case "alt": device.Altitude = Double.Parse(match.Groups[2].Value); break;
+                            case "chg": device.Charging = Int32.Parse(match.Groups[2].Value) == 1; break;
+                            case "batt": device.BatteryLevel = Double.Parse(match.Groups[2].Value); break;
+                            case "user":
+                                try
+                                {
+                                    userID = Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber);
+                                    User user = EyeContext.User(userID);
+                                    if (user == null)
+                                        userID = -1;
+                                    else
+                                        device.UserID = userID;
+                                }
+                                catch (FormatException) { }
+                                break;
+                        }
+                    }
+                }
+                if (userID < 0)
+                    device.UserID = null;
+            }
+        }
+
+        private void updateTimer_Tick(object sender, EventArgs e)
+        {
+            EyeContext.SubmitChangesThreaded();
         }
     }
 }

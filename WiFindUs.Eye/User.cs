@@ -5,14 +5,13 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public partial class User : IIndentifiable, ICreationTimestamped
+    public partial class User
     {
-        public delegate void UserEvent(User sender);
-        public static event UserEvent OnUserCreated;
-        public event UserEvent OnUserTypeChanged;
-        public event UserEvent OnUserFirstNameChanged;
-        public event UserEvent OnUserMiddleNameChanged;
-        public event UserEvent OnUserNameLastChanged;
+        public static event Action<User> OnUserCreated;
+        public event Action<User> OnUserTypeChanged;
+        public event Action<User> OnUserFirstNameChanged;
+        public event Action<User> OnUserMiddleNameChanged;
+        public event Action<User> OnUserNameLastChanged;
 
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS

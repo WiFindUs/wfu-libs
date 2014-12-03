@@ -2,23 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Waypoint : ILocation, ILocatable, IIndentifiable, ICreationTimestamped
+    public partial class Waypoint : ILocation, ILocatable
     {
-        public delegate void WaypointEvent(Waypoint sender);
-        public static event WaypointEvent OnWaypointCreated;
-        public event WaypointEvent OnLocationChanged;
-        public event WaypointEvent OnWaypointTypeChanged;
-        public event WaypointEvent OnWaypointCategoryChanged;
-        public event WaypointEvent OnWaypointDescriptionChanged;
-        public event WaypointEvent OnWaypointSeverityChanged;
-        public event WaypointEvent OnWaypointCodeChanged;
-        public event WaypointEvent OnReportingUserChanged;
-        public event WaypointEvent OnWaypointArchivedChanged;
-        public event WaypointEvent OnNextWaypointChanged;
-        public event WaypointEvent OnAssignedDevicesChanged;
+        public static event Action<Waypoint> OnWaypointCreated;
+        public event Action<Waypoint> OnWaypointLocationChanged;
+        public event Action<Waypoint> OnWaypointTypeChanged;
+        public event Action<Waypoint> OnWaypointCategoryChanged;
+        public event Action<Waypoint> OnWaypointDescriptionChanged;
+        public event Action<Waypoint> OnWaypointSeverityChanged;
+        public event Action<Waypoint> OnWaypointCodeChanged;
+        public event Action<Waypoint> OnWaypointReportingUserChanged;
+        public event Action<Waypoint> OnWaypointArchivedChanged;
+        public event Action<Waypoint> OnWaypointNextWaypointChanged;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -32,47 +31,31 @@ namespace WiFindUs.Eye
             }
         }
 
+        public bool HasLatLong
+        {
+            get
+            {
+                return Latitude.HasValue
+                    && Longitude.HasValue;
+            }
+        }
+
+        public bool EmptyLocation
+        {
+            get
+            {
+                return !Latitude.HasValue
+                    && !Longitude.HasValue
+                    && !Accuracy.HasValue
+                    && !Altitude.HasValue;
+            }
+        }
+
         public double? Accuracy
         {
             get { return 0.0; }
         }
 
-        public bool IsArchived
-        {
-            get { return ArchivedInternal; }
-            set
-            {
-                if (ArchivedInternal || !value)
-                    return;
-
-                //store users
-                List<Device> assignedDevices = new List<Device>();
-                foreach (Device device in AssignedDevices)
-                {
-                    if (device.User != null)
-                        ArchivedRespondersInternal.Add(device.User);
-                    assignedDevices.Add(device);
-                }
-
-                //unassign devices
-                foreach (Device device in assignedDevices)
-                    device.AssignedWaypoint = null;
-
-                //store time and set flag
-                ArchivedTime = DateTime.UtcNow;
-                ArchivedInternal = true;
-            }
-        }
-
-        public List<User> ArchivedResponders
-        {
-            get { return IsArchived ? new List<User>() : new List<User>(ArchivedRespondersInternal); }
-        }
-
-        public DateTime? Archived
-        {
-            get { return IsArchived ? ArchivedTime : null; }
-        }
 
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
@@ -83,56 +66,66 @@ namespace WiFindUs.Eye
             return WiFindUs.Eye.Location.Distance(this, other);
         }
 
+        public void Archive()
+        {
+            if (Archived)
+                return;
+
+            //store users
+            List<Device> assignedDevices = new List<Device>();
+            foreach (Device device in AssignedDevices)
+            {
+                if (device.User != null)
+                    ArchivedResponders.Add(device.User);
+                assignedDevices.Add(device);
+            }
+
+            //unassign devices
+            foreach (Device device in assignedDevices)
+                device.AssignedWaypoint = null;
+
+            //store time and set flag
+            ArchivedTime = DateTime.UtcNow.UnixTimestamp();
+            Archived = true;
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
         partial void OnCreated()
         {
-            AssignedDevices.ListChanged += AssignedDevices_ListChanged;
             if (OnWaypointCreated != null)
                 OnWaypointCreated(this);
         }
 
-        private void AssignedDevices_ListChanged(object sender, System.ComponentModel.ListChangedEventArgs e)
-        {
-            if (OnAssignedDevicesChanged != null)
-                OnAssignedDevicesChanged(this);
-        }
-
         partial void OnNextWaypointIDChanged()
         {
-            if (OnNextWaypointChanged != null)
-                OnNextWaypointChanged(this);
-        }
-
-        partial void OnArchivedInternalChanged()
-        {
-            if (OnWaypointArchivedChanged != null)
-                OnWaypointArchivedChanged(this);
+            if (OnWaypointNextWaypointChanged != null)
+                OnWaypointNextWaypointChanged(this);
         }
 
         partial void OnReportedByIDChanged()
         {
-            if (OnReportingUserChanged != null)
-                OnReportingUserChanged(this);
+            if (OnWaypointReportingUserChanged != null)
+                OnWaypointReportingUserChanged(this);
         }
 
         partial void OnLatitudeChanged()
         {
-            if (OnLocationChanged != null)
-                OnLocationChanged(this);
+            if (OnWaypointLocationChanged != null)
+                OnWaypointLocationChanged(this);
         }
 
         partial void OnLongitudeChanged()
         {
-            if (OnLocationChanged != null)
-                OnLocationChanged(this);
+            if (OnWaypointLocationChanged != null)
+                OnWaypointLocationChanged(this);
         }
 
         partial void OnAltitudeChanged()
         {
-            if (OnLocationChanged != null)
-                OnLocationChanged(this);
+            if (OnWaypointLocationChanged != null)
+                OnWaypointLocationChanged(this);
         }
 
         partial void OnCategoryChanged()
@@ -165,209 +158,11 @@ namespace WiFindUs.Eye
                 OnWaypointSeverityChanged(this);
         }
 
-        /*
-
-
-        public List<IUser> ArchivedResponders
+        partial void OnArchivedChanged()
         {
-            get
-            {
-                return new List<IUser>(ArchivedResponders);
-            }
-        }
+            if (OnWaypointArchivedChanged != null)
+                OnWaypointArchivedChanged(this);
 
-        public List<IDevice> AssignedDevices
-        {
-            get
-            {
-                return new List<IDevice>(AssignedDevices);
-            }
         }
-
-        public IWaypoint NextWaypoint
-        {
-            get
-            {
-                return NextWaypoint;
-            }
-            set
-            {
-                if (value == null)
-                    NextWaypoint = null;
-                else
-                {
-                    Waypoint waypoint = value as Waypoint;
-                    if (waypoint == null)
-                        throw new InvalidOperationException("You must use the database type when making this assignment!");
-                    NextWaypoint = waypoint;
-                }
-            }
-        }
-
-        public IUser ReportingUser
-        {
-            get
-            {
-                return ReportingUser;
-            }
-            set
-            {
-                if (value == null)
-                    ReportingUser = null;
-                else
-                {
-                    DBUser user = value as DBUser;
-                    if (user == null)
-                        throw new InvalidOperationException("You must use the database type when making this assignment!");
-                    ReportingUser = user;
-                }
-            }
-        }
-         * */
-
-        /*
-        
-        public bool Archived
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public List<IUser> ArchivedResponders
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public DateTime? ArchivedTime
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public List<IDevice> AssignedDevices
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public string Category
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int Code
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public DateTime Created
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public string Description
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public IWaypoint NextWaypoint
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public IUser ReportingUser
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public int Severity
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public string Type
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public double Latitude
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public double Longitude
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public double? Accuracy
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public double? Altitude
-        {
-            get { throw new NotImplementedException(); }
-        }
-
-        public double DistanceTo(ILocation other)
-        {
-            return Location.Distance(this, other);
-        }
-
-        */
     }
 }

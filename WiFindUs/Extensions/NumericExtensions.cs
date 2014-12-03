@@ -72,5 +72,14 @@ namespace WiFindUs.Extensions
                 return false;
             return true;
         }
+
+        /////////////////////////////////////////////////////////////////////
+        // DATETIMES
+        /////////////////////////////////////////////////////////////////////
+
+        public static long UnixTimestamp(this DateTime dt)
+        {
+            return (long)(dt.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+        }
     }
 }

@@ -11,5 +11,6 @@ namespace WiFindUs.Eye
         double? AirPressure { get; }
         double? Temperature { get; }
         double? LightLevel { get; }
+        bool EmptyAtmosphere { get; }
     }
 }

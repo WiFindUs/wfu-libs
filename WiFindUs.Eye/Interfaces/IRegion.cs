@@ -10,8 +10,10 @@ namespace WiFindUs.Eye
         bool Contains(ILocation location);
         double Height { get; }
         double LatitudinalSpan { get; }
-        Point LocationToScreen(Rectangle screenBounds, double latitude, double longitude);
-        Point LocationToScreen(Rectangle screenBounds, ILocation location);
+        WaveEngine.Common.Math.Vector3 LocationToVector(WaveEngine.Common.Math.Vector3 tl, WaveEngine.Common.Math.Vector3 br, double latitude, double longitude);
+        WaveEngine.Common.Math.Vector3 LocationToVector(WaveEngine.Common.Math.Vector3 tl, WaveEngine.Common.Math.Vector3 br, ILocation location);
+        System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude);
+        System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, ILocation location);
         double LongitudinalSpan { get; }
         ILocation NorthEast { get; }
         ILocation NorthWest { get; }

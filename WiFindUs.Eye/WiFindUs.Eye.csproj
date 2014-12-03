@@ -59,12 +59,16 @@
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="EyeContext.cs" />
+    <Compile Include="EyeContext.DeviceHistory.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="EyeContext.NodeHistory.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
     <Compile Include="EyePacket.cs" />
     <Compile Include="EyePacketListener.cs" />
     <Compile Include="EyeContext.Device.cs">
-      <DependentUpon>EyeContext.lqml</DependentUpon>
-    </Compile>
-    <Compile Include="EyeContext.DeviceState.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>
     <Compile Include="EyeContext.EyeContext.cs">
@@ -73,28 +77,20 @@
     <Compile Include="EyeContext.Node.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>
-    <Compile Include="EyeContext.NodeState.cs">
-      <DependentUpon>EyeContext.lqml</DependentUpon>
-    </Compile>
     <Compile Include="EyeContext.User.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>
     <Compile Include="EyeContext.Waypoint.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>
+    <Compile Include="Interfaces\IBatteryStats.cs" />
     <Compile Include="Interfaces\IAtmosphere.cs" />
     <Compile Include="Interfaces\ILocation.cs" />
     <Compile Include="Interfaces\IRegion.cs" />
-    <Compile Include="Interfaces\IUpdateTimestamped.cs" />
-    <Compile Include="Interfaces\ICreationTimestamped.cs" />
     <Compile Include="Interfaces\ILocatable.cs" />
     <Compile Include="Interfaces\IAtmospheric.cs" />
-    <Compile Include="Interfaces\IUserClient.cs" />
-    <Compile Include="Interfaces\INodeClient.cs" />
-    <Compile Include="Interfaces\IDeviceClient.cs" />
-    <Compile Include="Interfaces\IIndentifiable.cs" />
-    <Compile Include="Interfaces\IDeviceLogin.cs" />
     <Compile Include="Location.cs" />
+    <Compile Include="Wave\DeviceBehaviour.cs" />
     <Compile Include="Wave\IMapForm.cs" />
     <Compile Include="Wave\MapControl.cs">
       <SubType>Component</SubType>
@@ -107,8 +103,8 @@
     <Compile Include="Wave\Plane.cs" />
     <Compile Include="Wave\Mesh.cs" />
     <Compile Include="Region.cs" />
-    <Compile Include="NodeState.cs" />
-    <Compile Include="DeviceState.cs" />
+    <Compile Include="NodeHistory.cs" />
+    <Compile Include="DeviceHistory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Wave\TerrainChunk.cs">
       <SubType>Code</SubType>

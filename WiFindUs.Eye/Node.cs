@@ -7,92 +7,67 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Node : IIndentifiable, ILocatable, ICreationTimestamped, IUpdateTimestamped
+    public partial class Node : ILocatable, ILocation
     {
-        public delegate void NodeEvent(Node sender);
-        public static event NodeEvent OnNodeCreated;
-        public event NodeEvent OnIPAddressChanged;
-        public event NodeEvent OnVoltageChanged;
-        public event NodeEvent OnNumberChanged;
-        public event NodeEvent OnLocationChanged;
-        public event NodeEvent OnUpdated;
-
-        private static readonly double EPSILON_VOLTAGE = 0.05;
-        private NodeState currentState = null;
+        public static event Action<Node> OnNodeCreated;
+        public event Action<Node> OnNodeUpdated;
+        public event Action<Node> OnNodeLoaded;
+        public event Action<Node> OnNodeNumberChanged;
+        public event Action<Node> OnNodeIPAddressChanged;
+        public event Action<Node> OnNodeLocationChanged;
+        public event Action<Node> OnNodeVoltageChanged;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        protected NodeState State
-        {
-            get
-            {
-                return currentState;
-            }
-            set
-            {
-                if (value == currentState)
-                    return;
-                NodeState oldState = currentState;
-                currentState = value;
-
-                if (oldState == null || currentState == null)
-                {
-                    if (OnLocationChanged != null)
-                        OnLocationChanged(this);
-                    if (OnVoltageChanged != null)
-                        OnVoltageChanged(this);
-                    if (OnIPAddressChanged != null)
-                        OnIPAddressChanged(this);
-                    if (OnNumberChanged != null)
-                        OnNumberChanged(this);
-                }
-                else
-                {
-                    if (!WiFindUs.Eye.Location.Equals(oldState, currentState) && OnLocationChanged != null)
-                        OnLocationChanged(this);
-                    if (oldState.Number != currentState.Number && OnNumberChanged != null)
-                        OnNumberChanged(this);
-                    if (oldState.IPAddressRaw != currentState.IPAddressRaw && OnIPAddressChanged != null)
-                        OnIPAddressChanged(this);
-                    if (!oldState.Voltage.Tolerance(currentState.Voltage, EPSILON_VOLTAGE) && OnVoltageChanged != null)
-                        OnVoltageChanged(this);
-                }
-                if (OnUpdated != null)
-                    OnUpdated(this);
-            }
-        }
-
         public ILocation Location
         {
             get
             {
-                return State;
+                return this;
             }
-        }
-
-        public DateTime Updated
-        {
-            get { return State == null ? Created : State.Created; }
         }
 
         public IPAddress IPAddress
         {
             get
             {
-                return State == null ? null : new IPAddress(State.IPAddressRaw);
+                return IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
+            }
+            set
+            {
+                IPAddressRaw = value == null ? null : new Nullable<long>(value.Address);
             }
         }
 
-        public double Voltage
+        public bool HasLatLong
         {
-            get { return State == null ? 0.0 : State.Voltage.GetValueOrDefault(); }
+            get
+            {
+                return Latitude.HasValue
+                    && Longitude.HasValue;
+            }
         }
 
-        public long Number
+        public bool EmptyLocation
         {
-            get { return State == null ? 0 : State.Number; }
+            get
+            {
+                return !Latitude.HasValue
+                    && !Longitude.HasValue
+                    && !Accuracy.HasValue
+                    && !Altitude.HasValue;
+            }
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public double DistanceTo(ILocation other)
+        {
+            return WiFindUs.Eye.Location.Distance(this, other);
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -101,18 +76,62 @@ namespace WiFindUs.Eye
 
         partial void OnCreated()
         {
-            NodeStates.ListChanged += NodeStates_ListChanged;
             if (OnNodeCreated != null)
                 OnNodeCreated(this);
         }
 
-        private void NodeStates_ListChanged(object sender, System.ComponentModel.ListChangedEventArgs e)
+        partial void OnLoaded()
         {
-            NodeState current = null;
-            foreach (NodeState state in NodeStates)
-                if (current == null || state.Created.Ticks > current.Created.Ticks)
-                    current = state;
-            State = current;
+            if (OnNodeLoaded != null)
+                OnNodeLoaded(this);
+        }
+
+        partial void OnIPAddressRawChanged()
+        {
+            if (OnNodeIPAddressChanged != null)
+                OnNodeIPAddressChanged(this);
+        }
+
+        partial void OnAccuracyChanged()
+        {
+            if (OnNodeLocationChanged != null)
+                OnNodeLocationChanged(this);
+        }
+
+        partial void OnAltitudeChanged()
+        {
+            if (OnNodeLocationChanged != null)
+                OnNodeLocationChanged(this);
+        }
+
+        partial void OnLatitudeChanged()
+        {
+            if (OnNodeLocationChanged != null)
+                OnNodeLocationChanged(this);
+        }
+
+        partial void OnLongitudeChanged()
+        {
+            if (OnNodeLocationChanged != null)
+                OnNodeLocationChanged(this);
+        }
+
+        partial void OnNumberChanged()
+        {
+            if (OnNodeNumberChanged != null)
+                OnNodeNumberChanged(this);
+        }
+
+        partial void OnUpdatedChanged()
+        {
+            if (OnNodeUpdated != null)
+                OnNodeUpdated(this);
+        }
+
+        partial void OnVoltageChanged()
+        {
+            if (OnNodeVoltageChanged != null)
+                OnNodeVoltageChanged(this);
         }
     }
 }

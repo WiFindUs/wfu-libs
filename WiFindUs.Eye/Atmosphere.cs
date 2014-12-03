@@ -41,6 +41,16 @@ namespace WiFindUs.Eye
         {
             get { return lightLevel; }
         }
+        public bool EmptyAtmosphere
+        {
+            get
+            {
+                return !humidity.HasValue
+                    && !temperature.HasValue
+                    && !airPressure.HasValue
+                    && !lightLevel.HasValue;
+            }
+        }
         
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS

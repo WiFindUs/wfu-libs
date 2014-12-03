@@ -703,7 +703,14 @@ namespace WiFindUs
 			Debugger.V("Application terminating...");
 			running = false;
 
-			//release resources and close debugger
+			//apply any pending database changes
+            if (usesMySQL && mysqlContext != null)
+            {
+                try { mysqlContext.SubmitChanges(); }
+                catch (Exception e) { Debugger.Ex(e, false); }
+            }
+
+            //release resources and close debugger
             Free();
 		}
 
@@ -788,11 +795,11 @@ namespace WiFindUs
         {
             splashForm.Status = "Loading configuration files";
             
-            Debugger.V("Loading config files...");
+            Debugger.I("Loading config files...");
             String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             config = new ConfigFile(files);
             Debugger.V(config.ToString());
-            Debugger.V("Config files loaded OK.");
+            Debugger.I("Finished loading config files.");
             return true;
         }
 
@@ -803,7 +810,7 @@ namespace WiFindUs
 
             splashForm.Status = "Connecting to MySQL server";
             
-            Debugger.V("Establishing the MySQL connection data context...");
+            Debugger.I("Establishing the MySQL connection data context...");
             if (mysqlContextType == null || !mysqlContextType.IsSubclassOf(typeof(DataContext)))
             {
                 String message = "The MySQLContextType was missing or invalid!";
@@ -815,7 +822,7 @@ namespace WiFindUs
             try
             {
                 mysqlContext = (DataContext)mysqlContextType.GetConstructor(new Type[] { typeof(String) }).Invoke(new object[] { LinqConnectionString });
-                Debugger.V("MySQL connection created OK.");
+                Debugger.I("MySQL connection created OK.");
                 return true;
             }
             catch (Exception ex)

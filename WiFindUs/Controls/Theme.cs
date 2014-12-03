@@ -24,7 +24,7 @@ namespace WiFindUs.Controls
         private ThemeBrush highlightMid = new ThemeBrush(ColorTranslator.FromHtml("#007acc"));
         private ThemeBrush error = new ThemeBrush(ColorTranslator.FromHtml("#df3f26"));
         private ThemeBrush ok = new ThemeBrush(ColorTranslator.FromHtml("#39903c"));
-        private ThemeBrush warning = new ThemeBrush(ColorTranslator.FromHtml("#f09922"));
+        private ThemeBrush warning = new ThemeBrush(ColorTranslator.FromHtml("#ca5100"));
         private ThemeBrush textLight = new ThemeBrush(ColorTranslator.FromHtml("#FFFFFF"));
         private ThemeBrush textMid = new ThemeBrush(ColorTranslator.FromHtml("#BBBBBB"));
         private ThemeBrush textDark = new ThemeBrush(ColorTranslator.FromHtml("#999999"));

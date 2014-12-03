@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Devart.Data.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -7,81 +8,29 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Device : IIndentifiable, ILocatable, IAtmospheric, IUserClient, ICreationTimestamped, IUpdateTimestamped
+    public partial class Device
+        : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats
     {
-        public delegate void DeviceEvent(Device sender);
-        public static event DeviceEvent OnDeviceCreated;
-        public event DeviceEvent OnDeviceTypeChanged;
-        public event DeviceEvent OnAssignedWaypointChanged;
-        public event DeviceEvent OnLocationChanged;
-        public event DeviceEvent OnAtmosphereChanged;
-        public event DeviceEvent OnIPAddressChanged;
-        public event DeviceEvent OnBatteryLevelChanged;
-        public event DeviceEvent OnChargingChanged;
-        public event DeviceEvent OnUserChanged;
-        public event DeviceEvent OnUpdated;
-
-        private static readonly double EPSILON_BATTERY_LEVEL = 0.5;
-        private DeviceState currentState = null;
+        public static event Action<Device> OnDeviceCreated;
+        public event Action<Device> OnDeviceUpdated;
+        public event Action<Device> OnDeviceLoaded;
+        public event Action<Device> OnDeviceTypeChanged;
+        public event Action<Device> OnDeviceLocationChanged;
+        public event Action<Device> OnDeviceAtmosphereChanged;
+        public event Action<Device> OnDeviceBatteryChanged;
+        public event Action<Device> OnDeviceIPAddressChanged;
+        public event Action<Device> OnDeviceUserChanged;
+        public event Action<Device> OnDeviceAssignedWaypointChanged;
         
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        protected DeviceState State
-        {
-            get
-            {
-                return currentState;
-            }
-            set
-            {
-                if (value == currentState)
-                    return;
-                DeviceState oldState = currentState;
-                currentState = value;
-
-                if (oldState == null || currentState == null)
-                {
-                    if (OnLocationChanged != null)
-                        OnLocationChanged(this);
-                    if (OnAtmosphereChanged != null)
-                        OnAtmosphereChanged(this);
-                    if (OnIPAddressChanged != null)
-                        OnIPAddressChanged(this);
-                    if (OnBatteryLevelChanged != null)
-                        OnBatteryLevelChanged(this);
-                    if (OnChargingChanged != null)
-                        OnChargingChanged(this);
-                    if (OnUserChanged != null)
-                        OnUserChanged(this);
-                }
-                else
-                {
-                    if (!WiFindUs.Eye.Location.Equals(oldState, currentState) && OnLocationChanged != null)
-                        OnLocationChanged(this);
-                    if (!WiFindUs.Eye.Atmosphere.Equals(oldState, currentState) && OnAtmosphereChanged != null)
-                        OnAtmosphereChanged(this);
-                    if (!oldState.BatteryLevel.Tolerance(currentState.BatteryLevel, EPSILON_BATTERY_LEVEL) && OnBatteryLevelChanged != null)
-                        OnBatteryLevelChanged(this);
-                    if (oldState.Charging.GetValueOrDefault() != currentState.Charging.GetValueOrDefault() && OnChargingChanged != null)
-                        OnChargingChanged(this);
-                    if (oldState.User != currentState.User && OnUserChanged != null)
-                        OnUserChanged(this);
-                    if (oldState.IPAddressRaw != currentState.IPAddressRaw && OnIPAddressChanged != null)
-                        OnIPAddressChanged(this);
-                }
-
-                if (OnUpdated != null)
-                    OnUpdated(this);
-            }
-        }
-
         public ILocation Location
         {
             get
             {
-                return State;
+                return this;
             }
         }
 
@@ -89,41 +38,65 @@ namespace WiFindUs.Eye
         {
             get
             {
-                return State;
+                return this;
             }
         }
 
-        public User User
+        public bool EmptyAtmosphere
         {
-            get { return State == null ? null : State.User; }
+            get
+            {
+                return !Humidity.HasValue
+                    && !Temperature.HasValue
+                    && !AirPressure.HasValue
+                    && !LightLevel.HasValue;
+            }
         }
 
-        public DateTime Updated
+        public bool HasLatLong
         {
-            get { return State == null ? Created : State.Created; }
+            get
+            {
+                return Latitude.HasValue
+                    && Longitude.HasValue;
+            }
         }
 
-        public bool Charging
+        public bool EmptyLocation
         {
-            get { return State == null ? false : State.Charging.GetValueOrDefault(); }
-        }
-
-        public double BatteryLevel
-        {
-            get { return State == null ? 0.0 : State.BatteryLevel.GetValueOrDefault(); }
+            get
+            {
+                return !Latitude.HasValue
+                    && !Longitude.HasValue
+                    && !Accuracy.HasValue
+                    && !Altitude.HasValue;
+            }
         }
 
         public IPAddress IPAddress
         {
             get
             {
-                return State == null ? null : new IPAddress(State.IPAddressRaw);
+                return IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
+            }
+            set
+            {
+                IPAddressRaw = value == null ? null : new Nullable<long>(value.Address);
             }
         }
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
 
         public override string ToString()
         {
             return String.Format("Device[{0}]", ID);
+        }
+
+        public double DistanceTo(ILocation other)
+        {
+            return WiFindUs.Eye.Location.Distance(this, other);
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -132,18 +105,14 @@ namespace WiFindUs.Eye
 
         partial void OnCreated()
         {
-            DeviceStates.ListChanged += DeviceStates_ListChanged;
             if (OnDeviceCreated != null)
                 OnDeviceCreated(this);
         }
 
-        private void DeviceStates_ListChanged(object sender, System.ComponentModel.ListChangedEventArgs e)
+        partial void OnLoaded()
         {
-            DeviceState current = null;
-            foreach (DeviceState state in DeviceStates)
-                if (current == null || state.Created.Ticks > current.Created.Ticks)
-                    current = state;
-            State = current;
+            if (OnDeviceLoaded != null)
+                OnDeviceLoaded(this);
         }
 
         partial void OnTypeChanged()
@@ -154,8 +123,86 @@ namespace WiFindUs.Eye
 
         partial void OnWaypointIDChanged()
         {
-            if (OnAssignedWaypointChanged != null)
-                OnAssignedWaypointChanged(this);
+            if (OnDeviceAssignedWaypointChanged != null)
+                OnDeviceAssignedWaypointChanged(this);
+        }
+
+        partial void OnAccuracyChanged()
+        {
+            if (OnDeviceLocationChanged != null)
+                OnDeviceLocationChanged(this);
+        }
+
+        partial void OnAltitudeChanged()
+        {
+            if (OnDeviceLocationChanged != null)
+                OnDeviceLocationChanged(this);
+        }
+
+        partial void OnLatitudeChanged()
+        {
+            if (OnDeviceLocationChanged != null)
+                OnDeviceLocationChanged(this);
+        }
+
+        partial void OnLongitudeChanged()
+        {
+            if (OnDeviceLocationChanged != null)
+                OnDeviceLocationChanged(this);
+        }
+
+        partial void OnHumidityChanged()
+        {
+            if (OnDeviceAtmosphereChanged != null)
+                OnDeviceAtmosphereChanged(this);
+        }
+
+        partial void OnLightLevelChanged()
+        {
+            if (OnDeviceAtmosphereChanged != null)
+                OnDeviceAtmosphereChanged(this);
+        }
+
+        partial void OnAirPressureChanged()
+        {
+            if (OnDeviceAtmosphereChanged != null)
+                OnDeviceAtmosphereChanged(this);
+        }
+
+        partial void OnTemperatureChanged()
+        {
+            if (OnDeviceAtmosphereChanged != null)
+                OnDeviceAtmosphereChanged(this);
+        }
+
+        partial void OnIPAddressRawChanged()
+        {
+            if (OnDeviceIPAddressChanged != null)
+                OnDeviceIPAddressChanged(this);
+        }
+
+        partial void OnBatteryLevelChanged()
+        {
+            if (OnDeviceBatteryChanged != null)
+                OnDeviceBatteryChanged(this);
+        }
+
+        partial void OnChargingChanged()
+        {
+            if (OnDeviceBatteryChanged != null)
+                OnDeviceBatteryChanged(this);
+        }
+
+        partial void OnUserIDChanged()
+        {
+            if (OnDeviceUserChanged != null)
+                OnDeviceUserChanged(this);
+        }
+
+        partial void OnUpdatedChanged()
+        {
+            if (OnDeviceUpdated != null)
+                OnDeviceUpdated(this);
         }
     }
 }

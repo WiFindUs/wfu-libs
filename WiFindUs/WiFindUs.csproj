@@ -66,9 +66,6 @@
     </Compile>
     <Compile Include="HashCode.cs" />
     <Compile Include="IO\ConfigFile.cs" />
-    <Compile Include="Forms\ConsoleForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Controls\ConsolePanel.cs">
       <SubType>Component</SubType>
     </Compile>

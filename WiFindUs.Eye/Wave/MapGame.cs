@@ -12,7 +12,7 @@ namespace WiFindUs.Eye.Wave
     public class MapGame : Game, IThemeable
     {
         private MapScene scene;
-        
+       
         public Theme Theme
         {
             get
@@ -43,8 +43,17 @@ namespace WiFindUs.Eye.Wave
         public override void Initialize(IApplication application)
         {
             base.Initialize(application);
-            ScreenContext screenContext = new ScreenContext(scene = new MapScene());
-            WaveServices.ScreenContextManager.To(screenContext);
+            scene = null;
+            WaveServices.TaskScheduler.CreateTask(() =>
+            {
+                scene = new MapScene();
+                scene.Initialize(WaveServices.GraphicsDevice);
+            })
+            .ContinueWith(() =>
+            {
+                ScreenContext sc = new ScreenContext(scene);
+                WaveServices.ScreenContextManager.To(sc);
+            });
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-    public class EyePacket : IIndentifiable
+    public class EyePacket
     {
         private IPAddress address;
         private int port;
@@ -54,6 +54,16 @@ namespace WiFindUs.Eye
             this.id = id;
             this.timestamp = timestamp;
             this.payload = payload;
+        }
+
+        public override string ToString()
+        {
+            return String.Format("EyePacket[{0}:{1}, {2}, {3}, {4}, \"{5}\"]", address.ToString(),
+                port,
+                type,
+                id.ToString("X"),
+                timestamp,
+                payload);
         }
     }
 }

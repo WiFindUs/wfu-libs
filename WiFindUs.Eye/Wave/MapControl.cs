@@ -369,6 +369,8 @@ namespace WiFindUs.Eye.Wave
                     this.input.KeyboardState.LeftControl = state;
                     break;
                 case System.Windows.Forms.Keys.LShiftKey:
+                case System.Windows.Forms.Keys.Shift:
+                case System.Windows.Forms.Keys.ShiftKey:
                     this.input.KeyboardState.LeftShift = state;
                     break;
                 case System.Windows.Forms.Keys.LWin:

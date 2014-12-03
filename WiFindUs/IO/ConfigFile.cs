@@ -660,6 +660,8 @@ namespace WiFindUs.IO
 				//set value
 				SetValue(match.Groups[1].Value, index, value);
 			}
+
+            Debugger.I("Loaded config file '" + file + "'.");
 		}
 
 		private static String CheckKey(String key)

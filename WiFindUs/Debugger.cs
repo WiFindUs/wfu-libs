@@ -157,7 +157,7 @@ namespace WiFindUs
 			Log(Verbosity.Error, text);
 		}
 
-		public static void Ex(Exception e, bool forceStackTrace = false)
+		public static void Ex(Exception e, bool printStackTrace = false)
 		{
 			string log = "EXCEPTION THROWN!";
 			log += "\n  Type: " + e.GetType().FullName;
@@ -167,7 +167,10 @@ namespace WiFindUs
 				log += "\n  Inner Type: " + e.InnerException.GetType().FullName;
 				log += "\n  Message: " + e.InnerException.Message;
 			}
-			if (minLevel <= Verbosity.Verbose || forceStackTrace)
+#if DEBUG
+            printStackTrace = true;
+#endif
+            if (printStackTrace)
 			{
 				log += "\n  Stack trace: ";
 
@@ -187,7 +190,6 @@ namespace WiFindUs
 
         public static void FlushToConsoles()
         {
-            System.Diagnostics.Debugger.Log(0, "", "FlushToConsoles()\n");
             if (Flush())
                 initialflush = true;
         }

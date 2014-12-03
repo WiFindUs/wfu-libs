@@ -21,6 +21,7 @@ namespace WiFindUs.Eye
         private bool cancel = false;
         private UdpClient listener = null;
         private bool disposed = false;
+        private Dictionary<string, Dictionary<long, long>> timestamps = new Dictionary<string, Dictionary<long, long>>();
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
@@ -90,7 +91,7 @@ namespace WiFindUs.Eye
 
         private void ListenThread()
         {
-            Debugger.V("Eye listener thread started.");
+            Debugger.I("Eye listener thread started.");
             try
             {
                 listener = new UdpClient(port);
@@ -124,13 +125,33 @@ namespace WiFindUs.Eye
                     if (!match.Success)
                         continue;
 
+                    Debugger.V("Eye message: " + match.Value);
+
+                    //get identifiers
+                    string type = match.Groups[1].Value;
+                    long timestamp = Int64.Parse(match.Groups[3].Value, System.Globalization.NumberStyles.HexNumber);
+                    long id = Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber);
+
+                    //check for existing timestamp
+                    Dictionary<long, long> idTimestamps = null;
+                    if (!timestamps.TryGetValue(type, out idTimestamps))
+                        idTimestamps = timestamps[type] = new Dictionary<long, long>();
+                    long lastTimeStamp;
+                    if (!idTimestamps.TryGetValue(id, out lastTimeStamp))
+                        lastTimeStamp = -1;
+
+                    //check timestamp age, discard if same or older
+                    if (timestamp <= lastTimeStamp)
+                        continue;
+                    idTimestamps[id] = timestamp;
+
                     if (PacketReceived != null)
                     {
                         EyePacket packet = new EyePacket(
                             endPoint, //sender
-                            match.Groups[1].Value, //type
-                            Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber), //id
-                            Int64.Parse(match.Groups[3].Value, System.Globalization.NumberStyles.HexNumber), //timestamp
+                            type, //type
+                            id, //id
+                            timestamp, //timestamp
                             match.Groups[4].Value //payload
                             );
 
@@ -144,7 +165,7 @@ namespace WiFindUs.Eye
                 }
             }
             thread = null;
-            Debugger.V("Eye listener thread terminated.");
+            Debugger.I("Eye listener thread terminated.");
         }
     }
 }

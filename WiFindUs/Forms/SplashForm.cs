@@ -138,7 +138,7 @@ namespace WiFindUs.Forms
             e.Graphics.DrawString(
                 "[Debug Compilation]",
                 Theme.SubtitleFont,
-                Theme.TextDarkBrush,
+                Theme.WarningBrush,
                 new Point(activeArea.Left, top),
                 StringFormat.GenericTypographic);
 #endif

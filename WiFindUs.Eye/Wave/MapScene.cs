@@ -16,13 +16,16 @@ namespace WiFindUs.Eye.Wave
 {
     public class MapScene : Scene, IThemeable
     {
+        public static event Action<MapScene> SceneStarted;
+        
         private const float CAM_MIN_ZOOM = 100.0f;
         private const float CAM_MAX_ZOOM = 10000.0f;
         private const float CAM_MIN_ANGLE = (float)(Math.PI/8.0);
         private const float CAM_MAX_ANGLE = (float)(Math.PI/2.1);
-        
+
+        private EyeContext eyeContext;
         private Theme theme;
-        private FreeCamera camera;
+        private FixedCamera camera;
         private ILocation center;
         private Entity[][,] chunks;
         private TerrainChunk baseChunk;
@@ -64,6 +67,7 @@ namespace WiFindUs.Eye.Wave
                 if (value == null || value.Equals(center))
                     return;
                 center = value;
+                UpdateChunkLocations();
             }
         }
 
@@ -153,8 +157,63 @@ namespace WiFindUs.Eye.Wave
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
+        
+        public Vector3 LocationToVector(ILocation loc)
+        {
+            return baseChunk.Region.LocationToVector(baseChunk.TopLeft, baseChunk.BottomRight, loc);
+        }
 
-        public void UpdateCameraPosition()
+        /////////////////////////////////////////////////////////////////////
+        // PROTECTED METHODS
+        /////////////////////////////////////////////////////////////////////
+        
+        protected override void CreateScene()
+        {
+            //set up camera
+            camera = new FixedCamera("camera", Vector3.Up*200.0f,Vector3.Zero);
+            camera.NearPlane = 0.1f;
+            camera.FarPlane = 100000.0f;
+            //camera.Entity.AddComponent(new CameraFrustum());
+            if (theme != null)
+            {
+                camera.BackgroundColor = new Color(
+                    theme.ControlDarkColour.R, theme.ControlDarkColour.G,
+                    theme.ControlDarkColour.B, theme.ControlDarkColour.A);
+            }
+            else
+                camera.BackgroundColor = Color.CornflowerBlue;
+            camera.ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil;
+            cameraTransform = camera.Entity.FindComponent<Camera3D>();
+            //RenderManager.SetFrustumCullingCamera(camera.Entity);
+            EntityManager.Add(camera);
+            UpdateCameraPosition();
+
+            //create terrain layers
+            chunks = new Entity[Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + 1][,];
+            for (uint layer = 0; layer < (Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + 1); layer++)
+                CreateChunkLayer(layer);
+
+            //add scene behaviour
+            this.AddSceneBehavior(new MapSceneInputBehaviour(), SceneBehavior.Order.PreUpdate);
+        }
+
+        protected override void Start()
+        {
+            base.Start();
+            Chunks((chunk) => chunk.CalculatePosition());
+            eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.EyeContext;
+            if (SceneStarted != null)
+                SceneStarted(this);
+            foreach (Device device in eyeContext.Devices)
+                Device_OnDeviceCreated(device);
+            Device.OnDeviceCreated += Device_OnDeviceCreated;
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        private void UpdateCameraPosition()
         {
             if (cameraTransform == null)
                 return;
@@ -171,82 +230,53 @@ namespace WiFindUs.Eye.Wave
             cameraDirty = false;
         }
 
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
-        
-        protected virtual void OnMapCenterChanged()
+        private void Device_OnDeviceCreated(Device sender)
         {
-
+            Entity device = new Entity()
+                .AddComponent(new Transform3D())
+                .AddComponent(new MaterialsMap(new BasicMaterial(Color.Blue)))
+                .AddComponent(Model.CreateCylinder(20.0f, 5.0f, 6))
+                .AddComponent(new ModelRenderer())
+                .AddComponent(new DeviceBehaviour(sender));
+            EntityManager.Add(device);
         }
 
-        protected override void CreateScene()
+        public void CreateChunkLayer(uint layer)
         {
-            //set up camera
-            camera = new FreeCamera("camera", Vector3.Up*200.0f,Vector3.Zero);
-            camera.NearPlane = 0.1f;
-            camera.FarPlane = 100000.0f;
-            if (theme != null)
-            {
-                camera.BackgroundColor = new Color(
-                    theme.ControlDarkColour.R, theme.ControlDarkColour.G,
-                    theme.ControlDarkColour.B, theme.ControlDarkColour.A);
-            }
-            else
-                camera.BackgroundColor = Color.CornflowerBlue;
-            camera.ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil;
-            EntityManager.Add(camera);
-            cameraTransform = camera.Entity.FindComponent<Camera3D>();
-            UpdateCameraPosition();
-
-            //create terrain chunks
+            if (chunks == null || layer >= chunks.Length || chunks[layer] != null)
+                return;
+            
             float planeSize = (float)Math.Pow(2.0,
-                    9.0 //smallest chunks will be sized at this power of two
-                    + (Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM)) / 10.0f;
-            chunks = new Entity[Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + 1][,];
-            for (uint layer = 0; layer < chunks.Length; layer++)
+                9.0 //smallest chunks will be sized at this power of two
+                + (Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM)
+                - layer) / 10.0f;
+
+            int depth = 1 << (int)layer;
+            chunks[layer] = new Entity[depth, depth];
+            for (uint row = 0; row < depth; row++)
             {
-                int depth = 1 << (int)layer;
-                chunks[layer] = new Entity[depth, depth];
-                for (uint row = 0; row < depth; row++)
+                for (uint column = 0; column < depth; column++)
                 {
-                    for (uint column = 0; column < depth; column++)
-                    {
-                        TerrainChunk chunk = new TerrainChunk(
-                            layer == 0 ? null : baseChunk,
-                            Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + layer,
-                            row, column,
-                            planeSize);
-                        if (layer == 0)
-                            baseChunk = chunk;
+                    TerrainChunk chunk = new TerrainChunk(
+                        layer == 0 ? null : baseChunk,
+                        Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + layer,
+                        row, column,
+                        planeSize);
+                    if (layer == 0)
+                        baseChunk = chunk;
 
-                        Entity chunkEntity = chunks[layer][row, column] = new Entity()
-                        .AddComponent(new Transform3D())
-                        .AddComponent(new MaterialsMap(new BasicMaterial(row == 0 && column == 0 ? Color.Red : Color.Yellow)))
-                        .AddComponent(Model.CreatePlane(Vector3.UnitY, planeSize))
-                        .AddComponent(new ModelRenderer())
-                        .AddComponent(chunk);
-                        EntityManager.Add(chunkEntity);
+                    Entity chunkEntity = chunks[layer][row, column] = new Entity()
+                    .AddComponent(new Transform3D())
+                    .AddComponent(new MaterialsMap())
+                    .AddComponent(Model.CreatePlane(Vector3.UnitY, planeSize))
+                    .AddComponent(new ModelRenderer())
+                    .AddComponent(chunk);
+                    EntityManager.Add(chunkEntity);
 
-                        chunkEntity.IsVisible = layer == visibleLayer;
-                    }
+                    chunkEntity.IsVisible = layer == visibleLayer;
                 }
-                planeSize /= 2.0f;
             }
-
-            //add scene behaviour
-            this.AddSceneBehavior(new MapSceneInputBehaviour(), SceneBehavior.Order.PreUpdate);
         }
-
-        protected override void Start()
-        {
-            base.Start();
-            Chunks((chunk) => chunk.CalculatePosition());
-        }
-
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
 
         private void Chunks(Action<TerrainChunk> action, int firstLayer = -1, int lastLayer = -1, int excludeLayer = -1)
         {
@@ -276,9 +306,14 @@ namespace WiFindUs.Eye.Wave
             baseChunk.CenterLocation = center;
             Chunks((chunk) =>
             {
+                float ratio = (chunk.Size / baseChunk.Size);
+                float latSize = (float)baseChunk.Region.LatitudinalSpan * ratio;
+                float longSize = (float)baseChunk.Region.LongitudinalSpan * ratio;
 
-
-
+                chunk.CenterLocation = new Location(
+                    baseChunk.Region.NorthWest.Latitude - latSize * ((float)chunk.Row + 0.5f), //lat
+                    baseChunk.Region.NorthWest.Longitude - longSize * ((float)chunk.Column + 0.5f)//long
+                    );
 
             }, 1);
         }

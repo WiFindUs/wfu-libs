@@ -43,26 +43,31 @@ namespace WiFindUs.Eye.Wave
             if (moveDelta.LengthSquared() > 0.0f)
             {
                 moveDelta.Normalize();
-                moveDelta *= (float)gameTime.TotalSeconds * 250.0f;
+                moveDelta *= (float)gameTime.TotalSeconds * 1000.0f;
             }
 
-            //middle mouse drag for tilt and pan
+            //middle mouse drag for pan
             if (input.MouseState.MiddleButton == ButtonState.Pressed
                 && oldMouseState.MiddleButton == ButtonState.Pressed)
             {
-                mapScene.CameraTilt += input.MouseState.Y - oldMouseState.Y;
-                moveDelta.X += (oldMouseState.X - input.MouseState.X);
+
+                float zoomDiff = 1.0f + ((float)mapScene.CameraZoom / 100.0f);
+                moveDelta.X += (oldMouseState.X - input.MouseState.X) * zoomDiff;
+                moveDelta.Z += (oldMouseState.Y - input.MouseState.Y) * zoomDiff;
             }
 
             //do panning
             if (moveDelta.LengthSquared() > 0.0f)
                 mapScene.CameraTarget += moveDelta;
 
-            //mouse wheel for zooming
+            //mouse wheel for zooming and tilting
             if (input.MouseState.Wheel != oldMouseState.Wheel)
             {
                 int delta = input.MouseState.Wheel - oldMouseState.Wheel;
-                mapScene.CameraZoom -= delta * 5;
+                if (IsShift(input))
+                    mapScene.CameraTilt += delta * 5;
+                else
+                    mapScene.CameraZoom -= delta * 5;
             }
 
             //space button for diagnostics
@@ -74,6 +79,12 @@ namespace WiFindUs.Eye.Wave
             oldKeyboardState = input.KeyboardState;
             oldMouseState = input.MouseState;
             mapScene.CameraAutoUpdate = true;
+        }
+
+        private bool IsShift(Input input)
+        {
+            return input.KeyboardState.RightShift == ButtonState.Pressed
+                || input.KeyboardState.LeftShift == ButtonState.Pressed;
         }
 
         private bool IsLeft(Input input)

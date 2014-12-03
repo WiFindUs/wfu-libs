@@ -5,8 +5,9 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public interface IIndentifiable
+    public interface IBatteryStats
     {
-        long ID { get; }
+        bool? Charging { get; }
+        double? BatteryLevel { get; }
     }
 }

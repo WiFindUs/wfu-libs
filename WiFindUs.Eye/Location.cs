@@ -15,8 +15,8 @@ namespace WiFindUs.Eye
         private static readonly double EPSILON_HORIZONTAL = 0.000001;
         private static readonly double EPSILON_ACCURACY = 0.5;
         private static readonly double EPSILON_ALTITUDE = 1.0;
-        private double latitude;
-        private double longitude;
+        private double? latitude = null;
+        private double? longitude = null;
         private double? altitude = null;
         private double? accuracy = null;
 
@@ -24,11 +24,11 @@ namespace WiFindUs.Eye
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        public double Latitude
+        public double? Latitude
         {
             get { return latitude; }
         }
-        public double Longitude
+        public double? Longitude
         {
             get { return longitude; }
         }
@@ -41,6 +41,26 @@ namespace WiFindUs.Eye
             get { return altitude; }
         }
 
+        public bool HasLatLong
+        {
+            get
+            {
+                return latitude.HasValue
+                    && longitude.HasValue;
+            }
+        }
+
+        public bool EmptyLocation
+        {
+            get
+            {
+                return !latitude.HasValue
+                    && !longitude.HasValue
+                    && !accuracy.HasValue
+                    && !altitude.HasValue;
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -48,11 +68,11 @@ namespace WiFindUs.Eye
         /// <summary>
         /// Creates a new Location object.
         /// </summary>
-        /// <param name="latitude">The latitude of the coordinate.</param>
-        /// <param name="longitude">The longitude of the coordinate.</param>
+        /// <param name="latitude">The latitude of the coordinate. Use null for 'no data'.</param>
+        /// <param name="longitude">The longitude of the coordinate. Use null for 'no data'.</param>
         /// <param name="accuracy">The horizontal radius of 68% confidence as reported by the device. Use null for 'no data'.</param>
         /// <param name="altitude">The altitude of of the coordinate, as meters above sea level. Use null for 'no data'.</param>
-        public Location(double latitude, double longitude, double? accuracy = null, double? altitude = null)
+        public Location(double? latitude = null, double? longitude = null, double? accuracy = null, double? altitude = null)
         {
             this.latitude = latitude;
             this.longitude = longitude;
@@ -71,7 +91,7 @@ namespace WiFindUs.Eye
             if (values == null)
                 throw new ArgumentNullException("values");
             if (values.Length < 2)
-                throw new ArgumentOutOfRangeException("values", "Must provide at least to parameters (lat and long).");
+                throw new ArgumentOutOfRangeException("values", "Must provide at least two parameters (lat and long).");
 
             this.latitude = values[0];
             this.longitude = values[1];
@@ -146,7 +166,8 @@ namespace WiFindUs.Eye
                 throw new ArgumentNullException("A");
             if (B == null)
                 throw new ArgumentNullException("B");
-            return Distance(A.Latitude, A.Longitude, B.Latitude, B.Longitude);
+            return Distance(A.Latitude.GetValueOrDefault(), A.Longitude.GetValueOrDefault(),
+                B.Latitude.GetValueOrDefault(), B.Longitude.GetValueOrDefault());
         }
 
         /// <summary>
@@ -165,9 +186,9 @@ namespace WiFindUs.Eye
 
         private void CheckAssignedValues()
         {
-            if (latitude > 90.0 || latitude < -90.0)
+            if (latitude.HasValue && (latitude > 90.0 || latitude < -90.0))
                 throw new ArgumentOutOfRangeException("latitude", "Latitude must be null or between -90.0 and 90.0 (inclusive).");
-            if (longitude > 180.0 || longitude < -180.0)
+            if (longitude.HasValue && (longitude > 180.0 || longitude < -180.0))
                 throw new ArgumentOutOfRangeException("longitude", "Longitude must be null or between -180.0 and 180.0 (inclusive).");
             if (accuracy.HasValue && accuracy.Value <= 0.0)
                 throw new ArgumentOutOfRangeException("Accuracy must be null or greater than 0m.");

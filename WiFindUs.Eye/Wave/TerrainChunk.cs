@@ -25,6 +25,7 @@ namespace WiFindUs.Eye.Wave
         private uint row, column;
         private TerrainChunk baseChunk;
         private float size;
+        private Vector3 topLeft, bottomRight;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -38,10 +39,15 @@ namespace WiFindUs.Eye.Wave
             }
             set
             {
-                if (value == null || value.Equals(region.Center))
+                if (value == null || (region != null && value.Equals(region.Center)))
                     return;
                 region = new Region(value, googleMapsZoomLevel);
             }
+        }
+
+        public IRegion Region
+        {
+            get { return region; }
         }
 
         public uint Row
@@ -56,12 +62,22 @@ namespace WiFindUs.Eye.Wave
 
         public uint Layer
         {
-            get { return googleMapsZoomLevel - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM; }
+            get { return googleMapsZoomLevel - WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM; }
         }
 
         public float Size
         {
             get { return size; }
+        }
+
+        public Vector3 TopLeft
+        {
+            get { return topLeft; }
+        }
+
+        public Vector3 BottomRight
+        {
+            get { return bottomRight; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -70,9 +86,9 @@ namespace WiFindUs.Eye.Wave
 
         public TerrainChunk(TerrainChunk baseChunk, uint googleMapsZoomLevel, uint row, uint column, float size)
         {
-            if (googleMapsZoomLevel < Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM || googleMapsZoomLevel > Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM)
+            if (googleMapsZoomLevel < WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM || googleMapsZoomLevel > WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM)
                 throw new ArgumentOutOfRangeException("googleMapsZoomLevel", "Zoom level must be between "
-                    + Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + " and " + Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
+                    + WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + " and " + WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
 
             this.googleMapsZoomLevel = googleMapsZoomLevel;
             this.row = row;
@@ -97,14 +113,9 @@ namespace WiFindUs.Eye.Wave
                     0.0f,
                     start + (row * size));
             }
-        }
 
-        public void CalculateLocation()
-        {
-            if (baseChunk == null)
-                return;
-
-
+            topLeft = new Vector3(transform3D.Position.X - size/2.0f, 0.0f, transform3D.Position.Z - size/2.0f);
+            bottomRight = new Vector3(transform3D.Position.X + size / 2.0f, 0.0f, transform3D.Position.Z + size / 2.0f);
         }
 
         /////////////////////////////////////////////////////////////////////

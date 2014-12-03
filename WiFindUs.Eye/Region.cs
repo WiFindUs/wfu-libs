@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using WaveEngine.Common.Math;
 
 namespace WiFindUs.Eye
 {
@@ -12,7 +13,7 @@ namespace WiFindUs.Eye
     public class Region : ILocation, IEquatable<IRegion>, IRegion
     {
         public static readonly uint GOOGLE_MAPS_CHUNK_MIN_ZOOM = 15;
-        public static readonly uint GOOGLE_MAPS_CHUNK_MAX_ZOOM = 21;
+        public static readonly uint GOOGLE_MAPS_CHUNK_MAX_ZOOM = 20;
 
         private static readonly double GOOGLE_MAPS_CHUNK_RADIUS = 0.01126;
         private static readonly double GOOGLE_MAPS_CHUNK_LONG_SCALE = 1.22;
@@ -59,7 +60,7 @@ namespace WiFindUs.Eye
         /// <summary>
         /// The latitude of the region's exact center.
         /// </summary>
-        public double Latitude
+        public double? Latitude
         {
             get { return center.Latitude; }
         }
@@ -67,7 +68,7 @@ namespace WiFindUs.Eye
         /// <summary>
         /// The longitude of the region's exact center.
         /// </summary>
-        public double Longitude
+        public double? Longitude
         {
             get { return center.Longitude; }
         }
@@ -79,10 +80,8 @@ namespace WiFindUs.Eye
         {
             get
             {
-                return (!northWest.Accuracy.HasValue && !southEast.Accuracy.HasValue ? null :
-                    new double?(((northWest.Accuracy.HasValue ? northWest.Accuracy.Value : 0.0)
-                        + (southEast.Accuracy.HasValue ? southEast.Accuracy.Value : 0.0)) / 2.0)
-                    );
+                return northWest.Accuracy.GetValueOrDefault()
+                        + southEast.Accuracy.GetValueOrDefault() / 2.0;
             }
         }
 
@@ -93,10 +92,8 @@ namespace WiFindUs.Eye
         {
             get
             {
-                return (!northWest.Altitude.HasValue && !southEast.Altitude.HasValue ? null :
-                    new double?(((northWest.Altitude.HasValue ? northWest.Altitude.Value : 0.0)
-                        + (southEast.Altitude.HasValue ? southEast.Altitude.Value : 0.0)) / 2.0)
-                    );
+                return northWest.Altitude.GetValueOrDefault()
+                        + southEast.Altitude.GetValueOrDefault() / 2.0;
             }
         }
 
@@ -148,6 +145,22 @@ namespace WiFindUs.Eye
             get { return googleMapsZoomLevel; }
         }
 
+        public bool HasLatLong
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public bool EmptyLocation
+        {
+            get
+            {
+                return false;
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -158,6 +171,8 @@ namespace WiFindUs.Eye
                 throw new ArgumentNullException("northWest");
             if (southEast == null)
                 throw new ArgumentNullException("southEast");
+            if (!northWest.HasLatLong || !southEast.HasLatLong)
+                throw new ArgumentException("NW and SE must have both lat and long components.");
             if (southEast.Longitude < northWest.Longitude)
                 throw new ArgumentException("SE longitude must be greater than NW longitude (left-to-right).");
             if (northWest.Latitude < southEast.Latitude)
@@ -167,8 +182,8 @@ namespace WiFindUs.Eye
             this.southEast = southEast;
             northEast = new Location(northWest.Latitude, southEast.Longitude);
             southWest = new Location(southEast.Latitude, northWest.Longitude);
-            latSpan = northWest.Latitude - southEast.Latitude;
-            longSpan = southEast.Longitude - northWest.Longitude;
+            latSpan = northWest.Latitude.Value - southEast.Latitude.Value;
+            longSpan = southEast.Longitude.Value - northWest.Longitude.Value;
             width = northWest.DistanceTo(northEast);
             height = northWest.DistanceTo(southWest);
             center = new Location(northWest.Latitude - latSpan / 2.0, northWest.Longitude + longSpan / 2.0);
@@ -178,6 +193,8 @@ namespace WiFindUs.Eye
         {
             if (center == null)
                 throw new ArgumentNullException("center");
+            if (!center.HasLatLong)
+                throw new ArgumentException("Center must have both lat and long components.");
             if (latSpan < 0.0)
                 throw new ArgumentOutOfRangeException("latSpan", "latSpan cannot be negative");
             if (longSpan < 0.0)
@@ -198,6 +215,8 @@ namespace WiFindUs.Eye
         {
             if (center == null)
                 throw new ArgumentNullException("center");
+            if (!center.HasLatLong)
+                throw new ArgumentException("Center must have both lat and long components.");
             if (googleMapsZoomLevel < GOOGLE_MAPS_CHUNK_MIN_ZOOM || googleMapsZoomLevel > GOOGLE_MAPS_CHUNK_MAX_ZOOM)
                 throw new ArgumentOutOfRangeException("googleMapsZoomLevel", "Zoom level must be between "
                     + GOOGLE_MAPS_CHUNK_MIN_ZOOM + " and " + GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
@@ -209,8 +228,8 @@ namespace WiFindUs.Eye
             southEast = new Location(center.Latitude - scaledRadius,  center.Longitude + (scaledRadius * GOOGLE_MAPS_CHUNK_LONG_SCALE));
             northEast = new Location(northWest.Latitude, southEast.Longitude);
             southWest = new Location(southEast.Latitude, northWest.Longitude);
-            latSpan = northWest.Latitude - southEast.Latitude;
-            longSpan = southEast.Longitude - northWest.Longitude;
+            latSpan = northWest.Latitude.Value - southEast.Latitude.Value;
+            longSpan = southEast.Longitude.Value - northWest.Longitude.Value;
             width = northWest.DistanceTo(northEast);
             height = northWest.DistanceTo(southWest);
         }
@@ -255,25 +274,42 @@ namespace WiFindUs.Eye
         {
             if (location == null)
                 return false;
-            return Contains(location.Latitude, location.Longitude);
+            return Contains(location.Latitude.GetValueOrDefault(), location.Longitude.GetValueOrDefault());
         }
 
-        public Point LocationToScreen(Rectangle screenBounds, double latitude, double longitude)
+        public Vector3 LocationToVector(Vector3 tl, Vector3 br, double latitude, double longitude)
         {
-            return new Point(
+            float w = br.X - tl.X;
+            float h = br.Y - tl.Y;
+            
+            return new Vector3(
+                    tl.X + (float)(((longitude - northWest.Longitude) / longSpan) * (double)w),
+                    0,
+                    br.Y + (float)(((northWest.Latitude - latitude) / latSpan) * (double)h)
+                );
+        }
+
+        public Vector3 LocationToVector(Vector3 tl, Vector3 br, ILocation location)
+        {
+            return LocationToVector(tl, br, location.Latitude.GetValueOrDefault(), location.Longitude.GetValueOrDefault());
+        }
+
+        public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude)
+        {
+            return new System.Drawing.Point(
                     screenBounds.X + (int)(((longitude - northWest.Longitude) / longSpan) * (double)screenBounds.Width),
                     screenBounds.Y + (int)(((northWest.Latitude - latitude) / latSpan) * (double)screenBounds.Height)
                 );
         }
 
-        public Point LocationToScreen(Rectangle screenBounds, ILocation location)
+        public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, ILocation location)
         {
-            return LocationToScreen(screenBounds, location.Latitude, location.Longitude);
+            return LocationToScreen(screenBounds, location.Latitude.GetValueOrDefault(), location.Longitude.GetValueOrDefault());
         }
 
         public double DistanceTo(ILocation other)
         {
-            return Location.Distance(this, other);
+            return WiFindUs.Eye.Location.Distance(this, other);
         }
     }
 }
