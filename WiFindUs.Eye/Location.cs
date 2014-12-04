@@ -11,6 +11,12 @@ namespace WiFindUs.Eye
     /// </summary>
     public class Location : ILocation, IEquatable<ILocation>
     {
+        private static readonly Location GPS_MARKS_HOUSE = new Location(-35.025435, 138.561954);
+        private static readonly Location GPS_PARKSIDE = new Location(-34.951551, 138.623063);
+        private static readonly Location GPS_BONYTHON_PARK = new Location(-34.9165, 138.581479);
+        private static readonly Location GPS_MORPHETTVILLE = new Location(-34.977575, 138.54267);
+        private static readonly Location GPS_WAYVILLE = new Location(-34.945508, 138.5866207);
+        
         private static readonly double EARTH_RADIUS_MEAN = 6378.1370;
         private static readonly double EPSILON_HORIZONTAL = 0.000001;
         private static readonly double EPSILON_ACCURACY = 0.5;
@@ -113,6 +119,8 @@ namespace WiFindUs.Eye
                 return false;
             if (ReferenceEquals(A, B))
                 return true;
+            if (A.EmptyLocation != B.EmptyLocation || A.HasLatLong != B.HasLatLong)
+                return false;
 
             if (!A.Latitude.Tolerance(B.Latitude, EPSILON_HORIZONTAL)
                 || !A.Longitude.Tolerance(B.Longitude, EPSILON_HORIZONTAL)
@@ -178,6 +186,41 @@ namespace WiFindUs.Eye
         public double DistanceTo(ILocation other)
         {
             return Distance(this, other);
+        }
+
+        public static ILocation FromName(string locationName)
+        {
+            if (locationName == null)
+                throw new ArgumentNullException("locationName");
+            if ((locationName = locationName.Trim().ToLower()).Length == 0)
+                throw new ArgumentOutOfRangeException("locationName", "Location name was blank.");
+
+            switch (locationName)
+            {
+                case "mark":
+                    return GPS_MARKS_HOUSE;
+                case "morphettville":
+                    return GPS_MORPHETTVILLE;
+                case "wayville":
+                    return GPS_WAYVILLE;
+                case "parkside":
+                    return GPS_PARKSIDE;
+                case "bonython":
+                    return GPS_BONYTHON_PARK;
+            }
+
+            return null;
+        }
+
+        public static string ToString(ILocation location)
+        {
+            return location.Latitude.GetValueOrDefault()
+                + ", " + location.Longitude.GetValueOrDefault();
+        }
+
+        public override string ToString()
+        {
+            return ToString(this);
         }
 
         /////////////////////////////////////////////////////////////////////
