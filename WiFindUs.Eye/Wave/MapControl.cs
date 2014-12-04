@@ -17,6 +17,7 @@ namespace WiFindUs.Eye.Wave
     {
         private MapApplication mapApp;
         private Input input;
+        private int scaleFactor = 1;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -104,7 +105,7 @@ namespace WiFindUs.Eye.Wave
         {
             base.OnResize(e);
             if (this.mapApp != null && ClientRectangle.Width > 0 && ClientRectangle.Height > 0)
-                this.mapApp.ResizeScreen(ClientRectangle.Width / 2, ClientRectangle.Height / 2);
+                this.mapApp.ResizeScreen(ClientRectangle.Width / scaleFactor, ClientRectangle.Height / scaleFactor);
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)

@@ -59,6 +59,8 @@
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
     <Compile Include="Device.cs" />
+    <Compile Include="DevicePacket.cs" />
+    <Compile Include="Extensions\ConfigFileExtensions.cs" />
     <Compile Include="EyeContext.cs" />
     <Compile Include="EyeContext.DeviceHistory.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>

@@ -12,9 +12,9 @@ namespace WiFindUs.Eye.Dispatcher
         [STAThread]
         static void Main(String[] args)
         {
-            WFUApplication.Name = "Dispatcher";
-            WFUApplication.Description = "An Eye program designed to help first-responders manage their personnel.";
-            WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf";
+            WFUApplication.Name = "Ubi";
+            WFUApplication.Description = "First-Responder Asset Management System";
+            WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf|ubi.conf";
             WFUApplication.UsesMutex = true;
             WFUApplication.UsesMySQL = true;
             WFUApplication.MySQLContextType = typeof(WiFindUs.Eye.EyeContext);

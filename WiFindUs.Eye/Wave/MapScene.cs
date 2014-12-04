@@ -19,9 +19,11 @@ namespace WiFindUs.Eye.Wave
         public static event Action<MapScene> SceneStarted;
         
         private const float CAM_MIN_ZOOM = 100.0f;
-        private const float CAM_MAX_ZOOM = 10000.0f;
+        private const float CAM_MAX_ZOOM = 1000.0f;
         private const float CAM_MIN_ANGLE = (float)(Math.PI/8.0);
-        private const float CAM_MAX_ANGLE = (float)(Math.PI/2.1);
+        private const float CAM_MAX_ANGLE = (float)(Math.PI/2.01);
+        private const float ZOOM_RATE = 1.0f;
+        private const float TILT_RATE = 1.0f;
 
         private EyeContext eyeContext;
         private Theme theme;
@@ -30,8 +32,8 @@ namespace WiFindUs.Eye.Wave
         private Entity[][,] chunks;
         private TerrainChunk baseChunk;
         private uint visibleLayer = 0;
-        private int cameraZoom = 50; //percentage
-        private int cameraTilt = 50; //percentage
+        private int cameraZoom = 100; //percentage
+        private int cameraTilt = 100; //percentage
         private Camera3D cameraTransform;
         private bool autoUpdateCamera = true;
         private bool cameraDirty = false;
@@ -66,6 +68,7 @@ namespace WiFindUs.Eye.Wave
             {
                 if (value == null || value.Equals(center))
                     return;
+                Debugger.I("Setting map center to " + value.ToString());
                 center = value;
                 UpdateChunkLocations();
             }
@@ -88,7 +91,7 @@ namespace WiFindUs.Eye.Wave
             {
                 return visibleLayer;
             }
-            set
+            protected set
             {
                 uint layer = value >= chunks.Length ? (uint)chunks.Length - 1 : value;
                 if (layer == visibleLayer)
@@ -116,6 +119,7 @@ namespace WiFindUs.Eye.Wave
                 if (zoom == cameraZoom)
                     return;
                 cameraZoom = zoom;
+                VisibleLayer = (uint)((1.0f-((float)cameraZoom / 100.0f)) * (float)chunks.Length);
                 if (autoUpdateCamera)
                     UpdateCameraPosition();
                 else
@@ -146,7 +150,11 @@ namespace WiFindUs.Eye.Wave
             {
                 if (cameraTransform == null)
                     return;
-                cameraTransform.LookAt = value;
+                cameraTransform.LookAt = new Vector3(
+                    value.X < baseChunk.TopLeft.X ? baseChunk.TopLeft.X : (value.X > baseChunk.BottomRight.X ? baseChunk.BottomRight.X : value.X),
+                    value.Y,
+                    value.Z < baseChunk.TopLeft.Z ? baseChunk.TopLeft.Z : (value.Z > baseChunk.BottomRight.Z ? baseChunk.BottomRight.Z : value.Z)
+                    );
                 if (autoUpdateCamera)
                     UpdateCameraPosition();
                 else
@@ -173,7 +181,6 @@ namespace WiFindUs.Eye.Wave
             camera = new FixedCamera("camera", Vector3.Up*200.0f,Vector3.Zero);
             camera.NearPlane = 0.1f;
             camera.FarPlane = 100000.0f;
-            //camera.Entity.AddComponent(new CameraFrustum());
             if (theme != null)
             {
                 camera.BackgroundColor = new Color(
@@ -184,7 +191,6 @@ namespace WiFindUs.Eye.Wave
                 camera.BackgroundColor = Color.CornflowerBlue;
             camera.ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil;
             cameraTransform = camera.Entity.FindComponent<Camera3D>();
-            //RenderManager.SetFrustumCullingCamera(camera.Entity);
             EntityManager.Add(camera);
             UpdateCameraPosition();
 
@@ -193,8 +199,9 @@ namespace WiFindUs.Eye.Wave
             for (uint layer = 0; layer < (Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + 1); layer++)
                 CreateChunkLayer(layer);
 
-            //add scene behaviour
-            this.AddSceneBehavior(new MapSceneInputBehaviour(), SceneBehavior.Order.PreUpdate);
+            //add scene behaviours
+            AddSceneBehavior(new MapSceneInputBehaviour(), SceneBehavior.Order.PostUpdate);
+            AddSceneBehavior(new CameraMovementBehavior(), SceneBehavior.Order.PostUpdate);
         }
 
         protected override void Start()
@@ -312,10 +319,24 @@ namespace WiFindUs.Eye.Wave
 
                 chunk.CenterLocation = new Location(
                     baseChunk.Region.NorthWest.Latitude - latSize * ((float)chunk.Row + 0.5f), //lat
-                    baseChunk.Region.NorthWest.Longitude - longSize * ((float)chunk.Column + 0.5f)//long
+                    baseChunk.Region.NorthWest.Longitude + longSize * ((float)chunk.Column + 0.5f)//long
                     );
 
             }, 1);
         }
+
+        private class CameraMovementBehavior : SceneBehavior
+        {
+            protected override void ResolveDependencies()
+            {
+
+            }
+
+            protected override void Update(TimeSpan gameTime)
+            {
+
+
+            }
+        };
     }
 }

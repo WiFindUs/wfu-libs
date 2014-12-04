@@ -1069,7 +1069,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>e25ccd05-91cc-4386-8843-6f76352dc175</Path>
+                      <Path>391ab60f-f932-48c4-8913-804e50458db5</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -1085,7 +1085,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>ef130942-9d92-410b-ab77-eeea81eabe20</Path>
+                      <Path>6c011004-e6a6-4bef-a3eb-880bb04d2bff</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -1101,7 +1101,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>18c4b8ad-95ab-49b1-8912-00f5608b5cc7</Path>
+                      <Path>b9d68a99-a768-4407-8e6c-729331e343cc</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -1522,7 +1522,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>549de4a3-84ee-4c9a-931a-1205d15496ec</Path>
+                      <Path>3d5956d6-3973-43f3-8348-8f03e2932c12</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -2275,8 +2275,8 @@
           <ScaleMode>Free</ScaleMode>
           <Scale>0.82</Scale>
           <Location>
-            <X>-747.560982130455 px</X>
-            <Y>-185.365855275414 px</Y>
+            <X>-336.585368789569 px</X>
+            <Y>-89.0243910204293 px</Y>
           </Location>
         </ViewPort>
         <Oid xsi:type="SchemaModelOID">

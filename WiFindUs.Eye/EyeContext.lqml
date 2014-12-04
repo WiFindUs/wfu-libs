@@ -53,7 +53,7 @@
   </Table>
   <Table Name="wfu_eye_db.Users" Member="Users">
     <Type Name="User" ed:Guid="a28d924d-c045-4a2d-a43d-c69b927661a2">
-      <Column Name="ID" Type="System.Int64" AutoSync="OnInsert" DbType="bigint NOT NULL" IsReadOnly="true" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="8e0d5deb-c187-4159-b8f3-1d9b94aa4a34">
+      <Column Name="ID" Type="System.Int64" AutoSync="OnInsert" DbType="bigint NOT NULL" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="8e0d5deb-c187-4159-b8f3-1d9b94aa4a34">
         <Generator Name="Identity" />
       </Column>
       <Column Name="NameFirst" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="7237ce5c-6b94-404a-a92d-db366711a739" />
@@ -89,7 +89,7 @@
   </Table>
   <Table Name="wfu_eye_db.DeviceHistories" Member="DeviceHistories">
     <Type Name="DeviceHistory" ed:Guid="b7c1cb92-b5ad-49c7-b8e5-618ea7c97789">
-      <Column Name="DeviceID" Type="System.Int64" DbType="bigint NOT NULL" IsReadOnly="true" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="c781f730-69c3-4acf-9eac-267ca0dc5c00" />
+      <Column Name="DeviceID" Type="System.Int64" DbType="bigint NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="c781f730-69c3-4acf-9eac-267ca0dc5c00" />
       <Column Name="Created" Type="System.Int64" DbType="bigint NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="e25494f2-6a37-4a25-95fd-8cf4400dd16c" />
       <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="6ab09502-a017-4543-a275-2b987d18140d" />
       <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="41ed7c4b-28bc-4d5b-a385-f28ea99c053c" />

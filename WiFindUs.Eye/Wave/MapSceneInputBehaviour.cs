@@ -70,11 +70,6 @@ namespace WiFindUs.Eye.Wave
                     mapScene.CameraZoom -= delta * 5;
             }
 
-            //space button for diagnostics
-            if (input.KeyboardState.Space != oldKeyboardState.Space
-                && input.KeyboardState.Space == WaveEngine.Common.Input.ButtonState.Pressed)
-                mapScene.VisibleLayer = (mapScene.VisibleLayer + 1) % mapScene.LayerCount;
-
             //state
             oldKeyboardState = input.KeyboardState;
             oldMouseState = input.MouseState;

@@ -32,6 +32,23 @@ namespace WiFindUs.Eye
             {
                 return this;
             }
+            set
+            {
+                if (value == null)
+                {
+                    Altitude = null;
+                    Accuracy = null;
+                    Longitude = null;
+                    Latitude = null;
+                }
+                else
+                {
+                    Altitude = value.Altitude;
+                    Accuracy = value.Accuracy;
+                    Longitude = value.Longitude;
+                    Latitude = value.Latitude;
+                }
+            }
         }
 
         public IAtmosphere Atmosphere
@@ -39,6 +56,23 @@ namespace WiFindUs.Eye
             get
             {
                 return this;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    Temperature = null;
+                    Humidity = null;
+                    AirPressure = null;
+                    LightLevel = null;
+                }
+                else
+                {
+                    Temperature = value.Temperature;
+                    Humidity = value.Humidity;
+                    AirPressure = value.AirPressure;
+                    LightLevel = value.LightLevel;
+                }
             }
         }
 
@@ -97,6 +131,20 @@ namespace WiFindUs.Eye
         public double DistanceTo(ILocation other)
         {
             return WiFindUs.Eye.Location.Distance(this, other);
+        }
+
+        public void SetBatteryStats(IBatteryStats stats)
+        {
+            if (stats == null)
+            {
+                Charging = null;
+                BatteryLevel = null;
+            }
+            else
+            {
+                Charging = stats.Charging;
+                BatteryLevel = stats.BatteryLevel;
+            }
         }
 
         /////////////////////////////////////////////////////////////////////

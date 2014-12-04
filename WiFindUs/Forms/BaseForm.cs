@@ -77,6 +77,7 @@ namespace WiFindUs.Forms
             ShowIcon = true;
             Icon = WFUApplication.Icon;
             ResizeRedraw = true;
+            Text = WFUApplication.Name;
 
             if (IsDesignMode)
             {

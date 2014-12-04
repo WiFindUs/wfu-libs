@@ -24,8 +24,6 @@ namespace WiFindUs.Eye.Dispatcher
     {
         private EyeContext eyeContext = null;
         private EyePacketListener eyeListener = null;
-        protected static readonly Regex PACKET_KVP
-            = new Regex("^([a-zA-Z0-9_\\-.]+)\\s*[:=]\\s*(.+)\\s*$");
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -36,24 +34,9 @@ namespace WiFindUs.Eye.Dispatcher
             get { return eyeContext; }
         }
 
-        protected MapControl MapControl
+        protected MapControl Map
         {
             get { return mapControl; }
-        }
-
-        protected Panel MinimapPanel
-        {
-            get { return controlsOuterSplitter.Panel1; }
-        }
-
-        protected Panel InfoPanel
-        {
-            get { return controlsInnerSplitter.Panel1; }
-        }
-
-        protected Panel CommandsPanel
-        {
-            get { return controlsInnerSplitter.Panel2; }
         }
 
         protected override List<Func<bool>> LoadingTasks
@@ -92,7 +75,8 @@ namespace WiFindUs.Eye.Dispatcher
 
         public void RenderMap()
         {
-            mapControl.Render();
+            if (mapControl != null)
+                mapControl.Render();
         }
 
         public void SetApplicationStatus(string text, Color colour)
@@ -123,20 +107,22 @@ namespace WiFindUs.Eye.Dispatcher
         protected override void OnThemeChanged(Theme theme)
         {
             base.OnThemeChanged(theme);
-            MapControl.BackColor = theme.ControlDarkColour;
+            Map.BackColor = theme.ControlDarkColour;
             windowStatusStrip.BackColor = theme.ControlLightColour;
             windowStatusStrip.ForeColor = theme.TextLightColour;
-            infoTabs.BackColor = theme.ControlLightColour;
-        }
-
-        protected override void OnFormClosed(FormClosedEventArgs e)
-        {
-            updateTimer.Enabled = false;
-            base.OnFormClosed(e);
         }
 
         protected override void OnDisposing()
         {
+            updateTimer.Enabled = false;
+            
+            if (mapControl != null)
+            {
+                Controls.Remove(mapControl);
+                mapControl.Dispose();
+                mapControl = null;
+            }
+            
             if (eyeListener != null)
             {
                 eyeListener.PacketReceived -= eyeListener_PacketReceived;
@@ -218,7 +204,7 @@ namespace WiFindUs.Eye.Dispatcher
 
             SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
             eyeListener.PacketReceived += eyeListener_PacketReceived;
-            updateTimer.Interval = WFUApplication.Config.Get("mysql.submit_rate", 30000);
+            updateTimer.Interval = WFUApplication.Config.Get("mysql.submit_rate", 0, 30000);
             updateTimer.Enabled = true;
         }
 
@@ -228,43 +214,32 @@ namespace WiFindUs.Eye.Dispatcher
 
             if (obj.Type.CompareTo("DEV") == 0)
             {
-                Device device = EyeContext.Device(obj.ID);
-
-                string[] payloads = obj.Payload.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-
-                long userID = -1;
-                if (payloads != null)
+                bool newDevice;
+                DevicePacket devicePacket;
+                try
                 {
-                    foreach (string token in payloads)
-                    {
-                        Match match = PACKET_KVP.Match(token);
-                        if (!match.Success)
-                            continue;
-                        switch (match.Groups[1].Value.ToLower())
-                        {
-                            case "dt": device.Type = match.Groups[2].Value; break;
-                            case "lat": device.Latitude = Double.Parse(match.Groups[2].Value); break;
-                            case "long": device.Longitude = Double.Parse(match.Groups[2].Value); break;
-                            case "acc": device.Accuracy = Double.Parse(match.Groups[2].Value); break;
-                            case "alt": device.Altitude = Double.Parse(match.Groups[2].Value); break;
-                            case "chg": device.Charging = Int32.Parse(match.Groups[2].Value) == 1; break;
-                            case "batt": device.BatteryLevel = Double.Parse(match.Groups[2].Value); break;
-                            case "user":
-                                try
-                                {
-                                    userID = Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber);
-                                    User user = EyeContext.User(userID);
-                                    if (user == null)
-                                        userID = -1;
-                                    else
-                                        device.UserID = userID;
-                                }
-                                catch (FormatException) { }
-                                break;
-                        }
-                    }
+                    devicePacket = new DevicePacket(obj);
                 }
-                if (userID < 0)
+                catch (Exception)
+                {
+                    Debugger.E("Malformed device update packet recieved from " + obj.Address.ToString());
+                    return;
+                }
+                Device device = EyeContext.Device(obj.ID, out newDevice);
+                if (newDevice)
+                    device.Type = devicePacket.DeviceType;
+                if (!WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
+                    device.Location = devicePacket;
+                //if (!WiFindUs.Eye.Atmosphere.Equals(device.Atmosphere, devicePacket))
+                //device.Atmosphere = devicePacket;
+                device.SetBatteryStats(devicePacket);
+                if (devicePacket.UserID > -1)
+                {
+                    bool newUser;
+                    User user = EyeContext.User(devicePacket.UserID, out newUser);
+                    device.UserID = devicePacket.UserID;
+                }
+                else
                     device.UserID = null;
             }
         }

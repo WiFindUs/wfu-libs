@@ -34,7 +34,6 @@ namespace WiFindUs.Forms
 
             ShowInTaskbar = false;
             WindowState = FormWindowState.Minimized;
-            Text = WFUApplication.Name + " v" + WFUApplication.AssemblyVersion;
         }
 
         /////////////////////////////////////////////////////////////////////
