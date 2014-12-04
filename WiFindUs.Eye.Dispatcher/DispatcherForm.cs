@@ -15,6 +15,8 @@ using WiFindUs.Controls;
 using WiFindUs.Eye.Wave;
 using System.Text.RegularExpressions;
 using System.Threading;
+using WiFindUs.IO;
+using WiFindUs.Eye.Extensions;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -208,28 +210,11 @@ namespace WiFindUs.Eye.Dispatcher
         {
             MapScene.SceneStarted -= MapScene_SceneStarted;
 
-            double[] locArray = WFUApplication.Config.Get("map.center");
-            if (locArray == null)
-                Debugger.E("Could not find map.center in config files!");
+            ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
+            if (location == null)
+                Debugger.E("Could not parse map.center from config files!");
             else
-            {
-
-                ILocation location = null;
-                try
-                {
-                    location = new Location(locArray);
-                }
-                catch (Exception)
-                {
-                    Debugger.E("Error parsing config map.center as a Location value");
-                }
-
-                if (location != null)
-                {
-                    Debugger.I("Setting map center to " + location.ToString());
-                    obj.CenterLocation = location;
-                }
-            }
+                obj.CenterLocation = location;
 
             SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
             eyeListener.PacketReceived += eyeListener_PacketReceived;
