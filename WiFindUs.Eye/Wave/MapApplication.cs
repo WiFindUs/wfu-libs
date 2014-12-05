@@ -62,7 +62,7 @@ namespace WiFindUs.Eye.Wave
         public override void Draw(TimeSpan elapsedTime)
         {
             if (game != null && !game.HasExited)
-                    game.DrawFrame(elapsedTime);
+                game.DrawFrame(elapsedTime);
         }
 
         /// <summary>

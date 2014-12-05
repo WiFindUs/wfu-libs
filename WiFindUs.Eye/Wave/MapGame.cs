@@ -48,9 +48,7 @@ namespace WiFindUs.Eye.Wave
             {
                 scene = new MapScene();
                 scene.Initialize(WaveServices.GraphicsDevice);
-            })
-            .ContinueWith(() =>
-            {
+
                 ScreenContext sc = new ScreenContext(scene);
                 WaveServices.ScreenContextManager.To(sc);
             });

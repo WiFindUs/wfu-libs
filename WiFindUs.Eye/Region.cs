@@ -274,24 +274,28 @@ namespace WiFindUs.Eye
         {
             if (location == null)
                 return false;
-            return Contains(location.Latitude.GetValueOrDefault(), location.Longitude.GetValueOrDefault());
+            if (!location.HasLatLong)
+                throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
+            return Contains(location.Latitude.Value, location.Longitude.Value);
         }
 
         public Vector3 LocationToVector(Vector3 tl, Vector3 br, double latitude, double longitude)
         {
-            float w = br.X - tl.X;
-            float h = br.Y - tl.Y;
+            float width = br.X - tl.X;
+            float depth = br.Z - tl.Z;
             
             return new Vector3(
-                    tl.X + (float)(((longitude - northWest.Longitude) / longSpan) * (double)w),
+                    tl.X + (float)(((longitude - northWest.Longitude) / longSpan) * (double)width),
                     0,
-                    br.Y + (float)(((northWest.Latitude - latitude) / latSpan) * (double)h)
+                    tl.Z + (float)(((northWest.Latitude - latitude) / latSpan) * (double)depth)
                 );
         }
 
         public Vector3 LocationToVector(Vector3 tl, Vector3 br, ILocation location)
         {
-            return LocationToVector(tl, br, location.Latitude.GetValueOrDefault(), location.Longitude.GetValueOrDefault());
+            if (!location.HasLatLong)
+                throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
+            return LocationToVector(tl, br, location.Latitude.Value, location.Longitude.Value);
         }
 
         public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude)
@@ -304,7 +308,9 @@ namespace WiFindUs.Eye
 
         public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, ILocation location)
         {
-            return LocationToScreen(screenBounds, location.Latitude.GetValueOrDefault(), location.Longitude.GetValueOrDefault());
+            if (!location.HasLatLong)
+                throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
+            return LocationToScreen(screenBounds, location.Latitude.Value, location.Longitude.Value);
         }
 
         public double DistanceTo(ILocation other)

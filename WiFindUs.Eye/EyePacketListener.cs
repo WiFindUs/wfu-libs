@@ -125,8 +125,6 @@ namespace WiFindUs.Eye
                     if (!match.Success)
                         continue;
 
-                    Debugger.V("Eye message: " + match.Value);
-
                     //get identifiers
                     string type = match.Groups[1].Value;
                     long timestamp = Int64.Parse(match.Groups[3].Value, System.Globalization.NumberStyles.HexNumber);

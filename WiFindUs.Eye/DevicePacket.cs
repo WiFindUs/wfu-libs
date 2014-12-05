@@ -139,5 +139,17 @@ namespace WiFindUs.Eye
                 }
             }
         }
+
+        public override string ToString()
+        {
+            return String.Format("[{0}, {1}, {2}, {3}, {4}, {5}, {6}]",
+                packet.ToString(),
+                latitude.GetValueOrDefault(),
+                longitude.GetValueOrDefault(),
+                accuracy.GetValueOrDefault(),
+                altitude.GetValueOrDefault(),
+                batteryLevel.GetValueOrDefault(),
+                deviceType);
+        }
     }
 }

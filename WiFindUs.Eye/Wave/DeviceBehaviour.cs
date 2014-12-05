@@ -28,9 +28,11 @@ namespace WiFindUs.Eye.Wave
                 Debugger.E(String.Format("Device[{0}] pushed a null location", sender.ID));
                 return;
             }
-            
+            if (!sender.Location.HasLatLong)
+                return;
             Vector3 pos = scene.LocationToVector(sender.Location);
-            pos.Y = 10f;
+            Debugger.W(pos.ToString());
+            pos.Y = 50f;
             transform3D.Position = pos;
         }
 

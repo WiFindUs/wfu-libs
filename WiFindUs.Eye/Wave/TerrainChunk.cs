@@ -227,8 +227,14 @@ namespace WiFindUs.Eye.Wave
             image.Dispose();
 
             //swap out texture
-            Debugger.V("Swapping out texture for file " + ImageFilename);
-            Owner.FindComponent<MaterialsMap>().DefaultMaterial = new BasicMaterial(tex2D);
+            try
+            {
+                Owner.FindComponent<MaterialsMap>().DefaultMaterial = new BasicMaterial(tex2D);
+            }
+            catch (Exception e)
+            {
+                Debugger.Ex(e);
+            }
 
             mapTextured = true;
             loadThread = null;
@@ -296,7 +302,6 @@ namespace WiFindUs.Eye.Wave
 
             //copy the RGB values into the array
             System.Runtime.InteropServices.Marshal.Copy(bitmapData.Scan0, pixels, 0, numBytes);
-
             for (int i = 0; i < pixels.Length; i += 4)
             {
                 byte bb = pixels[i];
@@ -327,12 +332,8 @@ namespace WiFindUs.Eye.Wave
             tex2D.Data = new byte[1][][];
             tex2D.Data[0] = new byte[1][];
             tex2D.Data[0][0] = Array1DFromBitmap(bmp);
+            RenderManager.GraphicsDevice.Textures.UploadTexture(tex2D);
             bmp.Dispose();
-            try
-            {
-                RenderManager.GraphicsDevice.Textures.UploadTexture(tex2D);
-            }
-            catch { }
 
             return tex2D;
         }

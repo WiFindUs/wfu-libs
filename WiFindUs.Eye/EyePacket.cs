@@ -58,12 +58,11 @@ namespace WiFindUs.Eye
 
         public override string ToString()
         {
-            return String.Format("EyePacket[{0}:{1}, {2}, {3}, {4}, \"{5}\"]", address.ToString(),
+            return String.Format("[{0}:{1}, {2}, {3}, {4}]", address.ToString(),
                 port,
                 type,
                 id.ToString("X"),
-                timestamp,
-                payload);
+                timestamp);
         }
     }
 }

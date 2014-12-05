@@ -55,6 +55,14 @@ namespace WiFindUs.Eye.Wave
                 moveDelta.X += (oldMouseState.X - input.MouseState.X) * zoomDiff;
                 moveDelta.Z += (oldMouseState.Y - input.MouseState.Y) * zoomDiff;
             }
+            else if (//left + right buttons for tilting
+                input.MouseState.LeftButton == ButtonState.Pressed
+                    && oldMouseState.LeftButton == ButtonState.Pressed
+                    && input.MouseState.RightButton == ButtonState.Pressed
+                    && oldMouseState.RightButton == ButtonState.Pressed)
+            {
+                mapScene.CameraTilt += (int)(oldMouseState.Y - input.MouseState.Y);
+            }
 
             //do panning
             if (moveDelta.LengthSquared() > 0.0f)
@@ -62,13 +70,7 @@ namespace WiFindUs.Eye.Wave
 
             //mouse wheel for zooming and tilting
             if (input.MouseState.Wheel != oldMouseState.Wheel)
-            {
-                int delta = input.MouseState.Wheel - oldMouseState.Wheel;
-                if (IsShift(input))
-                    mapScene.CameraTilt += delta * 5;
-                else
-                    mapScene.CameraZoom -= delta * 5;
-            }
+                 mapScene.CameraZoom -= (input.MouseState.Wheel - oldMouseState.Wheel) * 5;
 
             //state
             oldKeyboardState = input.KeyboardState;

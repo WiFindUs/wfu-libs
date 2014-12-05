@@ -19,9 +19,9 @@ namespace WiFindUs.Eye
                 {
                     SubmitChanges(conflictMode);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Debugger.E("Error submitting MySQL context changes.");
+                    Debugger.Ex(e);
                 }
             }).Start();
         }
@@ -81,7 +81,11 @@ namespace WiFindUs.Eye
             {
                 Users.InsertOnSubmit(user = new User()
                 {
-                    ID = id
+                    ID = id,
+                    NameFirst = "",
+                    NameLast = "",
+                    NameMiddle = "",
+                    Type = ""
                 });
                 isNew = true;
             }

@@ -24,6 +24,7 @@ namespace WiFindUs.Eye.Dispatcher
     {
         private EyeContext eyeContext = null;
         private EyePacketListener eyeListener = null;
+        private bool skipNextSubmitTimer = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -102,6 +103,7 @@ namespace WiFindUs.Eye.Dispatcher
 #if DEBUG
             infoTabs.SelectedIndex = 1;
 #endif
+            Refresh();
         }
 
         protected override void OnThemeChanged(Theme theme)
@@ -210,42 +212,66 @@ namespace WiFindUs.Eye.Dispatcher
 
         private void eyeListener_PacketReceived(EyePacket obj)
         {
-            Debugger.V(obj.ToString());
-
             if (obj.Type.CompareTo("DEV") == 0)
             {
-                bool newDevice;
+                //parse packet for validity
                 DevicePacket devicePacket;
                 try
                 {
                     devicePacket = new DevicePacket(obj);
+                    if (devicePacket.ID <= -1)
+                        return;
                 }
                 catch (Exception)
                 {
                     Debugger.E("Malformed device update packet recieved from " + obj.Address.ToString());
                     return;
                 }
-                Device device = EyeContext.Device(obj.ID, out newDevice);
-                if (newDevice)
-                    device.Type = devicePacket.DeviceType;
-                if (!WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
-                    device.Location = devicePacket;
-                //if (!WiFindUs.Eye.Atmosphere.Equals(device.Atmosphere, devicePacket))
-                //device.Atmosphere = devicePacket;
-                device.SetBatteryStats(devicePacket);
-                if (devicePacket.UserID > -1)
+                Debugger.V(devicePacket.ToString());
+
+                //first get user
+                bool newUser = false;
+                User user = devicePacket.UserID >= 0 ? EyeContext.User(devicePacket.UserID, out newUser) : null;
+
+                //now get device
+                bool newDevice = false;
+                Device device = null;
+                try
                 {
-                    bool newUser;
-                    User user = EyeContext.User(devicePacket.UserID, out newUser);
-                    device.UserID = devicePacket.UserID;
+                    device = EyeContext.Devices.Where(d => d.ID == devicePacket.ID).Single();
                 }
-                else
-                    device.UserID = null;
+                catch { }
+                if (device == null)
+                {
+                    long ts = DateTime.UtcNow.UnixTimestamp();
+                    newDevice = true;
+                    EyeContext.Devices.InsertOnSubmit(device = new Device()
+                    {
+                        ID = devicePacket.ID,
+                        Created = ts,
+                        Updated = ts,
+                        User = user,
+                        Type = devicePacket.DeviceType,
+                        Location = devicePacket,
+                        //Atmosphere = devicePacket,
+                    });
+                }
+
+                if (newDevice || newUser)
+                {
+                    skipNextSubmitTimer = true;
+                    EyeContext.SubmitChangesThreaded();
+                }
             }
         }
 
         private void updateTimer_Tick(object sender, EventArgs e)
         {
+            if (skipNextSubmitTimer)
+            {
+                skipNextSubmitTimer = false;
+                return;
+            }
             EyeContext.SubmitChangesThreaded();
         }
     }

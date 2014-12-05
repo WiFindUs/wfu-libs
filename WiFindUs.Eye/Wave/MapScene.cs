@@ -241,8 +241,8 @@ namespace WiFindUs.Eye.Wave
         {
             Entity device = new Entity()
                 .AddComponent(new Transform3D())
-                .AddComponent(new MaterialsMap(new BasicMaterial(Color.Blue)))
-                .AddComponent(Model.CreateCylinder(20.0f, 5.0f, 6))
+                .AddComponent(new MaterialsMap(new BasicMaterial(Color.Orange)))
+                .AddComponent(Model.CreateCylinder(100.0f, 5.0f, 3))
                 .AddComponent(new ModelRenderer())
                 .AddComponent(new DeviceBehaviour(sender));
             EntityManager.Add(device);
@@ -318,10 +318,9 @@ namespace WiFindUs.Eye.Wave
                 float longSize = (float)baseChunk.Region.LongitudinalSpan * ratio;
 
                 chunk.CenterLocation = new Location(
-                    baseChunk.Region.NorthWest.Latitude - latSize * ((float)chunk.Row + 0.5f), //lat
-                    baseChunk.Region.NorthWest.Longitude + longSize * ((float)chunk.Column + 0.5f)//long
+                    baseChunk.Region.NorthWest.Latitude.Value - latSize * ((float)chunk.Row + 0.5f), //lat
+                    baseChunk.Region.NorthWest.Longitude.Value + longSize * ((float)chunk.Column + 0.5f)//long
                     );
-
             }, 1);
         }
 
