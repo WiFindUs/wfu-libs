@@ -18,7 +18,7 @@ namespace WiFindUs.Eye
         private static readonly Location GPS_WAYVILLE = new Location(-34.945508, 138.5866207);
         
         private static readonly double EARTH_RADIUS_MEAN = 6378.1370;
-        private static readonly double EPSILON_HORIZONTAL = 0.000001;
+        private static readonly double EPSILON_HORIZONTAL = 0.00000001;
         private static readonly double EPSILON_ACCURACY = 0.5;
         private static readonly double EPSILON_ALTITUDE = 1.0;
         private double? latitude = null;

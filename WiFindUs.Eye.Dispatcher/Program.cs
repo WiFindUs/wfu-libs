@@ -15,7 +15,6 @@ namespace WiFindUs.Eye.Dispatcher
             WFUApplication.Name = "Ubi";
             WFUApplication.Description = "First-Responder Asset Management System";
             WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf|ubi.conf";
-            WFUApplication.UsesMutex = true;
             WFUApplication.UsesMySQL = true;
             WFUApplication.MySQLContextType = typeof(WiFindUs.Eye.EyeContext);
             WFUApplication.MainFormType = typeof(DispatcherForm);

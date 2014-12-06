@@ -12,8 +12,8 @@ namespace WiFindUs.Eye
     /// </summary>
     public class Region : ILocation, IEquatable<IRegion>, IRegion
     {
-        public static readonly uint GOOGLE_MAPS_CHUNK_MIN_ZOOM = 15;
-        public static readonly uint GOOGLE_MAPS_CHUNK_MAX_ZOOM = 20;
+        public const uint GOOGLE_MAPS_CHUNK_MIN_ZOOM = 15;
+        public const uint GOOGLE_MAPS_CHUNK_MAX_ZOOM = 20;
 
         private static readonly double GOOGLE_MAPS_CHUNK_RADIUS = 0.01126;
         private static readonly double GOOGLE_MAPS_CHUNK_LONG_SCALE = 1.22;
@@ -283,11 +283,14 @@ namespace WiFindUs.Eye
         {
             float width = br.X - tl.X;
             float depth = br.Z - tl.Z;
-            
+
+            double w = (longitude - northWest.Longitude.Value) / longSpan;
+            double d = (northWest.Latitude.Value - latitude) / latSpan;
+
             return new Vector3(
-                    tl.X + (float)(((longitude - northWest.Longitude) / longSpan) * (double)width),
+                    tl.X + (float)(w * width),
                     0,
-                    tl.Z + (float)(((northWest.Latitude - latitude) / latSpan) * (double)depth)
+                    tl.Z + (float)(d * depth)
                 );
         }
 

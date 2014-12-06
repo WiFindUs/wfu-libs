@@ -44,7 +44,7 @@ namespace WiFindUs
         private static string executableDirectoryPath = "";
         private static string configPaths = "";
         private static Icon hostIcon = null;
-        private static ConfigFile config = null;
+        private static volatile ConfigFile config = null;
         private static ResourceLoader<Image> imageLoader = new ResourceLoader<Image>(Image.FromFile);
         private static string mysqlAddress = "";
         private static int mysqlPort= -1;
@@ -59,9 +59,9 @@ namespace WiFindUs
         private static SplashForm splashForm = null;
         private static bool splashLoadingFinished = false;
         private static Theme theme = new Theme();
-        private static FormWindowState postLoadWindowState = FormWindowState.Maximized;
         private static string googleAPIKey = "";
         private static Action<MainForm> mainLaunchAction = null;
+        private static bool mysqlDisabledAtCommandLine = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -403,7 +403,10 @@ namespace WiFindUs
         /// </summary>
         public static bool UsesMySQL
         {
-            get { return usesMySQL; }
+            get
+            {
+                return usesMySQL && !mysqlDisabledAtCommandLine;
+            }
             set { if (!readOnly) usesMySQL = value; }
         }
 
@@ -572,7 +575,7 @@ namespace WiFindUs
                     return;
                 splashLoadingFinished = true;
                 mainForm.ShowInTaskbar = true;
-                mainForm.WindowState = PostLoadWindowState;
+                mainForm.WindowState = FormWindowState.Normal;
                 mainForm.ShowForm();
                 splashForm = null;
             }
@@ -601,15 +604,6 @@ namespace WiFindUs
                     theme.Dispose();
                 theme = value;
             }
-        }
-
-        /// <summary>
-        /// Gets or sets the window state assigned to the application's main form after the splash loading has finished.
-        /// </summary>
-        public static FormWindowState PostLoadWindowState
-        {
-            get { return postLoadWindowState; }
-            set { if (!readOnly) postLoadWindowState = value; }
         }
 
         /// <summary>
@@ -659,6 +653,10 @@ namespace WiFindUs
 						InitialVerbosity = (Debugger.Verbosity)Int32.Parse(args[i]);
 						break;
 
+                    case "nomysql":
+                        mysqlDisabledAtCommandLine = true;
+                        break;
+
 					case "conf":
 						if (i == args.Length-1)
 							break;
@@ -704,7 +702,7 @@ namespace WiFindUs
 			running = false;
 
 			//apply any pending database changes
-            if (usesMySQL && mysqlContext != null)
+            if (mysqlContext != null)
             {
                 try { mysqlContext.SubmitChanges(); }
                 catch (Exception e) { Debugger.Ex(e, false); }

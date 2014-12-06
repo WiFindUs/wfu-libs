@@ -85,7 +85,7 @@ namespace WiFindUs.Eye
                 device.AssignedWaypoint = null;
 
             //store time and set flag
-            ArchivedTime = DateTime.UtcNow.UnixTimestamp();
+            ArchivedTime = DateTime.UtcNow.ToUnixTimestamp();
             Archived = true;
         }
 

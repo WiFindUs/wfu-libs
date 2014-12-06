@@ -60,7 +60,6 @@
             this.MinimumSize = new System.Drawing.Size(525, 692);
             this.Name = "SplashForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.TopMost = true;
             this.ResumeLayout(false);
 
         }

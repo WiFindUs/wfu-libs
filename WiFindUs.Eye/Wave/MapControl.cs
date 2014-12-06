@@ -66,9 +66,16 @@ namespace WiFindUs.Eye.Wave
         {
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.UserPaint, true);
             UpdateStyles();
+
+        }
+
+        public void StartMapApplication()
+        {
             mapApp = new MapApplication(this.Bounds.Width, this.Bounds.Height);
             mapApp.Configure(this.Handle);
-        } 
+        }
+        
+
 
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
@@ -94,7 +101,16 @@ namespace WiFindUs.Eye.Wave
         public void Render()
         {
             if (mapApp != null)
+            {
                 mapApp.Render();
+            }
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            mapApp.OnDeactivate();
+            mapApp.Dispose();
+            base.OnHandleDestroyed(e);
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -167,21 +183,6 @@ namespace WiFindUs.Eye.Wave
         {
             base.OnKeyUp(e);
             SetKeyboardButtonState(e, false);
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (IsDisposed)
-                return;
-
-            if (mapApp != null)
-            {
-                mapApp.OnDeactivate();
-                mapApp.Dispose();
-                mapApp = null;
-            }
-
-            base.Dispose(disposing);
         }
 
         /////////////////////////////////////////////////////////////////////

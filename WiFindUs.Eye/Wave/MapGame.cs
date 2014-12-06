@@ -44,14 +44,11 @@ namespace WiFindUs.Eye.Wave
         {
             base.Initialize(application);
             scene = null;
-            WaveServices.TaskScheduler.CreateTask(() =>
-            {
                 scene = new MapScene();
                 scene.Initialize(WaveServices.GraphicsDevice);
 
                 ScreenContext sc = new ScreenContext(scene);
                 WaveServices.ScreenContextManager.To(sc);
-            });
         }
     }
 }

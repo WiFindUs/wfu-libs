@@ -24,6 +24,7 @@ namespace WiFindUs.Eye.Wave
         private const float CAM_MAX_ANGLE = (float)(Math.PI/2.01);
         private const float ZOOM_RATE = 1.0f;
         private const float TILT_RATE = 1.0f;
+        public const uint MIN_LEVEL = Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM+1;
 
         private EyeContext eyeContext;
         private Theme theme;
@@ -37,6 +38,8 @@ namespace WiFindUs.Eye.Wave
         private Camera3D cameraTransform;
         private bool autoUpdateCamera = true;
         private bool cameraDirty = false;
+        private static readonly Color[] colours = new Color[] { Color.Blue, Color.Red, Color.Green };
+        private static int lastColor = 0;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -119,7 +122,7 @@ namespace WiFindUs.Eye.Wave
                 if (zoom == cameraZoom)
                     return;
                 cameraZoom = zoom;
-                VisibleLayer = (uint)((1.0f-((float)cameraZoom / 100.0f)) * (float)chunks.Length);
+                //VisibleLayer = (uint)((1.0f-((float)cameraZoom / 100.0f)) * (float)chunks.Length);
                 if (autoUpdateCamera)
                     UpdateCameraPosition();
                 else
@@ -178,8 +181,9 @@ namespace WiFindUs.Eye.Wave
         protected override void CreateScene()
         {
             //set up camera
+            Debugger.V("MapScene: initializing camera");
             camera = new FixedCamera("camera", Vector3.Up*200.0f,Vector3.Zero);
-            camera.NearPlane = 0.1f;
+            camera.NearPlane = 1f;
             camera.FarPlane = 100000.0f;
             if (theme != null)
             {
@@ -195,11 +199,13 @@ namespace WiFindUs.Eye.Wave
             UpdateCameraPosition();
 
             //create terrain layers
-            chunks = new Entity[Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + 1][,];
-            for (uint layer = 0; layer < (Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + 1); layer++)
+            Debugger.V("MapScene: creating layers");
+            chunks = new Entity[Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - MIN_LEVEL + 1][,];
+            for (uint layer = 0; layer < chunks.Length; layer++)
                 CreateChunkLayer(layer);
 
             //add scene behaviours
+            Debugger.V("MapScene: creating behaviours");
             AddSceneBehavior(new MapSceneInputBehaviour(), SceneBehavior.Order.PostUpdate);
             AddSceneBehavior(new CameraMovementBehavior(), SceneBehavior.Order.PostUpdate);
         }
@@ -241,11 +247,17 @@ namespace WiFindUs.Eye.Wave
         {
             Entity device = new Entity()
                 .AddComponent(new Transform3D())
-                .AddComponent(new MaterialsMap(new BasicMaterial(Color.Orange)))
-                .AddComponent(Model.CreateCylinder(100.0f, 5.0f, 3))
+                .AddComponent(new MaterialsMap(new BasicMaterial(colours[lastColor = (lastColor + 1) % colours.Length])))
+                .AddComponent(Model.CreateTorus(10f, 3f, 16))
                 .AddComponent(new ModelRenderer())
                 .AddComponent(new DeviceBehaviour(sender));
+            sender.OnDeviceTypeChanged += sender_OnDeviceTypeChanged;
             EntityManager.Add(device);
+        }
+
+        private void sender_OnDeviceTypeChanged(Device obj)
+        {
+            throw new NotImplementedException();
         }
 
         public void CreateChunkLayer(uint layer)
@@ -254,7 +266,7 @@ namespace WiFindUs.Eye.Wave
                 return;
             
             float planeSize = (float)Math.Pow(2.0,
-                9.0 //smallest chunks will be sized at this power of two
+                8.0 + (MIN_LEVEL - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM)//smallest chunks will be sized at this power of two
                 + (Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM)
                 - layer) / 10.0f;
 
@@ -266,7 +278,7 @@ namespace WiFindUs.Eye.Wave
                 {
                     TerrainChunk chunk = new TerrainChunk(
                         layer == 0 ? null : baseChunk,
-                        Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + layer,
+                        MIN_LEVEL + layer,
                         row, column,
                         planeSize);
                     if (layer == 0)

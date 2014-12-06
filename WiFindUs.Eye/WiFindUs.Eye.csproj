@@ -77,6 +77,10 @@
     <Compile Include="DevicePacket.cs" />
     <Compile Include="Extensions\ConfigFileExtensions.cs" />
     <Compile Include="EyeContext.cs" />
+    <Compile Include="EyeMainForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Wave\EyeContext.cs" />
     <Compile Include="EyeContext.DeviceHistory.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>

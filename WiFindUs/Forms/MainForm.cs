@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Drawing;
 
 namespace WiFindUs.Forms
 {
@@ -33,7 +34,6 @@ namespace WiFindUs.Forms
                 return;
 
             ShowInTaskbar = false;
-            WindowState = FormWindowState.Minimized;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -49,6 +49,28 @@ namespace WiFindUs.Forms
         {
             base.OnFirstShown(e);
             Debugger.FlushToConsoles();
+            Screen startScreen = Screen.PrimaryScreen;
+            int configMonitor = WFUApplication.Config.Get("display.start_screen", -1);
+            Debugger.V("Startup monitor:" + configMonitor);
+            if (configMonitor >= 0)
+            {
+                foreach (Screen screen in Screen.AllScreens)
+                {
+                    Debugger.I("\"" + screen.DeviceName + "\"");
+                    if (screen.DeviceName.CompareTo("\\\\.\\DISPLAY" + configMonitor) == 0)
+                    {
+                        Debugger.I("\"" + screen.DeviceName + "\"");
+                        startScreen = screen;
+                        break;
+                    }
+                }
+            }
+
+            Location = new Point(startScreen.Bounds.Left + 10, startScreen.Bounds.Top + 10);
+            bool startMaximized = WFUApplication.Config.Get("display.start_maximized", false);
+            Debugger.V("Start maximized: " + startMaximized);
+            if (startMaximized)
+                WindowState = FormWindowState.Maximized;
         }
 
         /////////////////////////////////////////////////////////////////////

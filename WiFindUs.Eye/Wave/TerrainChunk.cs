@@ -72,7 +72,7 @@ namespace WiFindUs.Eye.Wave
 
         public uint Layer
         {
-            get { return googleMapsZoomLevel - WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM; }
+            get { return googleMapsZoomLevel - MapScene.MIN_LEVEL; }
         }
 
         public float Size
@@ -111,7 +111,7 @@ namespace WiFindUs.Eye.Wave
                 return String.Format(
                     "{0}center={1:0.######},{2:0.######}&zoom={3}&scale={4}&size={5}x{6}&key={7}&maptype={8}&format={9}",
                     MAPS_URL_BASE, region.Latitude.Value, region.Longitude.Value, googleMapsZoomLevel,
-                    1, CHUNK_IMAGE_SIZE, CHUNK_IMAGE_SIZE,
+                    2, CHUNK_IMAGE_SIZE, CHUNK_IMAGE_SIZE,
                     WFUApplication.GoogleAPIKey, "satellite", IMAGE_FORMAT);
             }
         }
@@ -125,7 +125,7 @@ namespace WiFindUs.Eye.Wave
             if (googleMapsZoomLevel < WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM
                 || googleMapsZoomLevel > WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM)
                 throw new ArgumentOutOfRangeException("googleMapsZoomLevel", "Zoom level must be between "
-                    + WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM + " and " + WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
+                    + MapScene.MIN_LEVEL + " and " + WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
 
             this.googleMapsZoomLevel = googleMapsZoomLevel;
             this.row = row;

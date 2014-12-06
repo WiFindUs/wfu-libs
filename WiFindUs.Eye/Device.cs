@@ -21,6 +21,7 @@ namespace WiFindUs.Eye
         public event Action<Device> OnDeviceIPAddressChanged;
         public event Action<Device> OnDeviceUserChanged;
         public event Action<Device> OnDeviceAssignedWaypointChanged;
+        private WaveEngine.Framework.Entity waveEntity;
         
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -48,6 +49,25 @@ namespace WiFindUs.Eye
                     Longitude = value.Longitude;
                     Latitude = value.Latitude;
                 }
+
+                if (OnDeviceLocationChanged != null)
+                    OnDeviceLocationChanged(this);
+            }
+        }
+
+        public WaveEngine.Framework.Entity WaveEntity
+        {
+            get { return waveEntity; }
+            set
+            {
+                if (value == null || value == waveEntity)
+                    return;
+
+                if (waveEntity != null)
+                    waveEntity.FindComponent<WiFindUs.Eye.Wave.DeviceBehaviour>().Device = null;
+                waveEntity = value;
+                if (waveEntity != null)
+                    waveEntity.FindComponent<WiFindUs.Eye.Wave.DeviceBehaviour>().Device = this;
             }
         }
 
@@ -73,6 +93,9 @@ namespace WiFindUs.Eye
                     AirPressure = value.AirPressure;
                     LightLevel = value.LightLevel;
                 }
+
+                if (OnDeviceAtmosphereChanged != null)
+                    OnDeviceAtmosphereChanged(this);
             }
         }
 
@@ -116,6 +139,14 @@ namespace WiFindUs.Eye
             set
             {
                 IPAddressRaw = value == null ? null : new Nullable<long>(value.Address);
+            }
+        }
+
+        public long LastUpdate
+        {
+            get
+            {
+                return (DateTime.UtcNow.ToUnixTimestamp() - Updated);
             }
         }
 
@@ -173,54 +204,6 @@ namespace WiFindUs.Eye
         {
             if (OnDeviceAssignedWaypointChanged != null)
                 OnDeviceAssignedWaypointChanged(this);
-        }
-
-        partial void OnAccuracyChanged()
-        {
-            if (OnDeviceLocationChanged != null)
-                OnDeviceLocationChanged(this);
-        }
-
-        partial void OnAltitudeChanged()
-        {
-            if (OnDeviceLocationChanged != null)
-                OnDeviceLocationChanged(this);
-        }
-
-        partial void OnLatitudeChanged()
-        {
-            if (OnDeviceLocationChanged != null)
-                OnDeviceLocationChanged(this);
-        }
-
-        partial void OnLongitudeChanged()
-        {
-            if (OnDeviceLocationChanged != null)
-                OnDeviceLocationChanged(this);
-        }
-
-        partial void OnHumidityChanged()
-        {
-            if (OnDeviceAtmosphereChanged != null)
-                OnDeviceAtmosphereChanged(this);
-        }
-
-        partial void OnLightLevelChanged()
-        {
-            if (OnDeviceAtmosphereChanged != null)
-                OnDeviceAtmosphereChanged(this);
-        }
-
-        partial void OnAirPressureChanged()
-        {
-            if (OnDeviceAtmosphereChanged != null)
-                OnDeviceAtmosphereChanged(this);
-        }
-
-        partial void OnTemperatureChanged()
-        {
-            if (OnDeviceAtmosphereChanged != null)
-                OnDeviceAtmosphereChanged(this);
         }
 
         partial void OnIPAddressRawChanged()

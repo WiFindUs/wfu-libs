@@ -77,9 +77,16 @@ namespace WiFindUs.Extensions
         // DATETIMES
         /////////////////////////////////////////////////////////////////////
 
-        public static long UnixTimestamp(this DateTime dt)
+        public static long ToUnixTimestamp(this DateTime dt)
         {
-            return (long)(dt.Subtract(new DateTime(1970, 1, 1))).TotalSeconds;
+            return (long)(dt.Subtract(new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds;
+        }
+
+        public static DateTime ToDateTime(this long unixTimestamp)
+        {
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(unixTimestamp).ToLocalTime();
+            return dtDateTime;
         }
     }
 }

@@ -143,6 +143,7 @@ namespace WiFindUs.Eye
                         continue;
                     idTimestamps[id] = timestamp;
 
+                    Debugger.V(message);
                     if (PacketReceived != null)
                     {
                         EyePacket packet = new EyePacket(
