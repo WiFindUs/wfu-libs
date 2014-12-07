@@ -16,6 +16,7 @@ namespace WiFindUs
 {
 	public static class WFUApplication
 	{
+        private static Random random = new Random();
         private static string executablePath = "";
         private static Version assemblyVersion = null;
         private static string entryAssemblyName = "";
@@ -51,7 +52,6 @@ namespace WiFindUs
         private static string mysqlUsername = "";
         private static string mysqlPassword = "";
         private static string mysqlDatabase = "";
-        private static string mysqlCharset = "";
         private static Mutex mutex = null;
         private static Type mysqlContextType = null;
         private static DataContext mysqlContext = null;
@@ -62,6 +62,7 @@ namespace WiFindUs
         private static string googleAPIKey = "";
         private static Action<MainForm> mainLaunchAction = null;
         private static bool mysqlDisabledAtCommandLine = false;
+        private static bool mysqlDisabledInConfig = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -405,7 +406,7 @@ namespace WiFindUs
         {
             get
             {
-                return usesMySQL && !mysqlDisabledAtCommandLine;
+                return usesMySQL && !mysqlDisabledAtCommandLine && !mysqlDisabledInConfig;
             }
             set { if (!readOnly) usesMySQL = value; }
         }
@@ -481,20 +482,6 @@ namespace WiFindUs
         }
 
         /// <summary>
-        /// Returns the charset used for the MySQL connection. First checks the local override,
-        /// then the local ConfigFile instance at key "mysql.charset", then returns "utf8" as a fallback.
-        /// </summary>
-        public static string MySQLCharset
-        {
-            get
-            {
-                return mysqlCharset.Length > 0 ? mysqlCharset :
-                    (config != null ? config.Get("mysql.charset", "utf8") : "utf8");
-            }
-            set { if (!readOnly) mysqlCharset = value == null ? "" : value.Trim(); }
-        }
-
-        /// <summary>
         /// The Context type that will be created when the application is spawned. Must be Devart.Data.Linq.DataContext or a subclass.
         /// </summary>
         public static Type MySQLContextType
@@ -504,25 +491,9 @@ namespace WiFindUs
         }
 
         /// <summary>
-        /// The string passed to a MySQLConnector data connection to initiate connection to a database.
-        /// </summary>
-        private static string MySQLConnectionString
-        {
-            get
-            {
-                return "server=" + MySQLAddress
-                        + ";user=" + MySQLUsername
-                        + ";database=" + MySQLDatabase
-                        + ";port=" + MySQLPort
-                        + ";charset=" + MySQLCharset
-                        + ";password=" + MySQLPassword + ";";
-            }
-        }
-
-        /// <summary>
         /// The string passed to the LinqConnect DataContext to initiate the MySQL connection.
         /// </summary>
-        private static string LinqConnectionString
+        private static string MySQLConnectionString
         {
             get
             {
@@ -615,11 +586,22 @@ namespace WiFindUs
             set { if (!readOnly) googleAPIKey = value ?? ""; }
         }
 
+        /// <summary>
+        /// The action used to trigger the main application loop.
+        /// </summary>
         public static Action<MainForm> MainLaunchAction
         {
             get { return mainLaunchAction; }
             set { if (!readOnly) mainLaunchAction = value; }
-        }            
+        }
+
+        /// <summary>
+        /// An application-wide static random number generation instance.
+        /// </summary>
+        public static Random Random
+        {
+            get { return random; }
+        }
 
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
@@ -796,6 +778,7 @@ namespace WiFindUs
             Debugger.I("Loading config files...");
             String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             config = new ConfigFile(files);
+            mysqlDisabledInConfig = !config.Get("mysql.enabled", 0, true);
             Debugger.V(config.ToString());
             Debugger.I("Finished loading config files.");
             return true;
@@ -819,7 +802,7 @@ namespace WiFindUs
 
             try
             {
-                mysqlContext = (DataContext)mysqlContextType.GetConstructor(new Type[] { typeof(String) }).Invoke(new object[] { LinqConnectionString });
+                mysqlContext = (DataContext)mysqlContextType.GetConstructor(new Type[] { typeof(String) }).Invoke(new object[] { MySQLConnectionString });
                 Debugger.I("MySQL connection created OK.");
                 return true;
             }
