@@ -87,8 +87,7 @@ namespace WiFindUs.Eye
 
         public EyeMainForm()
         {
-            if (DesignMode)
-                return;
+
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -206,6 +205,8 @@ namespace WiFindUs.Eye
         protected override void OnFirstShown(EventArgs e)
         {
             base.OnFirstShown(e);
+            if (DesignMode)
+                return;
             MapScene.SceneStarted += MapSceneStarted;
             if (Map != null)
                 Map.StartMapApplication();
@@ -214,6 +215,8 @@ namespace WiFindUs.Eye
         protected override void OnThemeChanged(Theme theme)
         {
             base.OnThemeChanged(theme);
+            if (DesignMode)
+                return;
             if (Map != null)
                 Map.BackColor = theme.ControlDarkColour;
         }
