@@ -51,7 +51,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="WaveEngine.Framework, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\Desktop\Wave Nightly\WaveEngine.Framework.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Wave Engine\v1.0\Lib\Windows\WaveEngine.Framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
