@@ -21,7 +21,7 @@ namespace WiFindUs.IO
 		protected static readonly Regex EMPTY
 			= new Regex(@"^\s*$", RegexOptions.Compiled);
 		protected static readonly Regex TRUE
-			= new Regex("^\\s*(1|TRUE|YES|ON)\\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+			= new Regex(@"^\s*(?:1|TRUE|YES|ON)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         protected static readonly String NUM = "[-+]?[0-9]+(?:[.][0-9]*)?";
         protected static readonly String NUM_PERCENT = NUM + "[%]";
 		protected static readonly Regex COLOUR_RGBA
