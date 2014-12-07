@@ -64,6 +64,12 @@ namespace WiFindUs.Eye.Wave
 
         public MapControl()
         {
+            BackColor = System.Drawing.Color.Black;
+            Margin = new Padding(0);
+            TabStop = false;
+            
+            if (IsDesignMode)
+                return;
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.UserPaint, true);
             UpdateStyles();
 
@@ -126,6 +132,8 @@ namespace WiFindUs.Eye.Wave
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
+            if (IsDesignMode)
+                return;
             if (this.mapApp != null && ClientRectangle.Width > 0 && ClientRectangle.Height > 0)
                 this.mapApp.ResizeScreen(ClientRectangle.Width / scaleFactor, ClientRectangle.Height / scaleFactor);
         }

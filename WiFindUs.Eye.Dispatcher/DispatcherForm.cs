@@ -22,6 +22,8 @@ namespace WiFindUs.Eye.Dispatcher
 {
     public partial class DispatcherForm : EyeMainForm
     {
+        private MapControl mapControl;
+        
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
@@ -40,6 +42,8 @@ namespace WiFindUs.Eye.Dispatcher
             InitializeComponent();
             if (DesignMode)
                 return;
+            workingAreaToolStripContainer.ContentPanel.Controls.Add(mapControl = new MapControl());
+            mapControl.Dock = DockStyle.Fill;
             WFUApplication.StartSplashLoading(LoadingTasks);
         }
 

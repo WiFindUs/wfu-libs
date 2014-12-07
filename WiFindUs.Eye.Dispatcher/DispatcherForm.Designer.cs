@@ -34,7 +34,6 @@
             WiFindUs.Controls.Theme theme3 = new WiFindUs.Controls.Theme();
             WiFindUs.Controls.Theme theme4 = new WiFindUs.Controls.Theme();
             this.workingAreaToolStripContainer = new System.Windows.Forms.ToolStripContainer();
-            this.mapControl = new WiFindUs.Eye.Wave.MapControl();
             this.windowStatusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.windowSplitter = new System.Windows.Forms.SplitContainer();
@@ -84,7 +83,6 @@
             // 
             // workingAreaToolStripContainer.ContentPanel
             // 
-            this.workingAreaToolStripContainer.ContentPanel.Controls.Add(this.mapControl);
             this.workingAreaToolStripContainer.ContentPanel.Margin = new System.Windows.Forms.Padding(0);
             this.workingAreaToolStripContainer.ContentPanel.Size = new System.Drawing.Size(627, 284);
             this.workingAreaToolStripContainer.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -93,18 +91,6 @@
             this.workingAreaToolStripContainer.Size = new System.Drawing.Size(627, 309);
             this.workingAreaToolStripContainer.TabIndex = 0;
             this.workingAreaToolStripContainer.Text = "toolStripContainer1";
-            // 
-            // mapControl
-            // 
-            this.mapControl.BackColor = System.Drawing.Color.Black;
-            this.mapControl.CenterLocation = null;
-            this.mapControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mapControl.Location = new System.Drawing.Point(0, 0);
-            this.mapControl.Margin = new System.Windows.Forms.Padding(0);
-            this.mapControl.Name = "mapControl";
-            this.mapControl.Size = new System.Drawing.Size(627, 284);
-            this.mapControl.TabIndex = 0;
-            this.mapControl.Theme = null;
             // 
             // windowStatusStrip
             // 
@@ -480,7 +466,6 @@
         private Controls.ThemedTabControl actionTabs;
         private System.Windows.Forms.TabPage actionsTab;
         private Controls.ConsolePanel consolePanel;
-        private WiFindUs.Eye.Wave.MapControl mapControl;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
         private System.Windows.Forms.SplitContainer workingAreaSplitter;
         private Controls.ThemedTabControl entityTabs;
