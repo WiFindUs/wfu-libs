@@ -318,6 +318,7 @@ namespace WiFindUs.Eye
             }
             else
             {
+                Debugger.W("Config: mysql.enabled is set to false; data will not persist when the session is terminated.");
                 devices = new List<Device>();
                 deviceHistories = new List<DeviceHistory>();
                 nodes = new List<Node>();
@@ -391,7 +392,11 @@ namespace WiFindUs.Eye
         private bool StartServerThread()
         {
             if (!WFUApplication.Config.Get("server.enabled", true))
+            {
+                Debugger.W("Config: server.enabled is set to false; will not process updates sent by clients.");
                 return true;
+            }
+
             WFUApplication.SplashStatus = "Starting server thread";
             try
             {
