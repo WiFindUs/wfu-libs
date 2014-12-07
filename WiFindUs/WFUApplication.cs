@@ -61,7 +61,6 @@ namespace WiFindUs
         private static Theme theme = new Theme();
         private static string googleAPIKey = "";
         private static Action<MainForm> mainLaunchAction = null;
-        private static bool mysqlDisabledAtCommandLine = false;
         private static bool mysqlDisabledInConfig = false;
 
         /////////////////////////////////////////////////////////////////////
@@ -406,7 +405,7 @@ namespace WiFindUs
         {
             get
             {
-                return usesMySQL && !mysqlDisabledAtCommandLine && !mysqlDisabledInConfig;
+                return usesMySQL && !mysqlDisabledInConfig;
             }
             set { if (!readOnly) usesMySQL = value; }
         }
@@ -635,10 +634,6 @@ namespace WiFindUs
 						InitialVerbosity = (Debugger.Verbosity)Int32.Parse(args[i]);
 						break;
 
-                    case "nomysql":
-                        mysqlDisabledAtCommandLine = true;
-                        break;
-
 					case "conf":
 						if (i == args.Length-1)
 							break;
@@ -778,7 +773,7 @@ namespace WiFindUs
             Debugger.I("Loading config files...");
             String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             config = new ConfigFile(files);
-            mysqlDisabledInConfig = !config.Get("mysql.enabled", 0, true);
+            mysqlDisabledInConfig = !config.Get("mysql.enabled", true);
             Debugger.V(config.ToString());
             Debugger.I("Finished loading config files.");
             return true;
