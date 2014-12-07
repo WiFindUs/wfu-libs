@@ -49,23 +49,24 @@ namespace WiFindUs.Forms
         {
             base.OnFirstShown(e);
             Debugger.FlushToConsoles();
-            Screen startScreen = Screen.PrimaryScreen;
+            Screen startScreen = null;
             int configMonitor = WFUApplication.Config.Get("display.start_screen", -1);
-            Debugger.V("Startup monitor:" + configMonitor);
+            Debugger.V("Startup monitor: " + configMonitor);
             if (configMonitor >= 0)
             {
                 foreach (Screen screen in Screen.AllScreens)
                 {
-                    Debugger.I("\"" + screen.DeviceName + "\"");
                     if (screen.DeviceName.CompareTo("\\\\.\\DISPLAY" + configMonitor) == 0)
                     {
-                        Debugger.I("\"" + screen.DeviceName + "\"");
                         startScreen = screen;
                         break;
                     }
                 }
+                if (startScreen == null)
+                    Debugger.W("Could not find screen matching given number; will use primary screen.");
             }
-
+            if (startScreen == null)
+                startScreen = Screen.PrimaryScreen;
             Location = new Point(startScreen.Bounds.Left + 10, startScreen.Bounds.Top + 10);
             bool startMaximized = WFUApplication.Config.Get("display.start_maximized", false);
             Debugger.V("Start maximized: " + startMaximized);
