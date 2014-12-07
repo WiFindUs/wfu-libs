@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\ConsoleTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\IThemeable.cs" />
     <Compile Include="Controls\Theme.cs" />
     <Compile Include="Controls\ThemeBrush.cs" />
