@@ -19,22 +19,22 @@ namespace WiFindUs.Eye.Wave
         public static event Action<MapScene> SceneStarted;
         
         private const float CAM_MIN_ZOOM = 100.0f;
-        private const float CAM_MAX_ZOOM = 1000.0f;
+        private const float CAM_MAX_ZOOM = 2000.0f;
         private const float CAM_MIN_ANGLE = (float)(Math.PI/8.0);
         private const float CAM_MAX_ANGLE = (float)(Math.PI/2.01);
         private const float ZOOM_RATE = 1.0f;
         private const float TILT_RATE = 1.0f;
         public const uint MIN_LEVEL = Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM+1;
 
-        private EyeContext eyeContext;
+        private EyeMainForm eyeForm;
         private Theme theme;
         private FixedCamera camera;
         private ILocation center;
         private Entity[][,] chunks;
         private TerrainChunk baseChunk;
         private uint visibleLayer = 0;
-        private int cameraZoom = 100; //percentage
-        private int cameraTilt = 100; //percentage
+        private int cameraZoom = 100; //percentage; 100 is all the way zoomed out
+        private int cameraTilt = 50; //percentage; 100 is completely vertical
         private Camera3D cameraTransform;
         private bool autoUpdateCamera = true;
         private bool cameraDirty = false;
@@ -122,7 +122,7 @@ namespace WiFindUs.Eye.Wave
                 if (zoom == cameraZoom)
                     return;
                 cameraZoom = zoom;
-                //VisibleLayer = (uint)((1.0f-((float)cameraZoom / 100.0f)) * (float)chunks.Length);
+                VisibleLayer = (uint)((1.0f-((float)cameraZoom / 100.0f)) * (float)chunks.Length);
                 if (autoUpdateCamera)
                     UpdateCameraPosition();
                 else
@@ -174,6 +174,11 @@ namespace WiFindUs.Eye.Wave
             return baseChunk.Region.LocationToVector(baseChunk.TopLeft, baseChunk.BottomRight, loc);
         }
 
+        public void CancelThreads()
+        {
+            Chunks((chunk) => chunk.CancelThreads());
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
@@ -214,12 +219,13 @@ namespace WiFindUs.Eye.Wave
         {
             base.Start();
             Chunks((chunk) => chunk.CalculatePosition());
-            eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.EyeContext;
-            if (SceneStarted != null)
-                SceneStarted(this);
-            foreach (Device device in eyeContext.Devices)
+            chunks[0][0, 0].IsVisible = true;
+            eyeForm = (WFUApplication.MainForm as EyeMainForm);
+            foreach (Device device in eyeForm.Devices)
                 Device_OnDeviceCreated(device);
             Device.OnDeviceCreated += Device_OnDeviceCreated;
+            if (SceneStarted != null)
+                SceneStarted(this);
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -260,7 +266,7 @@ namespace WiFindUs.Eye.Wave
             throw new NotImplementedException();
         }
 
-        public void CreateChunkLayer(uint layer)
+        private void CreateChunkLayer(uint layer)
         {
             if (chunks == null || layer >= chunks.Length || chunks[layer] != null)
                 return;
@@ -286,13 +292,13 @@ namespace WiFindUs.Eye.Wave
 
                     Entity chunkEntity = chunks[layer][row, column] = new Entity()
                     .AddComponent(new Transform3D())
-                    .AddComponent(new MaterialsMap())
+                    .AddComponent(new MaterialsMap(new BasicMaterial((row+column) % 2 == 0 ? Color.Peru : Color.Sienna)))
                     .AddComponent(Model.CreatePlane(Vector3.UnitY, planeSize))
                     .AddComponent(new ModelRenderer())
                     .AddComponent(chunk);
                     EntityManager.Add(chunkEntity);
 
-                    chunkEntity.IsVisible = layer == visibleLayer;
+                    chunkEntity.IsVisible = false;
                 }
             }
         }

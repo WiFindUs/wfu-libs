@@ -81,6 +81,12 @@ namespace WiFindUs.Eye.Wave
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
+        public void CancelThreads()
+        {
+            if (mapApp != null)
+                mapApp.CancelThreads();
+        }
+
         public static void StartRenderLoop(WiFindUs.Forms.MainForm form)
         {
             IMapForm mapForm = form as IMapForm;

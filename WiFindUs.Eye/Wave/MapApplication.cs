@@ -84,6 +84,12 @@ namespace WiFindUs.Eye.Wave
             if (game != null)
                 game.OnDeactivated(); 
         }
+
+        public void CancelThreads()
+        {
+            if (game != null)
+                game.CancelThreads();
+        }
     }
 }
 

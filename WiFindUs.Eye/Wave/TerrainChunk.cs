@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
@@ -16,15 +17,20 @@ namespace WiFindUs.Eye.Wave
 {
     public class TerrainChunk : Behavior
     {
-        private static readonly int CHUNK_IMAGE_SIZE = 640;
+        private const int MAX_CONCURRENT_LOADS = 1;
+        private const int MAX_CONCURRENT_DOWNLOADS = 1;
+        private const int CHUNK_IMAGE_SIZE = 640;
         private static readonly string IMAGE_FORMAT = "png";
         private static readonly string MAPS_URL_BASE = "https://maps.googleapis.com/maps/api/staticmap?";
         private static readonly string MAPS_DIR = "maps/";
         private static int currentDownloads = 0;
         private static int currentLoads = 0;
+        private bool cancelThreads = false;
 
         [RequiredComponent]
         private Transform3D transform3D;
+        [RequiredComponent]
+        private MaterialsMap materialsMap;
 
         private Region region;
         private uint googleMapsZoomLevel;
@@ -32,10 +38,12 @@ namespace WiFindUs.Eye.Wave
         private TerrainChunk baseChunk;
         private float size;
         private Vector3 topLeft, bottomRight;
-        private Thread loadThread, downloadThread;
-        private bool badDownload = false;
-        private bool badLoad = false;
-        private bool mapTextured = false;
+        private Thread loadThread;
+        private bool mapTextured = true;
+        private WebClient downloadClient = null;
+        private int lastDownloadPercentage = 0;
+        private static bool mapsDirectoryExists = false;
+        private bool mapImageFileExists = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -52,6 +60,8 @@ namespace WiFindUs.Eye.Wave
                 if (value == null || (region != null && value.Equals(region.Center)))
                     return;
                 region = new Region(value, googleMapsZoomLevel);
+                mapImageFileExists = File.Exists(ImagePath);
+                mapTextured = false;
             }
         }
 
@@ -155,188 +165,134 @@ namespace WiFindUs.Eye.Wave
             bottomRight = new Vector3(transform3D.Position.X + size / 2.0f, 0.0f, transform3D.Position.Z + size / 2.0f);
         }
 
+        public void CancelThreads()
+        {
+            cancelThreads = true;
+            if (downloadClient != null)
+                downloadClient.CancelAsync();
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
+
+        private void CheckTextureState()
+        {
+            if (mapTextured || loadThread != null || downloadClient != null || cancelThreads)
+                return;
+
+            //check maps directory exists, create if necessary
+            if (!mapsDirectoryExists)
+            {
+                if (!Directory.Exists(MAPS_DIR))
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(MAPS_DIR);
+                    }
+                    catch
+                    {
+                        Debugger.E("Error creating maps directory!");
+                        materialsMap.DefaultMaterial = new BasicMaterial(Color.Red);
+                        mapTextured = true;
+                        return;
+                    }
+                }
+                mapsDirectoryExists = true;
+            }
+
+            //check for map tile, download if necessary
+            if (!mapImageFileExists)
+            {
+                if (currentDownloads >= MAX_CONCURRENT_DOWNLOADS)
+                    return;
+
+                currentDownloads++;
+                Debugger.V("Downloading map chunk texture " + ImageFilename + "...");
+                downloadClient = new WebClient();
+                downloadClient.DownloadFileCompleted += DownloadFileCompleted;
+                downloadClient.DownloadProgressChanged += DownloadProgressChanged;
+                downloadClient.DownloadFileAsync(new Uri(ImageDownloadURL), ImagePath, null);
+                materialsMap.DefaultMaterial = new BasicMaterial(Color.Orange);
+            }
+            else
+            {
+                if (currentLoads >= MAX_CONCURRENT_LOADS)
+                    return;
+
+                currentLoads++;
+                materialsMap.DefaultMaterial = new BasicMaterial(Color.Yellow);
+                loadThread = new Thread(new ThreadStart(LoadThread));
+                loadThread.Start();
+            }
+        }
+
         protected override void Update(TimeSpan gameTime)
         {
-            if (this.Owner.IsVisible && !mapTextured && loadThread == null && downloadThread == null)
-            {
-                if (!badLoad && System.IO.File.Exists(ImagePath))
-                {
-                    if (currentLoads < 10)
-                    {
-                        loadThread = new Thread(new ThreadStart(LoadThread));
-                        loadThread.Start();
-                    }
-                }
-                else if (!badDownload)
-                {
-                    if (currentDownloads < 3)
-                    {
-                        downloadThread = new Thread(new ThreadStart(DownloadThread));
-                        downloadThread.Start();
-                    }
-                }
-
-
-            }
+            CheckTextureState();
         }
 
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
+        private void DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
+        {
+            if (e.Cancelled || e.Error != null)
+            {
+                if (e.Error != null)
+                {
+                    Debugger.E("Error downloading map chunk texture " + ImageFilename + ".");
+                    materialsMap.DefaultMaterial = new BasicMaterial(Color.Red);
+                    mapTextured = true;
+                }
+
+                if (File.Exists(ImagePath))
+                {
+                    try { File.Delete(ImagePath); }
+                    catch { }
+                }
+            }
+            else
+                mapImageFileExists = true;
+
+            downloadClient.DownloadFileCompleted -= DownloadFileCompleted;
+            downloadClient.DownloadProgressChanged -= DownloadProgressChanged;
+            downloadClient.Dispose();
+            downloadClient = null;
+            currentDownloads--;
+        }
+
+        private void DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        {
+            if ((lastDownloadPercentage < 25 && e.ProgressPercentage >= 25)
+                || (lastDownloadPercentage < 50 && e.ProgressPercentage >= 50)
+                || (lastDownloadPercentage < 75 && e.ProgressPercentage >= 75))
+                Debugger.V("Downloaded " + e.ProgressPercentage.ToString() + "%");
+            lastDownloadPercentage = e.ProgressPercentage;
+        }
+        
         private void LoadThread()
         {
-            //load image file
-            currentLoads++;
-            System.Drawing.Image image = null;
             try
             {
-                image = System.Drawing.Image.FromFile(ImagePath);
-            }
-            catch
-            {
-                Debugger.E("Error loading '" + ImagePath + "'.");
-                badLoad = true;
-                loadThread = null;
-                currentLoads--;
-                return;
-            }
+                //load image file
+                Texture2D tex2D = null;
+                using (FileStream file = new FileStream(ImagePath, FileMode.Open))
+                    tex2D = Texture2D.FromFile(RenderManager.GraphicsDevice, file);
 
-            //check pixel formats to eliminate non-32bit ones
-            switch (image.PixelFormat)
-            {
-                case System.Drawing.Imaging.PixelFormat.Alpha:
-                case System.Drawing.Imaging.PixelFormat.DontCare:
-                case System.Drawing.Imaging.PixelFormat.PAlpha:
-                case System.Drawing.Imaging.PixelFormat.Max:
-                case System.Drawing.Imaging.PixelFormat.Gdi:
-                case System.Drawing.Imaging.PixelFormat.Extended:
-                    Debugger.E("Invalid pixel format in '" + ImagePath + "' ("+image.PixelFormat+").");
-                    badLoad = true;
-                    loadThread = null;
-                    currentLoads--;
-                    return;
-            }
-
-            //generate texture
-            Texture2D tex2D = TxdFromBitmap(image);
-            image.Dispose();
-
-            //swap out texture
-            try
-            {
-                Owner.FindComponent<MaterialsMap>().DefaultMaterial = new BasicMaterial(tex2D);
+                //swap out texture
+                materialsMap.DefaultMaterial = new BasicMaterial(tex2D);
             }
             catch (Exception e)
             {
-                Debugger.Ex(e);
+                Debugger.E("Error loading map chunk texture " + ImageFilename + ".");
+                materialsMap.DefaultMaterial = new BasicMaterial(Color.Red);
             }
-
             mapTextured = true;
             loadThread = null;
             currentLoads--;
         }
-
-        private void DownloadThread()
-        {
-            currentDownloads++;
-
-            if (!Directory.Exists(MAPS_DIR))
-            {
-                try
-                {
-                    Directory.CreateDirectory(MAPS_DIR);
-                }
-                catch
-                {
-                    Debugger.E("Error creating maps directory!");
-                }
-            }
-
-            using (WebClient Client = new WebClient())
-            {
-                try
-                {
-                    Debugger.V("Downloading map chunk texture " + ImageFilename + "...");
-                    Client.DownloadFile(ImageDownloadURL, ImagePath);
-                }
-                catch
-                {
-                    badDownload = true;
-                    Debugger.E("Error downloading map chunk texture " + ImageFilename + ".");
-                }
-            }
-
-            downloadThread = null;
-            currentDownloads--;
-        }
-
-        private static byte[] Array1DFromBitmap(System.Drawing.Bitmap bmp)
-        {
-            // get total locked pixels count
-            int PixelCount = bmp.Width * bmp.Height;
-
-            // Create rectangle to lock
-            System.Drawing.Rectangle rect = new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height);
-
-            // get source bitmap pixel format size
-            int depth = System.Drawing.Bitmap.GetPixelFormatSize(bmp.PixelFormat);
-
-            // Check if bpp (Bits Per Pixel) is 8, 24, or 32
-            if (depth != 8 && depth != 24 && depth != 32)
-            {
-                throw new ArgumentException("Only 8, 24 and 32 bpp images are supported.");
-            }
-
-            // Lock bitmap and return bitmap data
-            System.Drawing.Imaging.BitmapData bitmapData = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.ReadWrite,
-            bmp.PixelFormat);
-
-            //declare an array to hold the bytes of the bitmap
-            int numBytes = bitmapData.Stride * bmp.Height;
-            byte[] pixels = new byte[numBytes];
-
-            //copy the RGB values into the array
-            System.Runtime.InteropServices.Marshal.Copy(bitmapData.Scan0, pixels, 0, numBytes);
-            for (int i = 0; i < pixels.Length; i += 4)
-            {
-                byte bb = pixels[i];
-                byte br = pixels[i + 1];
-                byte bg = pixels[i + 2];
-                byte ba = pixels[i + 3];
-
-                pixels[i] = bg;
-                pixels[i + 1] = br;
-                pixels[i + 2] = bb;
-                pixels[i + 3] = ba;
-            }
-
-            return pixels;
-        }
-
-        private Texture2D TxdFromBitmap(System.Drawing.Image b)
-        {
-            Texture2D tex2D = new Texture2D()
-            {
-                Format = WaveEngine.Common.Graphics.PixelFormat.R8G8B8A8,
-                Height = b.Height,
-                Width = b.Width,
-                Levels = 1
-            };
-
-            System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(b);
-            tex2D.Data = new byte[1][][];
-            tex2D.Data[0] = new byte[1][];
-            tex2D.Data[0][0] = Array1DFromBitmap(bmp);
-            RenderManager.GraphicsDevice.Textures.UploadTexture(tex2D);
-            bmp.Dispose();
-
-            return tex2D;
-        }
-
     }
 }

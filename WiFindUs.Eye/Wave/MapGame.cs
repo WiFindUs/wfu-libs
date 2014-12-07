@@ -43,12 +43,17 @@ namespace WiFindUs.Eye.Wave
         public override void Initialize(IApplication application)
         {
             base.Initialize(application);
-            scene = null;
-                scene = new MapScene();
-                scene.Initialize(WaveServices.GraphicsDevice);
+            scene = new MapScene();
+            scene.Initialize(WaveServices.GraphicsDevice);
 
-                ScreenContext sc = new ScreenContext(scene);
-                WaveServices.ScreenContextManager.To(sc);
+            ScreenContext sc = new ScreenContext(scene);
+            WaveServices.ScreenContextManager.To(sc);
+        }
+
+        public void CancelThreads()
+        {
+            if (scene != null)
+                scene.CancelThreads();
         }
     }
 }
