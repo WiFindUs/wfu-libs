@@ -8,6 +8,8 @@ using WiFindUs.Eye.Wave;
 using WiFindUs.Forms;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Extensions;
+using System.Collections;
+using System.Windows.Forms;
 
 namespace WiFindUs.Eye
 {
@@ -21,42 +23,60 @@ namespace WiFindUs.Eye
         private IEnumerable<NodeHistory> nodeHistories;
         private IEnumerable<User> users;
         private IEnumerable<Waypoint> waypoints;
+        private Timer sqlSubmitTimer;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
+
+        protected override List<Func<bool>> LoadingTasks
+        {
+            get
+            {
+                List<Func<bool>> tasks = base.LoadingTasks;
+                tasks.Add(InitializeEntites);
+                tasks.Add(PreCacheUsers);
+                tasks.Add(PreCacheDevices);
+                tasks.Add(PreCacheDeviceHistories);
+                tasks.Add(PreCacheNodes);
+                tasks.Add(PreCacheNodeHistories);
+                tasks.Add(PreCacheWaypoints);
+                tasks.Add(StartServerThread);
+                return tasks;
+            }
+        }
 
         protected virtual MapControl Map
         {
             get { return null; }
         }
 
-        protected virtual IEnumerable<Device> Devices
+        public virtual IEnumerable<Device> Devices
         {
             get { return devices;  }
         }
 
-        protected virtual IEnumerable<Node> Nodes
+        public virtual IEnumerable<Node> Nodes
         {
             get { return nodes; }
         }
 
-        protected virtual IEnumerable<DeviceHistory> DeviceHistories
+        public virtual IEnumerable<DeviceHistory> DeviceHistories
         {
             get { return deviceHistories; }
         }
 
-        protected virtual IEnumerable<NodeHistory> NodeHistories
+        public virtual IEnumerable<NodeHistory> NodeHistories
         {
             get { return nodeHistories; }
         }
 
-        protected virtual IEnumerable<User> Users
+        public virtual IEnumerable<User> Users
         {
             get { return users; }
         }
 
-        protected virtual IEnumerable<Waypoint> Waypoints
+        public virtual IEnumerable<Waypoint> Waypoints
         {
             get { return waypoints; }
         }
@@ -69,19 +89,6 @@ namespace WiFindUs.Eye
         {
             if (DesignMode)
                 return;
-            if (WFUApplication.UsesMySQL)
-                eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.EyeContext;
-            else
-            {
-                devices = new List<Device>();
-                nodes = new List<Node>();
-                deviceHistories = new List<DeviceHistory>();
-                nodeHistories = new List<NodeHistory>();
-                users = new List<User>();
-                waypoints = new List<Waypoint>();
-            }
-            if (WFUApplication.Config.Get("server.enabled", true))
-                eyeListener = new EyePacketListener(WFUApplication.Config.Get("server.udp_port", 33339));
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -96,80 +103,98 @@ namespace WiFindUs.Eye
 
         public Device Device(long id, out bool isNew)
         {
+            isNew = false;
             if (id < 0)
-            {
-                isNew = false;
                 return null;
-            }
 
             //fetch
             Device device = null;
-            try
+            if (eyeContext != null)
             {
-                if (eyeContext != null)
-                    device = eyeContext.Devices.Where(d => d.ID == id).Single();
-                else
+                try
                 {
-                    foreach (Device d in devices)
-                        if (d.ID == id)
-                        {
-                            device = d;
-                            break;
-                        }
+                    device = eyeContext.Devices.Where(d => d.ID == id).Single();
                 }
-
+                catch (Exception e)
+                {
+                    Debugger.Ex(e);
+                    return null;
+                }
             }
-            catch { }
+            else
+            {
+                foreach (Device d in devices)
+                    if (d.ID == id)
+                    {
+                        device = d;
+                        break;
+                    }
+            }
 
             //create
             if (device == null)
             {
-                long ts = DateTime.UtcNow.UnixTimestamp();
-                Devices.InsertOnSubmit(device = new Device()
+                long ts = DateTime.UtcNow.ToUnixTimestamp();
+                device = new Device()
                 {
                     ID = id,
                     Created = ts,
                     Updated = ts
-                });
+                };
+                if (eyeContext == null)
+                    ((List<Device>)devices).Add(device);
                 isNew = true;
             }
-            else
-                isNew = false;
 
             return device;
         }
 
         public User User(long id, out bool isNew)
         {
+            isNew = false;
             if (id < 0)
-            {
-                isNew = false;
                 return null;
-            }
 
             //fetch
             User user = null;
-            try
+            if (eyeContext != null)
             {
-                user = Users.Where(d => d.ID == id).Single();
+                try
+                {
+                    user = Users.Where(d => d.ID == id).Single();
+                }
+                catch (Exception e)
+                {
+                    Debugger.Ex(e);
+                    return null;
+                }
             }
-            catch { }
+            else
+            {
+                foreach (User u in users)
+                    if (u.ID == id)
+                    {
+                        user = u;
+                        break;
+                    }
+            }
+
 
             //create
             if (user == null)
             {
-                Users.InsertOnSubmit(user = new User()
+                user = new User()
                 {
                     ID = id,
                     NameFirst = "",
                     NameLast = "",
                     NameMiddle = "",
                     Type = ""
-                });
+                };
+                if (eyeContext == null)
+                    ((List<User>)users).Add(user);
                 isNew = true;
             }
-            else
-                isNew = false;
 
             return user;
         }
@@ -181,11 +206,9 @@ namespace WiFindUs.Eye
         protected override void OnFirstShown(EventArgs e)
         {
             base.OnFirstShown(e);
+            MapScene.SceneStarted += MapSceneStarted;
             if (Map != null)
-            {
-                MapScene.SceneStarted += MapSceneStarted;
                 Map.StartMapApplication();
-            }
         }
 
         protected override void OnThemeChanged(Theme theme)
@@ -199,8 +222,16 @@ namespace WiFindUs.Eye
         {            
             if (Map != null)
             {
+                Map.CancelThreads();
                 Controls.Remove(Map);
                 Map.Dispose();
+            }
+
+            if (sqlSubmitTimer != null)
+            {
+                sqlSubmitTimer.Tick -= SqlSubmitTimerTick;
+                sqlSubmitTimer.Enabled = false;
+                sqlSubmitTimer.Dispose();
             }
             
             if (eyeListener != null)
@@ -212,7 +243,7 @@ namespace WiFindUs.Eye
             base.OnDisposing();
         }
 
-        protected virtual void EyePacketReceived (EyePacket obj)
+        protected virtual void EyePacketReceived(EyePacket obj)
         {
             if (obj.Type.CompareTo("DEV") == 0)
             {
@@ -233,56 +264,154 @@ namespace WiFindUs.Eye
 
                 //first get user
                 bool newUser = false;
-                User user = devicePacket.UserID >= 0 ? EyeContext.User(devicePacket.UserID, out newUser) : null;
+                User user = User(devicePacket.UserID, out newUser);
 
                 //now get device
-                long ts = DateTime.UtcNow.ToUnixTimestamp();
                 bool newDevice = false;
-                Device device = null;
-                try
-                {
-                    device = EyeContext.Devices.Where(d => d.ID == devicePacket.ID).Single();
-                }
-                catch { }
-                if (device == null)
-                {
-                    newDevice = true;
-                    EyeContext.Devices.InsertOnSubmit(device = new Device()
-                    {
-                        ID = devicePacket.ID,
-                        Created = ts,
-                        Updated = ts,
-                        User = user,
-                        Type = devicePacket.DeviceType,
-                        Location = devicePacket
-                    });
-                }
-                else
-                {
-                    device.Updated = ts;
-                    device.User = user;
-                    if (!WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
-                        device.Location = devicePacket;
-                }
+                Device device = Device(devicePacket.ID, out newDevice);
+                device.User = user;
+                if (!WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
+                    device.Location = devicePacket;
+                if (newDevice)
+                    device.Type = devicePacket.DeviceType;
+                else 
+                    device.Updated = DateTime.UtcNow.ToUnixTimestamp();
 
-                if (newDevice || newUser)
-                    EyeContext.SubmitChangesThreaded();
+                if (eyeContext != null && (newDevice || newUser))
+                    eyeContext.SubmitChangesThreaded();
             }
         }
 
         protected virtual void MapSceneStarted(MapScene obj)
         {
+            MapScene.SceneStarted -= MapSceneStarted;
             ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
             if (location == null)
                 Debugger.E("Could not parse map.center from config files!");
             else
                 obj.CenterLocation = location;
             Map.Theme = Theme;
-
-            if (eyeListener != null)
-                eyeListener.PacketReceived += EyePacketReceived;
         }
 
-       // ,
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        private bool InitializeEntites()
+        {
+            WFUApplication.SplashStatus = "Initializing entity collections";
+            if (WFUApplication.UsesMySQL)
+            {
+                eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.EyeContext;
+
+                devices = eyeContext.Devices;
+                deviceHistories = eyeContext.DeviceHistories;
+                nodes = eyeContext.Nodes;
+                nodeHistories = eyeContext.NodeHistories;
+                users = eyeContext.Users;
+                waypoints = eyeContext.Waypoints;
+
+                sqlSubmitTimer = new Timer();
+                sqlSubmitTimer.Interval = WFUApplication.Config.Get("mysql.submit_rate", 0, 10000);
+                sqlSubmitTimer.Tick += SqlSubmitTimerTick;
+                sqlSubmitTimer.Enabled = true;
+            }
+            else
+            {
+                devices = new List<Device>();
+                deviceHistories = new List<DeviceHistory>();
+                nodes = new List<Node>();
+                nodeHistories = new List<NodeHistory>();
+                users = new List<User>();
+                waypoints = new List<Waypoint>();
+            }
+            return true;
+        }
+
+        private bool PreCacheUsers()
+        {
+            if (!WFUApplication.UsesMySQL)
+                return true;
+            WFUApplication.SplashStatus = "Pre-caching users";
+            foreach (User user in Users)
+                ;
+            return true;
+        }
+
+        private bool PreCacheDevices()
+        {
+            if (!WFUApplication.UsesMySQL)
+                return true;
+            WFUApplication.SplashStatus = "Pre-caching devices";
+            foreach (Device device in Devices)
+                ;
+            return true;
+        }
+
+        private bool PreCacheDeviceHistories()
+        {
+            if (!WFUApplication.UsesMySQL)
+                return true;
+            WFUApplication.SplashStatus = "Pre-caching device history";
+            foreach (DeviceHistory history in DeviceHistories)
+                ;
+            return true;
+        }
+
+        private bool PreCacheNodes()
+        {
+            if (!WFUApplication.UsesMySQL)
+                return true;
+            WFUApplication.SplashStatus = "Pre-caching nodes";
+            foreach (Node node in Nodes)
+                ;
+            return true;
+        }
+
+        private bool PreCacheNodeHistories()
+        {
+            if (!WFUApplication.UsesMySQL)
+                return true;
+            WFUApplication.SplashStatus = "Pre-caching node history";
+            foreach (NodeHistory history in NodeHistories)
+                ;
+            return true;
+        }
+
+        private bool PreCacheWaypoints()
+        {
+            if (!WFUApplication.UsesMySQL)
+                return true;
+            WFUApplication.SplashStatus = "Pre-caching waypoints";
+            foreach (Waypoint waypoint in Waypoints)
+                ;
+            return true;
+        }
+
+        private bool StartServerThread()
+        {
+            if (!WFUApplication.Config.Get("server.enabled", true))
+                return true;
+            WFUApplication.SplashStatus = "Starting server thread";
+            try
+            {
+                eyeListener = new EyePacketListener(WFUApplication.Config.Get("server.udp_port", 33339));
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                String message = "There was an error creating the server thread: " + ex.Message;
+                Debugger.E(message);
+                MessageBox.Show(message + "\n\nThe application will now exit.", "Server thread creation error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            eyeListener.PacketReceived += EyePacketReceived;
+            return true;
+        }
+
+        private void SqlSubmitTimerTick(object sender, EventArgs e)
+        {
+            eyeContext.SubmitChangesThreaded();
+        }
     }
 }

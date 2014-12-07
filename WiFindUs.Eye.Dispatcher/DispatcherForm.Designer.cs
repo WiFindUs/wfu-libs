@@ -53,7 +53,6 @@
             this.consolePanel = new WiFindUs.Controls.ConsolePanel();
             this.actionTabs = new WiFindUs.Controls.ThemedTabControl();
             this.actionsTab = new System.Windows.Forms.TabPage();
-            this.updateTimer = new System.Windows.Forms.Timer(this.components);
             this.workingAreaToolStripContainer.ContentPanel.SuspendLayout();
             this.workingAreaToolStripContainer.SuspendLayout();
             this.windowStatusStrip.SuspendLayout();
@@ -428,11 +427,6 @@
             this.actionsTab.TabIndex = 0;
             this.actionsTab.Text = "Actions";
             // 
-            // updateTimer
-            // 
-            this.updateTimer.Interval = 30000;
-            this.updateTimer.Tick += new System.EventHandler(this.updateTimer_Tick);
-            // 
             // DispatcherForm
             // 
             this.ClientSize = new System.Drawing.Size(928, 564);
@@ -488,7 +482,6 @@
         private Controls.ConsolePanel consolePanel;
         private WiFindUs.Eye.Wave.MapControl mapControl;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
-        private System.Windows.Forms.Timer updateTimer;
         private System.Windows.Forms.SplitContainer workingAreaSplitter;
         private Controls.ThemedTabControl entityTabs;
         private System.Windows.Forms.TabPage devicesTab;
