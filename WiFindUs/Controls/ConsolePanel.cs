@@ -11,11 +11,8 @@ namespace WiFindUs.Controls
 	public class ConsolePanel : Panel, IThemeable
 	{
         private Theme theme;
-        private RichTextBox console;
+        private ConsoleTextBox console;
 		private TextBox input;
-
-        private static readonly int MAX_CONSOLE_LINES = 1024;
-		private readonly Color[] colors = new Color[6];
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -33,18 +30,9 @@ namespace WiFindUs.Controls
                     return;
 
                 theme = value;
-                BackColor = console.BackColor = input.BackColor = theme.ControlDarkColour;
-                Font = console.Font = input.Font = theme.ConsoleFont;
-                ForeColor = console.ForeColor = input.ForeColor = theme.TextLightColour;
-
-                colors[0] = theme.TextDarkColour; //verbose
-                colors[1] = theme.TextLightColour; //info
-                colors[2] = theme.WarningColour; //warning
-                colors[3] = theme.ErrorColour; //error
-                colors[4] = theme.ErrorColour; //exception
-                colors[5] = theme.HighlightLightColour; //prompts/console
-
-                Refresh();
+                BackColor = input.BackColor = theme.ControlDarkColour;
+                Font = input.Font = theme.ConsoleFont;
+                ForeColor = input.ForeColor = theme.TextLightColour;
             }
         }
 
@@ -71,20 +59,13 @@ namespace WiFindUs.Controls
 			Controls.Add(input);
 
 			//console panel
-			console = new RichTextBox();
+			console = new ConsoleTextBox();
 			console.Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom | AnchorStyles.Top;
-			console.Margin = new Padding(0);
-			console.BorderStyle = BorderStyle.None;
-			console.ScrollBars = RichTextBoxScrollBars.Vertical;
-			console.ReadOnly = true;
 			console.Bounds = new Rectangle(0,0,ClientRectangle.Width,ClientRectangle.Height - input.Height - 1);
 			Controls.Add(console);
 
 			ResumeLayout(false);
 			PerformLayout();
-	
-			//events
-			Debugger.OnDebugOutput += OnDebugOutput;
 		}
 
         /////////////////////////////////////////////////////////////////////
@@ -110,32 +91,5 @@ namespace WiFindUs.Controls
                 e.Handled = true;
             }
 		}
-
-		protected virtual void OnDebugOutput(Debugger.Verbosity level, string prefix, string text)
-		{
-			if (InvokeRequired)
-			{
-				try
-				{
-					Invoke(new Debugger.LogDelegate(OnDebugOutput), new object[] { level, prefix, text });
-				}
-				catch (Exception) { }
-				return;
-			}
-
-            if (console.Lines.Length >= MAX_CONSOLE_LINES)
-                console.Clear();
-
-            console.SelectionColor = colors[(int)level];
-            console.AppendText(prefix + text + "\n");
-            SendMessage(console.Handle, 277, (IntPtr)7, IntPtr.Zero);
-		}
-
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
-
-		[DllImport("user32.dll", CharSet = CharSet.Auto)]
-		private static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
 	}
 }
