@@ -18,6 +18,18 @@ namespace WiFindUs.Controls
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        public int HoverIndex
+        {
+            get { return hoverIndex; }
+            protected set
+            {
+                if (value == hoverIndex)
+                    return;
+                hoverIndex = value;
+                Refresh();
+            }
+        }
+
         public bool IsDesignMode
         {
             get
@@ -67,7 +79,7 @@ namespace WiFindUs.Controls
         {
             DrawMode = TabDrawMode.OwnerDrawFixed;
             SizeMode = TabSizeMode.Fixed;
-            ItemSize = new Size(80, 20);
+            ItemSize = new Size(80, 30);
             ResizeRedraw = true;
 
             if (IsDesignMode)
@@ -136,6 +148,26 @@ namespace WiFindUs.Controls
             }
         }
 
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+            int idx = -1;
+            for (int i = 0; i < TabCount; i++)
+            {
+                if ( GetTabRect(i).Contains(e.Location))
+                {
+                    idx = i;
+                    break;
+                }
+            }
+            HoverIndex = idx;
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            HoverIndex = -1;
+        }
 
         private void PaintTab(Graphics g, int tabIndex)
         {
