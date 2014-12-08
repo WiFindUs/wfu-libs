@@ -22,6 +22,8 @@ namespace WiFindUs.IO
 			= new Regex(@"^\s*$", RegexOptions.Compiled);
 		protected static readonly Regex TRUE
 			= new Regex(@"^\s*(?:1|TRUE|YES|ON)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        protected static readonly Regex FALSE
+            = new Regex(@"^\s*(?:0|FALSE|NO|OFF)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         protected static readonly String NUM = "[-+]?[0-9]+(?:[.][0-9]*)?";
         protected static readonly String NUM_PERCENT = NUM + "[%]";
 		protected static readonly Regex COLOUR_RGBA
@@ -218,9 +220,14 @@ namespace WiFindUs.IO
 
 		public bool Get(String key, int index, bool defaultValue)
 		{
-			if (TRUE.IsMatch(GetValue(key, index)))
-				return true;
-			return false;
+			String value = GetValue(key, index);
+            if (value == null || value.Length == 0)
+                return defaultValue;
+            if (TRUE.IsMatch(value))
+                return true;
+            if (FALSE.IsMatch(value))
+                return false;
+            return defaultValue;
 		}
 
 		public bool Get(String key, bool defaultValue)
