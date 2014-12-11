@@ -218,7 +218,7 @@ namespace WiFindUs.Eye.Wave
             }
             else
             {
-                if (currentLoads >= MAX_CONCURRENT_LOADS)
+                if (!Owner.IsVisible || currentLoads >= MAX_CONCURRENT_LOADS)
                     return;
 
                 currentLoads++;
