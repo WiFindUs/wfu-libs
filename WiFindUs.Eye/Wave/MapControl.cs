@@ -18,10 +18,22 @@ namespace WiFindUs.Eye.Wave
         private MapApplication mapApp;
         private Input input;
         private int scaleFactor = 1;
+        private Form form = null;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
+
+        public Form Form
+        {
+            get
+            {
+                if (form == null)
+                    form = FindForm();
+                return form;
+            }
+        }
+
 
         public bool IsDesignMode
         {
@@ -190,13 +202,15 @@ namespace WiFindUs.Eye.Wave
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
-            SetKeyboardButtonState(e, true);
+            if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
+                SetKeyboardButtonState(e, true);
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
             base.OnKeyUp(e);
-            SetKeyboardButtonState(e, false);
+            if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
+                SetKeyboardButtonState(e, false);
         }
 
         /////////////////////////////////////////////////////////////////////
