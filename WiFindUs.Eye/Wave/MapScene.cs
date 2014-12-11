@@ -292,7 +292,7 @@ namespace WiFindUs.Eye.Wave
 
                     Entity chunkEntity = chunks[layer][row, column] = new Entity()
                     .AddComponent(new Transform3D())
-                    .AddComponent(new MaterialsMap(new BasicMaterial((row+column) % 2 == 0 ? Color.Peru : Color.Sienna)))
+                    .AddComponent(new MaterialsMap((row+column) % 2 == 0 ? TerrainChunk.PlaceHolderMaterial : TerrainChunk.PlaceHolderMaterialAlt))
                     .AddComponent(Model.CreatePlane(Vector3.UnitY, planeSize))
                     .AddComponent(new ModelRenderer())
                     .AddComponent(chunk);

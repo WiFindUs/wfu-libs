@@ -17,6 +17,8 @@ namespace WiFindUs.Eye.Wave
 {
     public class TerrainChunk : Behavior
     {
+        private static Material placeHolderMaterial, placeHolderMaterialAlt,
+            loadingMaterial, downloadingMaterial, errorMaterial;
         private const int MAX_CONCURRENT_LOADS = 1;
         private const int MAX_CONCURRENT_DOWNLOADS = 1;
         private const int CHUNK_IMAGE_SIZE = 640;
@@ -98,6 +100,55 @@ namespace WiFindUs.Eye.Wave
         public Vector3 BottomRight
         {
             get { return bottomRight; }
+        }
+
+        public static Material PlaceHolderMaterial
+        {
+            get
+            {
+                if (placeHolderMaterial == null)
+                    placeHolderMaterial = new BasicMaterial(Color.Peru);
+                return placeHolderMaterial;
+            }
+        }
+        public static Material PlaceHolderMaterialAlt
+        {
+            get
+            {
+                if (placeHolderMaterialAlt == null)
+                    placeHolderMaterialAlt = new BasicMaterial(Color.Sienna);
+                return placeHolderMaterialAlt;
+            }
+        }
+
+        public static Material LoadingMaterial
+        {
+            get
+            {
+                if (loadingMaterial == null)
+                    loadingMaterial = new BasicMaterial(Color.Yellow);
+                return loadingMaterial;
+            }
+        }
+
+        public static Material DownloadingMaterial
+        {
+            get
+            {
+                if (downloadingMaterial == null)
+                    downloadingMaterial = new BasicMaterial(Color.Orange);
+                return downloadingMaterial;
+            }
+        }
+
+        public static Material ErrorMaterial
+        {
+            get
+            {
+                if (errorMaterial == null)
+                    errorMaterial = new BasicMaterial(Color.Red);
+                return errorMaterial;
+            }
         }
 
         private string ImageFilename
@@ -194,7 +245,7 @@ namespace WiFindUs.Eye.Wave
                     catch
                     {
                         Debugger.E("Error creating maps directory!");
-                        materialsMap.DefaultMaterial = new BasicMaterial(Color.Red);
+                        materialsMap.DefaultMaterial = ErrorMaterial;
                         mapTextured = true;
                         return;
                     }
@@ -214,7 +265,7 @@ namespace WiFindUs.Eye.Wave
                 downloadClient.DownloadFileCompleted += DownloadFileCompleted;
                 downloadClient.DownloadProgressChanged += DownloadProgressChanged;
                 downloadClient.DownloadFileAsync(new Uri(ImageDownloadURL), ImagePath, null);
-                materialsMap.DefaultMaterial = new BasicMaterial(Color.Orange);
+                materialsMap.DefaultMaterial = DownloadingMaterial;
             }
             else
             {
@@ -222,7 +273,7 @@ namespace WiFindUs.Eye.Wave
                     return;
 
                 currentLoads++;
-                materialsMap.DefaultMaterial = new BasicMaterial(Color.Yellow);
+                materialsMap.DefaultMaterial = LoadingMaterial;
                 loadThread = new Thread(new ThreadStart(LoadThread));
                 loadThread.Start();
             }
@@ -244,7 +295,7 @@ namespace WiFindUs.Eye.Wave
                 if (e.Error != null)
                 {
                     Debugger.E("Error downloading map chunk texture " + ImageFilename + ".");
-                    materialsMap.DefaultMaterial = new BasicMaterial(Color.Red);
+                    materialsMap.DefaultMaterial = ErrorMaterial;
                     mapTextured = true;
                 }
 
@@ -288,7 +339,7 @@ namespace WiFindUs.Eye.Wave
             catch (Exception e)
             {
                 Debugger.E("Error loading map chunk texture " + ImageFilename + ".");
-                materialsMap.DefaultMaterial = new BasicMaterial(Color.Red);
+                materialsMap.DefaultMaterial = ErrorMaterial;
             }
             mapTextured = true;
             loadThread = null;
