@@ -9,7 +9,7 @@ using WiFindUs.Extensions;
 namespace WiFindUs.Eye
 {
     public partial class Device
-        : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats
+        : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable
     {
         public static event Action<Device> OnDeviceCreated;
         public event Action<Device> OnDeviceUpdated;
@@ -21,7 +21,8 @@ namespace WiFindUs.Eye
         public event Action<Device> OnDeviceIPAddressChanged;
         public event Action<Device> OnDeviceUserChanged;
         public event Action<Device> OnDeviceAssignedWaypointChanged;
-        private WaveEngine.Framework.Entity waveEntity;
+        public event Action<Device> OnDeviceTimedOutChanged;
+        private bool timedOut = false;
         
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -52,22 +53,6 @@ namespace WiFindUs.Eye
 
                 if (OnDeviceLocationChanged != null)
                     OnDeviceLocationChanged(this);
-            }
-        }
-
-        public WaveEngine.Framework.Entity WaveEntity
-        {
-            get { return waveEntity; }
-            set
-            {
-                if (value == null || value == waveEntity)
-                    return;
-
-                if (waveEntity != null)
-                    waveEntity.FindComponent<WiFindUs.Eye.Wave.DeviceBehaviour>().Device = null;
-                waveEntity = value;
-                if (waveEntity != null)
-                    waveEntity.FindComponent<WiFindUs.Eye.Wave.DeviceBehaviour>().Device = this;
             }
         }
 
@@ -142,11 +127,28 @@ namespace WiFindUs.Eye
             }
         }
 
-        public long LastUpdate
+        public long UpdateAge
         {
             get
             {
                 return (DateTime.UtcNow.ToUnixTimestamp() - Updated);
+            }
+        }
+
+        public bool TimedOut
+        {
+            get
+            {
+                return timedOut;
+            }
+            private set
+            {
+                if (value == timedOut)
+                    return;
+
+                timedOut = value;
+                if (OnDeviceTimedOutChanged != null)
+                    OnDeviceTimedOutChanged(this);
             }
         }
 
@@ -176,6 +178,11 @@ namespace WiFindUs.Eye
                 Charging = stats.Charging;
                 BatteryLevel = stats.BatteryLevel;
             }
+        }
+
+        public void CheckTimeout()
+        {
+            TimedOut = UpdateAge > 60;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -234,6 +241,7 @@ namespace WiFindUs.Eye
         {
             if (OnDeviceUpdated != null)
                 OnDeviceUpdated(this);
+            CheckTimeout();
         }
     }
 }

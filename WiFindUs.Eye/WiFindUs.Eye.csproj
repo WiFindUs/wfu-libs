@@ -109,6 +109,7 @@
     <Compile Include="Interfaces\IRegion.cs" />
     <Compile Include="Interfaces\ILocatable.cs" />
     <Compile Include="Interfaces\IAtmospheric.cs" />
+    <Compile Include="Interfaces\IUpdateable.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Wave\DeviceBehaviour.cs" />
     <Compile Include="Wave\IMapForm.cs" />

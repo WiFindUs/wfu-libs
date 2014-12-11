@@ -7,7 +7,7 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Node : ILocatable, ILocation
+    public partial class Node : ILocatable, ILocation, IUpdateable
     {
         public static event Action<Node> OnNodeCreated;
         public event Action<Node> OnNodeUpdated;
@@ -16,6 +16,8 @@ namespace WiFindUs.Eye
         public event Action<Node> OnNodeIPAddressChanged;
         public event Action<Node> OnNodeLocationChanged;
         public event Action<Node> OnNodeVoltageChanged;
+        public event Action<Node> OnNodeTimedOutChanged;
+        private bool timedOut = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -61,6 +63,31 @@ namespace WiFindUs.Eye
             }
         }
 
+        public long UpdateAge
+        {
+            get
+            {
+                return (DateTime.UtcNow.ToUnixTimestamp() - Updated);
+            }
+        }
+
+        public bool TimedOut
+        {
+            get
+            {
+                return timedOut;
+            }
+            private set
+            {
+                if (value == timedOut)
+                    return;
+
+                timedOut = value;
+                if (OnNodeTimedOutChanged != null)
+                    OnNodeTimedOutChanged(this);
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
@@ -68,6 +95,11 @@ namespace WiFindUs.Eye
         public double DistanceTo(ILocation other)
         {
             return WiFindUs.Eye.Location.Distance(this, other);
+        }
+
+        public void CheckTimeout()
+        {
+            TimedOut = UpdateAge > 300;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -126,6 +158,7 @@ namespace WiFindUs.Eye
         {
             if (OnNodeUpdated != null)
                 OnNodeUpdated(this);
+            CheckTimeout();
         }
 
         partial void OnVoltageChanged()

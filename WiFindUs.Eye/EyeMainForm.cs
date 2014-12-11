@@ -23,7 +23,10 @@ namespace WiFindUs.Eye
         private IEnumerable<NodeHistory> nodeHistories;
         private IEnumerable<User> users;
         private IEnumerable<Waypoint> waypoints;
-        private Timer sqlSubmitTimer;
+        private Timer timer;
+        private long sqlSubmitInterval = 10000, sqlSubmitTimer = 0;
+        private long timeoutCheckInterval = 1000, timeoutCheckTimer = 0;
+        private List<IUpdateable> updateables = new List<IUpdateable>();
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -87,7 +90,8 @@ namespace WiFindUs.Eye
 
         public EyeMainForm()
         {
-
+            WiFindUs.Eye.Device.OnDeviceCreated += OnDeviceCreated;
+            WiFindUs.Eye.Node.OnNodeCreated += OnNodeCreated;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -230,11 +234,11 @@ namespace WiFindUs.Eye
                 Map.Dispose();
             }
 
-            if (sqlSubmitTimer != null)
+            if (timer != null)
             {
-                sqlSubmitTimer.Tick -= SqlSubmitTimerTick;
-                sqlSubmitTimer.Enabled = false;
-                sqlSubmitTimer.Dispose();
+                timer.Tick -= TimerTick;
+                timer.Enabled = false;
+                timer.Dispose();
             }
             
             if (eyeListener != null)
@@ -313,11 +317,7 @@ namespace WiFindUs.Eye
                 nodeHistories = eyeContext.NodeHistories;
                 users = eyeContext.Users;
                 waypoints = eyeContext.Waypoints;
-
-                sqlSubmitTimer = new Timer();
-                sqlSubmitTimer.Interval = WFUApplication.Config.Get("mysql.submit_rate", 0, 10000);
-                sqlSubmitTimer.Tick += SqlSubmitTimerTick;
-                sqlSubmitTimer.Enabled = true;
+                sqlSubmitInterval = WFUApplication.Config.Get("mysql.submit_rate", 0, 10000);
             }
             else
             {
@@ -329,6 +329,10 @@ namespace WiFindUs.Eye
                 users = new List<User>();
                 waypoints = new List<Waypoint>();
             }
+            timer = new Timer();
+            timer.Interval = 100;
+            timer.Tick += TimerTick;
+            timer.Enabled = true;
             return true;
         }
 
@@ -417,9 +421,35 @@ namespace WiFindUs.Eye
             return true;
         }
 
-        private void SqlSubmitTimerTick(object sender, EventArgs e)
+        private void OnDeviceCreated(Device obj)
         {
-            eyeContext.SubmitChangesThreaded();
+            updateables.Add(obj);
+        }
+
+        private void OnNodeCreated(Node obj)
+        {
+            updateables.Add(obj);
+        }
+
+        private void TimerTick(object sender, EventArgs e)
+        {
+            timeoutCheckTimer += timer.Interval;
+            if (timeoutCheckTimer >= timeoutCheckInterval)
+            {
+                timeoutCheckTimer = 0;
+                foreach (IUpdateable updateable in updateables)
+                    updateable.CheckTimeout();
+            }
+            
+            if (eyeContext != null)
+            {
+                sqlSubmitTimer += timer.Interval;
+                if (sqlSubmitTimer >= sqlSubmitInterval)
+                {
+                    sqlSubmitTimer = 0;
+                    eyeContext.SubmitChangesThreaded();
+                }
+            }
         }
     }
 }
