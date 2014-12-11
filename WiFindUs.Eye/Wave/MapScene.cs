@@ -11,6 +11,7 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Services;
 using WaveEngine.Materials;
 using WiFindUs.Controls;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -171,7 +172,9 @@ namespace WiFindUs.Eye.Wave
         
         public Vector3 LocationToVector(ILocation loc)
         {
-            return baseChunk.Region.LocationToVector(baseChunk.TopLeft, baseChunk.BottomRight, loc);
+            if (baseChunk == null)
+                return Vector3.Zero;
+            return baseChunk.LocationToVector(loc);
         }
 
         public void CancelThreads()
@@ -202,6 +205,12 @@ namespace WiFindUs.Eye.Wave
             cameraTransform = camera.Entity.FindComponent<Camera3D>();
             EntityManager.Add(camera);
             UpdateCameraPosition();
+
+            //create global lighting
+            Vector3 sun = new Vector3(0f, 100f, 25f);
+            sun.Normalize();
+            DirectionalLight skylight = new DirectionalLight("SkyLight", sun);
+            EntityManager.Add(skylight);
 
             //create terrain layers
             Debugger.V("MapScene: creating layers");
@@ -252,9 +261,10 @@ namespace WiFindUs.Eye.Wave
         private void Device_OnDeviceCreated(Device sender)
         {
             Entity device = new Entity()
-                .AddComponent(new Transform3D())
-                .AddComponent(new MaterialsMap(new BasicMaterial(colours[lastColor = (lastColor + 1) % colours.Length])))
-                .AddComponent(Model.CreateTorus(10f, 3f, 16))
+                .AddComponent(new Transform3D() { Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f) })
+                .AddComponent(new MaterialsMap(new BasicMaterial(colours[lastColor = (lastColor + 1) % colours.Length])
+                { LightingEnabled = true }))
+                .AddComponent(Model.CreateCone(10f, 6f, 6))
                 .AddComponent(new ModelRenderer())
                 .AddComponent(new DeviceBehaviour(sender));
             sender.OnDeviceTypeChanged += sender_OnDeviceTypeChanged;

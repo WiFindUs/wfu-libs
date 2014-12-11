@@ -223,6 +223,13 @@ namespace WiFindUs.Eye.Wave
                 downloadClient.CancelAsync();
         }
 
+        public Vector3 LocationToVector(ILocation loc)
+        {
+            if (region == null)
+                return Vector3.Zero;
+            return region.LocationToVector(topLeft, bottomRight, loc);
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
