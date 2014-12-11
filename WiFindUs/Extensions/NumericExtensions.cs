@@ -7,14 +7,12 @@ namespace WiFindUs.Extensions
 {
     public static class NumericExtensions
     {
+        public const double DEG_TO_RAD = Math.PI / 180.0;
+        public const double RAD_TO_DEG = 180.0 / Math.PI;
+        
         /////////////////////////////////////////////////////////////////////
         // FLOATS
         /////////////////////////////////////////////////////////////////////
-
-        public static float ToRadians(this float val)
-        {
-            return (float)(Math.PI / 180.0) * val;
-        }
 
         public static bool Tolerance(this float val, float other, float tolerance)
         {
@@ -28,15 +26,20 @@ namespace WiFindUs.Extensions
                 return false;
             return true;
         }
+
+        public static float ToRadians(this float degrees)
+        {
+            return (float)(degrees * DEG_TO_RAD);
+        }
+
+        public static float ToDegrees(this float radians)
+        {
+            return (float)(radians * RAD_TO_DEG);
+        }
         
         /////////////////////////////////////////////////////////////////////
         // DOUBLES
         /////////////////////////////////////////////////////////////////////
-
-        public static double ToRadians(this double val)
-        {
-            return (Math.PI / 180.0) * val;
-        }
 
         public static bool Tolerance(this double val, double other, double tolerance)
         {
@@ -51,14 +54,19 @@ namespace WiFindUs.Extensions
             return true;
         }
 
+        public static double ToRadians(this double degrees)
+        {
+            return degrees * DEG_TO_RAD;
+        }
+
+        public static double ToDegrees(this double radians)
+        {
+            return radians * RAD_TO_DEG;
+        }
+
         /////////////////////////////////////////////////////////////////////
         // DECIMALS
         /////////////////////////////////////////////////////////////////////
-
-        public static decimal ToRadians(this decimal val)
-        {
-            return ((decimal)Math.PI / 180.0m) * val;
-        }
 
         public static bool Tolerance(this decimal val, decimal other, decimal tolerance)
         {
