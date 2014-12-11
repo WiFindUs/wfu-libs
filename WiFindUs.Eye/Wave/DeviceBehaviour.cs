@@ -58,6 +58,11 @@ namespace WiFindUs.Eye.Wave
 
         protected override void Update(TimeSpan gameTime)
         {
+            if (Owner.IsVisible)
+                transform3D.Rotation = new Vector3(
+                    transform3D.Rotation.X,
+                    transform3D.Rotation.Y + 1f * (float)gameTime.TotalSeconds,
+                    transform3D.Rotation.Z);
             //UpdateVisible();
             //if (Owner.IsVisible)
             //    UpdateLocation();
