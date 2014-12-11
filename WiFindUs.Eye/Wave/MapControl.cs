@@ -92,8 +92,6 @@ namespace WiFindUs.Eye.Wave
             mapApp = new MapApplication(this.Bounds.Width, this.Bounds.Height);
             mapApp.Configure(this.Handle);
         }
-        
-
 
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
@@ -140,7 +138,6 @@ namespace WiFindUs.Eye.Wave
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
-
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);

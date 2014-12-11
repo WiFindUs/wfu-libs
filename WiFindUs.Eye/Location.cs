@@ -214,8 +214,8 @@ namespace WiFindUs.Eye
 
         public static string ToString(ILocation location)
         {
-            return location.Latitude.GetValueOrDefault()
-                + ", " + location.Longitude.GetValueOrDefault();
+            return "{" + location.Latitude.GetValueOrDefault()
+                + ", " + location.Longitude.GetValueOrDefault() + "}";
         }
 
         public override string ToString()
