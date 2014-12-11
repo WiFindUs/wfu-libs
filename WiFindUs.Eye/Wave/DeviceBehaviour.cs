@@ -23,56 +23,54 @@ namespace WiFindUs.Eye.Wave
         public Device Device
         {
             get { return device; }
-            set
-            {
-                if (value == device)
-                    return;
-                device = value;
-                if (device != null)
-                {
-                    UpdateVisible();
-                    if (Owner != null && Owner.IsVisible)
-                        UpdateLocation();
-                }
-            }
         }
 
         public DeviceBehaviour(Device device)
         {
-            Device = device;
+            if (device == null)
+                throw new ArgumentNullException("device", "Device cannot be null!");
+            this.device = device;
+            device.OnDeviceLocationChanged += OnDeviceLocationChanged;
+            device.OnDeviceTimedOutChanged += OnDeviceTimedOutChanged;
         }
 
-        public void UpdateLocation()
-        {
-            if (scene == null || device == null || device.Location == null || !device.Location.HasLatLong)
-                return;
-            Vector3 pos = scene.LocationToVector(device.Location);
-            pos.Y = 5f;
-            transform3D.Position = pos;
-        }
-
-        public void UpdateVisible()
+        public void UpdateDeviceState()
         {
             if (scene == null || device == null)
                 return;
-            long ms = (DateTime.UtcNow.ToUnixTimestamp() - device.Updated);
-            Owner.IsVisible = device.LastUpdate < 3000;
+            bool vis = !device.TimedOut && device.Location.HasLatLong;
+            if (vis != Owner.IsVisible)
+                Owner.IsVisible = vis;
+            if (vis)
+            {
+                Vector3 pos = scene.LocationToVector(device.Location);
+                pos.Y = 5f;
+                transform3D.Position = pos;
+            }
         }
 
         protected override void Initialize()
         {
             base.Initialize();
             scene = Owner.Scene as MapScene;
-            UpdateVisible();
-            if (Owner.IsVisible)
-                UpdateLocation();
+            UpdateDeviceState();
         }
 
         protected override void Update(TimeSpan gameTime)
         {
-            UpdateVisible();
-            if (Owner.IsVisible)
-                UpdateLocation();
+            //UpdateVisible();
+            //if (Owner.IsVisible)
+            //    UpdateLocation();
+        }
+
+        private void OnDeviceLocationChanged(Device obj)
+        {
+            UpdateDeviceState();
+        }
+
+        private void OnDeviceTimedOutChanged(Device obj)
+        {
+            UpdateDeviceState();
         }
     }
 }
