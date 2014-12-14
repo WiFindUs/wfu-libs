@@ -176,6 +176,8 @@ namespace WiFindUs.Controls
             //draw background (if selected or hovering
             if (hoverIndex == tabIndex || SelectedIndex == tabIndex)
                 g.FillRectangle(hoverIndex == tabIndex ? Theme.HighlightLightBrush : Theme.HighlightMidBrush, tabTextArea);
+            else if (IsDesignMode)
+                g.FillRectangle(Theme.ControlDarkBrush, tabTextArea);
 
             //draw text
             string text = TabPages[tabIndex].Text;

@@ -127,7 +127,7 @@ namespace WiFindUs.Eye
             {
                 try
                 {
-                    device = eyeContext.Devices.Where(d => d.ID == id).Single();
+                    device = eyeContext.Devices.Where(d => d.ID == id).SingleOrDefault();
                 }
                 catch (Exception e)
                 {
@@ -170,7 +170,7 @@ namespace WiFindUs.Eye
             {
                 try
                 {
-                    user = eyeContext.Users.Where(d => d.ID == id).Single();
+                    user = eyeContext.Users.Where(d => d.ID == id).SingleOrDefault();
                 }
                 catch (Exception e)
                 {

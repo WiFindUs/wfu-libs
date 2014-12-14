@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using WiFindUs.Controls;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Node : ILocatable, ILocation, IUpdateable
+    public partial class Node : ILocatable, ILocation, IUpdateable, ThemedListBoxItem
     {
         public static event Action<Node> OnNodeCreated;
         public event Action<Node> OnNodeUpdated;
@@ -100,6 +101,16 @@ namespace WiFindUs.Eye
         public void CheckTimeout()
         {
             TimedOut = UpdateAge > 300;
+        }
+
+        public int MeasureItemHeight(ThemedListBox host, System.Windows.Forms.MeasureItemEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DrawListboxItem(System.Windows.Forms.DrawItemEventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         /////////////////////////////////////////////////////////////////////

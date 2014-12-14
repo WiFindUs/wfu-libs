@@ -40,16 +40,30 @@ namespace WiFindUs.Controls
                 Font = theme.WindowFont;
             }
         }
+
+        /////////////////////////////////////////////////////////////////////
+        // CONSTRUCTORS
+        /////////////////////////////////////////////////////////////////////
         
         public ThemedListBox()
         {
-            this.DrawMode = DrawMode.OwnerDrawVariable;
+            Margin = new System.Windows.Forms.Padding(0);
+            DrawMode = DrawMode.OwnerDrawVariable;
+            BorderStyle = System.Windows.Forms.BorderStyle.None;
+
+            if (IsDesignMode)
+                return;
+            
             this.SetStyle(
                 ControlStyles.OptimizedDoubleBuffer |
                 ControlStyles.ResizeRedraw |
                 ControlStyles.UserPaint,
                 true);
         }
+
+        /////////////////////////////////////////////////////////////////////
+        // PROTECTED METHODS
+        /////////////////////////////////////////////////////////////////////
 
         protected override void OnDrawItem(DrawItemEventArgs e)
         {

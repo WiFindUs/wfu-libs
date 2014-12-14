@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using WaveEngine.Common.Input;
 using WaveEngine.Common.Math;
 using WaveEngine.Framework;
+using WaveEngine.Framework.Managers;
 using WaveEngine.Framework.Services;
 
 namespace WiFindUs.Eye.Wave
@@ -72,10 +73,18 @@ namespace WiFindUs.Eye.Wave
             if (input.MouseState.Wheel != oldMouseState.Wheel)
                  mapScene.CameraZoom -= (input.MouseState.Wheel - oldMouseState.Wheel) * 5;
 
+            //check debug hotkey
+           // if (oldKeyboardState.F2 == ButtonState.Release
+           ////     && input.KeyboardState.F2 == ButtonState.Pressed)
+             //   mapScene.RenderManager.DebugLines = true;
+
+
             //state
             oldKeyboardState = input.KeyboardState;
             oldMouseState = input.MouseState;
             mapScene.CameraAutoUpdate = true;
+
+            //;
         }
 
         private bool IsShift(Input input)
