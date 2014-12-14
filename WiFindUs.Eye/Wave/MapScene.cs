@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Cameras;
 using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
+using WaveEngine.Framework.Physics3D;
 using WaveEngine.Framework.Services;
 using WaveEngine.Materials;
 using WiFindUs.Controls;
@@ -18,29 +16,37 @@ namespace WiFindUs.Eye.Wave
     public class MapScene : Scene, IThemeable
     {
         public static event Action<MapScene> SceneStarted;
+        public event Action<MapScene> CameraChanged;
         
         private const float CAM_MIN_ZOOM = 100.0f;
         private const float CAM_MAX_ZOOM = 2000.0f;
-        private const float CAM_MIN_ANGLE = (float)(Math.PI/8.0);
+        private const float CAM_MIN_ANGLE = (float)(Math.PI/7.0);
         private const float CAM_MAX_ANGLE = (float)(Math.PI/2.01);
         private const float ZOOM_RATE = 1.0f;
         private const float TILT_RATE = 1.0f;
         public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM+1;
 
+        private MapControl hostControl;
         private EyeMainForm eyeForm;
         private Theme theme;
         private FixedCamera camera;
         private ILocation center;
         private Entity[][,] tiles;
+        private Entity groundPlane;
+        private BoxCollider groundPlaneCollider;
         private TerrainTile baseTile;
-        private uint visibleLayer = 0;
+        private uint visibleLayer = uint.MaxValue;
         private int cameraZoom = 100; //percentage; 100 is all the way zoomed out
-        private int cameraTilt = 50; //percentage; 100 is completely vertical
+        private int cameraTilt = 0; //percentage; 100 is completely vertical
         private Camera3D cameraTransform;
         private bool autoUpdateCamera = true;
         private bool cameraDirty = false;
         private static readonly Color[] colours = new Color[] { Color.Blue, Color.Red, Color.Green };
         private static int lastColor = 0;
+        private Ray cameraRay;
+        
+        //camera frustum
+        private ILocation cameraNW, cameraSW, cameraNE, cameraSE;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -75,6 +81,7 @@ namespace WiFindUs.Eye.Wave
                 Debugger.I("Setting map center to " + value.ToString());
                 center = value;
                 UpdateTileLocations();
+                UpdateCameraPosition();
             }
         }
 
@@ -101,11 +108,23 @@ namespace WiFindUs.Eye.Wave
                 if (layer == visibleLayer)
                     return;
 
-                Tiles((tile) => { tile.Owner.IsVisible = tile.Owner.IsActive = false; },
-                    (int)visibleLayer, (int)visibleLayer);
+                Tiles((tile) =>
+                {
+                    tile.Owner.IsVisible
+                        = tile.Owner.IsActive
+                        = tile.Owner.FindComponent<BoxCollider>().IsActive
+                        = false;
+                },(int)visibleLayer, (int)visibleLayer);
+
                 visibleLayer = layer;
-                Tiles((tile) => { tile.Owner.IsVisible = tile.Owner.IsActive = true; },
-                    (int)visibleLayer, (int)visibleLayer);
+
+                Tiles((tile) =>
+                {
+                    tile.Owner.IsVisible
+                        = tile.Owner.IsActive
+                        = tile.Owner.FindComponent<BoxCollider>().IsActive
+                        = true;
+                },(int)visibleLayer, (int)visibleLayer);
             }
         }
 
@@ -166,6 +185,36 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        public TerrainTile BaseTile
+        {
+            get { return baseTile; }
+        }
+
+        public ILocation CameraNorthWest
+        {
+            get { return cameraNW; }
+        }
+
+        public ILocation CameraNorthEast
+        {
+            get { return cameraNE; }
+        }
+
+        public ILocation CameraSouthEast
+        {
+            get { return cameraSE; }
+        }
+
+        public ILocation CameraSouthWest
+        {
+            get { return cameraSW; }
+        }
+
+        public MapScene(MapControl hostControl)
+        {
+            this.hostControl = hostControl;
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
@@ -175,6 +224,40 @@ namespace WiFindUs.Eye.Wave
             if (baseTile == null)
                 return Vector3.Zero;
             return baseTile.LocationToVector(loc);
+        }
+
+        public ILocation VectorToLocation(Vector3 vec)
+        {
+            return new Location(
+                baseTile.Region.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LatitudinalSpan,
+                baseTile.Region.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LongitudinalSpan
+                );
+        }
+
+        public ILocation LocationFromScreenRay(int x, int y)
+        {
+            if (groundPlaneCollider == null)
+                return null;
+            
+            //convert screen to world
+            Vector3 screenCoords = new Vector3(x, y, 0.0f);
+            Vector3 screenCoordsFar = new Vector3(x, y, 1.0f);
+            screenCoords = cameraTransform.Unproject(ref screenCoords);
+            screenCoordsFar = cameraTransform.Unproject(ref screenCoordsFar);
+
+            //update ray
+            Vector3 rayDirection = screenCoordsFar - screenCoords;
+            rayDirection.Normalize();
+            cameraRay.Direction = rayDirection;
+            cameraRay.Position = screenCoords;
+
+            //test for collision with ground plane
+            float? result = groundPlaneCollider.Intersects(ref cameraRay);
+            if (!result.HasValue)
+                return null;
+
+            //return result
+            return VectorToLocation(cameraRay.Position + cameraRay.Direction * result.Value);
         }
 
         public void CancelThreads()
@@ -188,25 +271,30 @@ namespace WiFindUs.Eye.Wave
         
         protected override void CreateScene()
         {
+#if DEBUG
+            WaveServices.ScreenContextManager.SetDiagnosticsActive(true);
+            RenderManager.DebugLines = true;
+#endif
+            
             //set up camera
             Debugger.V("MapScene: initializing camera");
-            camera = new FixedCamera("camera", Vector3.Up*200.0f,Vector3.Zero);
-            camera.NearPlane = 1f;
-            camera.FarPlane = 100000.0f;
-            if (theme != null)
+            cameraRay = new Ray();
+            camera = new FixedCamera("camera", Vector3.Up * 200.0f, Vector3.Zero)
             {
-                camera.BackgroundColor = new Color(
+                NearPlane = 1f,
+                FarPlane = 100000.0f,
+                ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil,
+                BackgroundColor = theme != null ? new Color(
                     theme.ControlDarkColour.R, theme.ControlDarkColour.G,
-                    theme.ControlDarkColour.B, theme.ControlDarkColour.A);
-            }
-            else
-                camera.BackgroundColor = Color.CornflowerBlue;
-            camera.ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil;
+                    theme.ControlDarkColour.B, theme.ControlDarkColour.A)
+                    : Color.CornflowerBlue
+            };
             cameraTransform = camera.Entity.FindComponent<Camera3D>();
             EntityManager.Add(camera);
             UpdateCameraPosition();
 
             //create global lighting
+            Debugger.V("MapScene: creating lighting");
             Vector3 sun = new Vector3(0f, 100f, 25f);
             sun.Normalize();
             DirectionalLight skylight = new DirectionalLight("SkyLight", sun);
@@ -218,6 +306,19 @@ namespace WiFindUs.Eye.Wave
             for (uint layer = 0; layer < tiles.Length; layer++)
                 CreateTileLayer(layer);
 
+            //create ground plane
+            Debugger.V("MapScene: creating ground plane");
+            groundPlane = new Entity()
+                .AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
+                .AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 50f))
+                //.AddComponent(new ModelRenderer())
+                //.AddComponent(new MaterialsMap(new BasicMaterial(Color.Purple) { LayerType = DefaultLayers.Alpha, Alpha = 0.2f }))
+                .AddComponent(groundPlaneCollider = new BoxCollider());
+            EntityManager.Add(groundPlane);
+#if !DEBUG
+            groundPlane.IsVisible = false;
+#endif
+
             //add scene behaviours
             Debugger.V("MapScene: creating behaviours");
             AddSceneBehavior(new MapSceneInputBehaviour(), SceneBehavior.Order.PostUpdate);
@@ -228,7 +329,7 @@ namespace WiFindUs.Eye.Wave
         {
             base.Start();
             Tiles((tile) => tile.CalculatePosition());
-            tiles[0][0, 0].IsVisible = true;
+            VisibleLayer = 0;
             eyeForm = (WFUApplication.MainForm as EyeMainForm);
             foreach (Device device in eyeForm.Devices)
                 Device_OnDeviceCreated(device);
@@ -246,6 +347,7 @@ namespace WiFindUs.Eye.Wave
             if (cameraTransform == null)
                 return;
 
+            //set position
             float angle = CAM_MIN_ANGLE + ((CAM_MAX_ANGLE - CAM_MIN_ANGLE) * ((float)cameraTilt / 100.0f));
             float distance = CAM_MIN_ZOOM + ((CAM_MAX_ZOOM - CAM_MIN_ZOOM) * ((float)cameraZoom / 100.0f));
             Vector3 direction = new Vector3(0f, (float)Math.Sin(angle), (float)Math.Cos(angle));
@@ -255,17 +357,26 @@ namespace WiFindUs.Eye.Wave
                 cameraTransform.LookAt.Y + (direction.Y * distance),
                 cameraTransform.LookAt.Z + (direction.Z * distance));
 
+            //update frustum
+            cameraNW = LocationFromScreenRay(0, 0);
+            cameraNE = LocationFromScreenRay(hostControl.ClientRectangle.Width, 0);
+            cameraSE = LocationFromScreenRay(hostControl.ClientRectangle.Width, hostControl.ClientRectangle.Height);
+            cameraSW = LocationFromScreenRay(0, hostControl.ClientRectangle.Height);
+
+            //state
             cameraDirty = false;
+            if (CameraChanged != null)
+                CameraChanged(this);
         }
 
         private void Device_OnDeviceCreated(Device sender)
         {
             Entity device = new Entity()
                 .AddComponent(new Transform3D() { Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f) })
-                .AddComponent(new MaterialsMap(new BasicMaterial(colours[lastColor = (lastColor + 1) % colours.Length])
-                { LightingEnabled = true }))
+                .AddComponent(new MaterialsMap(new BasicMaterial(colours[lastColor = (lastColor + 1) % colours.Length]) { LightingEnabled = true }))
                 .AddComponent(Model.CreateCone(10f, 6f, 6))
                 .AddComponent(new ModelRenderer())
+                .AddComponent(new BoxCollider())
                 .AddComponent(new DeviceBehaviour(sender));
             sender.OnDeviceTypeChanged += sender_OnDeviceTypeChanged;
             EntityManager.Add(device);
@@ -273,7 +384,7 @@ namespace WiFindUs.Eye.Wave
 
         private void sender_OnDeviceTypeChanged(Device obj)
         {
-            throw new NotImplementedException();
+
         }
 
         private void CreateTileLayer(uint layer)
@@ -300,15 +411,17 @@ namespace WiFindUs.Eye.Wave
                     if (layer == 0)
                         baseTile = tile;
 
-                    Entity chunkEntity = tiles[layer][row, column] = new Entity()
+                    Entity tileEntity = tiles[layer][row, column] = new Entity()
                     .AddComponent(new Transform3D())
                     .AddComponent(new MaterialsMap((row+column) % 2 == 0 ? TerrainTile.PlaceHolderMaterial : TerrainTile.PlaceHolderMaterialAlt))
                     .AddComponent(Model.CreatePlane(Vector3.UnitY, planeSize))
                     .AddComponent(new ModelRenderer())
+                    .AddComponent(new BoxCollider() { IsActive = false })
                     .AddComponent(tile);
-                    EntityManager.Add(chunkEntity);
+                    EntityManager.Add(tileEntity);
 
-                    chunkEntity.IsVisible = false;
+                    tileEntity.IsVisible = false;
+                    tileEntity.IsActive = false;
                 }
             }
         }
