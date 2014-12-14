@@ -320,5 +320,15 @@ namespace WiFindUs.Eye
         {
             return WiFindUs.Eye.Location.Distance(this, other);
         }
+
+        public static string ToString(IRegion region)
+        {
+            return region.NorthWest + "x" + region.SouthEast;
+        }
+
+        public override string ToString()
+        {
+            return ToString(this);
+        }
     }
 }
