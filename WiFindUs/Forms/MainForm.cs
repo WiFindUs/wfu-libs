@@ -51,7 +51,7 @@ namespace WiFindUs.Forms
             Debugger.FlushToConsoles();
             Screen startScreen = null;
             int configMonitor = WFUApplication.Config.Get("display.start_screen", -1);
-            Debugger.V("Startup monitor: " + configMonitor);
+            Debugger.V("Start screen: " + configMonitor);
             if (configMonitor >= 0)
             {
                 foreach (Screen screen in Screen.AllScreens)
