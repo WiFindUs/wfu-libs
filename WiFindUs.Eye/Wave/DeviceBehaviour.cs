@@ -63,9 +63,6 @@ namespace WiFindUs.Eye.Wave
                     transform3D.Rotation.X,
                     transform3D.Rotation.Y + 1f * (float)gameTime.TotalSeconds,
                     transform3D.Rotation.Z);
-            //UpdateVisible();
-            //if (Owner.IsVisible)
-            //    UpdateLocation();
         }
 
         private void OnDeviceLocationChanged(Device obj)
