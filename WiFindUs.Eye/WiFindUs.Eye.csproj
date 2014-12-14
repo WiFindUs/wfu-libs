@@ -125,8 +125,6 @@
     <Compile Include="Wave\MiniMapControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Wave\Plane.cs" />
-    <Compile Include="Wave\Mesh.cs" />
     <Compile Include="Region.cs" />
     <Compile Include="NodeHistory.cs" />
     <Compile Include="DeviceHistory.cs" />
