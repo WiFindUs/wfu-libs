@@ -10,6 +10,7 @@ using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
+using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 
@@ -17,6 +18,8 @@ namespace WiFindUs.Eye.Wave
 {
     public class TerrainTile : Behavior
     {
+        public event Action<TerrainTile> TextureLoadingFinished;
+        
         private static Material placeHolderMaterial, placeHolderMaterialAlt,
             loadingMaterial, downloadingMaterial, errorMaterial;
         private const int MAX_CONCURRENT_LOADS = 1;
@@ -33,6 +36,8 @@ namespace WiFindUs.Eye.Wave
         private Transform3D transform3D;
         [RequiredComponent]
         private MaterialsMap materialsMap;
+        [RequiredComponent]
+        private MeshCollider meshCollider;
 
         private Region region;
         private uint googleMapsZoomLevel;
@@ -46,6 +51,7 @@ namespace WiFindUs.Eye.Wave
         private int lastDownloadPercentage = 0;
         private static bool mapsDirectoryExists = false;
         private bool mapImageFileExists = false;
+        private System.Drawing.Image tileImage = null; //only used on base tile
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -64,6 +70,11 @@ namespace WiFindUs.Eye.Wave
                 region = new Region(value, googleMapsZoomLevel);
                 mapImageFileExists = File.Exists(ImagePath);
                 mapTextured = false;
+                if (tileImage != null)
+                {
+                    tileImage.Dispose();
+                    tileImage = null;
+                }
             }
         }
 
@@ -177,6 +188,11 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        public System.Drawing.Image TileImage
+        {
+            get { return tileImage; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -254,6 +270,8 @@ namespace WiFindUs.Eye.Wave
                         Debugger.E("Error creating maps directory!");
                         materialsMap.DefaultMaterial = ErrorMaterial;
                         mapTextured = true;
+                        if (TextureLoadingFinished != null)
+                            TextureLoadingFinished(this);
                         return;
                     }
                 }
@@ -276,7 +294,9 @@ namespace WiFindUs.Eye.Wave
             }
             else
             {
-                if (!Owner.IsVisible || currentLoads >= MAX_CONCURRENT_LOADS)
+                if (!Owner.IsVisible
+                    || currentLoads >= MAX_CONCURRENT_LOADS
+                    || !Owner.Scene.RenderManager.ActiveCamera3D.Contains(meshCollider))
                     return;
 
                 currentLoads++;
@@ -304,6 +324,8 @@ namespace WiFindUs.Eye.Wave
                     Debugger.E("Error downloading map tile texture " + ImageFilename + ".");
                     materialsMap.DefaultMaterial = ErrorMaterial;
                     mapTextured = true;
+                    if (TextureLoadingFinished != null)
+                        TextureLoadingFinished(this);
                 }
 
                 if (File.Exists(ImagePath))
@@ -338,7 +360,11 @@ namespace WiFindUs.Eye.Wave
                 //load image file
                 Texture2D tex2D = null;
                 using (FileStream file = new FileStream(ImagePath, FileMode.Open))
+                {
                     tex2D = Texture2D.FromFile(RenderManager.GraphicsDevice, file);
+                    if (baseTile == null)
+                        tileImage = System.Drawing.Image.FromStream(file);
+                }
 
                 //swap out texture
                 materialsMap.DefaultMaterial = new BasicMaterial(tex2D);
@@ -351,6 +377,8 @@ namespace WiFindUs.Eye.Wave
             mapTextured = true;
             loadThread = null;
             currentLoads--;
+            if (TextureLoadingFinished != null)
+                TextureLoadingFinished(this);
         }
     }
 }
