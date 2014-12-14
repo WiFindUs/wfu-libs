@@ -39,11 +39,11 @@
             this.workingAreaSplitter = new System.Windows.Forms.SplitContainer();
             this.entityTabs = new WiFindUs.Controls.ThemedTabControl();
             this.devicesTab = new System.Windows.Forms.TabPage();
-            this.themedListBox1 = new WiFindUs.Controls.ThemedListBox();
+            this.devicesListBox = new WiFindUs.Controls.ThemedListBox();
             this.usersTab = new System.Windows.Forms.TabPage();
-            this.themedListBox2 = new WiFindUs.Controls.ThemedListBox();
+            this.usersListBox = new WiFindUs.Controls.ThemedListBox();
             this.incidentsTab = new System.Windows.Forms.TabPage();
-            this.themedListBox3 = new WiFindUs.Controls.ThemedListBox();
+            this.incidentsListBox = new WiFindUs.Controls.ThemedListBox();
             this.controlsOuterSplitter = new System.Windows.Forms.SplitContainer();
             this.mapTabs = new WiFindUs.Controls.ThemedTabControl();
             this.minimapTab = new System.Windows.Forms.TabPage();
@@ -88,11 +88,11 @@
             // workingAreaToolStripContainer.ContentPanel
             // 
             this.workingAreaToolStripContainer.ContentPanel.Margin = new System.Windows.Forms.Padding(0);
-            this.workingAreaToolStripContainer.ContentPanel.Size = new System.Drawing.Size(627, 296);
+            this.workingAreaToolStripContainer.ContentPanel.Size = new System.Drawing.Size(627, 299);
             this.workingAreaToolStripContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.workingAreaToolStripContainer.Location = new System.Drawing.Point(0, 0);
             this.workingAreaToolStripContainer.Name = "workingAreaToolStripContainer";
-            this.workingAreaToolStripContainer.Size = new System.Drawing.Size(627, 321);
+            this.workingAreaToolStripContainer.Size = new System.Drawing.Size(627, 324);
             this.workingAreaToolStripContainer.TabIndex = 0;
             this.workingAreaToolStripContainer.Text = "toolStripContainer1";
             // 
@@ -129,7 +129,7 @@
             // 
             this.windowSplitter.Panel2.Controls.Add(this.controlsOuterSplitter);
             this.windowSplitter.Size = new System.Drawing.Size(928, 542);
-            this.windowSplitter.SplitterDistance = 321;
+            this.windowSplitter.SplitterDistance = 324;
             this.windowSplitter.SplitterWidth = 1;
             this.windowSplitter.TabIndex = 2;
             // 
@@ -149,7 +149,7 @@
             // workingAreaSplitter.Panel2
             // 
             this.workingAreaSplitter.Panel2.Controls.Add(this.workingAreaToolStripContainer);
-            this.workingAreaSplitter.Size = new System.Drawing.Size(928, 321);
+            this.workingAreaSplitter.Size = new System.Drawing.Size(928, 324);
             this.workingAreaSplitter.SplitterDistance = 300;
             this.workingAreaSplitter.SplitterWidth = 1;
             this.workingAreaSplitter.TabIndex = 1;
@@ -168,7 +168,7 @@
             this.entityTabs.Name = "entityTabs";
             this.entityTabs.Padding = new System.Drawing.Point(0, 0);
             this.entityTabs.SelectedIndex = 0;
-            this.entityTabs.Size = new System.Drawing.Size(300, 321);
+            this.entityTabs.Size = new System.Drawing.Size(300, 324);
             this.entityTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.entityTabs.TabIndex = 1;
             theme1.ConsoleFont = new System.Drawing.Font("Consolas", 10F);
@@ -192,66 +192,75 @@
             // devicesTab
             // 
             this.devicesTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.devicesTab.Controls.Add(this.themedListBox1);
+            this.devicesTab.Controls.Add(this.devicesListBox);
             this.devicesTab.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.devicesTab.Location = new System.Drawing.Point(4, 24);
             this.devicesTab.Margin = new System.Windows.Forms.Padding(0);
             this.devicesTab.Name = "devicesTab";
-            this.devicesTab.Size = new System.Drawing.Size(292, 293);
+            this.devicesTab.Size = new System.Drawing.Size(292, 296);
             this.devicesTab.TabIndex = 0;
             this.devicesTab.Text = "Devices";
             // 
-            // themedListBox1
+            // devicesListBox
             // 
-            this.themedListBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.themedListBox1.FormattingEnabled = true;
-            this.themedListBox1.Location = new System.Drawing.Point(0, 0);
-            this.themedListBox1.Name = "themedListBox1";
-            this.themedListBox1.Size = new System.Drawing.Size(292, 293);
-            this.themedListBox1.TabIndex = 0;
-            this.themedListBox1.Theme = null;
+            this.devicesListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.devicesListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.devicesListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.devicesListBox.FormattingEnabled = true;
+            this.devicesListBox.Location = new System.Drawing.Point(0, 0);
+            this.devicesListBox.Margin = new System.Windows.Forms.Padding(0);
+            this.devicesListBox.Name = "devicesListBox";
+            this.devicesListBox.Size = new System.Drawing.Size(292, 296);
+            this.devicesListBox.TabIndex = 0;
+            this.devicesListBox.Theme = null;
             // 
             // usersTab
             // 
             this.usersTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.usersTab.Controls.Add(this.themedListBox2);
+            this.usersTab.Controls.Add(this.usersListBox);
             this.usersTab.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.usersTab.Location = new System.Drawing.Point(4, 24);
             this.usersTab.Name = "usersTab";
-            this.usersTab.Size = new System.Drawing.Size(292, 290);
+            this.usersTab.Size = new System.Drawing.Size(292, 296);
             this.usersTab.TabIndex = 1;
             this.usersTab.Text = "Users";
             // 
-            // themedListBox2
+            // usersListBox
             // 
-            this.themedListBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.themedListBox2.FormattingEnabled = true;
-            this.themedListBox2.Location = new System.Drawing.Point(0, 0);
-            this.themedListBox2.Name = "themedListBox2";
-            this.themedListBox2.Size = new System.Drawing.Size(292, 290);
-            this.themedListBox2.TabIndex = 0;
-            this.themedListBox2.Theme = null;
+            this.usersListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.usersListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.usersListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.usersListBox.FormattingEnabled = true;
+            this.usersListBox.Location = new System.Drawing.Point(0, 0);
+            this.usersListBox.Margin = new System.Windows.Forms.Padding(0);
+            this.usersListBox.Name = "usersListBox";
+            this.usersListBox.Size = new System.Drawing.Size(292, 296);
+            this.usersListBox.TabIndex = 0;
+            this.usersListBox.Theme = null;
             // 
             // incidentsTab
             // 
             this.incidentsTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.incidentsTab.Controls.Add(this.themedListBox3);
+            this.incidentsTab.Controls.Add(this.incidentsListBox);
             this.incidentsTab.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.incidentsTab.Location = new System.Drawing.Point(4, 24);
             this.incidentsTab.Name = "incidentsTab";
-            this.incidentsTab.Size = new System.Drawing.Size(292, 290);
+            this.incidentsTab.Size = new System.Drawing.Size(292, 296);
             this.incidentsTab.TabIndex = 2;
             this.incidentsTab.Text = "Incidents";
             // 
-            // themedListBox3
+            // incidentsListBox
             // 
-            this.themedListBox3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.themedListBox3.FormattingEnabled = true;
-            this.themedListBox3.Location = new System.Drawing.Point(0, 0);
-            this.themedListBox3.Name = "themedListBox3";
-            this.themedListBox3.Size = new System.Drawing.Size(292, 290);
-            this.themedListBox3.TabIndex = 0;
-            this.themedListBox3.Theme = null;
+            this.incidentsListBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.incidentsListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.incidentsListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+            this.incidentsListBox.FormattingEnabled = true;
+            this.incidentsListBox.Location = new System.Drawing.Point(0, 0);
+            this.incidentsListBox.Margin = new System.Windows.Forms.Padding(0);
+            this.incidentsListBox.Name = "incidentsListBox";
+            this.incidentsListBox.Size = new System.Drawing.Size(292, 296);
+            this.incidentsListBox.TabIndex = 0;
+            this.incidentsListBox.Theme = null;
             // 
             // controlsOuterSplitter
             // 
@@ -269,7 +278,7 @@
             // controlsOuterSplitter.Panel2
             // 
             this.controlsOuterSplitter.Panel2.Controls.Add(this.controlsInnerSplitter);
-            this.controlsOuterSplitter.Size = new System.Drawing.Size(928, 220);
+            this.controlsOuterSplitter.Size = new System.Drawing.Size(928, 217);
             this.controlsOuterSplitter.SplitterDistance = 300;
             this.controlsOuterSplitter.SplitterWidth = 1;
             this.controlsOuterSplitter.TabIndex = 0;
@@ -286,7 +295,7 @@
             this.mapTabs.Name = "mapTabs";
             this.mapTabs.Padding = new System.Drawing.Point(0, 0);
             this.mapTabs.SelectedIndex = 0;
-            this.mapTabs.Size = new System.Drawing.Size(300, 220);
+            this.mapTabs.Size = new System.Drawing.Size(300, 217);
             this.mapTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.mapTabs.TabIndex = 0;
             theme2.ConsoleFont = new System.Drawing.Font("Consolas", 10F);
@@ -314,7 +323,7 @@
             this.minimapTab.Location = new System.Drawing.Point(4, 24);
             this.minimapTab.Margin = new System.Windows.Forms.Padding(0);
             this.minimapTab.Name = "minimapTab";
-            this.minimapTab.Size = new System.Drawing.Size(292, 192);
+            this.minimapTab.Size = new System.Drawing.Size(292, 189);
             this.minimapTab.TabIndex = 0;
             this.minimapTab.Text = "Minimap";
             // 
@@ -334,8 +343,8 @@
             // controlsInnerSplitter.Panel2
             // 
             this.controlsInnerSplitter.Panel2.Controls.Add(this.actionTabs);
-            this.controlsInnerSplitter.Size = new System.Drawing.Size(627, 220);
-            this.controlsInnerSplitter.SplitterDistance = 321;
+            this.controlsInnerSplitter.Size = new System.Drawing.Size(627, 217);
+            this.controlsInnerSplitter.SplitterDistance = 324;
             this.controlsInnerSplitter.SplitterWidth = 1;
             this.controlsInnerSplitter.TabIndex = 0;
             // 
@@ -352,7 +361,7 @@
             this.infoTabs.Name = "infoTabs";
             this.infoTabs.Padding = new System.Drawing.Point(0, 0);
             this.infoTabs.SelectedIndex = 0;
-            this.infoTabs.Size = new System.Drawing.Size(321, 220);
+            this.infoTabs.Size = new System.Drawing.Size(324, 217);
             this.infoTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.infoTabs.TabIndex = 0;
             theme3.ConsoleFont = new System.Drawing.Font("Consolas", 10F);
@@ -380,7 +389,7 @@
             this.infoTab.Location = new System.Drawing.Point(4, 24);
             this.infoTab.Margin = new System.Windows.Forms.Padding(0);
             this.infoTab.Name = "infoTab";
-            this.infoTab.Size = new System.Drawing.Size(313, 192);
+            this.infoTab.Size = new System.Drawing.Size(316, 189);
             this.infoTab.TabIndex = 0;
             this.infoTab.Text = "Information";
             // 
@@ -392,7 +401,7 @@
             this.consoleTab.Location = new System.Drawing.Point(4, 24);
             this.consoleTab.Margin = new System.Windows.Forms.Padding(0);
             this.consoleTab.Name = "consoleTab";
-            this.consoleTab.Size = new System.Drawing.Size(310, 195);
+            this.consoleTab.Size = new System.Drawing.Size(313, 192);
             this.consoleTab.TabIndex = 1;
             this.consoleTab.Text = "Console";
             // 
@@ -402,7 +411,7 @@
             this.consolePanel.Location = new System.Drawing.Point(0, 0);
             this.consolePanel.Margin = new System.Windows.Forms.Padding(0);
             this.consolePanel.Name = "consolePanel";
-            this.consolePanel.Size = new System.Drawing.Size(310, 195);
+            this.consolePanel.Size = new System.Drawing.Size(313, 192);
             this.consolePanel.TabIndex = 0;
             this.consolePanel.Theme = null;
             // 
@@ -418,7 +427,7 @@
             this.actionTabs.Name = "actionTabs";
             this.actionTabs.Padding = new System.Drawing.Point(0, 0);
             this.actionTabs.SelectedIndex = 0;
-            this.actionTabs.Size = new System.Drawing.Size(305, 220);
+            this.actionTabs.Size = new System.Drawing.Size(302, 217);
             this.actionTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.actionTabs.TabIndex = 0;
             theme4.ConsoleFont = new System.Drawing.Font("Consolas", 10F);
@@ -446,7 +455,7 @@
             this.actionsTab.Location = new System.Drawing.Point(4, 24);
             this.actionsTab.Margin = new System.Windows.Forms.Padding(0);
             this.actionsTab.Name = "actionsTab";
-            this.actionsTab.Size = new System.Drawing.Size(297, 192);
+            this.actionsTab.Size = new System.Drawing.Size(294, 189);
             this.actionsTab.TabIndex = 0;
             this.actionsTab.Text = "Actions";
             // 
@@ -511,9 +520,9 @@
         private System.Windows.Forms.TabPage devicesTab;
         private System.Windows.Forms.TabPage usersTab;
         private System.Windows.Forms.TabPage incidentsTab;
-        private Controls.ThemedListBox themedListBox1;
-        private Controls.ThemedListBox themedListBox2;
-        private Controls.ThemedListBox themedListBox3;
+        private Controls.ThemedListBox devicesListBox;
+        private Controls.ThemedListBox usersListBox;
+        private Controls.ThemedListBox incidentsListBox;
 
 
     }

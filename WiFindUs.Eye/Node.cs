@@ -105,12 +105,12 @@ namespace WiFindUs.Eye
 
         public int MeasureItemHeight(ThemedListBox host, System.Windows.Forms.MeasureItemEventArgs e)
         {
-            throw new NotImplementedException();
+            return 30;
         }
 
         public void DrawListboxItem(System.Windows.Forms.DrawItemEventArgs e)
         {
-            throw new NotImplementedException();
+
         }
 
         /////////////////////////////////////////////////////////////////////

@@ -70,6 +70,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Wave Engine\v1.0\Lib\Windows\WaveEngine.Materials.dll</HintPath>
     </Reference>
+    <Reference Include="WaveEngine.Physics, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
@@ -121,6 +122,9 @@
     <Compile Include="Wave\MapGame.cs" />
     <Compile Include="Wave\MapScene.cs" />
     <Compile Include="Wave\MapSceneInputBehaviour.cs" />
+    <Compile Include="Wave\MiniMapControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Wave\Plane.cs" />
     <Compile Include="Wave\Mesh.cs" />
     <Compile Include="Region.cs" />
