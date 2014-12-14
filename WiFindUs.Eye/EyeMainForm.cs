@@ -269,8 +269,11 @@ namespace WiFindUs.Eye
             base.OnDisposing();
         }
 
-        protected virtual void EyePacketReceived(EyePacket obj)
+        private void EyePacketReceived(EyePacket obj)
         {
+            if (!ServerMode)
+                return;
+            
             if (obj.Type.CompareTo("DEV") == 0)
             {
                 //parse packet for validity
@@ -303,7 +306,7 @@ namespace WiFindUs.Eye
                 else 
                     device.Updated = DateTime.UtcNow.ToUnixTimestamp();
 
-                if (eyeContext != null && (newDevice || newUser))
+                if (newDevice || newUser)
                     eyeContext.SubmitChangesThreaded();
             }
         }
