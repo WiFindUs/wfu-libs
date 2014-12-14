@@ -22,7 +22,8 @@ namespace WiFindUs.Eye.Dispatcher
 {
     public partial class DispatcherForm : EyeMainForm
     {
-        private MapControl mapControl;
+        private MapControl map;
+        private MiniMapControl minimap;
         private FormWindowState oldWindowState;
         private Rectangle oldBounds;
 
@@ -32,7 +33,7 @@ namespace WiFindUs.Eye.Dispatcher
 
         protected override MapControl Map
         {
-            get { return mapControl; }
+            get { return map; }
         }
 
         public bool FullScreen
@@ -91,8 +92,17 @@ namespace WiFindUs.Eye.Dispatcher
             InitializeComponent();
             if (DesignMode)
                 return;
-            workingAreaToolStripContainer.ContentPanel.Controls.Add(mapControl = new MapControl());
-            mapControl.Dock = DockStyle.Fill;
+
+            //controls
+            workingAreaToolStripContainer.ContentPanel.Controls.Add(map = new MapControl(){ Dock = DockStyle.Fill });
+            minimapTab.Controls.Add(minimap = new MiniMapControl() { Dock = DockStyle.Fill });
+
+            //events
+            WiFindUs.Eye.Device.OnDeviceCreated += OnDeviceCreated;
+            WiFindUs.Eye.User.OnUserCreated += OnUserCreated;
+            WiFindUs.Eye.Waypoint.OnWaypointCreated += OnWaypointCreated;
+
+            //load
             WFUApplication.StartSplashLoading(LoadingTasks);
         }
 
@@ -144,12 +154,34 @@ namespace WiFindUs.Eye.Dispatcher
         {
             base.MapSceneStarted(obj);
             SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
-            mapControl.AltEnterPressed += mapControl_AltEnterPressed;
+            map.AltEnterPressed += mapControl_AltEnterPressed;
+            map.Scene.BaseTile.TextureLoadingFinished += BaseTile_TextureLoadingFinished;
+            minimap.Scene = map.Scene;
+        }
+
+        private void BaseTile_TextureLoadingFinished(TerrainTile obj)
+        {
+            minimap.RefreshThreadSafe();
         }
 
         private void mapControl_AltEnterPressed(MapControl obj)
         {
             FullScreen = !FullScreen;
+        }
+
+        private void OnDeviceCreated(Device obj)
+        {
+            devicesListBox.Items.Add(obj);
+        }
+
+        private void OnUserCreated(User obj)
+        {
+            usersListBox.Items.Add(obj);
+        }
+
+        private void OnWaypointCreated(Waypoint obj)
+        {
+            incidentsListBox.Items.Add(obj);
         }
     }
 }
