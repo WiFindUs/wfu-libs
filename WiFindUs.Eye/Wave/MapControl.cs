@@ -58,15 +58,16 @@ namespace WiFindUs.Eye.Wave
 
         public MapControl()
         {
-            BackColor = System.Drawing.Color.Black;
             Margin = new Padding(0);
             TabStop = false;
             
             if (IsDesignMode)
                 return;
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque | ControlStyles.UserPaint, true);
-            UpdateStyles();
 
+            SetStyle( ControlStyles.AllPaintingInWmPaint
+                | ControlStyles.Opaque
+                | ControlStyles.UserPaint, true);
+            UpdateStyles();
         }
 
         public void StartMapApplication()
@@ -179,10 +180,16 @@ namespace WiFindUs.Eye.Wave
             base.OnKeyDown(e);
             if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
             {
-                if (((e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return) && e.Modifiers == Keys.Alt) && AltEnterPressed != null)
-                    AltEnterPressed(this);
-                else
-                    SetKeyboardButtonState(e, true);
+                if (e.Modifiers == Keys.Alt)
+                {
+                    if ((e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return) && AltEnterPressed != null)
+                    {
+                        AltEnterPressed(this);
+                        e.Handled = true;
+                    }
+                    return;
+                }
+                SetKeyboardButtonState(e, true);
                 e.Handled = true;
             }
         }
@@ -192,6 +199,8 @@ namespace WiFindUs.Eye.Wave
             base.OnKeyUp(e);
             if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
             {
+                if (e.Modifiers == Keys.Alt)
+                    return;
                 SetKeyboardButtonState(e, false);
                 e.Handled = true;
             }
