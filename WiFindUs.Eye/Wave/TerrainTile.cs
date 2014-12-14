@@ -37,7 +37,7 @@ namespace WiFindUs.Eye.Wave
         [RequiredComponent]
         private MaterialsMap materialsMap;
         [RequiredComponent]
-        private MeshCollider meshCollider;
+        private BoxCollider boxCollider;
 
         private Region region;
         private uint googleMapsZoomLevel;
@@ -296,7 +296,7 @@ namespace WiFindUs.Eye.Wave
             {
                 if (!Owner.IsVisible
                     || currentLoads >= MAX_CONCURRENT_LOADS
-                    || !Owner.Scene.RenderManager.ActiveCamera3D.Contains(meshCollider))
+                    || !Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider))
                     return;
 
                 currentLoads++;
