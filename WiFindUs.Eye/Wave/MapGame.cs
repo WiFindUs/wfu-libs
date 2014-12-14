@@ -12,6 +12,7 @@ namespace WiFindUs.Eye.Wave
     public class MapGame : Game
     {
         private MapScene scene;
+        private MapControl hostControl;
        
         public MapScene Scene
         {
@@ -21,11 +22,16 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        public MapGame(MapControl hostControl)
+        {
+            this.hostControl = hostControl;
+        }
+
         
         public override void Initialize(IApplication application)
         {
             base.Initialize(application);
-            scene = new MapScene();
+            scene = new MapScene(hostControl);
             scene.Initialize(WaveServices.GraphicsDevice);
 
             ScreenContext sc = new ScreenContext(scene);

@@ -72,7 +72,7 @@ namespace WiFindUs.Eye.Wave
 
         public void StartMapApplication()
         {
-            mapApp = new MapApplication(this.Bounds.Width, this.Bounds.Height);
+            mapApp = new MapApplication(this, this.Bounds.Width, this.Bounds.Height);
             mapApp.Configure(this.Handle);
         }
 

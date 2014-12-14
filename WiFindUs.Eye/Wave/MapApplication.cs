@@ -14,6 +14,7 @@ namespace WiFindUs.Eye.Wave
     public class MapApplication : FormApplication
     {
         MapGame game;
+        MapControl hostControl;
 
         public MapScene Scene
         {
@@ -23,14 +24,15 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
-        public MapApplication(int width, int height)
+        public MapApplication(MapControl hostControl, int width, int height)
             : base(width, height)
         {
+            this.hostControl = hostControl;
         }
 
         public override void Initialize()
         {
-            game = new MapGame();
+            game = new MapGame(hostControl);
             game.Initialize(this);
         }
 
