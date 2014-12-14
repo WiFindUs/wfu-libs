@@ -19,6 +19,7 @@ namespace WiFindUs.Forms
         private Rectangle activeArea = Rectangle.Empty;
         private string statusString = "";
         private List<Func<bool>> tasks;
+        public event Action<PaintEventArgs> PreDraw, PostDraw;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -89,19 +90,20 @@ namespace WiFindUs.Forms
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+            if (IsDesignMode)
+                return;
 
-            bool design = IsDesignMode;
+            if (PreDraw != null)
+                PreDraw(e);
 
             //logo
             if (logo != null)
                 e.Graphics.DrawImage(logo, activeArea.Location);
-
-            if (!design)
-                e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
-
+            
             //title
+            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
             e.Graphics.DrawString(
-                design ? "Application Name" : WFUApplication.Name,
+                WFUApplication.Name,
                 Theme.TitleFont,
                 Theme.TextLightBrush,
                 new Point(activeArea.Left * 2 + logo.Width, activeArea.Top),
@@ -109,7 +111,7 @@ namespace WiFindUs.Forms
 
             //edition
             int top = activeArea.Top + 2 * logo.Height;
-            string text = (design ? "Application" : WFUApplication.Edition) + " Edition";
+            string text = WFUApplication.Edition + " Edition";
             SizeF sz = e.Graphics.MeasureString(
                 text,
                 Theme.SubtitleFont,
@@ -125,7 +127,7 @@ namespace WiFindUs.Forms
             //version
             top += (int)sz.Height;
             e.Graphics.DrawString(
-                "v" + (design ? "1.0.0.0" : WFUApplication.AssemblyVersion.ToString()),
+                "v" + WFUApplication.AssemblyVersion.ToString(),
                 Theme.SubtitleFont,
                 Theme.TextDarkBrush,
                 new Point(activeArea.Left, top),
@@ -158,6 +160,9 @@ namespace WiFindUs.Forms
                     new PointF(activeArea.Left, progressBar.Top-sz.Height*1.5f),
                     StringFormat.GenericTypographic);
             }
+
+            if (PostDraw != null)
+                PostDraw(e);
         }
 
         protected override void OnFirstShown(EventArgs e)
