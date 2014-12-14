@@ -8,13 +8,13 @@ using System.Drawing;
 
 namespace WiFindUs.Forms
 {
-    public class MainForm : BaseForm
+    public class MainForm : BaseForm, ISplashLoader
 	{
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        protected virtual List<Func<bool>> LoadingTasks
+        public virtual List<Func<bool>> LoadingTasks
         {
             get { return new List<Func<bool>>(); }
         }
