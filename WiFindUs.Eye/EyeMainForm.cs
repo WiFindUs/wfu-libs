@@ -17,27 +17,55 @@ namespace WiFindUs.Eye
     {
         private EyeContext eyeContext = null;
         private EyePacketListener eyeListener = null;
-        private IEnumerable<Device> devices;
-        private IEnumerable<Node> nodes;
-        private IEnumerable<DeviceHistory> deviceHistories;
-        private IEnumerable<NodeHistory> nodeHistories;
-        private IEnumerable<User> users;
-        private IEnumerable<Waypoint> waypoints;
         private Timer timer;
         private long sqlSubmitInterval = 10000, sqlSubmitTimer = 0;
         private long timeoutCheckInterval = 1000, timeoutCheckTimer = 0;
         private List<IUpdateable> updateables = new List<IUpdateable>();
+        private bool serverMode = false;
+        
+        //non-mysql collections (client mode):
+        private Dictionary<long, Device> devices;
+        private Dictionary<long, Node> nodes;
+        private Dictionary<long, List<DeviceHistory>> deviceHistories; //device id, history list
+        private Dictionary<long, List<NodeHistory>> nodeHistories;
+        private Dictionary<long, User> users;
+        private Dictionary<long, Waypoint> waypoints;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        protected override List<Func<bool>> LoadingTasks
+        public bool ServerMode
+        {
+            get { return serverMode; }
+        }
+
+        public virtual IEnumerable<Device> Devices
+        {
+            get { return serverMode ? (IEnumerable<Device>)eyeContext.Devices : devices.Values; }
+        }
+
+        public virtual IEnumerable<Node> Nodes
+        {
+            get { return serverMode ? (IEnumerable<Node>)eyeContext.Nodes : nodes.Values; }
+        }
+
+        public virtual IEnumerable<User> Users
+        {
+            get { return serverMode ? (IEnumerable<User>)eyeContext.Users : users.Values; }
+        }
+
+        public virtual IEnumerable<Waypoint> Waypoints
+        {
+            get { return serverMode ? (IEnumerable<Waypoint>)eyeContext.Waypoints : waypoints.Values; }
+        }
+
+        public override List<Func<bool>> LoadingTasks
         {
             get
             {
                 List<Func<bool>> tasks = base.LoadingTasks;
-                tasks.Add(InitializeEntites);
+                tasks.Add(InitializeApplicationMode);
                 tasks.Add(PreCacheUsers);
                 tasks.Add(PreCacheDevices);
                 tasks.Add(PreCacheDeviceHistories);
@@ -49,39 +77,22 @@ namespace WiFindUs.Eye
             }
         }
 
+        protected string MySQLConnectionString
+        {
+            get
+            {
+                return "Host=" + WFUApplication.Config.Get("mysql.address", "localhost")
+                        + ";Port=" + WFUApplication.Config.Get("mysql.port", 3306)
+                        + ";Persist Security Info=True"
+                        + ";User Id=" + WFUApplication.Config.Get("mysql.username", "root")
+                        + ";Database=" + WFUApplication.Config.Get("mysql.database", "")
+                        + ";Password=" + WFUApplication.Config.Get("mysql.password", "") + ";";
+            }
+        }
+
         protected virtual MapControl Map
         {
             get { return null; }
-        }
-
-        public virtual IEnumerable<Device> Devices
-        {
-            get { return devices;  }
-        }
-
-        public virtual IEnumerable<Node> Nodes
-        {
-            get { return nodes; }
-        }
-
-        public virtual IEnumerable<DeviceHistory> DeviceHistories
-        {
-            get { return deviceHistories; }
-        }
-
-        public virtual IEnumerable<NodeHistory> NodeHistories
-        {
-            get { return nodeHistories; }
-        }
-
-        public virtual IEnumerable<User> Users
-        {
-            get { return users; }
-        }
-
-        public virtual IEnumerable<Waypoint> Waypoints
-        {
-            get { return waypoints; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -112,7 +123,7 @@ namespace WiFindUs.Eye
 
             //fetch
             Device device = null;
-            if (eyeContext != null)
+            if (ServerMode)
             {
                 try
                 {
@@ -126,12 +137,7 @@ namespace WiFindUs.Eye
             }
             else
             {
-                foreach (Device d in devices)
-                    if (d.ID == id)
-                    {
-                        device = d;
-                        break;
-                    }
+                devices.TryGetValue(id, out device);
             }
 
             //create
@@ -144,8 +150,8 @@ namespace WiFindUs.Eye
                     Created = ts,
                     Updated = ts
                 };
-                if (eyeContext == null)
-                    ((List<Device>)devices).Add(device);
+                if (!ServerMode)
+                    devices[id] = device;
                 isNew = true;
             }
 
@@ -160,11 +166,11 @@ namespace WiFindUs.Eye
 
             //fetch
             User user = null;
-            if (eyeContext != null)
+            if (ServerMode)
             {
                 try
                 {
-                    user = Users.Where(d => d.ID == id).Single();
+                    user = eyeContext.Users.Where(d => d.ID == id).Single();
                 }
                 catch (Exception e)
                 {
@@ -174,12 +180,7 @@ namespace WiFindUs.Eye
             }
             else
             {
-                foreach (User u in users)
-                    if (u.ID == id)
-                    {
-                        user = u;
-                        break;
-                    }
+                users.TryGetValue(id, out user);
             }
 
 
@@ -194,8 +195,8 @@ namespace WiFindUs.Eye
                     NameMiddle = "",
                     Type = ""
                 };
-                if (eyeContext == null)
-                    ((List<User>)users).Add(user);
+                if (!ServerMode)
+                    users[id] = user;
                 isNew = true;
             }
 
@@ -211,9 +212,17 @@ namespace WiFindUs.Eye
             base.OnFirstShown(e);
             if (DesignMode)
                 return;
+
+            //start map scene
             MapScene.SceneStarted += MapSceneStarted;
             if (Map != null)
                 Map.StartMapApplication();
+
+            //start timer
+            timer = new Timer();
+            timer.Interval = 100;
+            timer.Tick += TimerTick;
+            timer.Enabled = true;
         }
 
         protected override void OnThemeChanged(Theme theme)
@@ -246,6 +255,16 @@ namespace WiFindUs.Eye
                 eyeListener.PacketReceived -= EyePacketReceived;
                 eyeListener.Dispose();
                 eyeListener = null;
+            }
+
+            if (eyeContext != null)
+            {
+                //apply any pending database changes
+                try { eyeContext.SubmitChanges(); }
+                catch (Exception e) { Debugger.Ex(e, false); }
+
+                eyeContext.Dispose();
+                eyeContext = null;
             }
             base.OnDisposing();
         }
@@ -304,105 +323,117 @@ namespace WiFindUs.Eye
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        private bool InitializeEntites()
+        private bool InitializeApplicationMode()
         {
-            WFUApplication.SplashStatus = "Initializing entity collections";
-            if (WFUApplication.UsesMySQL)
+            serverMode = WFUApplication.Config.Get("server", false);
+            if (serverMode)
             {
-                eyeContext = WFUApplication.MySQLDataContext as WiFindUs.Eye.EyeContext;
+                WFUApplication.SplashStatus = "Creating MySQL Context";
 
-                devices = eyeContext.Devices;
-                deviceHistories = eyeContext.DeviceHistories;
-                nodes = eyeContext.Nodes;
-                nodeHistories = eyeContext.NodeHistories;
-                users = eyeContext.Users;
-                waypoints = eyeContext.Waypoints;
-                sqlSubmitInterval = WFUApplication.Config.Get("mysql.submit_rate", 0, 10000);
+                try
+                {
+                    eyeContext = new EyeContext(MySQLConnectionString);
+                    Debugger.I("MySQL connection created OK.");
+                }
+                catch (Exception ex)
+                {
+                    String message = "There was an error establishing the MySQL connection: " + ex.Message;
+                    Debugger.E(message);
+                    MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+
+                sqlSubmitInterval = WFUApplication.Config.Get("mysql.auto_submit_rate", 0, 10000);
+                timeoutCheckInterval = WFUApplication.Config.Get("server.timeout_check_rate", 0, 1000);
+
+                Debugger.I("Application running in SERVER mode.");
             }
             else
             {
-                Debugger.W("Config: mysql.enabled is set to false; data will not persist when the session is terminated.");
-                devices = new List<Device>();
-                deviceHistories = new List<DeviceHistory>();
-                nodes = new List<Node>();
-                nodeHistories = new List<NodeHistory>();
-                users = new List<User>();
-                waypoints = new List<Waypoint>();
+                WFUApplication.SplashStatus = "Initializing entity collections";
+                devices = new Dictionary<long, Device>();
+                nodes = new Dictionary<long, Node>();
+                deviceHistories = new Dictionary<long, List<DeviceHistory>>();
+                nodeHistories = new Dictionary<long, List<NodeHistory>>();
+                users = new Dictionary<long, User>();
+                waypoints = new Dictionary<long, Waypoint>();
+
+                Debugger.I("Application running in CLIENT mode.");
             }
-            timer = new Timer();
-            timer.Interval = 100;
-            timer.Tick += TimerTick;
-            timer.Enabled = true;
             return true;
         }
 
+        /// <summary>
+        /// Pre-caches the user collection.
+        /// </summary>
+        /// <remarks>This probably seems pointless, but it isn't; LinqConnect doesn't fully
+        /// initialize entities until you iterate over them at least once, so this forces
+        /// that to take place.</remarks>
+        /// <returns></returns>
         private bool PreCacheUsers()
         {
-            if (!WFUApplication.UsesMySQL)
+            if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching users";
-            foreach (User user in Users)
+            foreach (User user in eyeContext.Users)
                 ;
             return true;
         }
 
         private bool PreCacheDevices()
         {
-            if (!WFUApplication.UsesMySQL)
+            if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching devices";
-            foreach (Device device in Devices)
+            foreach (Device device in eyeContext.Devices)
                 ;
             return true;
         }
 
         private bool PreCacheDeviceHistories()
         {
-            if (!WFUApplication.UsesMySQL)
+            if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching device history";
-            foreach (DeviceHistory history in DeviceHistories)
+            foreach (DeviceHistory history in eyeContext.DeviceHistories)
                 ;
             return true;
         }
 
         private bool PreCacheNodes()
         {
-            if (!WFUApplication.UsesMySQL)
+            if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching nodes";
-            foreach (Node node in Nodes)
+            foreach (Node node in eyeContext.Nodes)
                 ;
             return true;
         }
 
         private bool PreCacheNodeHistories()
         {
-            if (!WFUApplication.UsesMySQL)
+            if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching node history";
-            foreach (NodeHistory history in NodeHistories)
+            foreach (NodeHistory history in eyeContext.NodeHistories)
                 ;
             return true;
         }
 
         private bool PreCacheWaypoints()
         {
-            if (!WFUApplication.UsesMySQL)
+            if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching waypoints";
-            foreach (Waypoint waypoint in Waypoints)
+            foreach (Waypoint waypoint in eyeContext.Waypoints)
                 ;
             return true;
         }
 
         private bool StartServerThread()
         {
-            if (!WFUApplication.Config.Get("server.enabled", true))
-            {
-                Debugger.W("Config: server.enabled is set to false; will not process updates sent by clients.");
+            if (!ServerMode)
                 return true;
-            }
 
             WFUApplication.SplashStatus = "Starting server thread";
             try
@@ -433,19 +464,27 @@ namespace WiFindUs.Eye
 
         private void TimerTick(object sender, EventArgs e)
         {
-            timeoutCheckTimer += timer.Interval;
-            if (timeoutCheckTimer >= timeoutCheckInterval)
+            if (!ServerMode)
+                return;
+
+            if (timeoutCheckInterval > 0)
             {
-                timeoutCheckTimer = 0;
-                foreach (IUpdateable updateable in updateables)
-                    updateable.CheckTimeout();
+                timeoutCheckTimer += timer.Interval;
+                if (timeoutCheckTimer >= timeoutCheckInterval)
+                {
+                    Debugger.V("CheckTimeout()");
+                    timeoutCheckTimer = 0;
+                    foreach (IUpdateable updateable in updateables)
+                        updateable.CheckTimeout();
+                }
             }
-            
-            if (eyeContext != null)
+
+            if (sqlSubmitInterval > 0)
             {
                 sqlSubmitTimer += timer.Interval;
                 if (sqlSubmitTimer >= sqlSubmitInterval)
                 {
+                    Debugger.V("SubmitChangesThreaded()");
                     sqlSubmitTimer = 0;
                     eyeContext.SubmitChangesThreaded();
                 }

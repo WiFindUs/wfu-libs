@@ -7,7 +7,6 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 using System.Drawing;
-using Devart.Data.Linq;
 using WiFindUs.IO;
 using WiFindUs.Forms;
 using WiFindUs.Controls;
@@ -47,21 +46,13 @@ namespace WiFindUs
         private static Icon hostIcon = null;
         private static volatile ConfigFile config = null;
         private static ResourceLoader<Image> imageLoader = new ResourceLoader<Image>(Image.FromFile);
-        private static string mysqlAddress = "";
-        private static int mysqlPort= -1;
-        private static string mysqlUsername = "";
-        private static string mysqlPassword = "";
-        private static string mysqlDatabase = "";
         private static Mutex mutex = null;
-        private static Type mysqlContextType = null;
-        private static DataContext mysqlContext = null;
         private static List<Func<object, bool>> loadingTasks = new List<Func<object, bool>>();
         private static SplashForm splashForm = null;
         private static bool splashLoadingFinished = false;
         private static Theme theme = new Theme();
-        private static string googleAPIKey = "";
+        private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
         private static Action<MainForm> mainLaunchAction = null;
-        private static bool mysqlDisabledInConfig = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -399,121 +390,6 @@ namespace WiFindUs
         }
 
         /// <summary>
-        /// If true, the application will attempt to connect to a MySQL database upon launching, and will abort if the connection fails.
-        /// </summary>
-        public static bool UsesMySQL
-        {
-            get
-            {
-                return usesMySQL && !mysqlDisabledInConfig;
-            }
-            set { if (!readOnly) usesMySQL = value; }
-        }
-
-        /// <summary>
-        /// Returns the address on which the MySQL connection will be made. First checks the local override,
-        /// then the local ConfigFile instance at key "mysql.address", then returns "localhost" as a fallback.
-        /// </summary>
-        public static string MySQLAddress
-        {
-            get
-            {
-                return mysqlAddress.Length > 0 ? mysqlAddress :
-                    (config != null ? config.Get("mysql.address", "localhost") : "localhost");
-            }
-            set { if (!readOnly) mysqlAddress = value == null ? "" : value.Trim(); }
-        }
-
-        /// <summary>
-        /// Returns the port on which the MySQL connection will be made. First checks the local override,
-        /// then the local ConfigFile instance at key "mysql.port", then returns 3306 as a fallback.
-        /// </summary>
-        public static int MySQLPort
-        {
-            get
-            {
-                return mysqlPort >= 1024 && mysqlPort <= 65535 ? mysqlPort :
-                    (config != null ? config.Get("mysql.port", 3306) : 3306);
-            }
-            set { if (!readOnly) mysqlPort = value; }
-        }
-
-        /// <summary>
-        /// Returns the username with which the MySQL connection will be made. First checks the local override,
-        /// then the local ConfigFile instance at key "mysql.username", then returns "root" as a fallback.
-        /// </summary>
-        public static string MySQLUsername
-        {
-            get
-            {
-                return mysqlUsername.Length > 0 ? mysqlUsername :
-                    (config != null ? config.Get("mysql.username", "root") : "root");
-            }
-            set { if (!readOnly) mysqlUsername = value == null ? "" : value.Trim(); }
-        }
-
-        /// <summary>
-        /// Returns the database name to which the MySQL connection will be made. First checks the local override,
-        /// then the local ConfigFile instance at key "mysql.database".
-        /// </summary>
-        public static string MySQLDatabase
-        {
-            get
-            {
-                return mysqlDatabase.Length > 0 ? mysqlDatabase :
-                    (config != null ? config.Get("mysql.database", "") : "");
-            }
-            set { if (!readOnly) mysqlDatabase = value == null ? "" : value.Trim(); }
-        }
-
-        /// <summary>
-        /// Returns the password with which the MySQL connection will be made. First checks the local override,
-        /// then the local ConfigFile instance at key "mysql.password".
-        /// </summary>
-        public static string MySQLPassword
-        {
-            get
-            {
-                return mysqlPassword.Length > 0 ? mysqlPassword :
-                    (config != null ? config.Get("mysql.password", "") : "");
-            }
-            set { if (!readOnly) mysqlPassword = value == null ? "" : value.Trim(); }
-        }
-
-        /// <summary>
-        /// The Context type that will be created when the application is spawned. Must be Devart.Data.Linq.DataContext or a subclass.
-        /// </summary>
-        public static Type MySQLContextType
-        {
-            get { return mysqlContextType; }
-            set { if (!readOnly) mysqlContextType = value; }
-        }
-
-        /// <summary>
-        /// The string passed to the LinqConnect DataContext to initiate the MySQL connection.
-        /// </summary>
-        private static string MySQLConnectionString
-        {
-            get
-            {
-                return "Host=" + MySQLAddress
-                        + ";Port=" + MySQLPort
-                        + ";Persist Security Info=True"
-                        + ";User Id=" + MySQLUsername
-                        + ";Database=" + MySQLDatabase
-                        + ";Password=" + MySQLPassword + ";";
-            }
-        }
-
-        /// <summary>
-        /// The global LinqConnect data conext in use by this application.
-        /// </summary>
-        public static DataContext MySQLDataContext
-        {
-            get { return mysqlContext;  }
-        }
-
-        /// <summary>
         /// The base list of tasks passed to the splash screen for application initialization. 
         /// This is merged with the overridable list from your MainForm(), which is passed via StartSplashLoading().
         /// </summary>
@@ -525,8 +401,6 @@ namespace WiFindUs
                 tasks.Add(InitializeDebugger);
                 tasks.Add(CheckAppDataPath);
                 tasks.Add(LoadConfigFiles);
-                if (UsesMySQL)
-                    tasks.Add(CreateMySQLContext);
                 return tasks;
             }
         }
@@ -557,7 +431,12 @@ namespace WiFindUs
         public static string SplashStatus
         {
             get { return splashForm == null ? "" : splashForm.Status; }
-            set { if (splashForm != null) splashForm.Status = value; }
+            set
+            {
+                Debugger.I("Splash loading: " + (value ?? ""));
+                if (splashForm != null)
+                    splashForm.Status = value;
+            }
         }
 
         /// <summary>
@@ -678,13 +557,6 @@ namespace WiFindUs
 			Debugger.V("Application terminating...");
 			running = false;
 
-			//apply any pending database changes
-            if (mysqlContext != null)
-            {
-                try { mysqlContext.SubmitChanges(); }
-                catch (Exception e) { Debugger.Ex(e, false); }
-            }
-
             //release resources and close debugger
             Free();
 		}
@@ -773,41 +645,9 @@ namespace WiFindUs
             Debugger.I("Loading config files...");
             String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             config = new ConfigFile(files);
-            mysqlDisabledInConfig = !config.Get("mysql.enabled", true);
             Debugger.V(config.ToString());
             Debugger.I("Finished loading config files.");
             return true;
-        }
-
-        private static bool CreateMySQLContext()
-        {
-            if (!UsesMySQL)
-                return true;
-
-            splashForm.Status = "Connecting to MySQL server";
-            
-            Debugger.I("Establishing the MySQL connection data context...");
-            if (mysqlContextType == null || !mysqlContextType.IsSubclassOf(typeof(DataContext)))
-            {
-                String message = "The MySQLContextType was missing or invalid!";
-                Debugger.E(message);
-                MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
-            try
-            {
-                mysqlContext = (DataContext)mysqlContextType.GetConstructor(new Type[] { typeof(String) }).Invoke(new object[] { MySQLConnectionString });
-                Debugger.I("MySQL connection created OK.");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                String message = "There was an error establishing the MySQL connection: " + ex.Message;
-                Debugger.E(message);
-                MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
         }
 
         private static void Free()
@@ -818,11 +658,6 @@ namespace WiFindUs
                 theme = null;
             }
             
-            if (mysqlContext != null)
-            {
-                mysqlContext.Dispose();
-                mysqlContext = null;
-            }
             
             if (imageLoader != null)
             {

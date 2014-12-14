@@ -15,10 +15,7 @@ namespace WiFindUs.Eye.Dispatcher
             WFUApplication.Name = "Ubi";
             WFUApplication.Description = "First-Responder Asset Management System";
             WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf|ubi.conf";
-            WFUApplication.UsesMySQL = true;
-            WFUApplication.MySQLContextType = typeof(WiFindUs.Eye.EyeContext);
             WFUApplication.MainFormType = typeof(DispatcherForm);
-            WFUApplication.GoogleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
             WFUApplication.MainLaunchAction = MapControl.StartRenderLoop;
             WFUApplication.Run(args);
         }
