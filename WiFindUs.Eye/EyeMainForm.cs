@@ -231,14 +231,19 @@ namespace WiFindUs.Eye
             if (DesignMode)
                 return;
             if (Map != null)
+            {
                 Map.BackColor = theme.ControlDarkColour;
+                if (Map.Scene != null)
+                    Map.Scene.Theme = Theme;
+            }
         }
 
         protected override void OnDisposing()
         {            
             if (Map != null)
             {
-                Map.CancelThreads();
+                if (Map.Scene != null)
+                    Map.Scene.CancelThreads();
                 Controls.Remove(Map);
                 Map.Dispose();
             }
@@ -319,7 +324,7 @@ namespace WiFindUs.Eye
                 Debugger.E("Could not parse map.center from config files!");
             else
                 obj.CenterLocation = location;
-            Map.Theme = Theme;
+            Map.Scene.Theme = Theme;
         }
 
         /////////////////////////////////////////////////////////////////////

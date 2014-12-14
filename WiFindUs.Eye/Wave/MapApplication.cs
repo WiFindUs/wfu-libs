@@ -11,34 +11,15 @@ using WiFindUs.Controls;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class MapApplication : FormApplication, IThemeable
+    public class MapApplication : FormApplication
     {
         MapGame game;
 
-        public Theme Theme
+        public MapScene Scene
         {
             get
             {
-                return game == null ? null : game.Theme;
-            }
-            set
-            {
-                if (game != null)
-                    game.Theme = value;
-            }
-        }
-
-        public ILocation CenterLocation
-        {
-            get
-            {
-                return game == null ? null : game.CenterLocation;
-            }
-            set
-            {
-                if (game == null)
-                    return;
-                game.CenterLocation = value;
+                return game == null ? null : game.Scene;
             }
         }
 
@@ -83,12 +64,6 @@ namespace WiFindUs.Eye.Wave
             base.OnDeactivate();
             if (game != null)
                 game.OnDeactivated(); 
-        }
-
-        public void CancelThreads()
-        {
-            if (game != null)
-                game.CancelThreads();
         }
     }
 }

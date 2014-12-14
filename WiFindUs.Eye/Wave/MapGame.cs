@@ -9,36 +9,18 @@ using WiFindUs.Controls;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class MapGame : Game, IThemeable
+    public class MapGame : Game
     {
         private MapScene scene;
        
-        public Theme Theme
+        public MapScene Scene
         {
             get
             {
-                return scene == null ? null : scene.Theme;
-            }
-            set
-            {
-                if (scene != null)
-                    scene.Theme = value;
+                return scene;
             }
         }
 
-        public ILocation CenterLocation
-        {
-            get
-            {
-                return scene == null ? null : scene.CenterLocation;
-            }
-            set
-            {
-                if (scene == null)
-                    return;
-                scene.CenterLocation = value;
-            }
-        }
         
         public override void Initialize(IApplication application)
         {
@@ -48,12 +30,6 @@ namespace WiFindUs.Eye.Wave
 
             ScreenContext sc = new ScreenContext(scene);
             WaveServices.ScreenContextManager.To(sc);
-        }
-
-        public void CancelThreads()
-        {
-            if (scene != null)
-                scene.CancelThreads();
         }
     }
 }

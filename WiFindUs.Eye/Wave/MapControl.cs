@@ -13,7 +13,7 @@ using WiFindUs.Controls;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class MapControl : Control, IThemeable
+    public class MapControl : Control
     {
         private MapApplication mapApp;
         private Input input;
@@ -34,39 +34,20 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        public MapScene Scene
+        {
+            get
+            {
+                return mapApp == null ? null : mapApp.Scene;
+            }
+        }
+
 
         public bool IsDesignMode
         {
             get
             {
                 return DesignMode || this.IsDesignMode();
-            }
-        }
-
-        public ILocation CenterLocation
-        {
-            get
-            {
-                return mapApp == null ? null : mapApp.CenterLocation;
-            }
-            set
-            {
-                if (mapApp == null)
-                    return;
-                mapApp.CenterLocation = value;
-            }
-        }
-
-        public Theme Theme
-        {
-            get
-            {
-                return mapApp == null ? null : mapApp.Theme;
-            }
-            set
-            {
-                if (mapApp != null)
-                    mapApp.Theme = value;
             }
         }
 
@@ -96,12 +77,6 @@ namespace WiFindUs.Eye.Wave
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
-
-        public void CancelThreads()
-        {
-            if (mapApp != null)
-                mapApp.CancelThreads();
-        }
 
         public static void StartRenderLoop(WiFindUs.Forms.MainForm form)
         {
