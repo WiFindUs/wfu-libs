@@ -25,14 +25,14 @@ namespace WiFindUs.Eye.Wave
         private const float CAM_MAX_ANGLE = (float)(Math.PI/2.01);
         private const float ZOOM_RATE = 1.0f;
         private const float TILT_RATE = 1.0f;
-        public const uint MIN_LEVEL = Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM+1;
+        public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM+1;
 
         private EyeMainForm eyeForm;
         private Theme theme;
         private FixedCamera camera;
         private ILocation center;
-        private Entity[][,] chunks;
-        private TerrainChunk baseChunk;
+        private Entity[][,] tiles;
+        private TerrainTile baseTile;
         private uint visibleLayer = 0;
         private int cameraZoom = 100; //percentage; 100 is all the way zoomed out
         private int cameraTilt = 50; //percentage; 100 is completely vertical
@@ -74,7 +74,7 @@ namespace WiFindUs.Eye.Wave
                     return;
                 Debugger.I("Setting map center to " + value.ToString());
                 center = value;
-                UpdateChunkLocations();
+                UpdateTileLocations();
             }
         }
 
@@ -97,21 +97,21 @@ namespace WiFindUs.Eye.Wave
             }
             protected set
             {
-                uint layer = value >= chunks.Length ? (uint)chunks.Length - 1 : value;
+                uint layer = value >= tiles.Length ? (uint)tiles.Length - 1 : value;
                 if (layer == visibleLayer)
                     return;
 
-                Chunks((chunk) => { chunk.Owner.IsVisible = chunk.Owner.IsActive = false; },
+                Tiles((tile) => { tile.Owner.IsVisible = tile.Owner.IsActive = false; },
                     (int)visibleLayer, (int)visibleLayer);
                 visibleLayer = layer;
-                Chunks((chunk) => {chunk.Owner.IsVisible = chunk.Owner.IsActive = true;},
+                Tiles((tile) => { tile.Owner.IsVisible = tile.Owner.IsActive = true; },
                     (int)visibleLayer, (int)visibleLayer);
             }
         }
 
         public uint LayerCount
         {
-            get { return (uint)chunks.Length; }
+            get { return (uint)tiles.Length; }
         }
 
         public int CameraZoom
@@ -123,7 +123,7 @@ namespace WiFindUs.Eye.Wave
                 if (zoom == cameraZoom)
                     return;
                 cameraZoom = zoom;
-                VisibleLayer = (uint)((1.0f-((float)cameraZoom / 100.0f)) * (float)chunks.Length);
+                VisibleLayer = (uint)((1.0f - ((float)cameraZoom / 100.0f)) * (float)tiles.Length);
                 if (autoUpdateCamera)
                     UpdateCameraPosition();
                 else
@@ -155,9 +155,9 @@ namespace WiFindUs.Eye.Wave
                 if (cameraTransform == null)
                     return;
                 cameraTransform.LookAt = new Vector3(
-                    value.X < baseChunk.TopLeft.X ? baseChunk.TopLeft.X : (value.X > baseChunk.BottomRight.X ? baseChunk.BottomRight.X : value.X),
+                    value.X < baseTile.TopLeft.X ? baseTile.TopLeft.X : (value.X > baseTile.BottomRight.X ? baseTile.BottomRight.X : value.X),
                     value.Y,
-                    value.Z < baseChunk.TopLeft.Z ? baseChunk.TopLeft.Z : (value.Z > baseChunk.BottomRight.Z ? baseChunk.BottomRight.Z : value.Z)
+                    value.Z < baseTile.TopLeft.Z ? baseTile.TopLeft.Z : (value.Z > baseTile.BottomRight.Z ? baseTile.BottomRight.Z : value.Z)
                     );
                 if (autoUpdateCamera)
                     UpdateCameraPosition();
@@ -172,14 +172,14 @@ namespace WiFindUs.Eye.Wave
         
         public Vector3 LocationToVector(ILocation loc)
         {
-            if (baseChunk == null)
+            if (baseTile == null)
                 return Vector3.Zero;
-            return baseChunk.LocationToVector(loc);
+            return baseTile.LocationToVector(loc);
         }
 
         public void CancelThreads()
         {
-            Chunks((chunk) => chunk.CancelThreads());
+            Tiles((tile) => tile.CancelThreads());
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -214,9 +214,9 @@ namespace WiFindUs.Eye.Wave
 
             //create terrain layers
             Debugger.V("MapScene: creating layers");
-            chunks = new Entity[Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - MIN_LEVEL + 1][,];
-            for (uint layer = 0; layer < chunks.Length; layer++)
-                CreateChunkLayer(layer);
+            tiles = new Entity[Region.GOOGLE_MAPS_TILE_MAX_ZOOM - MIN_LEVEL + 1][,];
+            for (uint layer = 0; layer < tiles.Length; layer++)
+                CreateTileLayer(layer);
 
             //add scene behaviours
             Debugger.V("MapScene: creating behaviours");
@@ -227,8 +227,8 @@ namespace WiFindUs.Eye.Wave
         protected override void Start()
         {
             base.Start();
-            Chunks((chunk) => chunk.CalculatePosition());
-            chunks[0][0, 0].IsVisible = true;
+            Tiles((tile) => tile.CalculatePosition());
+            tiles[0][0, 0].IsVisible = true;
             eyeForm = (WFUApplication.MainForm as EyeMainForm);
             foreach (Device device in eyeForm.Devices)
                 Device_OnDeviceCreated(device);
@@ -276,36 +276,36 @@ namespace WiFindUs.Eye.Wave
             throw new NotImplementedException();
         }
 
-        private void CreateChunkLayer(uint layer)
+        private void CreateTileLayer(uint layer)
         {
-            if (chunks == null || layer >= chunks.Length || chunks[layer] != null)
+            if (tiles == null || layer >= tiles.Length || tiles[layer] != null)
                 return;
             
             float planeSize = (float)Math.Pow(2.0,
-                8.0 + (MIN_LEVEL - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM)//smallest chunks will be sized at this power of two
-                + (Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM - Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM)
+                8.0 + (MIN_LEVEL - Region.GOOGLE_MAPS_TILE_MIN_ZOOM)//smallest chunks will be sized at this power of two
+                + (Region.GOOGLE_MAPS_TILE_MAX_ZOOM - Region.GOOGLE_MAPS_TILE_MIN_ZOOM)
                 - layer) / 10.0f;
 
             int depth = 1 << (int)layer;
-            chunks[layer] = new Entity[depth, depth];
+            tiles[layer] = new Entity[depth, depth];
             for (uint row = 0; row < depth; row++)
             {
                 for (uint column = 0; column < depth; column++)
                 {
-                    TerrainChunk chunk = new TerrainChunk(
-                        layer == 0 ? null : baseChunk,
+                    TerrainTile tile = new TerrainTile(
+                        layer == 0 ? null : baseTile,
                         MIN_LEVEL + layer,
                         row, column,
                         planeSize);
                     if (layer == 0)
-                        baseChunk = chunk;
+                        baseTile = tile;
 
-                    Entity chunkEntity = chunks[layer][row, column] = new Entity()
+                    Entity chunkEntity = tiles[layer][row, column] = new Entity()
                     .AddComponent(new Transform3D())
-                    .AddComponent(new MaterialsMap((row+column) % 2 == 0 ? TerrainChunk.PlaceHolderMaterial : TerrainChunk.PlaceHolderMaterialAlt))
+                    .AddComponent(new MaterialsMap((row+column) % 2 == 0 ? TerrainTile.PlaceHolderMaterial : TerrainTile.PlaceHolderMaterialAlt))
                     .AddComponent(Model.CreatePlane(Vector3.UnitY, planeSize))
                     .AddComponent(new ModelRenderer())
-                    .AddComponent(chunk);
+                    .AddComponent(tile);
                     EntityManager.Add(chunkEntity);
 
                     chunkEntity.IsVisible = false;
@@ -313,14 +313,14 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
-        private void Chunks(Action<TerrainChunk> action, int firstLayer = -1, int lastLayer = -1, int excludeLayer = -1)
+        private void Tiles(Action<TerrainTile> action, int firstLayer = -1, int lastLayer = -1, int excludeLayer = -1)
         {
-            if (action == null || chunks == null || firstLayer >= chunks.Length)
+            if (action == null || tiles == null || firstLayer >= tiles.Length)
                 return;
 
             firstLayer = firstLayer < 0 ? 0 : firstLayer;
-            lastLayer = lastLayer < 0 ? chunks.Length - 1 : (lastLayer < firstLayer ? firstLayer
-                : (lastLayer >= chunks.Length ? chunks.Length - 1 : lastLayer));
+            lastLayer = lastLayer < 0 ? tiles.Length - 1 : (lastLayer < firstLayer ? firstLayer
+                : (lastLayer >= tiles.Length ? tiles.Length - 1 : lastLayer));
 
             for (int layer = firstLayer; layer <= lastLayer; layer++)
             {
@@ -329,25 +329,25 @@ namespace WiFindUs.Eye.Wave
                 int depth = 1 << (int)layer;
                 for (uint row = 0; row < depth; row++)
                     for (uint column = 0; column < depth; column++)
-                        action(chunks[layer][row, column].FindComponent<TerrainChunk>());
+                        action(tiles[layer][row, column].FindComponent<TerrainTile>());
             }
         }
 
-        private void UpdateChunkLocations()
+        private void UpdateTileLocations()
         {
-            if (center == null || chunks == null || baseChunk == null)
+            if (center == null || tiles == null || baseTile == null)
                 return;
 
-            baseChunk.CenterLocation = center;
-            Chunks((chunk) =>
+            baseTile.CenterLocation = center;
+            Tiles((tile) =>
             {
-                float ratio = (chunk.Size / baseChunk.Size);
-                float latSize = (float)baseChunk.Region.LatitudinalSpan * ratio;
-                float longSize = (float)baseChunk.Region.LongitudinalSpan * ratio;
+                float ratio = (tile.Size / baseTile.Size);
+                float latSize = (float)baseTile.Region.LatitudinalSpan * ratio;
+                float longSize = (float)baseTile.Region.LongitudinalSpan * ratio;
 
-                chunk.CenterLocation = new Location(
-                    baseChunk.Region.NorthWest.Latitude.Value - latSize * ((float)chunk.Row + 0.5f), //lat
-                    baseChunk.Region.NorthWest.Longitude.Value + longSize * ((float)chunk.Column + 0.5f)//long
+                tile.CenterLocation = new Location(
+                    baseTile.Region.NorthWest.Latitude.Value - latSize * ((float)tile.Row + 0.5f), //lat
+                    baseTile.Region.NorthWest.Longitude.Value + longSize * ((float)tile.Column + 0.5f)//long
                     );
             }, 1);
         }

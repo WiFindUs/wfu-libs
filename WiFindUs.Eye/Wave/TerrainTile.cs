@@ -15,13 +15,13 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class TerrainChunk : Behavior
+    public class TerrainTile : Behavior
     {
         private static Material placeHolderMaterial, placeHolderMaterialAlt,
             loadingMaterial, downloadingMaterial, errorMaterial;
         private const int MAX_CONCURRENT_LOADS = 1;
         private const int MAX_CONCURRENT_DOWNLOADS = 1;
-        private const int CHUNK_IMAGE_SIZE = 640;
+        private const int TILE_IMAGE_SIZE = 640;
         private static readonly string IMAGE_FORMAT = "png";
         private static readonly string MAPS_URL_BASE = "https://maps.googleapis.com/maps/api/staticmap?";
         private static readonly string MAPS_DIR = "maps/";
@@ -37,7 +37,7 @@ namespace WiFindUs.Eye.Wave
         private Region region;
         private uint googleMapsZoomLevel;
         private uint row, column;
-        private TerrainChunk baseChunk;
+        private TerrainTile baseTile;
         private float size;
         private Vector3 topLeft, bottomRight;
         private Thread loadThread;
@@ -172,7 +172,7 @@ namespace WiFindUs.Eye.Wave
                 return String.Format(
                     "{0}center={1:0.######},{2:0.######}&zoom={3}&scale={4}&size={5}x{6}&key={7}&maptype={8}&format={9}",
                     MAPS_URL_BASE, region.Latitude.Value, region.Longitude.Value, googleMapsZoomLevel,
-                    2, CHUNK_IMAGE_SIZE, CHUNK_IMAGE_SIZE,
+                    2, TILE_IMAGE_SIZE, TILE_IMAGE_SIZE,
                     WFUApplication.GoogleAPIKey, "satellite", IMAGE_FORMAT);
             }
         }
@@ -181,17 +181,17 @@ namespace WiFindUs.Eye.Wave
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public TerrainChunk(TerrainChunk baseChunk, uint googleMapsZoomLevel, uint row, uint column, float size)
+        public TerrainTile(TerrainTile baseTile, uint googleMapsZoomLevel, uint row, uint column, float size)
         {
-            if (googleMapsZoomLevel < WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MIN_ZOOM
-                || googleMapsZoomLevel > WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM)
+            if (googleMapsZoomLevel < WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM
+                || googleMapsZoomLevel > WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM)
                 throw new ArgumentOutOfRangeException("googleMapsZoomLevel", "Zoom level must be between "
-                    + MapScene.MIN_LEVEL + " and " + WiFindUs.Eye.Region.GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
+                    + MapScene.MIN_LEVEL + " and " + WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM + " (inclusive).");
 
             this.googleMapsZoomLevel = googleMapsZoomLevel;
             this.row = row;
             this.column = column;
-            this.baseChunk = baseChunk;
+            this.baseTile = baseTile;
             this.size = size;
         }
 
@@ -201,11 +201,11 @@ namespace WiFindUs.Eye.Wave
 
         public void CalculatePosition()
         {
-            if (baseChunk == null)
+            if (baseTile == null)
                 transform3D.Position = new Vector3(0f, 0f, 0f);
             else
             {
-                float start = (baseChunk.Size / -2.0f) + (size / 2.0f);
+                float start = (baseTile.Size / -2.0f) + (size / 2.0f);
                 transform3D.Position = new Vector3(
                     start + (column * size),
                     0.0f,
@@ -267,7 +267,7 @@ namespace WiFindUs.Eye.Wave
                     return;
 
                 currentDownloads++;
-                Debugger.V("Downloading map chunk texture " + ImageFilename + "...");
+                Debugger.V("Downloading map tile texture " + ImageFilename + "...");
                 downloadClient = new WebClient();
                 downloadClient.DownloadFileCompleted += DownloadFileCompleted;
                 downloadClient.DownloadProgressChanged += DownloadProgressChanged;
@@ -301,7 +301,7 @@ namespace WiFindUs.Eye.Wave
             {
                 if (e.Error != null)
                 {
-                    Debugger.E("Error downloading map chunk texture " + ImageFilename + ".");
+                    Debugger.E("Error downloading map tile texture " + ImageFilename + ".");
                     materialsMap.DefaultMaterial = ErrorMaterial;
                     mapTextured = true;
                 }
@@ -345,7 +345,7 @@ namespace WiFindUs.Eye.Wave
             }
             catch (Exception e)
             {
-                Debugger.E("Error loading map chunk texture " + ImageFilename + ".");
+                Debugger.E("Error loading map tile texture " + ImageFilename + ".");
                 materialsMap.DefaultMaterial = ErrorMaterial;
             }
             mapTextured = true;

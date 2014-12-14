@@ -127,7 +127,7 @@
     <Compile Include="NodeHistory.cs" />
     <Compile Include="DeviceHistory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Wave\TerrainChunk.cs">
+    <Compile Include="Wave\TerrainTile.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="User.cs" />

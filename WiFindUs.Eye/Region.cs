@@ -12,11 +12,11 @@ namespace WiFindUs.Eye
     /// </summary>
     public class Region : ILocation, IEquatable<IRegion>, IRegion
     {
-        public const uint GOOGLE_MAPS_CHUNK_MIN_ZOOM = 15;
-        public const uint GOOGLE_MAPS_CHUNK_MAX_ZOOM = 20;
+        public const uint GOOGLE_MAPS_TILE_MIN_ZOOM = 15;
+        public const uint GOOGLE_MAPS_TILE_MAX_ZOOM = 20;
 
-        private static readonly double GOOGLE_MAPS_CHUNK_RADIUS = 0.01126;
-        private static readonly double GOOGLE_MAPS_CHUNK_LONG_SCALE = 1.22;
+        private static readonly double GOOGLE_MAPS_TILE_RADIUS = 0.01126;
+        private static readonly double GOOGLE_MAPS_TILE_LONG_SCALE = 1.22;
         private ILocation northWest, northEast, southWest, southEast, center;
         private double latSpan, longSpan, width, height;
         private uint googleMapsZoomLevel = 0;
@@ -217,15 +217,15 @@ namespace WiFindUs.Eye
                 throw new ArgumentNullException("center");
             if (!center.HasLatLong)
                 throw new ArgumentException("Center must have both lat and long components.");
-            if (googleMapsZoomLevel < GOOGLE_MAPS_CHUNK_MIN_ZOOM || googleMapsZoomLevel > GOOGLE_MAPS_CHUNK_MAX_ZOOM)
+            if (googleMapsZoomLevel < GOOGLE_MAPS_TILE_MIN_ZOOM || googleMapsZoomLevel > GOOGLE_MAPS_TILE_MAX_ZOOM)
                 throw new ArgumentOutOfRangeException("googleMapsZoomLevel", "Zoom level must be between "
-                    + GOOGLE_MAPS_CHUNK_MIN_ZOOM + " and " + GOOGLE_MAPS_CHUNK_MAX_ZOOM + " (inclusive).");
+                    + GOOGLE_MAPS_TILE_MIN_ZOOM + " and " + GOOGLE_MAPS_TILE_MAX_ZOOM + " (inclusive).");
 
             this.googleMapsZoomLevel = googleMapsZoomLevel;
-            double scaledRadius = GOOGLE_MAPS_CHUNK_RADIUS / Math.Pow(2.0, (googleMapsZoomLevel - GOOGLE_MAPS_CHUNK_MIN_ZOOM));
+            double scaledRadius = GOOGLE_MAPS_TILE_RADIUS / Math.Pow(2.0, (googleMapsZoomLevel - GOOGLE_MAPS_TILE_MIN_ZOOM));
             this.center = center;
-            northWest = new Location(center.Latitude + scaledRadius, center.Longitude - (scaledRadius * GOOGLE_MAPS_CHUNK_LONG_SCALE));
-            southEast = new Location(center.Latitude - scaledRadius,  center.Longitude + (scaledRadius * GOOGLE_MAPS_CHUNK_LONG_SCALE));
+            northWest = new Location(center.Latitude + scaledRadius, center.Longitude - (scaledRadius * GOOGLE_MAPS_TILE_LONG_SCALE));
+            southEast = new Location(center.Latitude - scaledRadius, center.Longitude + (scaledRadius * GOOGLE_MAPS_TILE_LONG_SCALE));
             northEast = new Location(northWest.Latitude, southEast.Longitude);
             southWest = new Location(southEast.Latitude, northWest.Longitude);
             latSpan = northWest.Latitude.Value - southEast.Latitude.Value;
