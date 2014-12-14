@@ -19,6 +19,7 @@ namespace WiFindUs.Eye.Wave
         private Input input;
         private int scaleFactor = 1;
         private Form form = null;
+        public event Action<MapControl> AltEnterPressed;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -131,12 +132,14 @@ namespace WiFindUs.Eye.Wave
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+
             if (IsDesignMode)
             {
                 e.Graphics.Clear(System.Drawing.Color.WhiteSmoke);
                 string text = "Wave Engine Map Renderer Control";
                 var sizeText = e.Graphics.MeasureString(text, Font);
                 e.Graphics.DrawString(text, Font, Brushes.Black, (Width - sizeText.Width) / 2, (Height - sizeText.Height) / 2);
+                return;
             }
         }
 
@@ -175,14 +178,23 @@ namespace WiFindUs.Eye.Wave
         {
             base.OnKeyDown(e);
             if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
-                SetKeyboardButtonState(e, true);
+            {
+                if (((e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return) && e.Modifiers == Keys.Alt) && AltEnterPressed != null)
+                    AltEnterPressed(this);
+                else
+                    SetKeyboardButtonState(e, true);
+                e.Handled = true;
+            }
         }
 
         protected override void OnKeyUp(KeyEventArgs e)
         {
             base.OnKeyUp(e);
             if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
+            {
                 SetKeyboardButtonState(e, false);
+                e.Handled = true;
+            }
         }
 
         /////////////////////////////////////////////////////////////////////

@@ -54,5 +54,35 @@ namespace WiFindUs.Extensions
                 RecurseControls(child, action);
             }
         }
+
+        public static void HidePanel(this SplitContainer container, int panel)
+        {
+            panel = panel > 2 ? 2 : (panel < 1 ? 1 : panel);
+            if (panel == 1)
+            {
+                container.Panel1Collapsed = true;
+                container.Panel1.Hide();
+            }
+            else
+            {
+                container.Panel2Collapsed = true;
+                container.Panel2.Hide();
+            }
+        }
+
+        public static void ShowPanel(this SplitContainer container, int panel)
+        {
+            panel = panel > 2 ? 2 : (panel < 1 ? 1 : panel);
+            if (panel == 1)
+            {
+                container.Panel1.Show();
+                container.Panel1Collapsed = false;
+            }
+            else
+            {
+                container.Panel2.Show();
+                container.Panel2Collapsed = false;
+            }
+        }
     }
 }

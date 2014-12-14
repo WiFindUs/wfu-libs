@@ -23,7 +23,9 @@ namespace WiFindUs.Eye.Dispatcher
     public partial class DispatcherForm : EyeMainForm
     {
         private MapControl mapControl;
-        
+        private FormWindowState oldWindowState;
+        private Rectangle oldBounds;
+
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
@@ -31,6 +33,53 @@ namespace WiFindUs.Eye.Dispatcher
         protected override MapControl Map
         {
             get { return mapControl; }
+        }
+
+        public bool FullScreen
+        {
+            get { return FormBorderStyle == FormBorderStyle.None; }
+            set
+            {
+                if (value == FullScreen)
+                    return;
+
+                //suspend layout stuff
+                SuspendLayout();
+                this.RecurseControls(control => SuspendLayout());
+
+                //going fullscreen
+                if (value)
+                {
+                    oldWindowState = WindowState;
+                    oldBounds = Bounds;
+                    
+                    if (WindowState != FormWindowState.Normal)
+                        WindowState = FormWindowState.Normal;
+                    FormBorderStyle = FormBorderStyle.None;
+                    Bounds = Screen.FromControl(this).Bounds;
+                    TopMost = true;
+                    workingAreaSplitter.HidePanel(1);
+                    windowSplitter.HidePanel(2);
+                    windowStatusStrip.Visible = false;
+                }
+                else
+                {
+                    windowStatusStrip.Visible = true;
+                    windowSplitter.ShowPanel(2);
+                    workingAreaSplitter.ShowPanel(1);
+                    TopMost = false;
+                    FormBorderStyle = FormBorderStyle.Sizable;
+                    Bounds = oldBounds;
+                    if (oldWindowState != FormWindowState.Normal)
+                        WindowState = oldWindowState;
+                }
+
+                //resume layout stuff
+                this.RecurseControls(control => ResumeLayout(false));
+                ResumeLayout(false);
+                PerformLayout();
+
+            }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -75,6 +124,10 @@ namespace WiFindUs.Eye.Dispatcher
 #if DEBUG
             infoTabs.SelectedIndex = 1;
 #endif
+            bool startFullScreen = WFUApplication.Config.Get("display.start_fullscreen", false);
+            Debugger.V("Start fullscreen: " + startFullScreen);
+            if (startFullScreen)
+                FullScreen = true;
         }
 
         protected override void OnThemeChanged(Theme theme)
@@ -91,6 +144,12 @@ namespace WiFindUs.Eye.Dispatcher
         {
             base.MapSceneStarted(obj);
             SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
+            mapControl.AltEnterPressed += mapControl_AltEnterPressed;
+        }
+
+        private void mapControl_AltEnterPressed(MapControl obj)
+        {
+            FullScreen = !FullScreen;
         }
     }
 }
