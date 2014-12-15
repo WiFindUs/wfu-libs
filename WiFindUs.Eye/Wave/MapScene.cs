@@ -15,7 +15,7 @@ namespace WiFindUs.Eye.Wave
 {
     public class MapScene : Scene, IThemeable
     {
-        public static event Action<MapScene> SceneStarted;
+        public event Action<MapScene> SceneStarted;
         public event Action<MapScene> CameraChanged;
         
         private const float CAM_MIN_ZOOM = 100.0f;
@@ -210,8 +210,19 @@ namespace WiFindUs.Eye.Wave
             get { return cameraSW; }
         }
 
+        public MapControl HostControl
+        {
+            get { return hostControl; }
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // CONSTRUCTORS
+        /////////////////////////////////////////////////////////////////////
+
         public MapScene(MapControl hostControl)
         {
+            if (hostControl == null)
+                throw new ArgumentNullException("hostControl", "MapScene cannot be instantiated outside of a host MapControl.");
             this.hostControl = hostControl;
         }
 

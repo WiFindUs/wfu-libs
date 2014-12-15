@@ -13,6 +13,7 @@ namespace WiFindUs.Eye.Wave
 {
     public class MapApplication : FormApplication
     {
+        public event Action<MapScene> SceneStarted;
         MapGame game;
         MapControl hostControl;
 
@@ -24,15 +25,23 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        public MapControl HostControl
+        {
+            get { return hostControl; }
+        }
+
         public MapApplication(MapControl hostControl, int width, int height)
             : base(width, height)
         {
+            if (hostControl == null)
+                throw new ArgumentNullException("hostControl", "MapApplication cannot be instantiated outside of a host MapControl.");
             this.hostControl = hostControl;
         }
 
         public override void Initialize()
         {
             game = new MapGame(hostControl);
+            game.SceneStarted += scene_SceneStarted;
             game.Initialize(this);
         }
 
@@ -66,6 +75,12 @@ namespace WiFindUs.Eye.Wave
             base.OnDeactivate();
             if (game != null)
                 game.OnDeactivated(); 
+        }
+
+        private void scene_SceneStarted(MapScene obj)
+        {
+            if (SceneStarted != null)
+                SceneStarted(obj);
         }
     }
 }

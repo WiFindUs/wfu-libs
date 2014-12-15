@@ -15,6 +15,7 @@ namespace WiFindUs.Eye.Wave
 {
     public class MapControl : Control
     {
+        public event Action<MapScene> SceneStarted;
         private MapApplication mapApp;
         private Input input;
         private int scaleFactor = 1;
@@ -73,6 +74,7 @@ namespace WiFindUs.Eye.Wave
         public void StartMapApplication()
         {
             mapApp = new MapApplication(this, this.Bounds.Width, this.Bounds.Height);
+            mapApp.SceneStarted += scene_SceneStarted;
             mapApp.Configure(this.Handle);
         }
 
@@ -469,6 +471,12 @@ namespace WiFindUs.Eye.Wave
                     this.input.KeyboardState.Z = state;
                     break;
             }
+        }
+
+        private void scene_SceneStarted(MapScene obj)
+        {
+            if (SceneStarted != null)
+                SceneStarted(obj);
         }
     }
 }
