@@ -18,11 +18,12 @@ namespace WiFindUs.Eye.Wave
 {
     public class TerrainTile : Behavior
     {
-        public event Action<TerrainTile> TextureLoadingFinished;
+        public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError;
         
         private static Material placeHolderMaterial, placeHolderMaterialAlt,
             loadingMaterial, downloadingMaterial, errorMaterial;
-        private const int MAX_CONCURRENT_LOADS = 1;
+        private const int MAX_CONCURRENT_TEXTURE_CREATIONS = 1;
+        private const int MAX_CONCURRENT_LOADS = 10;
         private const int MAX_CONCURRENT_DOWNLOADS = 1;
         private const int TILE_IMAGE_SIZE = 640;
         private static readonly string IMAGE_FORMAT = "png";
@@ -30,7 +31,7 @@ namespace WiFindUs.Eye.Wave
         private static readonly string MAPS_DIR = "maps/";
         private static int currentDownloads = 0;
         private static int currentLoads = 0;
-        private bool cancelThreads = false;
+        private static int currentTextureCreations = 0;
 
         [RequiredComponent]
         private Transform3D transform3D;
@@ -39,19 +40,18 @@ namespace WiFindUs.Eye.Wave
         [RequiredComponent]
         private BoxCollider boxCollider;
 
+        private bool errorState = false;
         private Region region;
         private uint googleMapsZoomLevel;
         private uint row, column;
         private TerrainTile baseTile;
         private float size;
         private Vector3 topLeft, bottomRight;
-        private Thread loadThread;
-        private bool mapTextured = true;
-        private WebClient downloadClient = null;
+        private bool textured = true;
         private int lastDownloadPercentage = 0;
-        private static bool mapsDirectoryExists = false;
         private bool mapImageFileExists = false;
         private System.Drawing.Image tileImage = null; //only used on base tile
+        private object threadObject = null;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -67,14 +67,28 @@ namespace WiFindUs.Eye.Wave
             {
                 if (value == null || (region != null && value.Equals(region.Center)))
                     return;
+
+                CancelThreads();
+                materialsMap.DefaultMaterial = (row + column) % 2 == 0 ? PlaceHolderMaterial : PlaceHolderMaterialAlt;
                 region = new Region(value, googleMapsZoomLevel);
-                mapImageFileExists = File.Exists(ImagePath);
-                mapTextured = false;
-                if (tileImage != null)
+                errorState = false;
+                textured = false;
+                TileImage = null;
+                if (!Directory.Exists(MAPS_DIR))
                 {
-                    tileImage.Dispose();
-                    tileImage = null;
+                    mapImageFileExists = false;
+                    try
+                    {
+                        Directory.CreateDirectory(MAPS_DIR);
+                    }
+                    catch
+                    {
+                        ErrorState("Error creating maps directory!");
+                        return;
+                    }
                 }
+                else
+                    mapImageFileExists = File.Exists(ImagePath);
             }
         }
 
@@ -191,13 +205,24 @@ namespace WiFindUs.Eye.Wave
         public System.Drawing.Image TileImage
         {
             get { return tileImage; }
+            protected set
+            {
+                if (value == tileImage)
+                    return;
+                if (tileImage != null)
+                {
+                    tileImage.Dispose();
+                    tileImage = null;
+                }
+                tileImage = value;
+            }
         }
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public TerrainTile(TerrainTile baseTile, uint googleMapsZoomLevel, uint row, uint column, float size)
+        private TerrainTile(TerrainTile baseTile, uint googleMapsZoomLevel, uint row, uint column, float size)
         {
             if (googleMapsZoomLevel < WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM
                 || googleMapsZoomLevel > WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM)
@@ -209,6 +234,30 @@ namespace WiFindUs.Eye.Wave
             this.column = column;
             this.baseTile = baseTile;
             this.size = size;
+        }
+
+        public static Entity Create(uint layer, uint row, uint column, TerrainTile baseTile)
+        {
+            float size = (float)Math.Pow(2.0,
+                8.0 + (MapScene.MIN_LEVEL - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM)//smallest chunks will be sized at this power of two
+                + (WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM)
+                - layer) / 10.0f;
+            
+            Entity tileEntity = new Entity()
+            .AddComponent(new Transform3D())
+            .AddComponent(new MaterialsMap((row + column) % 2 == 0 ? PlaceHolderMaterial : PlaceHolderMaterialAlt))
+            .AddComponent(Model.CreatePlane(Vector3.UnitY, size))
+            .AddComponent(new ModelRenderer())
+            .AddComponent(new BoxCollider() { IsActive = false })
+            .AddComponent(new TerrainTile(
+                layer == 0 ? null : baseTile,
+                MapScene.MIN_LEVEL + layer,
+                row, column,
+                size));
+            tileEntity.IsVisible = false;
+            tileEntity.IsActive = false;
+
+            return tileEntity;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -234,9 +283,9 @@ namespace WiFindUs.Eye.Wave
 
         public void CancelThreads()
         {
-            cancelThreads = true;
-            if (downloadClient != null)
-                downloadClient.CancelAsync();
+            if (threadObject != null && (threadObject is WebClient))
+                (threadObject as WebClient).CancelAsync();
+            threadObject = null;
         }
 
         public Vector3 LocationToVector(ILocation loc)
@@ -250,34 +299,8 @@ namespace WiFindUs.Eye.Wave
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
-
         private void CheckTextureState()
         {
-            if (mapTextured || loadThread != null || downloadClient != null || cancelThreads)
-                return;
-
-            //check maps directory exists, create if necessary
-            if (!mapsDirectoryExists)
-            {
-                if (!Directory.Exists(MAPS_DIR))
-                {
-                    try
-                    {
-                        Directory.CreateDirectory(MAPS_DIR);
-                    }
-                    catch
-                    {
-                        Debugger.E("Error creating maps directory!");
-                        materialsMap.DefaultMaterial = ErrorMaterial;
-                        mapTextured = true;
-                        if (TextureLoadingFinished != null)
-                            TextureLoadingFinished(this);
-                        return;
-                    }
-                }
-                mapsDirectoryExists = true;
-            }
-
             //check for map tile, download if necessary
             if (!mapImageFileExists)
             {
@@ -286,29 +309,53 @@ namespace WiFindUs.Eye.Wave
 
                 currentDownloads++;
                 Debugger.V("Downloading map tile texture " + ImageFilename + "...");
-                downloadClient = new WebClient();
+                WebClient downloadClient = new WebClient();
                 downloadClient.DownloadFileCompleted += DownloadFileCompleted;
                 downloadClient.DownloadProgressChanged += DownloadProgressChanged;
                 downloadClient.DownloadFileAsync(new Uri(ImageDownloadURL), ImagePath, null);
                 materialsMap.DefaultMaterial = DownloadingMaterial;
+                threadObject = downloadClient;
+                return;
             }
-            else
+
+            //don't bother loading images or creating textures for tiles that are not visible
+            if (!Owner.IsVisible || !Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider))
+                return;
+
+            //the image has already been loaded, create a texture from it
+            if (TileImage != null)
             {
-                if (!Owner.IsVisible
-                    || currentLoads >= MAX_CONCURRENT_LOADS
-                    || !Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider))
+                if (currentTextureCreations >= MAX_CONCURRENT_TEXTURE_CREATIONS)
+                    return;
+
+                currentTextureCreations++;
+                Thread textureThread = new Thread(new ThreadStart(TextureCreationThread));
+                threadObject = textureThread;
+                textureThread.Start();
+            }
+            else //load it
+            {
+                if (currentLoads >= Environment.ProcessorCount)
                     return;
 
                 currentLoads++;
                 materialsMap.DefaultMaterial = LoadingMaterial;
-                loadThread = new Thread(new ThreadStart(LoadThread));
+                Thread loadThread = new Thread(new ThreadStart(LoadThread));
+                threadObject = loadThread;
                 loadThread.Start();
             }
         }
 
         protected override void Update(TimeSpan gameTime)
         {
-            CheckTextureState();
+            if (!errorState && !textured && threadObject == null)
+                CheckTextureState();
+        }
+
+        protected override void DeleteDependencies()
+        {
+            TileImage = null;
+            base.DeleteDependencies();
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -317,16 +364,12 @@ namespace WiFindUs.Eye.Wave
 
         private void DownloadFileCompleted(object sender, System.ComponentModel.AsyncCompletedEventArgs e)
         {
+            WebClient downloadClient = sender as WebClient;
+            
             if (e.Cancelled || e.Error != null)
             {
-                if (e.Error != null)
-                {
-                    Debugger.E("Error downloading map tile texture " + ImageFilename + ".");
-                    materialsMap.DefaultMaterial = ErrorMaterial;
-                    mapTextured = true;
-                    if (TextureLoadingFinished != null)
-                        TextureLoadingFinished(this);
-                }
+                if (threadObject == downloadClient && e.Error != null)
+                    ErrorState("Error downloading map tile texture " + ImageFilename + ".");
 
                 if (File.Exists(ImagePath))
                 {
@@ -340,12 +383,17 @@ namespace WiFindUs.Eye.Wave
             downloadClient.DownloadFileCompleted -= DownloadFileCompleted;
             downloadClient.DownloadProgressChanged -= DownloadProgressChanged;
             downloadClient.Dispose();
-            downloadClient = null;
             currentDownloads--;
+            if (threadObject == downloadClient)
+                threadObject = null;
         }
 
         private void DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
+            WebClient downloadClient = sender as WebClient;
+            if (threadObject != downloadClient)
+                return;
+            
             if ((lastDownloadPercentage < 25 && e.ProgressPercentage >= 25)
                 || (lastDownloadPercentage < 50 && e.ProgressPercentage >= 50)
                 || (lastDownloadPercentage < 75 && e.ProgressPercentage >= 75))
@@ -355,30 +403,95 @@ namespace WiFindUs.Eye.Wave
         
         private void LoadThread()
         {
+            object initialThreadObject = threadObject; //should be the loading thread
+
             try
             {
-                //load image file
-                Texture2D tex2D = null;
-                using (FileStream file = new FileStream(ImagePath, FileMode.Open))
-                {
-                    tex2D = Texture2D.FromFile(RenderManager.GraphicsDevice, file);
-                    if (baseTile == null)
-                        tileImage = System.Drawing.Image.FromStream(file);
-                }
 
-                //swap out texture
-                materialsMap.DefaultMaterial = new BasicMaterial(tex2D);
+                //determine what the image scale is
+                float scale = (WFUApplication.Config == null ? 1.0f : WFUApplication.Config.Get("map.texture_scale",
+                #if DEBUG
+                    0.50f
+                #else
+                    1.0f
+                #endif
+                )).Clamp(0.1f, 1.0f);
+
+                //get source image
+                System.Drawing.Image image = System.Drawing.Image.FromFile(ImagePath);
+                if (initialThreadObject == threadObject) //cancelled?
+                {
+                    System.Drawing.Image resizedImage = null;
+                    if (image.Resize((int)(image.Width * scale), (int)(image.Height * scale), out resizedImage))
+                    {
+                        image.Dispose();
+                        image = resizedImage;
+                        resizedImage = null;
+                    }
+
+                    if (initialThreadObject == threadObject) //cancelled?
+                    {
+                        //store image
+                        TileImage = image;
+                    }
+                }
             }
-            catch (Exception e)
+            catch (FileNotFoundException fex)
             {
-                Debugger.E("Error loading map tile texture " + ImageFilename + ".");
-                materialsMap.DefaultMaterial = ErrorMaterial;
+                ErrorState("Error loading map tile texture " + ImageFilename + ": file not found");
             }
-            mapTextured = true;
-            loadThread = null;
+            catch (OutOfMemoryException oomex)
+            {
+                ErrorState("Error loading map tile texture " + ImageFilename + ": out of system memory");
+            }
+            catch (Exception ex)
+            {
+                ErrorState("Error loading map tile texture " + ImageFilename + ": " + ex.Message);
+            }
+
+            if (errorState)
+                TileImage = null;
+            if (initialThreadObject == threadObject) //cancelled?
+            {
+                threadObject = null;
+            
+                if (TextureImageLoadingFinished != null)
+                    TextureImageLoadingFinished(this);
+            }
             currentLoads--;
-            if (TextureLoadingFinished != null)
-                TextureLoadingFinished(this);
+        }
+
+        private void TextureCreationThread()
+        {
+            object initialThreadObject = threadObject; //should be the texture thread
+            
+            if (TileImage != null)
+            {
+                using (Stream stream = TileImage.GetStream())
+                    materialsMap.DefaultMaterial = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream));
+                if (baseTile != null)
+                    TileImage = null; //don't hang on to the texture for child tiles
+            }
+            else
+                ErrorState("Error creating texture for " + ImageFilename + ": image not loaded.");
+
+            if (initialThreadObject == threadObject) //cancelled?
+            {
+                threadObject = null;
+                textured = true;
+                if (TextureLoadingFinished != null)
+                    TextureLoadingFinished(this);
+            }
+            currentTextureCreations--;
+        }
+
+        private void ErrorState(string message)
+        {
+            Debugger.E(message);
+            errorState = true;
+            materialsMap.DefaultMaterial = ErrorMaterial;
+            if (TextureError != null)
+                TextureError(this);
         }
     }
 }
