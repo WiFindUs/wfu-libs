@@ -36,7 +36,7 @@ namespace WiFindUs.Extensions
             try
             {
                 if (progressBar.InvokeRequired)
-                    progressBar.Invoke(new Action<int>(progressBar.Increment), new object[] { value });
+                    progressBar.Invoke(new Action<int>(progressBar.Increment), value);
                 else
                     progressBar.Increment(value);
             }
