@@ -36,6 +36,11 @@ namespace WiFindUs.Extensions
         {
             return (float)(radians * RAD_TO_DEG);
         }
+
+        public static float Clamp(this float value, float min, float max)
+        {
+            return value < min ? min : (value > max ? max : value);
+        }
         
         /////////////////////////////////////////////////////////////////////
         // DOUBLES
@@ -62,6 +67,11 @@ namespace WiFindUs.Extensions
         public static double ToDegrees(this double radians)
         {
             return radians * RAD_TO_DEG;
+        }
+
+        public static double Clamp(this double value, double min, double max)
+        {
+            return value < min ? min : (value > max ? max : value);
         }
 
         /////////////////////////////////////////////////////////////////////
