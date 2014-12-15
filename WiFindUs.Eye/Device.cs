@@ -14,6 +14,8 @@ namespace WiFindUs.Eye
     public partial class Device
         : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, ThemedListBoxItem
     {
+        public const long TIMEOUT = 60;
+        
         public static event Action<Device> OnDeviceCreated;
         public event Action<Device> OnDeviceUpdated;
         public event Action<Device> OnDeviceLoaded;
@@ -185,7 +187,7 @@ namespace WiFindUs.Eye
 
         public void CheckTimeout()
         {
-            TimedOut = UpdateAge > 60;
+            TimedOut = UpdateAge > TIMEOUT;
         }
 
         public int MeasureItemHeight(ThemedListBox host, System.Windows.Forms.MeasureItemEventArgs e)
