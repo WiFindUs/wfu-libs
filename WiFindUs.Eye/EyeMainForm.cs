@@ -214,9 +214,11 @@ namespace WiFindUs.Eye
                 return;
 
             //start map scene
-            MapScene.SceneStarted += MapSceneStarted;
             if (Map != null)
+            {
+                Map.SceneStarted += MapSceneStarted;
                 Map.StartMapApplication();
+            }
 
             //start timer
             timer = new Timer();
@@ -318,7 +320,6 @@ namespace WiFindUs.Eye
 
         protected virtual void MapSceneStarted(MapScene obj)
         {
-            MapScene.SceneStarted -= MapSceneStarted;
             ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
             if (location == null)
                 Debugger.E("Could not parse map.center from config files!");
