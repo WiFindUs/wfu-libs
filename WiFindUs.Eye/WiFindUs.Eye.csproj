@@ -112,7 +112,7 @@
     <Compile Include="Interfaces\IAtmospheric.cs" />
     <Compile Include="Interfaces\IUpdateable.cs" />
     <Compile Include="Location.cs" />
-    <Compile Include="Wave\DeviceBehaviour.cs" />
+    <Compile Include="Wave\DeviceMarker.cs" />
     <Compile Include="Wave\IMapForm.cs" />
     <Compile Include="Wave\MapControl.cs">
       <SubType>Component</SubType>

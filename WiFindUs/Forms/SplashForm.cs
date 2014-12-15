@@ -53,13 +53,7 @@ namespace WiFindUs.Forms
             RecalculateActiveArea();
 
             if (IsDesignMode)
-            {
-                logo = new Bitmap(75, 97, PixelFormat.Format24bppRgb);
-                using (Graphics grp = Graphics.FromImage(logo))
-                    grp.FillRectangle(Brushes.White, 0, 0, logo.Width, logo.Height);
-                
                 return;
-            }
 
             //set tasks
             if (tasks == null)
@@ -93,6 +87,8 @@ namespace WiFindUs.Forms
             if (IsDesignMode)
                 return;
 
+            e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
+
             if (PreDraw != null)
                 PreDraw(e);
 
@@ -101,7 +97,6 @@ namespace WiFindUs.Forms
                 e.Graphics.DrawImage(logo, activeArea.Location);
             
             //title
-            e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
             e.Graphics.DrawString(
                 WFUApplication.Name,
                 Theme.TitleFont,

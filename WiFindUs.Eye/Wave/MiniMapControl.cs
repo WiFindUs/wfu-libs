@@ -40,10 +40,10 @@ namespace WiFindUs.Eye.Wave
                 if (value == scene)
                     return;
                 if (scene != null)
-                    scene.CameraChanged -= scene_CameraChanged;
+                    scene.CameraFrustumChanged -= scene_CameraFrustumChanged;
                 scene = value;
                 if (scene != null)
-                    scene.CameraChanged += scene_CameraChanged;
+                    scene.CameraFrustumChanged += scene_CameraFrustumChanged;
                 Refresh();
             }
         }
@@ -121,24 +121,27 @@ namespace WiFindUs.Eye.Wave
         {
             base.OnPaint(e);
 
-            if (IsDesignMode || Scene == null || Scene.BaseTile == null)
+            if (IsDesignMode || scene == null || scene.BaseTile == null)
                 return;
 
+            //initialize render state
             e.Graphics.Clear(theme.ControlDarkColour);
-            e.Graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-            e.Graphics.CompositingQuality = CompositingQuality.HighQuality;
-            e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+            e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
             //draw base image
-            if (Scene.BaseTile.TileImage != null)
-                e.Graphics.DrawImage(Scene.BaseTile.TileImage, mapArea);
+            if (scene.BaseTile.TileImage != null)
+                e.Graphics.DrawImage(scene.BaseTile.TileImage, mapArea);
 
             //generate frustum poly
             Point[] points = new Point[4];
-            points[0] = Scene.CameraNorthWest == null ? new Point(mapArea.Left, mapArea.Top) : LocationToScreen(Scene.CameraNorthWest);
-            points[1] = Scene.CameraNorthEast == null ? new Point(mapArea.Right, mapArea.Top) : LocationToScreen(Scene.CameraNorthEast);
-            points[2] = Scene.CameraSouthEast == null ? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(Scene.CameraSouthEast);
-            points[3] = Scene.CameraSouthWest == null ? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(Scene.CameraSouthWest);
+            points[0] = scene.CameraNorthWest == null
+                ? new Point(mapArea.Left, mapArea.Top) : LocationToScreen(scene.CameraNorthWest);
+            points[1] = scene.CameraNorthEast == null
+                ? new Point(mapArea.Right, mapArea.Top) : LocationToScreen(scene.CameraNorthEast);
+            points[2] = scene.CameraSouthEast == null
+                ? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(scene.CameraSouthEast);
+            points[3] = scene.CameraSouthWest == null
+                ? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(scene.CameraSouthWest);
 
             //darken non-focal area
             GraphicsPath path = new GraphicsPath();
@@ -217,7 +220,7 @@ namespace WiFindUs.Eye.Wave
                 size, size);
         }
 
-        private void scene_CameraChanged(MapScene obj)
+        private void scene_CameraFrustumChanged(MapScene obj)
         {
             Refresh();
         }
