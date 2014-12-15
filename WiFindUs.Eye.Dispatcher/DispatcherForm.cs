@@ -22,7 +22,6 @@ namespace WiFindUs.Eye.Dispatcher
 {
     public partial class DispatcherForm : EyeMainForm
     {
-        private MapControl map;
         private MiniMapControl minimap;
         private FormWindowState oldWindowState;
         private Rectangle oldBounds;
@@ -30,11 +29,6 @@ namespace WiFindUs.Eye.Dispatcher
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
-
-        protected override MapControl Map
-        {
-            get { return map; }
-        }
 
         public bool FullScreen
         {
@@ -94,7 +88,7 @@ namespace WiFindUs.Eye.Dispatcher
                 return;
 
             //controls
-            workingAreaToolStripContainer.ContentPanel.Controls.Add(map = new MapControl(){ Dock = DockStyle.Fill });
+            workingAreaToolStripContainer.ContentPanel.Controls.Add(Map = new MapControl(){ Dock = DockStyle.Fill });
             minimapTab.Controls.Add(minimap = new MiniMapControl() { Dock = DockStyle.Fill });
 
             //events
@@ -154,12 +148,12 @@ namespace WiFindUs.Eye.Dispatcher
         {
             base.MapSceneStarted(obj);
             SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
-            map.AltEnterPressed += mapControl_AltEnterPressed;
-            map.Scene.BaseTile.TextureLoadingFinished += BaseTile_TextureLoadingFinished;
-            minimap.Scene = map.Scene;
+            Map.AltEnterPressed += mapControl_AltEnterPressed;
+            Map.Scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
+            minimap.Scene = Map.Scene;
         }
 
-        private void BaseTile_TextureLoadingFinished(TerrainTile obj)
+        private void BaseTile_TextureImageLoadingFinished(TerrainTile obj)
         {
             minimap.RefreshThreadSafe();
         }
@@ -171,6 +165,11 @@ namespace WiFindUs.Eye.Dispatcher
 
         private void OnDeviceCreated(Device obj)
         {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<Device>(OnDeviceCreated), obj);
+                return;
+            }
             devicesListBox.Items.Add(obj);
         }
 
