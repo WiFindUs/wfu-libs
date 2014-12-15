@@ -16,9 +16,10 @@ namespace WiFindUs.Eye.Wave
     public class MapControl : Control
     {
         public event Action<MapScene> SceneStarted;
+        public event Action<MapControl> ApplicationStarting;
         private MapApplication mapApp;
         private Input input;
-        private int scaleFactor = 1;
+        private float scaleFactor = 1.0f;
         private Form form = null;
         public event Action<MapControl> AltEnterPressed;
 
@@ -53,6 +54,38 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        public float BackBufferScale
+        {
+            get { return scaleFactor; }
+            set
+            {
+                float newVal = value < 0.1f ? 0.1f : (value > 1.0f ? 1.0f : value);
+                if (newVal.Tolerance(scaleFactor, 0.01f))
+                    return;
+                scaleFactor = newVal;
+                if (mapApp != null)
+                    mapApp.ResizeScreen(BackBufferWidth, BackBufferHeight);
+            }
+        }
+
+        public int BackBufferWidth
+        {
+            get
+            {
+                int val = (int)((float)ClientRectangle.Width * scaleFactor);
+                return val <= 0 ? 1 : val;
+            }
+        }
+
+        public int BackBufferHeight
+        {
+            get
+            {
+                int val = (int)((float)ClientRectangle.Height * scaleFactor);
+                return val <= 0 ? 1 : val;
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -71,16 +104,18 @@ namespace WiFindUs.Eye.Wave
             UpdateStyles();
         }
 
-        public void StartMapApplication()
-        {
-            mapApp = new MapApplication(this, this.Bounds.Width, this.Bounds.Height);
-            mapApp.SceneStarted += scene_SceneStarted;
-            mapApp.Configure(this.Handle);
-        }
-
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
+
+        public void StartMapApplication()
+        {
+            if (ApplicationStarting != null)
+                ApplicationStarting(this);
+            mapApp = new MapApplication(this, BackBufferWidth, BackBufferHeight);
+            mapApp.SceneStarted += scene_SceneStarted;
+            mapApp.Configure(this.Handle);
+        }
 
         public static void StartRenderLoop(WiFindUs.Forms.MainForm form)
         {
@@ -109,21 +144,28 @@ namespace WiFindUs.Eye.Wave
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
+            mapApp.CancelThreads();
             mapApp.OnDeactivate();
             mapApp.Dispose();
             base.OnHandleDestroyed(e);
         }
 
+        public void CancelThreads()
+        {
+            if (mapApp != null)
+                mapApp.CancelThreads();
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
+
         protected override void OnResize(EventArgs e)
         {
+            if (!IsDesignMode && mapApp != null)
+                mapApp.ResizeScreen(BackBufferWidth, BackBufferHeight);
+
             base.OnResize(e);
-            if (IsDesignMode)
-                return;
-            if (this.mapApp != null && ClientRectangle.Width > 0 && ClientRectangle.Height > 0)
-                this.mapApp.ResizeScreen(ClientRectangle.Width / scaleFactor, ClientRectangle.Height / scaleFactor);
         }
 
         protected override void OnPaintBackground(PaintEventArgs e)

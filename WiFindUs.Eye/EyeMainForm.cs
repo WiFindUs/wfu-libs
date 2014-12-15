@@ -22,7 +22,8 @@ namespace WiFindUs.Eye
         private long timeoutCheckInterval = 1000, timeoutCheckTimer = 0;
         private List<IUpdateable> updateables = new List<IUpdateable>();
         private bool serverMode = false;
-        
+        private MapControl map;
+
         //non-mysql collections (client mode):
         private Dictionary<long, Device> devices;
         private Dictionary<long, Node> nodes;
@@ -90,9 +91,17 @@ namespace WiFindUs.Eye
             }
         }
 
-        protected virtual MapControl Map
+        protected MapControl Map
         {
-            get { return null; }
+            get { return map; }
+            set
+            {
+                if (map != null || value == null)
+                    return;
+                map = value;
+                map.ApplicationStarting += MapApplicationStarting;
+                map.SceneStarted += MapSceneStarted;
+            }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -127,7 +136,13 @@ namespace WiFindUs.Eye
             {
                 try
                 {
-                    device = eyeContext.Devices.Where(d => d.ID == id).SingleOrDefault();
+                    var devices = eyeContext.Devices.Where(d => d.ID == id);
+                    Debugger.V(devices == null ? "null" : devices.ToString());
+                    Debugger.V(devices == null ? "-1" : devices.Count().ToString());
+                    if (devices == null || devices.Count() > 1)
+                        return null;
+                    if (devices.Count() == 1)
+                        device = devices.Single();
                 }
                 catch (Exception e)
                 {
@@ -215,10 +230,7 @@ namespace WiFindUs.Eye
 
             //start map scene
             if (Map != null)
-            {
-                Map.SceneStarted += MapSceneStarted;
                 Map.StartMapApplication();
-            }
 
             //start timer
             timer = new Timer();
@@ -244,9 +256,7 @@ namespace WiFindUs.Eye
         {            
             if (Map != null)
             {
-                if (Map.Scene != null)
-                    Map.Scene.CancelThreads();
-                Controls.Remove(Map);
+                Map.CancelThreads();
                 Map.Dispose();
             }
 
@@ -305,6 +315,8 @@ namespace WiFindUs.Eye
                 //now get device
                 bool newDevice = false;
                 Device device = Device(devicePacket.ID, out newDevice);
+                if (device == null) //error
+                    return;
                 device.User = user;
                 if (!WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
                     device.Location = devicePacket;
@@ -395,7 +407,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching devices";
             foreach (Device device in eyeContext.Devices)
-                ;
+                device.CheckTimeout();
             return true;
         }
 
@@ -481,7 +493,6 @@ namespace WiFindUs.Eye
                 timeoutCheckTimer += timer.Interval;
                 if (timeoutCheckTimer >= timeoutCheckInterval)
                 {
-                    Debugger.V("CheckTimeout()");
                     timeoutCheckTimer = 0;
                     foreach (IUpdateable updateable in updateables)
                         updateable.CheckTimeout();
@@ -493,11 +504,16 @@ namespace WiFindUs.Eye
                 sqlSubmitTimer += timer.Interval;
                 if (sqlSubmitTimer >= sqlSubmitInterval)
                 {
-                    Debugger.V("SubmitChangesThreaded()");
                     sqlSubmitTimer = 0;
                     eyeContext.SubmitChangesThreaded();
                 }
             }
+        }
+
+        private void MapApplicationStarting(MapControl map)
+        {
+            if (WFUApplication.Config != null)
+                map.BackBufferScale = WFUApplication.Config.Get("map.resolution_scale", 1.0f);
         }
     }
 }

@@ -16,7 +16,7 @@ namespace WiFindUs.Eye.Wave
     public class MapScene : Scene, IThemeable
     {
         public event Action<MapScene> SceneStarted;
-        public event Action<MapScene> CameraChanged;
+        public event Action<MapScene> CameraChanged, CameraFrustumChanged;
         
         private const float CAM_MIN_ZOOM = 100.0f;
         private const float CAM_MAX_ZOOM = 2000.0f;
@@ -26,7 +26,7 @@ namespace WiFindUs.Eye.Wave
         private const float TILT_RATE = 1.0f;
         public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM+1;
 
-        private MapControl hostControl;
+        private MapGame hostGame;
         private EyeMainForm eyeForm;
         private Theme theme;
         private FixedCamera camera;
@@ -210,20 +210,31 @@ namespace WiFindUs.Eye.Wave
             get { return cameraSW; }
         }
 
+        public MapGame HostGame
+        {
+            get { return hostGame; }
+        }
+
+        public MapApplication HostApplication
+        {
+            get { return hostGame.HostApplication; }
+        }
+
         public MapControl HostControl
         {
-            get { return hostControl; }
+            get { return hostGame.HostControl; }
         }
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public MapScene(MapControl hostControl)
+        public MapScene(MapGame hostGame)
         {
-            if (hostControl == null)
-                throw new ArgumentNullException("hostControl", "MapScene cannot be instantiated outside of a host MapControl.");
-            this.hostControl = hostControl;
+            if (hostGame == null)
+                throw new ArgumentNullException("hostGame", "MapScene cannot be instantiated outside of a host MapGame.");
+            this.hostGame = hostGame;
+            HostApplication.ScreenResized += HostApplication_ScreenResized;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -322,18 +333,12 @@ namespace WiFindUs.Eye.Wave
             groundPlane = new Entity()
                 .AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
                 .AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 50f))
-                //.AddComponent(new ModelRenderer())
-                //.AddComponent(new MaterialsMap(new BasicMaterial(Color.Purple) { LayerType = DefaultLayers.Alpha, Alpha = 0.2f }))
                 .AddComponent(groundPlaneCollider = new BoxCollider());
             EntityManager.Add(groundPlane);
-#if !DEBUG
-            groundPlane.IsVisible = false;
-#endif
 
             //add scene behaviours
             Debugger.V("MapScene: creating behaviours");
             AddSceneBehavior(new MapSceneInputBehaviour(), SceneBehavior.Order.PostUpdate);
-            AddSceneBehavior(new CameraMovementBehavior(), SceneBehavior.Order.PostUpdate);
         }
 
         protected override void Start()
@@ -368,11 +373,8 @@ namespace WiFindUs.Eye.Wave
                 cameraTransform.LookAt.Y + (direction.Y * distance),
                 cameraTransform.LookAt.Z + (direction.Z * distance));
 
-            //update frustum
-            cameraNW = LocationFromScreenRay(0, 0);
-            cameraNE = LocationFromScreenRay(hostControl.ClientRectangle.Width, 0);
-            cameraSE = LocationFromScreenRay(hostControl.ClientRectangle.Width, hostControl.ClientRectangle.Height);
-            cameraSW = LocationFromScreenRay(0, hostControl.ClientRectangle.Height);
+            //update location 'frustum'
+            UpdateCameraFrustum();
 
             //state
             cameraDirty = false;
@@ -380,22 +382,20 @@ namespace WiFindUs.Eye.Wave
                 CameraChanged(this);
         }
 
-        private void Device_OnDeviceCreated(Device sender)
+        private void UpdateCameraFrustum()
         {
-            Entity device = new Entity()
-                .AddComponent(new Transform3D() { Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f) })
-                .AddComponent(new MaterialsMap(new BasicMaterial(colours[lastColor = (lastColor + 1) % colours.Length]) { LightingEnabled = true }))
-                .AddComponent(Model.CreateCone(10f, 6f, 6))
-                .AddComponent(new ModelRenderer())
-                .AddComponent(new BoxCollider())
-                .AddComponent(new DeviceBehaviour(sender));
-            sender.OnDeviceTypeChanged += sender_OnDeviceTypeChanged;
-            EntityManager.Add(device);
+            cameraNW = LocationFromScreenRay(0, 0);
+            cameraNE = LocationFromScreenRay(HostApplication.Width, 0);
+            cameraSE = LocationFromScreenRay(HostApplication.Width, HostApplication.Height);
+            cameraSW = LocationFromScreenRay(0, HostApplication.Height);
+
+            if (CameraFrustumChanged != null)
+                CameraFrustumChanged(this);
         }
 
-        private void sender_OnDeviceTypeChanged(Device obj)
+        private void Device_OnDeviceCreated(Device device)
         {
-
+            EntityManager.Add(DeviceMarker.Create(device));
         }
 
         private void CreateTileLayer(uint layer)
@@ -403,36 +403,17 @@ namespace WiFindUs.Eye.Wave
             if (tiles == null || layer >= tiles.Length || tiles[layer] != null)
                 return;
             
-            float planeSize = (float)Math.Pow(2.0,
-                8.0 + (MIN_LEVEL - Region.GOOGLE_MAPS_TILE_MIN_ZOOM)//smallest chunks will be sized at this power of two
-                + (Region.GOOGLE_MAPS_TILE_MAX_ZOOM - Region.GOOGLE_MAPS_TILE_MIN_ZOOM)
-                - layer) / 10.0f;
-
             int depth = 1 << (int)layer;
             tiles[layer] = new Entity[depth, depth];
             for (uint row = 0; row < depth; row++)
             {
                 for (uint column = 0; column < depth; column++)
                 {
-                    TerrainTile tile = new TerrainTile(
-                        layer == 0 ? null : baseTile,
-                        MIN_LEVEL + layer,
-                        row, column,
-                        planeSize);
-                    if (layer == 0)
-                        baseTile = tile;
-
-                    Entity tileEntity = tiles[layer][row, column] = new Entity()
-                    .AddComponent(new Transform3D())
-                    .AddComponent(new MaterialsMap((row+column) % 2 == 0 ? TerrainTile.PlaceHolderMaterial : TerrainTile.PlaceHolderMaterialAlt))
-                    .AddComponent(Model.CreatePlane(Vector3.UnitY, planeSize))
-                    .AddComponent(new ModelRenderer())
-                    .AddComponent(new BoxCollider() { IsActive = false })
-                    .AddComponent(tile);
+                    Entity tileEntity = tiles[layer][row, column] = TerrainTile.Create(layer, row, column, baseTile);
                     EntityManager.Add(tileEntity);
-
-                    tileEntity.IsVisible = false;
-                    tileEntity.IsActive = false;
+                    if (layer == 0)
+                        baseTile = tileEntity.FindComponent<TerrainTile>();
+                    
                 }
             }
         }
@@ -476,18 +457,9 @@ namespace WiFindUs.Eye.Wave
             }, 1);
         }
 
-        private class CameraMovementBehavior : SceneBehavior
+        private void HostApplication_ScreenResized(MapApplication obj)
         {
-            protected override void ResolveDependencies()
-            {
-
-            }
-
-            protected override void Update(TimeSpan gameTime)
-            {
-
-
-            }
-        };
+            UpdateCameraFrustum();
+        }
     }
 }

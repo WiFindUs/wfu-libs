@@ -14,8 +14,13 @@ namespace WiFindUs.Eye.Wave
     public class MapApplication : FormApplication
     {
         public event Action<MapScene> SceneStarted;
-        MapGame game;
-        MapControl hostControl;
+        public event Action<MapApplication> ScreenResized;
+        private MapGame game;
+        private MapControl hostControl;
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
 
         public MapScene Scene
         {
@@ -30,6 +35,10 @@ namespace WiFindUs.Eye.Wave
             get { return hostControl; }
         }
 
+        /////////////////////////////////////////////////////////////////////
+        // CONSTRUCTORS
+        /////////////////////////////////////////////////////////////////////
+
         public MapApplication(MapControl hostControl, int width, int height)
             : base(width, height)
         {
@@ -38,9 +47,13 @@ namespace WiFindUs.Eye.Wave
             this.hostControl = hostControl;
         }
 
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
         public override void Initialize()
         {
-            game = new MapGame(hostControl);
+            game = new MapGame(this);
             game.SceneStarted += scene_SceneStarted;
             game.Initialize(this);
         }
@@ -76,6 +89,23 @@ namespace WiFindUs.Eye.Wave
             if (game != null)
                 game.OnDeactivated(); 
         }
+
+        public override void ResizeScreen(int width, int height)
+        {
+            base.ResizeScreen(width, height);
+            if (ScreenResized != null)
+                ScreenResized(this);
+        }
+
+        public void CancelThreads()
+        {
+            if (game != null)
+                game.CancelThreads();
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
 
         private void scene_SceneStarted(MapScene obj)
         {
