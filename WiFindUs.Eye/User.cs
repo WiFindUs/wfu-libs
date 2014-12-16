@@ -6,27 +6,13 @@ using WiFindUs.Controls;
 
 namespace WiFindUs.Eye
 {
-    public partial class User : ThemedListBoxItem
+    public partial class User
     {
         public static event Action<User> OnUserCreated;
         public event Action<User> OnUserTypeChanged;
         public event Action<User> OnUserFirstNameChanged;
         public event Action<User> OnUserMiddleNameChanged;
         public event Action<User> OnUserNameLastChanged;
-
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
-
-        public int MeasureItemHeight(ThemedListBox host, System.Windows.Forms.MeasureItemEventArgs e)
-        {
-            return 30;
-        }
-
-        public void DrawListboxItem(System.Windows.Forms.DrawItemEventArgs e)
-        {
-
-        }
 
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS

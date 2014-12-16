@@ -12,7 +12,7 @@ using WiFindUs.Extensions;
 namespace WiFindUs.Eye
 {
     public partial class Device
-        : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, ThemedListBoxItem
+        : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable
     {
         public const long TIMEOUT = 60;
         
@@ -190,53 +190,20 @@ namespace WiFindUs.Eye
             TimedOut = UpdateAge > TIMEOUT;
         }
 
-        public int MeasureItemHeight(ThemedListBox host, System.Windows.Forms.MeasureItemEventArgs e)
-        {
-            return 30;
-        }
-
-        public void DrawListboxItem(System.Windows.Forms.DrawItemEventArgs e)
-        {
-            float offset = 0.0f;
-            /*
-            if (icon != null)
-            {
-                offset = (float)icon.Width + 5f;
-                e.Graphics.DrawImageUnscaled(icon,
-                    new Point(5, e.Bounds.Top + (int)((double)e.Bounds.Height / 2.0) - (int)((double)icon.Size.Height / 2.0)));
-            }
-            */
-
-            string s = ID.ToString("X");
-            SizeF bigSize = e.Graphics.MeasureString(s, e.Font);
-            bool grayText = TimedOut || ((e.State & DrawItemState.Disabled) == DrawItemState.Disabled);
-            bool selected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-
-            e.Graphics.DrawString(s, e.Font, grayText ? SystemBrushes.GrayText : (selected ? SystemBrushes.HighlightText : SystemBrushes.MenuText),
-                new PointF(5.0f + offset, e.Bounds.Top + 4.0f));
-
-            s = TimedOut ? "Timed out" : "ffffff";
-            using (Font f = new Font(e.Font.FontFamily, e.Font.Size - 1f))
-            {
-                SizeF smallSize = e.Graphics.MeasureString(s, f);
-
-                //e.Graphics.DrawString(s, f, grayText ? SystemBrushes.GrayText : (selected ? SystemBrushes.HighlightText : MenuCaptionColor),
-                  //  new PointF(10.0f + offset, e.Bounds.Top + 6 + bigSize.Height));
-            }
-        }
-
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
         partial void OnCreated()
         {
+            Debugger.V(this.ToString() + " created.");
             if (OnDeviceCreated != null)
                 OnDeviceCreated(this);
         }
 
         partial void OnLoaded()
         {
+            
             if (OnDeviceLoaded != null)
                 OnDeviceLoaded(this);
         }

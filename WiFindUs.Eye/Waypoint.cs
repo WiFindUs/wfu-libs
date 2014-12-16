@@ -7,7 +7,7 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Waypoint : ILocation, ILocatable, ThemedListBoxItem
+    public partial class Waypoint : ILocation, ILocatable
     {
         public static event Action<Waypoint> OnWaypointCreated;
         public event Action<Waypoint> OnWaypointLocationChanged;
@@ -88,16 +88,6 @@ namespace WiFindUs.Eye
             //store time and set flag
             ArchivedTime = DateTime.UtcNow.ToUnixTimestamp();
             Archived = true;
-        }
-
-        public int MeasureItemHeight(ThemedListBox host, System.Windows.Forms.MeasureItemEventArgs e)
-        {
-            return 30;
-        }
-
-        public void DrawListboxItem(System.Windows.Forms.DrawItemEventArgs e)
-        {
-
         }
 
         /////////////////////////////////////////////////////////////////////
