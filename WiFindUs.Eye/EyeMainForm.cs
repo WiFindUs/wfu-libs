@@ -137,8 +137,6 @@ namespace WiFindUs.Eye
                 try
                 {
                     var devices = eyeContext.Devices.Where(d => d.ID == id);
-                    Debugger.V(devices == null ? "null" : devices.ToString());
-                    Debugger.V(devices == null ? "-1" : devices.Count().ToString());
                     if (devices == null || devices.Count() > 1)
                         return null;
                     if (devices.Count() == 1)
@@ -165,7 +163,9 @@ namespace WiFindUs.Eye
                     Created = ts,
                     Updated = ts
                 };
-                if (!ServerMode)
+                if (ServerMode)
+                    eyeContext.Devices.InsertOnSubmit(device);
+                else
                     devices[id] = device;
                 isNew = true;
             }
@@ -185,7 +185,11 @@ namespace WiFindUs.Eye
             {
                 try
                 {
-                    user = eyeContext.Users.Where(d => d.ID == id).SingleOrDefault();
+                    var users = eyeContext.Users.Where(u => u.ID == id);
+                    if (users == null || users.Count() > 1)
+                        return null;
+                    if (users.Count() == 1)
+                        user = users.Single();
                 }
                 catch (Exception e)
                 {
@@ -198,7 +202,6 @@ namespace WiFindUs.Eye
                 users.TryGetValue(id, out user);
             }
 
-
             //create
             if (user == null)
             {
@@ -210,7 +213,9 @@ namespace WiFindUs.Eye
                     NameMiddle = "",
                     Type = ""
                 };
-                if (!ServerMode)
+                if (ServerMode)
+                    eyeContext.Users.InsertOnSubmit(user);
+                else
                     users[id] = user;
                 isNew = true;
             }
@@ -326,7 +331,7 @@ namespace WiFindUs.Eye
                     device.Updated = DateTime.UtcNow.ToUnixTimestamp();
 
                 if (newDevice || newUser)
-                    eyeContext.SubmitChangesThreaded();
+                    eyeContext.SubmitChanges();
             }
         }
 
