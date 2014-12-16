@@ -711,6 +711,8 @@ namespace WiFindUs.IO
 			if (index < 0)
 				return "";
 			List<String> values = this[key];
+            if (values.Count == 0)
+                Debugger.V("ConfigFile: Attempt to access undefined key '"+key+"' was ignored.");
 			if (index >= values.Count)
 				return "";
 			return values[index];
