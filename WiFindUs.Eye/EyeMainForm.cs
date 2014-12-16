@@ -99,6 +99,7 @@ namespace WiFindUs.Eye
                 if (map != null || value == null)
                     return;
                 map = value;
+                map.Theme = Theme;
                 map.ApplicationStarting += MapApplicationStarting;
                 map.SceneStarted += MapSceneStarted;
             }
@@ -242,19 +243,6 @@ namespace WiFindUs.Eye
             timer.Interval = 100;
             timer.Tick += TimerTick;
             timer.Enabled = true;
-        }
-
-        protected override void OnThemeChanged(Theme theme)
-        {
-            base.OnThemeChanged(theme);
-            if (DesignMode)
-                return;
-            if (Map != null)
-            {
-                Map.BackColor = theme.ControlDarkColour;
-                if (Map.Scene != null)
-                    Map.Scene.Theme = Theme;
-            }
         }
 
         protected override void OnDisposing()
