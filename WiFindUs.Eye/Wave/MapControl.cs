@@ -13,15 +13,17 @@ using WiFindUs.Controls;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class MapControl : Control
+    public class MapControl : Control, IThemeable
     {
         public event Action<MapScene> SceneStarted;
         public event Action<MapControl> ApplicationStarting;
+        public event Action<MapControl> AltEnterPressed;
+
         private MapApplication mapApp;
         private Input input;
         private float scaleFactor = 1.0f;
         private Form form = null;
-        public event Action<MapControl> AltEnterPressed;
+        private Theme theme;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -86,6 +88,27 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        public Theme Theme
+        {
+            get
+            {
+                return theme;
+            }
+            set
+            {
+                if (value == null || value == theme)
+                    return;
+
+                theme = value;
+                BackColor = theme.ControlDarkColour;
+                ForeColor = theme.TextLightColour;
+                Font = theme.WindowFont;
+
+                if (Scene != null)
+                    Scene.Theme = value;
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -99,7 +122,7 @@ namespace WiFindUs.Eye.Wave
                 return;
 
             SetStyle( ControlStyles.AllPaintingInWmPaint
-                | ControlStyles.Opaque
+                | ControlStyles.OptimizedDoubleBuffer
                 | ControlStyles.UserPaint, true);
             UpdateStyles();
         }
@@ -170,21 +193,20 @@ namespace WiFindUs.Eye.Wave
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
-            if (IsDesignMode)
+            if (Scene == null || IsDesignMode)
                 base.OnPaintBackground(e);
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
-
-            if (IsDesignMode)
+            bool design = IsDesignMode;
+            if (design || Scene == null)
             {
-                e.Graphics.Clear(System.Drawing.Color.WhiteSmoke);
-                string text = "Wave Engine Map Renderer Control";
+                e.Graphics.Clear(design ? Color.WhiteSmoke : theme.ControlDarkColour);
+                string text = design ? "Wave Engine Map Renderer Control" : "Waiting for map scene to initialize...";
                 var sizeText = e.Graphics.MeasureString(text, Font);
-                e.Graphics.DrawString(text, Font, Brushes.Black, (Width - sizeText.Width) / 2, (Height - sizeText.Height) / 2);
-                return;
+                using (Font f = new Font(Font.FontFamily, Font.Size + 6.0f, Font.Style | FontStyle.Bold))
+                    e.Graphics.DrawString(text, f, design ? Brushes.Black : theme.TextMidBrush, (Width - sizeText.Width) / 2, (Height - sizeText.Height) / 2);
             }
         }
 
@@ -517,6 +539,9 @@ namespace WiFindUs.Eye.Wave
 
         private void scene_SceneStarted(MapScene obj)
         {
+            SetStyle(ControlStyles.Opaque, true);
+            UpdateStyles();
+
             if (SceneStarted != null)
                 SceneStarted(obj);
         }
