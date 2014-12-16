@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
+using WaveEngine.Components.UI;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
@@ -16,6 +17,8 @@ namespace WiFindUs.Eye.Wave
 {
     public class DeviceMarker : Behavior
     {
+        private const float MAX_SPIN_RATE = 5.0f;
+
         [RequiredComponent]
         private Transform3D transform3D;
         private Device device;
@@ -34,7 +37,19 @@ namespace WiFindUs.Eye.Wave
 
         public float RotationSpeed
         {
-            get { return 1.0f; } //may change this later to something dynamic
+            get
+            {
+                if (device.TimedOut)
+                    return 0.0f;
+                
+                long age = device.UpdateAge;
+                if (age == 0)
+                    return MAX_SPIN_RATE;
+                else if (age >= Device.TIMEOUT)
+                    return 0.0f;
+                else
+                    return MAX_SPIN_RATE * (1.0f - (device.UpdateAge / (float)Device.TIMEOUT));
+            }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -52,14 +67,16 @@ namespace WiFindUs.Eye.Wave
         }
 
         public static Entity Create(Device device)
-        {
+        {           
             return new Entity()
                 .AddComponent(new Transform3D() { Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f) })
-                .AddComponent(new MaterialsMap(new BasicMaterial(Color.Red) { LightingEnabled = true }))
+                .AddComponent(new MaterialsMap(new BasicMaterial(Color.Red, DefaultLayers.Alpha) { LightingEnabled = true }))
                 .AddComponent(Model.CreateCone(10f, 6f, 6))
                 .AddComponent(new ModelRenderer())
                 .AddComponent(new BoxCollider())
                 .AddComponent(new DeviceMarker(device));
+
+            
         }
 
         /////////////////////////////////////////////////////////////////////
