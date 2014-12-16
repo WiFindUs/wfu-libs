@@ -431,13 +431,8 @@ namespace WiFindUs.Eye.Wave
             {
 
                 //determine what the image scale is
-                float scale = (WFUApplication.Config == null ? 1.0f : WFUApplication.Config.Get("map.texture_scale",
-                #if DEBUG
-                    0.50f
-                #else
-                    1.0f
-                #endif
-                )).Clamp(0.1f, 1.0f);
+                float scale = (WFUApplication.Config == null ? 1.0f : WFUApplication.Config.Get("map.texture_scale",1.0f))
+                    .Clamp(0.1f, 1.0f);
 
                 //get source image
                 System.Drawing.Image image = System.Drawing.Image.FromFile(ImagePath);
@@ -492,7 +487,16 @@ namespace WiFindUs.Eye.Wave
             if (TileImage != null)
             {
                 using (Stream stream = TileImage.GetStream())
-                    materialsMap.DefaultMaterial = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream));
+                {
+                    try
+                    {
+                        materialsMap.DefaultMaterial = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream));
+                    }
+                    catch
+                    {
+                        ErrorState("Error creating texture for " + ImageFilename + ": exception occurred.");
+                    }
+                }
                 if (baseTile != null)
                     TileImage = null; //don't hang on to the texture for child tiles
             }
