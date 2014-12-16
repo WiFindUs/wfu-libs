@@ -54,6 +54,12 @@
     <Compile Include="Controls\ThemedListBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\ThemedFlowLayoutPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ThemedPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\ThemedTabControl.cs">
       <SubType>Component</SubType>
     </Compile>

@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using WiFindUs.IO;
 using WiFindUs.Eye.Extensions;
+using WiFindUs.Eye.Controls;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -163,24 +164,38 @@ namespace WiFindUs.Eye.Dispatcher
             FullScreen = !FullScreen;
         }
 
-        private void OnDeviceCreated(Device obj)
+        private void OnDeviceCreated(Device device)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<Device>(OnDeviceCreated), obj);
+                Invoke(new Action<Device>(OnDeviceCreated), device);
                 return;
             }
-            devicesListBox.Items.Add(obj);
+            DeviceListChild dlc = new DeviceListChild(device);
+            dlc.Theme = Theme;
+            devicesFlowPanel.Controls.Add(dlc);
+            dlc.BackColor = Color.Red;
         }
 
-        private void OnUserCreated(User obj)
+        private void OnUserCreated(User user)
         {
-            usersListBox.Items.Add(obj);
+            if (InvokeRequired)
+            {
+                Invoke(new Action<User>(OnUserCreated), user);
+                return;
+            }
+            //usersFlowPanel.Controls.Add(new UserListPanel(user));
         }
 
-        private void OnWaypointCreated(Waypoint obj)
+        private void OnWaypointCreated(Waypoint waypoint)
         {
-            incidentsListBox.Items.Add(obj);
+            if (InvokeRequired)
+            {
+                Invoke(new Action<Waypoint>(OnWaypointCreated), waypoint);
+                return;
+            }
+           // waypoits
+            //usersFlowPanel.Controls.Add(new UserListPanel(user));
         }
     }
 }

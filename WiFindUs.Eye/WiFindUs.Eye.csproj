@@ -74,6 +74,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
+    <Compile Include="Controls\DeviceListChild.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\EntityList.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\EntityListChild.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Device.cs" />
     <Compile Include="DevicePacket.cs" />
     <Compile Include="Extensions\ConfigFileExtensions.cs" />
