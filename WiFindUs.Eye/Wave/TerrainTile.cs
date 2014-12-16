@@ -21,7 +21,8 @@ namespace WiFindUs.Eye.Wave
         public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError;
         
         private static Material placeHolderMaterial, placeHolderMaterialAlt,
-            loadingMaterial, downloadingMaterial, errorMaterial;
+            loadingMaterial, downloadingMaterial, errorMaterial, creatingTextureMaterial,
+            loadedMaterial;
         private const int MAX_CONCURRENT_TEXTURE_CREATIONS = 1;
         private const int MAX_CONCURRENT_LOADS = 10;
         private const int MAX_CONCURRENT_DOWNLOADS = 1;
@@ -143,6 +144,26 @@ namespace WiFindUs.Eye.Wave
                 if (placeHolderMaterialAlt == null)
                     placeHolderMaterialAlt = new BasicMaterial(Color.Sienna);
                 return placeHolderMaterialAlt;
+            }
+        }
+
+        public static Material CreatingTextureMaterial
+        {
+            get
+            {
+                if (creatingTextureMaterial == null)
+                    creatingTextureMaterial = new BasicMaterial(Color.Green);
+                return creatingTextureMaterial;
+            }
+        }
+
+        public static Material LoadedMaterial
+        {
+            get
+            {
+                if (loadedMaterial == null)
+                    loadedMaterial = new BasicMaterial(Color.GreenYellow);
+                return loadedMaterial;
             }
         }
 
@@ -309,11 +330,11 @@ namespace WiFindUs.Eye.Wave
 
                 currentDownloads++;
                 Debugger.V("Downloading map tile texture " + ImageFilename + "...");
+                materialsMap.DefaultMaterial = DownloadingMaterial;
                 WebClient downloadClient = new WebClient();
                 downloadClient.DownloadFileCompleted += DownloadFileCompleted;
                 downloadClient.DownloadProgressChanged += DownloadProgressChanged;
                 downloadClient.DownloadFileAsync(new Uri(ImageDownloadURL), ImagePath, null);
-                materialsMap.DefaultMaterial = DownloadingMaterial;
                 threadObject = downloadClient;
                 return;
             }
@@ -329,13 +350,14 @@ namespace WiFindUs.Eye.Wave
                     return;
 
                 currentTextureCreations++;
+                materialsMap.DefaultMaterial = CreatingTextureMaterial;
                 Thread textureThread = new Thread(new ThreadStart(TextureCreationThread));
                 threadObject = textureThread;
                 textureThread.Start();
             }
             else //load it
             {
-                if (currentLoads >= Environment.ProcessorCount)
+                if (currentLoads >= Math.Max(1, Environment.ProcessorCount/2))
                     return;
 
                 currentLoads++;
@@ -454,6 +476,8 @@ namespace WiFindUs.Eye.Wave
             if (initialThreadObject == threadObject) //cancelled?
             {
                 threadObject = null;
+                if (TileImage != null)
+                    materialsMap.DefaultMaterial = LoadedMaterial;
             
                 if (TextureImageLoadingFinished != null)
                     TextureImageLoadingFinished(this);
