@@ -72,13 +72,10 @@ namespace WiFindUs.Eye.Wave
             //mouse wheel for zooming and tilting
             if (input.MouseState.Wheel != oldMouseState.Wheel)
                  mapScene.CameraZoom -= (input.MouseState.Wheel - oldMouseState.Wheel) * 5;
-#if DEBUG
-            //check debug hotkey
-            if (oldKeyboardState.F2 == ButtonState.Release
-                && input.KeyboardState.F2 == ButtonState.Pressed)
-                WaveServices.ScreenContextManager.SetDiagnosticsActive(mapScene.RenderManager.DebugLines = !mapScene.RenderManager.DebugLines);
-#endif
 
+            //check debug hotkey
+            if (oldKeyboardState.F2 == ButtonState.Release && input.KeyboardState.F2 == ButtonState.Pressed)
+                mapScene.DebugMode = !mapScene.DebugMode;
 
             //state
             oldKeyboardState = input.KeyboardState;

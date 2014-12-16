@@ -225,6 +225,21 @@ namespace WiFindUs.Eye.Wave
             get { return hostGame.HostControl; }
         }
 
+        public bool DebugMode
+        {
+            get
+            {
+                return RenderManager.DebugLines;
+            }
+            set
+            {
+                if (value == DebugMode)
+                    return;
+                RenderManager.DebugLines = value;
+                WaveServices.ScreenContextManager.SetDiagnosticsActive(value);
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -294,8 +309,7 @@ namespace WiFindUs.Eye.Wave
         protected override void CreateScene()
         {
 #if DEBUG
-            WaveServices.ScreenContextManager.SetDiagnosticsActive(true);
-            RenderManager.DebugLines = true;
+            DebugMode = true;
 #endif
             
             //set up camera
