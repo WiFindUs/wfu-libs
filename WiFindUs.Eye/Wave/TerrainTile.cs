@@ -29,7 +29,7 @@ namespace WiFindUs.Eye.Wave
         private const int TILE_IMAGE_SIZE = 640;
         private static readonly string IMAGE_FORMAT = "png";
         private static readonly string MAPS_URL_BASE = "https://maps.googleapis.com/maps/api/staticmap?";
-        private static readonly string MAPS_DIR = "maps/";
+        private static readonly string MAPS_DIR = "maps" +System.IO.Path.DirectorySeparatorChar;
         private static int currentDownloads = 0;
         private static int currentLoads = 0;
         private static int currentTextureCreations = 0;
@@ -75,16 +75,16 @@ namespace WiFindUs.Eye.Wave
                 errorState = false;
                 textured = false;
                 TileImage = null;
-                if (!Directory.Exists(MAPS_DIR))
+                if (!Directory.Exists(ImageDirectory))
                 {
                     mapImageFileExists = false;
                     try
                     {
-                        Directory.CreateDirectory(MAPS_DIR);
+                        Directory.CreateDirectory(ImageDirectory);
                     }
                     catch
                     {
-                        ErrorState("Error creating maps directory!");
+                        ErrorState("Error creating directory '" + ImageDirectory + "'");
                         return;
                     }
                 }
@@ -197,18 +197,32 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
+        private string ImageFilenameLatLong
+        {
+            get
+            {
+                return String.Format("{0:0.000000}_{1:0.000000}",
+                    region.Latitude.Value, region.Longitude.Value);
+            }
+        }
+
         private string ImageFilename
         {
             get
             {
-                return String.Format("{0:0.000000}_{1:0.000000}_{2}_{3}.{4}",
-                    region.Latitude.Value, region.Longitude.Value, googleMapsZoomLevel, "satellite", IMAGE_FORMAT);
+                return String.Format("{0}_{1}_{2}.{3}",
+                    ImageFilenameLatLong, googleMapsZoomLevel, "satellite", IMAGE_FORMAT);
             }
+        }
+
+        private string ImageDirectory
+        {
+            get { return baseTile == null ? System.IO.Path.Combine(MAPS_DIR, ImageFilenameLatLong + System.IO.Path.DirectorySeparatorChar) : baseTile.ImageDirectory; }
         }
 
         private string ImagePath
         {
-            get { return System.IO.Path.Combine(MAPS_DIR, ImageFilename); }
+            get { return System.IO.Path.Combine(ImageDirectory, ImageFilename); }
         }
 
         private string ImageDownloadURL
