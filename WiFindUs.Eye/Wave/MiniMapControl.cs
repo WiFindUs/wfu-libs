@@ -100,7 +100,12 @@ namespace WiFindUs.Eye.Wave
 
         public ILocation ScreenToLocation(Point point)
         {
-            return new Location(
+            if (scene == null
+                || scene.BaseTile == null
+                || scene.BaseTile.Region == null)
+                return WiFindUs.Eye.Location.EMPTY;
+
+            return new WiFindUs.Eye.Location(
                 scene.BaseTile.Region.NorthWest.Latitude - ((point.Y - mapArea.Top) / (float)mapArea.Height) * scene.BaseTile.Region.LatitudinalSpan,
                 scene.BaseTile.Region.NorthWest.Longitude + ((point.X - mapArea.Left) / (float)mapArea.Width) * scene.BaseTile.Region.LongitudinalSpan
                 );
