@@ -137,24 +137,24 @@ namespace WiFindUs
 			outFile = null;
 		}
 
-		public static void V(string text)
+		public static void V(string text, params object[] args)
 		{
-			Log(Verbosity.Verbose, text);
+            Log(Verbosity.Verbose, text, args);
 		}
 
-		public static void I(string text)
+        public static void I(string text, params object[] args)
 		{
-			Log(Verbosity.Information, text);
+            Log(Verbosity.Information, text, args);
 		}
 
-		public static void W(string text)
+        public static void W(string text, params object[] args)
 		{
-			Log(Verbosity.Warning, text);
+            Log(Verbosity.Warning, text, args);
 		}
 
-		public static void E(string text)
+        public static void E(string text, params object[] args)
 		{
-			Log(Verbosity.Error, text);
+            Log(Verbosity.Error, text, args);
 		}
 
 		public static void Ex(Exception e, bool printStackTrace = false)
@@ -183,9 +183,9 @@ namespace WiFindUs
 			Log(Verbosity.Exception, log);
 		}
 
-		public static void C(string text)
+		public static void C(string text, params object[] args)
 		{
-			Log(Verbosity.Console, text);
+            Log(Verbosity.Console, text, args);
 		}
 
         public static void FlushToConsoles()
@@ -220,12 +220,14 @@ namespace WiFindUs
             return true;
         }
 
-		private static void Log(Verbosity level, string text)
+        private static void Log(Verbosity level, string text, params object[] args)
 		{
 			if (level < minLevel)
 				return;
 
 			string prefix = "[" + DateTime.Now.ToLongTimeString() + "] ";
+            if (args != null && args.Length > 0)
+                text = String.Format(text, args);
 			if (level < Verbosity.Console)
 			{
 				System.Diagnostics.Debugger.Log((int)level, level.ToString(), prefix + text + "\n");
