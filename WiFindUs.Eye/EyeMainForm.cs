@@ -138,8 +138,8 @@ namespace WiFindUs.Eye
             {
                 try
                 {
-                    var devices = from d in eyeContext.Devices where d.ID == id select d;
-                    foreach (Device d in devices)
+                    var dev = from d in eyeContext.Devices where d.ID == id select d;
+                    foreach (Device d in dev) //force load
                     {
                         if (device == null)
                             device = d;
@@ -152,9 +152,7 @@ namespace WiFindUs.Eye
                 }
             }
             else
-            {
                 devices.TryGetValue(id, out device);
-            }
 
             //create
             if (device == null)
@@ -188,11 +186,12 @@ namespace WiFindUs.Eye
             {
                 try
                 {
-                    var users = eyeContext.Users.Where(u => u.ID == id);
-                    if (users == null || users.Count() > 1)
-                        return null;
-                    if (users.Count() == 1)
-                        user = users.Single();
+                    var usr = from u in eyeContext.Users where u.ID == id select u;
+                    foreach (User u in usr) //force load
+                    {
+                        if (user == null)
+                            user = u;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -201,9 +200,7 @@ namespace WiFindUs.Eye
                 }
             }
             else
-            {
                 users.TryGetValue(id, out user);
-            }
 
             //create
             if (user == null)
@@ -421,7 +418,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching device history";
             foreach (DeviceHistory history in eyeContext.DeviceHistories)
-                Debugger.V("Precached device history: " + history.ToString());
+                ;
             return true;
         }
 
@@ -431,7 +428,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching nodes";
             foreach (Node node in eyeContext.Nodes)
-                Debugger.V("Precached node: " + node.ToString());
+                ;
             return true;
         }
 
@@ -441,7 +438,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching node history";
             foreach (NodeHistory history in eyeContext.NodeHistories)
-                Debugger.V("Precached node history: " + history.ToString());
+                ;
             return true;
         }
 
@@ -451,7 +448,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching waypoints";
             foreach (Waypoint waypoint in eyeContext.Waypoints)
-                Debugger.V("Precached waypoint: " + waypoint.ToString());
+                ;
             return true;
         }
 
