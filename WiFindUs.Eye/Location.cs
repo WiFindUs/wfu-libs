@@ -11,6 +11,7 @@ namespace WiFindUs.Eye
     /// </summary>
     public class Location : ILocation, IEquatable<ILocation>
     {
+        public static readonly Location EMPTY = new Location();
         private static readonly Location GPS_MARKS_HOUSE = new Location(-35.025435, 138.561954);
         private static readonly Location GPS_PARKSIDE = new Location(-34.951551, 138.623063);
         private static readonly Location GPS_BONYTHON_PARK = new Location(-34.9165, 138.581479);
@@ -108,6 +109,13 @@ namespace WiFindUs.Eye
 
             CheckAssignedValues();
         }
+
+        private Location()
+            : this (null,null,null,null)
+        {
+
+        }
+        
 
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
