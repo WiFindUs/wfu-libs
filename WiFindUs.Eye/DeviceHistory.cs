@@ -8,6 +8,7 @@ namespace WiFindUs.Eye
     public partial class DeviceHistory : ILocation, ILocatable, IAtmosphere, IAtmospheric
     {
         public static event Action<DeviceHistory> OnDeviceHistoryLoaded;
+        private bool loaded = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -59,12 +60,18 @@ namespace WiFindUs.Eye
             return WiFindUs.Eye.Location.Distance(this, other);
         }
 
+        public bool Loaded
+        {
+            get { return loaded; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
         partial void OnLoaded()
         {
+            loaded = true;
             Debugger.V(this.ToString() + " loaded.");
             if (OnDeviceHistoryLoaded != null)
                 OnDeviceHistoryLoaded(this);

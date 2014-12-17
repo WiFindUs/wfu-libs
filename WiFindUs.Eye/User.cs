@@ -13,6 +13,7 @@ namespace WiFindUs.Eye
         public event Action<User> OnUserFirstNameChanged;
         public event Action<User> OnUserMiddleNameChanged;
         public event Action<User> OnUserNameLastChanged;
+        private bool loaded = false;
 
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
@@ -20,6 +21,7 @@ namespace WiFindUs.Eye
 
         partial void OnLoaded()
         {
+            loaded = true;
             Debugger.V(this.ToString() + " loaded.");
             if (OnUserLoaded != null)
                 OnUserLoaded(this);
@@ -47,6 +49,11 @@ namespace WiFindUs.Eye
         {
             if (OnUserTypeChanged != null)
                 OnUserTypeChanged(this);
+        }
+
+        public bool Loaded
+        {
+            get { return loaded; }
         }
     }
 }

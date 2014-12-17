@@ -26,7 +26,7 @@ namespace WiFindUs.Eye
         public event Action<Device> OnDeviceUserChanged;
         public event Action<Device> OnDeviceAssignedWaypointChanged;
         public event Action<Device> OnDeviceTimedOutChanged;
-        private bool timedOut = false;
+        private bool timedOut = false, loaded = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -189,12 +189,18 @@ namespace WiFindUs.Eye
             TimedOut = UpdateAge > TIMEOUT;
         }
 
+        public bool Loaded
+        {
+            get { return loaded; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
         partial void OnLoaded()
         {
+            loaded = true;
             Debugger.V(this.ToString() + " loaded.");
             if (OnDeviceLoaded != null)
                 OnDeviceLoaded(this);

@@ -19,6 +19,7 @@ namespace WiFindUs.Eye
         public event Action<Waypoint> OnWaypointReportingUserChanged;
         public event Action<Waypoint> OnWaypointArchivedChanged;
         public event Action<Waypoint> OnWaypointNextWaypointChanged;
+        private bool loaded = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -90,11 +91,17 @@ namespace WiFindUs.Eye
             Archived = true;
         }
 
+        public bool Loaded
+        {
+            get { return loaded; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
         partial void OnLoaded()
         {
+            loaded = true;
             Debugger.V(this.ToString() + " loaded.");
             if (OnWaypointLoaded != null)
                 OnWaypointLoaded(this);

@@ -17,7 +17,7 @@ namespace WiFindUs.Eye
         public event Action<Node> OnNodeLocationChanged;
         public event Action<Node> OnNodeVoltageChanged;
         public event Action<Node> OnNodeTimedOutChanged;
-        private bool timedOut = false;
+        private bool timedOut = false, loaded = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -102,12 +102,18 @@ namespace WiFindUs.Eye
             TimedOut = UpdateAge > 300;
         }
 
+        public bool Loaded
+        {
+            get { return loaded; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
         partial void OnLoaded()
         {
+            loaded = true;
             Debugger.V(this.ToString() + " loaded.");
             if (OnNodeLoaded != null)
                 OnNodeLoaded(this);

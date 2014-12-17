@@ -362,7 +362,11 @@ namespace WiFindUs.Eye.Wave
             VisibleLayer = 0;
             eyeForm = (WFUApplication.MainForm as EyeMainForm);
             foreach (Device device in eyeForm.Devices)
+            {
+                if (!device.Loaded)
+                    continue;
                 Device_OnDeviceLoaded(device);
+            }
             Device.OnDeviceLoaded += Device_OnDeviceLoaded;
             if (SceneStarted != null)
                 SceneStarted(this);
