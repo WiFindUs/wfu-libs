@@ -15,6 +15,7 @@ namespace WiFindUs.Eye.Wave
     {        
         private KeyboardState oldKeyboardState;
         private MouseState oldMouseState;
+        private System.Windows.Forms.Cursor cursor = null;
         
         protected override void ResolveDependencies()
         {
@@ -28,7 +29,8 @@ namespace WiFindUs.Eye.Wave
             if (mapScene == null || input == null)
                 return;
 
-            //turn off camera auto updates
+            //initial state
+            cursor = null;
             mapScene.CameraAutoUpdate = false;
 
             //arrows and WSAD for pan
@@ -48,21 +50,19 @@ namespace WiFindUs.Eye.Wave
             }
 
             //middle mouse drag for pan
-            if (input.MouseState.MiddleButton == ButtonState.Pressed
-                && oldMouseState.MiddleButton == ButtonState.Pressed)
+            if (MiddleMousePressedOrHeld(ref input.MouseState, ref oldMouseState))
             {
-
                 float zoomDiff = 1.0f + ((float)mapScene.CameraZoom / 100.0f);
                 moveDelta.X += (oldMouseState.X - input.MouseState.X) * zoomDiff;
                 moveDelta.Z += (oldMouseState.Y - input.MouseState.Y) * zoomDiff;
+                cursor = System.Windows.Forms.Cursors.Hand;
             }
             else if (//left + right buttons for tilting
-                input.MouseState.LeftButton == ButtonState.Pressed
-                    && oldMouseState.LeftButton == ButtonState.Pressed
-                    && input.MouseState.RightButton == ButtonState.Pressed
-                    && oldMouseState.RightButton == ButtonState.Pressed)
+                LeftMousePressedOrHeld(ref input.MouseState, ref oldMouseState)
+                    && RightMousePressedOrHeld(ref input.MouseState, ref oldMouseState))
             {
                 mapScene.CameraTilt += (int)(oldMouseState.Y - input.MouseState.Y);
+                cursor = System.Windows.Forms.Cursors.SizeNS;
             }
 
             //do panning
@@ -78,12 +78,16 @@ namespace WiFindUs.Eye.Wave
                 mapScene.DebugMode = !mapScene.DebugMode;
 
             //state
+            if (cursor != mapScene.HostControl.Cursor)
+                mapScene.HostControl.Cursor = cursor ?? System.Windows.Forms.Cursors.Default;
             oldKeyboardState = input.KeyboardState;
             oldMouseState = input.MouseState;
             mapScene.CameraAutoUpdate = true;
-
-            //;
         }
+
+        /////////////////////////////////////////////////////////////////////
+        // KEYBOARD BUTTONS
+        /////////////////////////////////////////////////////////////////////
 
         private bool IsShift(Input input)
         {
@@ -102,6 +106,7 @@ namespace WiFindUs.Eye.Wave
             return input.KeyboardState.Right == ButtonState.Pressed
                 || input.KeyboardState.D == ButtonState.Pressed;
         }
+
         private bool IsForward(Input input)
         {
             return input.KeyboardState.Up == ButtonState.Pressed
@@ -112,6 +117,93 @@ namespace WiFindUs.Eye.Wave
         {
             return input.KeyboardState.Down == ButtonState.Pressed
                 || input.KeyboardState.S == ButtonState.Pressed;
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // LEFT MOUSE BUTTON
+        /////////////////////////////////////////////////////////////////////
+
+        private bool IsLeftMouse(ref MouseState state)
+        {
+            return state.LeftButton == ButtonState.Pressed;
+        }
+
+        private bool LeftMousePressed(ref MouseState state, ref MouseState oldState)
+        {
+            return IsLeftMouse(ref state) && !IsLeftMouse(ref oldState);
+        }
+
+        private bool LeftMouseHeld(ref MouseState state, ref MouseState oldState)
+        {
+            return IsLeftMouse(ref state) && IsLeftMouse(ref oldState);
+        }
+
+        private bool LeftMousePressedOrHeld(ref MouseState state, ref MouseState oldState)
+        {
+            return LeftMousePressed(ref state, ref oldState) || LeftMouseHeld(ref state, ref oldState);
+        }
+
+        private bool LeftMouseReleased(ref MouseState state, ref MouseState oldState)
+        {
+            return !IsLeftMouse(ref state) && IsLeftMouse(ref oldState);
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // MIDDLE MOUSE BUTTON
+        /////////////////////////////////////////////////////////////////////
+
+        private bool IsMiddleMouse(ref MouseState state)
+        {
+            return state.MiddleButton == ButtonState.Pressed;
+        }
+
+        private bool MiddleMousePressed(ref MouseState state, ref MouseState oldState)
+        {
+            return IsMiddleMouse(ref state) && !IsMiddleMouse(ref oldState);
+        }
+
+        private bool MiddleMouseHeld(ref MouseState state, ref MouseState oldState)
+        {
+            return IsMiddleMouse(ref state) && IsMiddleMouse(ref oldState);
+        }
+
+        private bool MiddleMousePressedOrHeld(ref MouseState state, ref MouseState oldState)
+        {
+            return MiddleMousePressed(ref state, ref oldState) || MiddleMouseHeld(ref state, ref oldState);
+        }
+
+        private bool MiddleMouseReleased(ref MouseState state, ref MouseState oldState)
+        {
+            return !IsMiddleMouse(ref state) && IsMiddleMouse(ref oldState);
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // MIDDLE MOUSE BUTTON
+        /////////////////////////////////////////////////////////////////////
+
+        private bool IsRightMouse(ref MouseState state)
+        {
+            return state.RightButton == ButtonState.Pressed;
+        }
+
+        private bool RightMousePressed(ref MouseState state, ref MouseState oldState)
+        {
+            return IsRightMouse(ref state) && !IsRightMouse(ref oldState);
+        }
+
+        private bool RightMouseHeld(ref MouseState state, ref MouseState oldState)
+        {
+            return IsRightMouse(ref state) && IsRightMouse(ref oldState);
+        }
+
+        private bool RightMousePressedOrHeld(ref MouseState state, ref MouseState oldState)
+        {
+            return RightMousePressed(ref state, ref oldState) || RightMouseHeld(ref state, ref oldState);
+        }
+
+        private bool RightMouseReleased(ref MouseState state, ref MouseState oldState)
+        {
+            return !IsRightMouse(ref state) && IsRightMouse(ref oldState);
         }
     }
 }
