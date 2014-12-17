@@ -12,7 +12,7 @@ namespace WiFindUs.Eye
 {
     public class EyePacketListener : IDisposable
     {
-        public event Action<EyePacket> PacketReceived;
+        public event Action<EyePacketListener, EyePacket> PacketReceived;
         
         private static readonly Regex REGEX_EYE_MESSAGE = new Regex(
             @"^EYE\|(DEV|NODE)\|([0-9A-F]+)\|([0-9A-F]+)\|\s*(.+)\s*$", RegexOptions.Compiled);
@@ -22,6 +22,17 @@ namespace WiFindUs.Eye
         private UdpClient listener = null;
         private bool disposed = false;
         private Dictionary<string, Dictionary<long, long>> timestamps = new Dictionary<string, Dictionary<long, long>>();
+        private bool logPackets = false;
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+
+        public bool LogPackets
+        {
+            get { return logPackets; }
+            set { logPackets = value; }
+        }
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
@@ -98,7 +109,7 @@ namespace WiFindUs.Eye
             }
             catch (SocketException)
             {
-                Debugger.E("Error creating UDP listener on port " + port);
+                Debugger.E("Error creating UDP listener on port {0}", port);
             }
 
             if (listener != null)
@@ -143,7 +154,8 @@ namespace WiFindUs.Eye
                         continue;
                     idTimestamps[id] = timestamp;
 
-                    Debugger.V(message);
+                    if (logPackets)
+                        Debugger.V(message);
                     if (PacketReceived != null)
                     {
                         EyePacket packet = new EyePacket(
@@ -154,7 +166,7 @@ namespace WiFindUs.Eye
                             match.Groups[4].Value //payload
                             );
 
-                        PacketReceived(packet);
+                        PacketReceived(this, packet);
                     }
                 }
                 if (listener != null)
