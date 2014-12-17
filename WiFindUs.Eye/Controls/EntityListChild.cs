@@ -24,7 +24,6 @@ namespace WiFindUs.Eye.Controls
         public EntityListChild()
         {
             Height = 40;
-            Debugger.V(this.GetType().ToString() + " created");
         }
     }
 }
