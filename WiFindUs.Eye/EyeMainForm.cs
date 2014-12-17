@@ -11,6 +11,7 @@ using WiFindUs.Eye.Extensions;
 using System.Collections;
 using System.Windows.Forms;
 using Devart.Data.Linq;
+using System.ComponentModel;
 
 namespace WiFindUs.Eye
 {
@@ -37,31 +38,43 @@ namespace WiFindUs.Eye
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool ServerMode
         {
             get { return serverMode; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual IEnumerable<Device> Devices
         {
             get { return serverMode ? (IEnumerable<Device>)eyeContext.Devices : devices.Values; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual IEnumerable<Node> Nodes
         {
             get { return serverMode ? (IEnumerable<Node>)eyeContext.Nodes : nodes.Values; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual IEnumerable<User> Users
         {
             get { return serverMode ? (IEnumerable<User>)eyeContext.Users : users.Values; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual IEnumerable<Waypoint> Waypoints
         {
             get { return serverMode ? (IEnumerable<Waypoint>)eyeContext.Waypoints : waypoints.Values; }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public override List<Func<bool>> LoadingTasks
         {
             get
@@ -79,6 +92,8 @@ namespace WiFindUs.Eye
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected string MySQLConnectionString
         {
             get
@@ -92,6 +107,8 @@ namespace WiFindUs.Eye
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected MapControl Map
         {
             get { return map; }

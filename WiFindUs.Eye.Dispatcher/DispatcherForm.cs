@@ -30,6 +30,8 @@ namespace WiFindUs.Eye.Dispatcher
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool FullScreen
         {
             get { return FormBorderStyle == FormBorderStyle.None; }

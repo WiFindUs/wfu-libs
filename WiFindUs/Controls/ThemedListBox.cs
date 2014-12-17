@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,8 @@ namespace WiFindUs.Controls
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsDesignMode
         {
             get
@@ -24,7 +27,9 @@ namespace WiFindUs.Controls
                 return DesignMode || this.IsDesignMode();
             }
         }
-        
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Theme Theme
         {
             get

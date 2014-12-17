@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace WiFindUs.Controls
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int HoverIndex
         {
             get { return hoverIndex; }
@@ -30,6 +33,8 @@ namespace WiFindUs.Controls
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsDesignMode
         {
             get
@@ -38,6 +43,8 @@ namespace WiFindUs.Controls
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Theme Theme
         {
             get
@@ -59,6 +66,9 @@ namespace WiFindUs.Controls
                 }
             }
         }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected Rectangle TabBounds
         {
             get

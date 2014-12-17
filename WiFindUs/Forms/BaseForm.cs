@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.IO;
 using WiFindUs.Extensions;
 using WiFindUs.Controls;
+using System.ComponentModel;
 
 namespace WiFindUs.Forms
 {
@@ -18,6 +19,8 @@ namespace WiFindUs.Forms
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsDesignMode
         {
             get
@@ -42,6 +45,8 @@ namespace WiFindUs.Forms
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Theme Theme
         {
             get

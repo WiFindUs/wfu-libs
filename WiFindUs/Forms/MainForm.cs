@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO;
 using System.Drawing;
+using System.ComponentModel;
 
 namespace WiFindUs.Forms
 {
@@ -14,6 +15,8 @@ namespace WiFindUs.Forms
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public virtual List<Func<bool>> LoadingTasks
         {
             get { return new List<Func<bool>>(); }

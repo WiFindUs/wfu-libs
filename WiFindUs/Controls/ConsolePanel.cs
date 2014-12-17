@@ -5,6 +5,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.ComponentModel;
 
 namespace WiFindUs.Controls
 {
@@ -18,6 +19,8 @@ namespace WiFindUs.Controls
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Theme Theme
         {
             get
