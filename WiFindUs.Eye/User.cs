@@ -8,7 +8,7 @@ namespace WiFindUs.Eye
 {
     public partial class User
     {
-        public static event Action<User> OnUserCreated;
+        public static event Action<User> OnUserLoaded;
         public event Action<User> OnUserTypeChanged;
         public event Action<User> OnUserFirstNameChanged;
         public event Action<User> OnUserMiddleNameChanged;
@@ -18,10 +18,11 @@ namespace WiFindUs.Eye
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        partial void OnCreated()
+        partial void OnLoaded()
         {
-            if (OnUserCreated != null)
-                OnUserCreated(this);
+            Debugger.V(this.ToString() + " loaded.");
+            if (OnUserLoaded != null)
+                OnUserLoaded(this);
         }
 
         partial void OnNameFirstChanged()

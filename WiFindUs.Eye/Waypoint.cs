@@ -9,7 +9,7 @@ namespace WiFindUs.Eye
 {
     public partial class Waypoint : ILocation, ILocatable
     {
-        public static event Action<Waypoint> OnWaypointCreated;
+        public static event Action<Waypoint> OnWaypointLoaded;
         public event Action<Waypoint> OnWaypointLocationChanged;
         public event Action<Waypoint> OnWaypointTypeChanged;
         public event Action<Waypoint> OnWaypointCategoryChanged;
@@ -93,10 +93,11 @@ namespace WiFindUs.Eye
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
-        partial void OnCreated()
+        partial void OnLoaded()
         {
-            if (OnWaypointCreated != null)
-                OnWaypointCreated(this);
+            Debugger.V(this.ToString() + " loaded.");
+            if (OnWaypointLoaded != null)
+                OnWaypointLoaded(this);
         }
 
         partial void OnNextWaypointIDChanged()

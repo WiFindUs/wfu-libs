@@ -16,9 +16,8 @@ namespace WiFindUs.Eye
     {
         public const long TIMEOUT = 60;
         
-        public static event Action<Device> OnDeviceCreated;
+        public static event Action<Device> OnDeviceLoaded;
         public event Action<Device> OnDeviceUpdated;
-        public event Action<Device> OnDeviceLoaded;
         public event Action<Device> OnDeviceTypeChanged;
         public event Action<Device> OnDeviceLocationChanged;
         public event Action<Device> OnDeviceAtmosphereChanged;
@@ -163,7 +162,7 @@ namespace WiFindUs.Eye
 
         public override string ToString()
         {
-            return String.Format("Device[{0}]", ID);
+            return String.Format("Device[{0:X}]", ID);
         }
 
         public double DistanceTo(ILocation other)
@@ -194,16 +193,9 @@ namespace WiFindUs.Eye
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        partial void OnCreated()
-        {
-            Debugger.V(this.ToString() + " created.");
-            if (OnDeviceCreated != null)
-                OnDeviceCreated(this);
-        }
-
         partial void OnLoaded()
         {
-            
+            Debugger.V(this.ToString() + " loaded.");
             if (OnDeviceLoaded != null)
                 OnDeviceLoaded(this);
         }

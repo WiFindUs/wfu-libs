@@ -10,9 +10,8 @@ namespace WiFindUs.Eye
 {
     public partial class Node : ILocatable, ILocation, IUpdateable
     {
-        public static event Action<Node> OnNodeCreated;
+        public static event Action<Node> OnNodeLoaded;
         public event Action<Node> OnNodeUpdated;
-        public event Action<Node> OnNodeLoaded;
         public event Action<Node> OnNodeNumberChanged;
         public event Action<Node> OnNodeIPAddressChanged;
         public event Action<Node> OnNodeLocationChanged;
@@ -107,14 +106,9 @@ namespace WiFindUs.Eye
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        partial void OnCreated()
-        {
-            if (OnNodeCreated != null)
-                OnNodeCreated(this);
-        }
-
         partial void OnLoaded()
         {
+            Debugger.V(this.ToString() + " loaded.");
             if (OnNodeLoaded != null)
                 OnNodeLoaded(this);
         }

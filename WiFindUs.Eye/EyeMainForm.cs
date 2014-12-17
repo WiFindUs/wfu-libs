@@ -10,6 +10,7 @@ using WiFindUs.Extensions;
 using WiFindUs.Eye.Extensions;
 using System.Collections;
 using System.Windows.Forms;
+using Devart.Data.Linq;
 
 namespace WiFindUs.Eye
 {
@@ -111,8 +112,8 @@ namespace WiFindUs.Eye
 
         public EyeMainForm()
         {
-            WiFindUs.Eye.Device.OnDeviceCreated += OnDeviceCreated;
-            WiFindUs.Eye.Node.OnNodeCreated += OnNodeCreated;
+            WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
+            WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -137,11 +138,12 @@ namespace WiFindUs.Eye
             {
                 try
                 {
-                    var devices = eyeContext.Devices.Where(d => d.ID == id);
-                    if (devices == null || devices.Count() > 1)
-                        return null;
-                    if (devices.Count() == 1)
-                        device = devices.Single();
+                    var devices = from d in eyeContext.Devices where d.ID == id select d;
+                    foreach (Device d in devices)
+                    {
+                        if (device == null)
+                            device = d;
+                    }
                 }
                 catch (Exception e)
                 {
@@ -279,7 +281,7 @@ namespace WiFindUs.Eye
             base.OnDisposing();
         }
 
-        private void EyePacketReceived(EyePacket obj)
+        private void EyePacketReceived(EyePacketListener sender, EyePacket obj)
         {
             if (!ServerMode)
                 return;
@@ -299,7 +301,9 @@ namespace WiFindUs.Eye
                     Debugger.E("Malformed device update packet recieved from " + obj.Address.ToString());
                     return;
                 }
-                Debugger.V(devicePacket.ToString());
+                
+                if (sender.LogPackets)
+                    Debugger.V(devicePacket.ToString());
 
                 //first get user
                 bool newUser = false;
@@ -318,8 +322,8 @@ namespace WiFindUs.Eye
                 else 
                     device.Updated = DateTime.UtcNow.ToUnixTimestamp();
 
-                if (newDevice || newUser)
-                    eyeContext.SubmitChanges();
+                //update database
+                eyeContext.SubmitChanges();
             }
         }
 
@@ -347,6 +351,13 @@ namespace WiFindUs.Eye
                 try
                 {
                     eyeContext = new EyeContext(MySQLConnectionString);
+
+                    DataLoadOptions options = new DataLoadOptions();
+                    options.LoadWith<Device>(d => d.User);
+                    options.LoadWith<Device>(d => d.History);
+                    options.LoadWith<Device>(d => d.AssignedWaypoint);
+                    eyeContext.LoadOptions = options;
+
                     Debugger.I("MySQL connection created OK.");
                 }
                 catch (Exception ex)
@@ -410,7 +421,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching device history";
             foreach (DeviceHistory history in eyeContext.DeviceHistories)
-                ;
+                Debugger.V("Precached device history: " + history.ToString());
             return true;
         }
 
@@ -420,7 +431,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching nodes";
             foreach (Node node in eyeContext.Nodes)
-                ;
+                Debugger.V("Precached node: " + node.ToString());
             return true;
         }
 
@@ -430,7 +441,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching node history";
             foreach (NodeHistory history in eyeContext.NodeHistories)
-                ;
+                Debugger.V("Precached node history: " + history.ToString());
             return true;
         }
 
@@ -440,7 +451,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching waypoints";
             foreach (Waypoint waypoint in eyeContext.Waypoints)
-                ;
+                Debugger.V("Precached waypoint: " + waypoint.ToString());
             return true;
         }
 
@@ -466,12 +477,12 @@ namespace WiFindUs.Eye
             return true;
         }
 
-        private void OnDeviceCreated(Device obj)
+        private void OnDeviceLoaded(Device obj)
         {
             updateables.Add(obj);
         }
 
-        private void OnNodeCreated(Node obj)
+        private void OnNodeLoaded(Node obj)
         {
             updateables.Add(obj);
         }

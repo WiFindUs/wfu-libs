@@ -1,5 +1,4 @@
-﻿using Devart.Data.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -93,9 +92,9 @@ namespace WiFindUs.Eye.Dispatcher
             minimapTab.Controls.Add(minimap = new MiniMapControl() { Dock = DockStyle.Fill });
 
             //events
-            WiFindUs.Eye.Device.OnDeviceCreated += OnDeviceCreated;
-            WiFindUs.Eye.User.OnUserCreated += OnUserCreated;
-            WiFindUs.Eye.Waypoint.OnWaypointCreated += OnWaypointCreated;
+            WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
+            WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
+            WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 
             //load
             WFUApplication.StartSplashLoading(LoadingTasks);
@@ -164,11 +163,11 @@ namespace WiFindUs.Eye.Dispatcher
             FullScreen = !FullScreen;
         }
 
-        private void OnDeviceCreated(Device device)
+        private void OnDeviceLoaded(Device device)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<Device>(OnDeviceCreated), device);
+                Invoke(new Action<Device>(OnDeviceLoaded), device);
                 return;
             }
             DeviceListChild dlc = new DeviceListChild(device);
@@ -177,21 +176,21 @@ namespace WiFindUs.Eye.Dispatcher
             dlc.BackColor = Color.Red;
         }
 
-        private void OnUserCreated(User user)
+        private void OnUserLoaded(User user)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<User>(OnUserCreated), user);
+                Invoke(new Action<User>(OnUserLoaded), user);
                 return;
             }
             //usersFlowPanel.Controls.Add(new UserListPanel(user));
         }
 
-        private void OnWaypointCreated(Waypoint waypoint)
+        private void OnWaypointLoaded(Waypoint waypoint)
         {
             if (InvokeRequired)
             {
-                Invoke(new Action<Waypoint>(OnWaypointCreated), waypoint);
+                Invoke(new Action<Waypoint>(OnWaypointLoaded), waypoint);
                 return;
             }
            // waypoits

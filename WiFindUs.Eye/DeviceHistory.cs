@@ -7,6 +7,12 @@ namespace WiFindUs.Eye
 {
     public partial class DeviceHistory : ILocation, ILocatable, IAtmosphere, IAtmospheric
     {
+        public static event Action<DeviceHistory> OnDeviceHistoryLoaded;
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+        
         public bool EmptyAtmosphere
         {
             get
@@ -53,5 +59,15 @@ namespace WiFindUs.Eye
             return WiFindUs.Eye.Location.Distance(this, other);
         }
 
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        partial void OnLoaded()
+        {
+            Debugger.V(this.ToString() + " loaded.");
+            if (OnDeviceHistoryLoaded != null)
+                OnDeviceHistoryLoaded(this);
+        }
     }
 }

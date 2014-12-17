@@ -362,8 +362,8 @@ namespace WiFindUs.Eye.Wave
             VisibleLayer = 0;
             eyeForm = (WFUApplication.MainForm as EyeMainForm);
             foreach (Device device in eyeForm.Devices)
-                Device_OnDeviceCreated(device);
-            Device.OnDeviceCreated += Device_OnDeviceCreated;
+                Device_OnDeviceLoaded(device);
+            Device.OnDeviceLoaded += Device_OnDeviceLoaded;
             if (SceneStarted != null)
                 SceneStarted(this);
         }
@@ -407,7 +407,7 @@ namespace WiFindUs.Eye.Wave
                 CameraFrustumChanged(this);
         }
 
-        private void Device_OnDeviceCreated(Device device)
+        private void Device_OnDeviceLoaded(Device device)
         {
             EntityManager.Add(DeviceMarker.Create(device));
         }
