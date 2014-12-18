@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Diagnostics;
+using System.Threading;
 
 namespace WiFindUs
 {
@@ -225,7 +226,7 @@ namespace WiFindUs
 			if (level < minLevel)
 				return;
 
-			string prefix = "[" + DateTime.Now.ToLongTimeString() + "] ";
+            string prefix = String.Format("[{0},{1}] ", DateTime.Now.ToLongTimeString(), Thread.CurrentThread.ManagedThreadId.ToString("D3"));
             if (args != null && args.Length > 0)
                 text = String.Format(text, args);
 			if (level < Verbosity.Console)
