@@ -23,6 +23,57 @@ namespace WiFindUs.Eye.Wave
         private Transform3D transform3D;
         private Device device;
         private MapScene scene;
+        [RequiredComponent]
+        private MaterialsMap materialsMap;
+
+        private static Material placeHolderMaterial, selectedMaterial;
+        private static Dictionary<string, Material> userTypeColours = new Dictionary<string, Material>();
+
+        public static Material PlaceHolderMaterial
+        {
+            get
+            {
+                if (placeHolderMaterial == null)
+                    placeHolderMaterial = new BasicMaterial(Color.Gray) { LightingEnabled = true };
+                return placeHolderMaterial;
+            }
+        }
+
+        public static Material SelectedMaterial
+        {
+            get
+            {
+                if (selectedMaterial == null)
+                    selectedMaterial = new BasicMaterial(Color.Yellow) { LightingEnabled = true };
+                return selectedMaterial;
+            }
+        }
+
+        protected Material CurrentMaterial
+        {
+            get
+            {
+                if (device == null)
+                    return PlaceHolderMaterial;
+                if (device.Selected)
+                    return SelectedMaterial;
+                if (device.User == null)
+                    return PlaceHolderMaterial;
+                string type = device.User.Type;
+                if (type == null || (type = type.Trim().ToLower()).Length == 0)
+                    return PlaceHolderMaterial;
+
+                Material material = PlaceHolderMaterial;
+                if (!userTypeColours.TryGetValue(type, out material))
+                {
+                    System.Drawing.Color col
+                        = WFUApplication.Config.Get("type_" + device.User.Type + ".colour", System.Drawing.Color.Gray);
+                    userTypeColours[type] = material
+                        = new BasicMaterial(new Color(col.R, col.G, col.B, col.A)) { LightingEnabled = true };
+                }
+                return material;               
+            }
+        }
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -61,14 +112,29 @@ namespace WiFindUs.Eye.Wave
             this.device = device;
             device.OnDeviceLocationChanged += OnDeviceLocationChanged;
             device.OnDeviceTimedOutChanged += OnDeviceTimedOutChanged;
-            device.OnDeviceTypeChanged += OnDeviceTypeChanged;
+            device.OnDeviceUserChanged += OnDeviceUserChanged;
+            device.SelectedChanged += DeviceSelectedChanged;
+        }
+
+        void device_SelectedChanged(ISelectableEntity obj)
+        {
+            throw new NotImplementedException();
+        }
+
+        void device_OnDeviceUserChanged(Device obj)
+        {
+            throw new NotImplementedException();
         }
 
         public static Entity Create(Device device)
         {           
             return new Entity()
-                .AddComponent(new Transform3D() { Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f) })
-                .AddComponent(new MaterialsMap(new BasicMaterial(Color.Red, DefaultLayers.Alpha) { LightingEnabled = true }))
+                .AddComponent(new Transform3D()
+                {
+                    Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f),
+                    Scale = device.Selected ? new Vector3(2.0f, 2.0f, 2.0f) : new Vector3(1.0f, 1.0f, 1.0f)
+                })
+                .AddComponent(new MaterialsMap(PlaceHolderMaterial))
                 .AddComponent(Model.CreateCone(10f, 6f, 6))
                 .AddComponent(new ModelRenderer())
                 .AddComponent(new BoxCollider())
@@ -89,7 +155,7 @@ namespace WiFindUs.Eye.Wave
             if (vis)
             {
                 Vector3 pos = scene.LocationToVector(device.Location);
-                pos.Y = 5f;
+                pos.Y = device.Selected ? 10f : 5f;
                 transform3D.Position = pos;
             }
         }
@@ -118,19 +184,26 @@ namespace WiFindUs.Eye.Wave
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        private void OnDeviceTypeChanged(Device obj)
-        {
-
-        }
-
-        private void OnDeviceLocationChanged(Device obj)
+        private void OnDeviceLocationChanged(Device device)
         {
             UpdateDeviceState();
         }
 
-        private void OnDeviceTimedOutChanged(Device obj)
+        private void OnDeviceTimedOutChanged(Device device)
         {
             UpdateDeviceState();
+        }
+
+        private void DeviceSelectedChanged(ISelectableEntity device)
+        {
+            transform3D.Position = new Vector3(transform3D.Position.X, device.Selected ? 10f : 5f, transform3D.Position.Z);
+            transform3D.Scale = device.Selected ? new Vector3(2.0f, 2.0f, 2.0f) : new Vector3(1.0f, 1.0f, 1.0f);
+            materialsMap.DefaultMaterial = CurrentMaterial;
+        }
+
+        private void OnDeviceUserChanged(Device device)
+        {
+            materialsMap.DefaultMaterial = CurrentMaterial;
         }
     }
 }
