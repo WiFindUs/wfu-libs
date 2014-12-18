@@ -43,6 +43,8 @@ namespace WiFindUs.IO
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		private Dictionary<String, List<String>> kvps = new Dictionary<String, List<String>>();
+        private List<String> lastKVPS = null;
+        private string lastKey = "";
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -52,9 +54,17 @@ namespace WiFindUs.IO
         {
             get
             {
+                //check key for validity
+                key = CheckKey(key);
+
+                //check if it was the same as the last lookup (during a loop or something)
+                if (lastKey.Length > 0 && lastKey.CompareTo(key) == 0)
+                    return lastKVPS;
+
+                //otherwise do a new lookup
                 List<String> values;
-                if (!kvps.TryGetValue(CheckKey(key), out values))
-                    kvps[key] = values = new List<String>();
+                if (!kvps.TryGetValue(lastKey = key, out values))
+                    kvps[key] = values = lastKVPS = new List<String>();
                 return values;
             }
             set
@@ -601,6 +611,14 @@ namespace WiFindUs.IO
             return Default(key, 0, defaultValues);
         }
 
+        public int Count(String key)
+        {
+            key = CheckKey(key, true);
+            if (key.Length == 0)
+                return 0;
+            return this[key].Count;
+        }
+
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -671,13 +689,24 @@ namespace WiFindUs.IO
             Debugger.I("Loaded config file '" + file + "'.");
 		}
 
-		private static String CheckKey(String key)
+		private static String CheckKey(String key, bool allowEmpty = false)
 		{
 			if (key == null)
-				throw new ArgumentNullException("key");
+            {
+                if (allowEmpty)
+                    return "";
+                else
+	        		throw new ArgumentNullException("key");
+            }
+
 			key = key.Trim().ToLower();
 			if (key.Length == 0)
-				throw new ArgumentException("Parameter 'key' cannot be an empty string.");
+            {
+				if (allowEmpty)
+                    return "";
+                else
+                    throw new ArgumentException("Parameter 'key' cannot be an empty string.");
+            }
 			else if (!KEY.IsMatch(key))
 				throw new ArgumentException("Parameter 'key' contains invalid characters.");
 			return key;
