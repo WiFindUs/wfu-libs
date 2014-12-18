@@ -337,7 +337,10 @@ namespace WiFindUs.Eye
                 bool newDevice = false;
                 Device device = Device(devicePacket.ID, out newDevice);
                 if (device == null) //error
+                {
+                    Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
                     return;
+                }
                 device.User = user;
                 if (!WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
                     device.Location = devicePacket;
@@ -488,6 +491,7 @@ namespace WiFindUs.Eye
             try
             {
                 eyeListener = new EyePacketListener(WFUApplication.Config.Get("server.udp_port", 33339));
+                eyeListener.LogPackets = WFUApplication.Config.Get("server.log_packets", false);
             }
             catch (ArgumentOutOfRangeException ex)
             {

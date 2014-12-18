@@ -47,6 +47,7 @@ namespace WiFindUs.IO
         private volatile List<String> lastKVPS = null;
         private volatile string lastKey = "";
         private object threadLock = new Object();
+        private bool logMissing = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -75,6 +76,12 @@ namespace WiFindUs.IO
                 }
                 return values;
             }
+        }
+
+        public bool LogMissingKeys
+        {
+            get { return logMissing; }
+            set { logMissing = value; }
         }
 
 		/////////////////////////////////////////////////////////////////////
@@ -754,7 +761,8 @@ namespace WiFindUs.IO
             List<String> values = this[key];
             if (index >= values.Count)
             {
-                Debugger.V("ConfigFile: Attempt to access undefined key \"{0}[{1}]\" was ignored.", key, index);
+                if (logMissing)
+                    Debugger.V("ConfigFile: Attempt to access undefined key \"{0}[{1}]\" was ignored.", key, index);
                 return "";
             }
 
