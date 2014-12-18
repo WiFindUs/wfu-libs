@@ -156,9 +156,18 @@ namespace WiFindUs.Eye.Wave
             using (Brush b = new SolidBrush(Color.FromArgb(180,0,0,0)))
                 e.Graphics.FillRegion(b,region);
 
-            //draw outline
-            using (Pen p = new Pen(theme.HighlightMidColour, 1.5f))
+            //draw frustum
+            using (Pen p = new Pen(Color.FromArgb(140,255,255,255),1f))
+            {
+                //poly
                 e.Graphics.DrawPolygon(p, points);
+
+                //position + target
+                Point pos = LocationToScreen(scene.CameraLocation);
+                Point target = LocationToScreen(scene.CameraAimLocation);
+                e.Graphics.DrawLine(p, pos, target);
+                e.Graphics.DrawEllipse(p, target.X - 4f, target.Y - 4f, 8f, 8f);
+            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

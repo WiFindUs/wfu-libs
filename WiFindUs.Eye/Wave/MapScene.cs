@@ -46,7 +46,7 @@ namespace WiFindUs.Eye.Wave
         private Ray cameraRay;
         
         //camera frustum
-        private ILocation cameraNW, cameraSW, cameraNE, cameraSE;
+        private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -210,6 +210,16 @@ namespace WiFindUs.Eye.Wave
             get { return cameraSW; }
         }
 
+        public ILocation CameraLocation
+        {
+            get { return cameraPos; }
+        }
+
+        public ILocation CameraAimLocation
+        {
+            get { return cameraAim; }
+        }
+
         public MapGame HostGame
         {
             get { return hostGame; }
@@ -265,6 +275,9 @@ namespace WiFindUs.Eye.Wave
 
         public ILocation VectorToLocation(Vector3 vec)
         {
+            if (baseTile == null || baseTile.Region == null)
+                return WiFindUs.Eye.Location.EMPTY;
+            
             return new Location(
                 baseTile.Region.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LatitudinalSpan,
                 baseTile.Region.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LongitudinalSpan
@@ -402,6 +415,8 @@ namespace WiFindUs.Eye.Wave
 
         private void UpdateCameraFrustum()
         {
+            cameraPos = VectorToLocation(cameraTransform.Position);
+            cameraAim = VectorToLocation(cameraTransform.LookAt);
             cameraNW = LocationFromScreenRay(0, 0);
             cameraNE = LocationFromScreenRay(HostApplication.Width, 0);
             cameraSE = LocationFromScreenRay(HostApplication.Width, HostApplication.Height);
