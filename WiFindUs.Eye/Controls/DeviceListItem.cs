@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,22 +10,27 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Controls
 {
-    public class EntityListChild : ThemedPanel
+    public class DeviceListItem : EntityListItem
     {
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public override Color ThemeBackColor
+        public Device Device
         {
-            get { return Theme.ControlDarkColour; }
+            get { return Entity as Device; }
         }
-        
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public EntityListChild()
+        public DeviceListItem(Device device)
+            : base(device)
         {
-            Height = 40;
+
         }
     }
 }

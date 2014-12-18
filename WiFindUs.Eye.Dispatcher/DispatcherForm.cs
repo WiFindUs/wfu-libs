@@ -170,7 +170,7 @@ namespace WiFindUs.Eye.Dispatcher
                 Invoke(new Action<Device>(OnDeviceLoaded), device);
                 return;
             }
-            DeviceListChild dlc = new DeviceListChild(device);
+            DeviceListItem dlc = new DeviceListItem(device);
             dlc.Theme = Theme;
             devicesFlowPanel.Controls.Add(dlc);
         }
@@ -182,7 +182,7 @@ namespace WiFindUs.Eye.Dispatcher
                 Invoke(new Action<User>(OnUserLoaded), user);
                 return;
             }
-            UserListChild ulc = new UserListChild(user);
+            UserListItem ulc = new UserListItem(user);
             ulc.Theme = Theme;
             usersFlowPanel.Controls.Add(ulc);
         }
@@ -197,7 +197,7 @@ namespace WiFindUs.Eye.Dispatcher
                 Invoke(new Action<Waypoint>(OnWaypointLoaded), waypoint);
                 return;
             }
-            IncidentListChild ilc = new IncidentListChild(waypoint);
+            WaypointListItem ilc = new WaypointListItem(waypoint);
             ilc.Theme = Theme;
             incidentsFlowPanel.Controls.Add(ilc);
         }

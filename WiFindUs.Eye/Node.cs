@@ -8,7 +8,7 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Node : ILocatable, ILocation, IUpdateable
+    public partial class Node : ILocatable, ILocation, IUpdateable, ISelectableEntity
     {
         public static event Action<Node> OnNodeLoaded;
         public event Action<Node> OnNodeUpdated;
@@ -17,11 +17,25 @@ namespace WiFindUs.Eye
         public event Action<Node> OnNodeLocationChanged;
         public event Action<Node> OnNodeVoltageChanged;
         public event Action<Node> OnNodeTimedOutChanged;
-        private bool timedOut = false, loaded = false;
+        public event Action<ISelectableEntity> SelectedChanged;
+        private bool timedOut = false, loaded = false, selected = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
+
+        public bool Selected
+        {
+            get { return selected; }
+            set
+            {
+                if (selected == value)
+                    return;
+                selected = value;
+                if (SelectedChanged != null)
+                    SelectedChanged(this);
+            }
+        }
 
         public ILocation Location
         {

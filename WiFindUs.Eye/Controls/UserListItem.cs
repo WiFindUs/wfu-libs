@@ -10,9 +10,9 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Controls
 {
-    public class IncidentListChild : EntityListChild
+    public class UserListItem : EntityListItem
     {
-        private Waypoint incident;
+        private User user;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -20,20 +20,19 @@ namespace WiFindUs.Eye.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Waypoint Incident
+        public User User
         {
-            get { return incident; }
+            get { return Entity as User; }
         }
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public IncidentListChild(Waypoint incident)
+        public UserListItem(User user)
+            : base(user)
         {
-            if (incident == null)
-                throw new ArgumentNullException("incident", "Incident waypoint cannot be null!");
-            this.incident = incident;
+
         }
     }
 }

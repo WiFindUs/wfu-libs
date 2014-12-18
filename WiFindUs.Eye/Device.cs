@@ -12,7 +12,7 @@ using WiFindUs.Extensions;
 namespace WiFindUs.Eye
 {
     public partial class Device
-        : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable
+        : ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, ISelectableEntity
     {
         public const long TIMEOUT = 60;
         
@@ -26,11 +26,25 @@ namespace WiFindUs.Eye
         public event Action<Device> OnDeviceUserChanged;
         public event Action<Device> OnDeviceAssignedWaypointChanged;
         public event Action<Device> OnDeviceTimedOutChanged;
-        private bool timedOut = false, loaded = false;
+        public event Action<ISelectableEntity> SelectedChanged;
+        private bool timedOut = false, loaded = false, selected = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
+
+        public bool Selected
+        {
+            get { return selected; }
+            set
+            {
+                if (selected == value)
+                    return;
+                selected = value;
+                if (SelectedChanged != null)
+                    SelectedChanged(this);
+            }
+        }
 
         public ILocation Location
         {

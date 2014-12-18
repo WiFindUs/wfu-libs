@@ -6,14 +6,32 @@ using WiFindUs.Controls;
 
 namespace WiFindUs.Eye
 {
-    public partial class User
+    public partial class User : ISelectableEntity
     {
         public static event Action<User> OnUserLoaded;
         public event Action<User> OnUserTypeChanged;
         public event Action<User> OnUserFirstNameChanged;
         public event Action<User> OnUserMiddleNameChanged;
         public event Action<User> OnUserNameLastChanged;
-        private bool loaded = false;
+        public event Action<ISelectableEntity> SelectedChanged;
+        private bool loaded = false, selected = false;
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+
+        public bool Selected
+        {
+            get { return selected; }
+            set
+            {
+                if (selected == value)
+                    return;
+                selected = value;
+                if (SelectedChanged != null)
+                    SelectedChanged(this);
+            }
+        }
 
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS

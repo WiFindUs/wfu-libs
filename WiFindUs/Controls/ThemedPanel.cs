@@ -12,7 +12,9 @@ namespace WiFindUs.Controls
 {
     public class ThemedPanel : Panel, IThemeable
     {
+        public event Action<ThemedPanel> MouseHoveringChanged;
         private Theme theme;
+        private bool mouseHovering = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -30,13 +32,6 @@ namespace WiFindUs.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Color ThemeBackColor
-        {
-            get { return theme.ControlLightColour; }
-        }
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Theme Theme
         {
             get
@@ -49,9 +44,21 @@ namespace WiFindUs.Controls
                     return;
 
                 theme = value;
-                BackColor = ThemeBackColor;
+                BackColor = theme.ControlLightColour;
                 ForeColor = theme.TextLightColour;
                 Font = theme.WindowFont;
+            }
+        }
+
+        public bool MouseHovering
+        {
+            get { return mouseHovering; }
+            private set
+            {
+                if (value == mouseHovering)
+                    return;
+                mouseHovering = value;
+                OnMouseHoverChanged();
             }
         }
 
@@ -63,6 +70,24 @@ namespace WiFindUs.Controls
         {
             Margin = new Padding(0);
             Padding = new Padding(0);
+        }
+
+        protected virtual void OnMouseHoverChanged()
+        {
+            if (MouseHoveringChanged != null)
+                MouseHoveringChanged(this);
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            MouseHovering = true;
+            base.OnMouseEnter(e);
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            MouseHovering = false;
         }
     }
 }

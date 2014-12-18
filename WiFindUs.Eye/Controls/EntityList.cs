@@ -22,7 +22,7 @@ namespace WiFindUs.Eye.Controls
         {
             SuspendLayout();
             base.OnControlAdded(e);
-            EntityListChild elc = e.Control as EntityListChild;
+            EntityListItem elc = e.Control as EntityListItem;
             if (elc == null)
                 return;
             elc.Width = ClientRectangle.Width - 1;

@@ -86,19 +86,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
-    <Compile Include="Controls\IncidentListChild.cs">
+    <Compile Include="Controls\WaypointListItem.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\DeviceListChild.cs">
+    <Compile Include="Controls\DeviceListItem.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\UserListChild.cs">
+    <Compile Include="Controls\UserListItem.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\EntityList.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\EntityListChild.cs">
+    <Compile Include="Controls\EntityListItem.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Device.cs" />
@@ -137,6 +137,7 @@
     <Compile Include="Interfaces\IRegion.cs" />
     <Compile Include="Interfaces\ILocatable.cs" />
     <Compile Include="Interfaces\IAtmospheric.cs" />
+    <Compile Include="Interfaces\ISelectableEntity.cs" />
     <Compile Include="Interfaces\IUpdateable.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Wave\DeviceMarker.cs" />
@@ -149,7 +150,7 @@
     <Compile Include="Wave\MapGame.cs" />
     <Compile Include="Wave\MapScene.cs" />
     <Compile Include="Wave\MapSceneInputBehaviour.cs" />
-    <Compile Include="Wave\MiniMapControl.cs">
+    <Compile Include="Controls\MiniMapControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Region.cs" />
