@@ -86,7 +86,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
+    <Compile Include="Controls\IncidentListChild.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\DeviceListChild.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\UserListChild.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\EntityList.cs">
