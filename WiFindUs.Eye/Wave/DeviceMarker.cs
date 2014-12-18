@@ -73,8 +73,6 @@ namespace WiFindUs.Eye.Wave
                 .AddComponent(new ModelRenderer())
                 .AddComponent(new BoxCollider())
                 .AddComponent(new DeviceMarker(device));
-
-            
         }
 
         /////////////////////////////////////////////////////////////////////

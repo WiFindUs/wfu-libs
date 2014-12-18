@@ -10,5 +10,6 @@ namespace WiFindUs.Eye
     {
         bool Selected { get; set; }
         event Action<ISelectableEntity> SelectedChanged;
+        ISelectableEntityGroup SelectionGroup { get; set; }
     }
 }

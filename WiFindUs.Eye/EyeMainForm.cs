@@ -25,6 +25,7 @@ namespace WiFindUs.Eye
         private List<IUpdateable> updateables = new List<IUpdateable>();
         private bool serverMode = false;
         private MapControl map;
+        private SelectableEntityGroup defaultEntityGroup = new SelectableEntityGroup();
 
         //non-mysql collections (client mode):
         private Dictionary<long, Device> devices;
@@ -123,6 +124,13 @@ namespace WiFindUs.Eye
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ISelectableEntityGroup DefaultEntitySelectionGroup
+        {
+            get { return defaultEntityGroup; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -131,6 +139,8 @@ namespace WiFindUs.Eye
         {
             WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
             WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
+            WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
+            WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -425,7 +435,7 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching devices";
             foreach (Device device in eyeContext.Devices)
-                device.CheckTimeout();
+                ;
             return true;
         }
 
@@ -491,14 +501,28 @@ namespace WiFindUs.Eye
             return true;
         }
 
-        private void OnDeviceLoaded(Device obj)
+        private void OnDeviceLoaded(Device device)
         {
-            updateables.Add(obj);
+            device.SelectionGroup = DefaultEntitySelectionGroup;
+            updateables.Add(device);
+            device.CheckTimeout();
         }
 
-        private void OnNodeLoaded(Node obj)
+        private void OnNodeLoaded(Node node)
         {
-            updateables.Add(obj);
+            node.SelectionGroup = DefaultEntitySelectionGroup;
+            updateables.Add(node);
+            node.CheckTimeout();
+        }
+
+        private void OnUserLoaded(User user)
+        {
+            user.SelectionGroup = DefaultEntitySelectionGroup;
+        }
+
+        private void OnWaypointLoaded(Waypoint waypoint)
+        {
+            waypoint.SelectionGroup = DefaultEntitySelectionGroup;
         }
 
         private void TimerTick(object sender, EventArgs e)

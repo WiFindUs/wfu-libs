@@ -105,6 +105,8 @@
     </Compile>
     <Compile Include="Device.cs" />
     <Compile Include="DevicePacket.cs" />
+    <Compile Include="SelectableEntity.cs" />
+    <Compile Include="SelectableEntityGroup.cs" />
     <Compile Include="Extensions\ConfigFileExtensions.cs" />
     <Compile Include="EyeContext.cs" />
     <Compile Include="EyeMainForm.cs">
@@ -140,6 +142,7 @@
     <Compile Include="Interfaces\ILocatable.cs" />
     <Compile Include="Interfaces\IAtmospheric.cs" />
     <Compile Include="Interfaces\ISelectableEntity.cs" />
+    <Compile Include="Interfaces\ISelectableEntityGroup.cs" />
     <Compile Include="Interfaces\IUpdateable.cs" />
     <Compile Include="Location.cs" />
     <Compile Include="Wave\DeviceMarker.cs" />

@@ -26,6 +26,27 @@ namespace WiFindUs.Eye.Controls
         {
             get { return entity; }
         }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Image Image
+        {
+            get { return image; }
+            protected set
+            {
+                if (image == value)
+                    return;
+                image = value;
+                Refresh();
+            }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected virtual Color ImagePlaceholderColour
+        {
+            get { return MouseHovering || entity.Selected ? Theme.ControlLightColour : Theme.ControlDarkColour;  }
+        }
         
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
@@ -59,8 +80,12 @@ namespace WiFindUs.Eye.Controls
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            
             e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
+
+            if (image != null)
+                e.Graphics.DrawImage(image, 4, 4, 40, 40);
+            else
+                e.Graphics.FillRectangle(MouseHovering || entity.Selected ? Theme.ControlLightBrush : Theme.ControlDarkBrush, 4, 4, 40, 40);
         }
 
         protected override void OnMouseHoverChanged()
@@ -72,7 +97,7 @@ namespace WiFindUs.Eye.Controls
         protected override void OnMouseClick(MouseEventArgs e)
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                entity.Selected = true;
+                entity.SelectionGroup.SetEntitySelection(entity);
             else
                 base.OnMouseClick(e);
         }

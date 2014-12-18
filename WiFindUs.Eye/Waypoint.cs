@@ -7,7 +7,7 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Waypoint : ILocation, ILocatable, ISelectableEntity
+    public partial class Waypoint : SelectableEntity, ILocation, ILocatable
     {
         public static event Action<Waypoint> OnWaypointLoaded;
         public event Action<Waypoint> OnWaypointLocationChanged;
@@ -19,25 +19,7 @@ namespace WiFindUs.Eye
         public event Action<Waypoint> OnWaypointReportingUserChanged;
         public event Action<Waypoint> OnWaypointArchivedChanged;
         public event Action<Waypoint> OnWaypointNextWaypointChanged;
-        public event Action<ISelectableEntity> SelectedChanged;
-        private bool loaded = false, selected = false;
-
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
-
-        public bool Selected
-        {
-            get { return selected; }
-            set
-            {
-                if (selected == value)
-                    return;
-                selected = value;
-                if (SelectedChanged != null)
-                    SelectedChanged(this);
-            }
-        }
+        private bool loaded = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
