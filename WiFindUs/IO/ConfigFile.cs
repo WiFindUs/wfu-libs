@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Drawing;
+using System.Collections.Concurrent;
 
 namespace WiFindUs.IO
 {
@@ -42,9 +43,10 @@ namespace WiFindUs.IO
             = new Regex("(" + NUM + ")(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?",
                 RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		private Dictionary<String, List<String>> kvps = new Dictionary<String, List<String>>();
-        private List<String> lastKVPS = null;
-        private string lastKey = "";
+        private volatile ConcurrentDictionary<String, List<String>> kvps = new ConcurrentDictionary<String, List<String>>();
+        private volatile List<String> lastKVPS = null;
+        private volatile string lastKey = "";
+        private object threadLock = new Object();
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -58,18 +60,20 @@ namespace WiFindUs.IO
                 key = CheckKey(key);
 
                 //check if it was the same as the last lookup (during a loop or something)
-                if (lastKey.Length > 0 && lastKey.CompareTo(key) == 0)
-                    return lastKVPS;
+                if (lastKey != null && lastKVPS != null
+                        && lastKey.Length > 0 && lastKey.CompareTo(key) == 0)
+                        return lastKVPS;
 
-                //otherwise do a new lookup
                 List<String> values;
-                if (!kvps.TryGetValue(lastKey = key, out values))
-                    kvps[key] = values = lastKVPS = new List<String>();
+                lock (threadLock)
+                {
+                    //otherwise do a new lookup
+                    if (!kvps.TryGetValue(key, out values))
+                        kvps[key] = values = new List<String>();
+                    lastKey = key;
+                    lastKVPS = values;
+                }
                 return values;
-            }
-            set
-            {
-                kvps[CheckKey(key)] = value ?? new List<String>();
             }
         }
 
@@ -161,26 +165,30 @@ namespace WiFindUs.IO
 
 		public override string ToString()
 		{
-			System.Text.StringBuilder sb = new System.Text.StringBuilder();
+			
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
 			sb.Append("ConfigFile[");
-			if (kvps.Count > 0)
-			{
-				sb.Append("\n");
-				foreach (KeyValuePair<String, List<String>> kvp in kvps)
-				{
-					if (kvp.Key == null || kvp.Value == null || kvp.Value.Count == 0)
-						continue;
-					for (int i = 0; i < kvp.Value.Count; i++)
-					{
-						String value = kvp.Value[i];
-						if (value == null || value.Length == 0)
-							continue;
-						sb.Append("    " + kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value + "\n");
-					}
-				}
-			}
-			else
-				sb.Append(" ");
+            lock (threadLock)
+            {
+                if (kvps.Count > 0)
+                {
+                    sb.Append("\n");
+                    foreach (KeyValuePair<String, List<String>> kvp in kvps)
+                    {
+                        if (kvp.Key == null || kvp.Value == null || kvp.Value.Count == 0)
+                            continue;
+                        for (int i = 0; i < kvp.Value.Count; i++)
+                        {
+                            String value = kvp.Value[i];
+                            if (value == null || value.Length == 0)
+                                continue;
+                            sb.Append("    " + kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value + "\n");
+                        }
+                    }
+                }
+                else
+                    sb.Append(" ");
+            }
 			sb.Append("]");
 			return sb.ToString();
 		}
@@ -720,30 +728,36 @@ namespace WiFindUs.IO
 			index = index < 0 ? values.Count : index;
 
 			//add value, resize array if necessary
-			if (index >= values.Count)
-			{
-				if (values.Capacity <= index)
-					values.Capacity = (int)(index * 1.5);
-				int count = values.Count;
-				for (int i = count; i < index; i++)
-					values.Add("");
-				values.Add(value);
-			}
-			else
-			{
-				values[index] = value;
-			}
+            lock (threadLock)
+            {
+                if (index >= values.Count)
+                {
+                    if (values.Capacity <= index)
+                        values.Capacity = (int)(index * 1.5);
+                    int count = values.Count;
+                    for (int i = count; i < index; i++)
+                        values.Add("");
+                    values.Add(value);
+                }
+                else
+                {
+                    values[index] = value;
+                }
+            }
 		}
 
 		private String GetValue(String key, int index)
 		{
-			if (index < 0)
+            if (index < 0)
 				return "";
-			List<String> values = this[key];
-            if (values.Count == 0)
-                Debugger.V("ConfigFile: Attempt to access undefined key '"+key+"' was ignored.");
-			if (index >= values.Count)
-				return "";
+
+            List<String> values = this[key];
+            if (index >= values.Count)
+            {
+                Debugger.V("ConfigFile: Attempt to access undefined key \"{0}[{1}]\" was ignored.", key, index);
+                return "";
+            }
+
 			return values[index];
 		}
 
