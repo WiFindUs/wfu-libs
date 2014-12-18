@@ -96,6 +96,11 @@ namespace WiFindUs.Eye
             get { return loaded; }
         }
 
+        public bool IsIncident
+        {
+            get { return Type.ToLower().CompareTo("incident") == 0; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
