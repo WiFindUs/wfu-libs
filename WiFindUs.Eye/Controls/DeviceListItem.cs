@@ -57,37 +57,37 @@ namespace WiFindUs.Eye.Controls
 
         private void device_OnDeviceAssignedWaypointChanged(Device obj)
         {
-            Refresh();
+            this.RefreshThreadSafe();
         }
 
         private void device_OnDeviceBatteryChanged(Device obj)
         {
-            Refresh();
+            this.RefreshThreadSafe();
         }
 
         private void device_OnDeviceTimedOutChanged(Device obj)
         {
-            Refresh();
+            this.RefreshThreadSafe();
         }
 
         private void device_OnDeviceUpdated(Device obj)
         {
-            Refresh();
+            this.RefreshThreadSafe();
         }
 
         private void device_OnDeviceLocationChanged(Device obj)
         {
-            Refresh();
+            this.RefreshThreadSafe();
         }
 
         private void device_OnDeviceUserChanged(Device obj)
         {
-            Refresh();
+            this.RefreshThreadSafe();
         }
 
         private void device_OnDeviceTypeChanged(Device obj)
         {
-            Refresh();
+            this.RefreshThreadSafe();
         }
     }
 }
