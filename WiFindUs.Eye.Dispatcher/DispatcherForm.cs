@@ -41,8 +41,7 @@ namespace WiFindUs.Eye.Dispatcher
                     return;
 
                 //suspend layout stuff
-                SuspendLayout();
-                this.RecurseControls(control => SuspendLayout());
+                this.SuspendAllLayout();
 
                 //going fullscreen
                 if (value)
@@ -72,10 +71,7 @@ namespace WiFindUs.Eye.Dispatcher
                 }
 
                 //resume layout stuff
-                this.RecurseControls(control => ResumeLayout(false));
-                ResumeLayout(false);
-                PerformLayout();
-
+                this.ResumeAllLayout();
             }
         }
 
@@ -99,6 +95,7 @@ namespace WiFindUs.Eye.Dispatcher
             WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 
             //load
+            this.SuspendAllLayout();
             WFUApplication.StartSplashLoading(LoadingTasks);
         }
 
@@ -126,12 +123,13 @@ namespace WiFindUs.Eye.Dispatcher
         {
             SetApplicationStatus("Initializing 3D scene...", Theme.WarningColour);
             base.OnFirstShown(e);
-
+            this.ResumeAllLayout();
 #if DEBUG
             infoTabs.SelectedIndex = 1;
 #endif
             bool startFullScreen = WFUApplication.Config.Get("display.start_fullscreen", false);
             Debugger.V("Start fullscreen: " + startFullScreen);
+            
             if (startFullScreen)
                 FullScreen = true;
         }
@@ -175,7 +173,6 @@ namespace WiFindUs.Eye.Dispatcher
             DeviceListChild dlc = new DeviceListChild(device);
             dlc.Theme = Theme;
             devicesFlowPanel.Controls.Add(dlc);
-            dlc.BackColor = Color.Red;
         }
 
         private void OnUserLoaded(User user)
@@ -185,18 +182,24 @@ namespace WiFindUs.Eye.Dispatcher
                 Invoke(new Action<User>(OnUserLoaded), user);
                 return;
             }
-            //usersFlowPanel.Controls.Add(new UserListPanel(user));
+            UserListChild ulc = new UserListChild(user);
+            ulc.Theme = Theme;
+            usersFlowPanel.Controls.Add(ulc);
         }
 
         private void OnWaypointLoaded(Waypoint waypoint)
         {
+            if (!waypoint.IsIncident)
+                return;
+            
             if (InvokeRequired)
             {
                 Invoke(new Action<Waypoint>(OnWaypointLoaded), waypoint);
                 return;
             }
-           // waypoits
-            //usersFlowPanel.Controls.Add(new UserListPanel(user));
+            IncidentListChild ilc = new IncidentListChild(waypoint);
+            ilc.Theme = Theme;
+            incidentsFlowPanel.Controls.Add(ilc);
         }
     }
 }

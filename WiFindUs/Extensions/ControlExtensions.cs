@@ -55,6 +55,18 @@ namespace WiFindUs.Extensions
             }
         }
 
+        public static void SuspendAllLayout(this Control root)
+        {
+            root.SuspendLayout();
+            root.RecurseControls(control => control.SuspendLayout());
+        }
+
+        public static void ResumeAllLayout(this Control root, bool performLayout = true)
+        {
+            root.RecurseControls(control => control.ResumeLayout(false));
+            root.ResumeLayout(performLayout);
+        }
+
         public static void HidePanel(this SplitContainer container, int panel)
         {
             panel = panel > 2 ? 2 : (panel < 1 ? 1 : panel);
