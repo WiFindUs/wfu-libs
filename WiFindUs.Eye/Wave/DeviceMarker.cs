@@ -23,8 +23,6 @@ namespace WiFindUs.Eye.Wave
         private Transform3D transform3D;
         private Device device;
         private MapScene scene;
-        [RequiredComponent]
-        private ModelRenderer renderer;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES

@@ -29,7 +29,6 @@ namespace WiFindUs
             = Debugger.Verbosity.Information;
 #endif
         private static bool usesMutex = false;
-        private static bool usesMySQL = false;
         private static string applicationDescription = "A WiFindUs application.";
         private static string applicationCompany = "WiFindUs";
         private static string applicationName = "Program";

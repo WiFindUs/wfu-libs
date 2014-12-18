@@ -467,11 +467,11 @@ namespace WiFindUs.Eye.Wave
                     }
                 }
             }
-            catch (FileNotFoundException fex)
+            catch (FileNotFoundException)
             {
                 ErrorState("Error loading map tile texture " + ImageFilename + ": file not found");
             }
-            catch (OutOfMemoryException oomex)
+            catch (OutOfMemoryException)
             {
                 ErrorState("Error loading map tile texture " + ImageFilename + ": out of system memory");
             }
