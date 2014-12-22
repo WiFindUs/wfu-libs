@@ -554,7 +554,6 @@ namespace WiFindUs
                 mainLaunchAction(mainForm);
 			
 			Debugger.V("Application terminating...");
-			running = false;
 
             //release resources and close debugger
             Free();
@@ -674,6 +673,8 @@ namespace WiFindUs
             }
 
             Debugger.Dispose();
+
+            running = false;
         }
 	}
 }

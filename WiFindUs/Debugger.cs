@@ -87,7 +87,7 @@ namespace WiFindUs
 
 		public static void Initialize(string path, Verbosity minLevel)
 		{
-			if (Initialized || WFUApplication.Running)
+			if (Initialized || !WFUApplication.Running)
 				return;
 
 			//initialization
@@ -120,7 +120,7 @@ namespace WiFindUs
 
 		public static void Dispose()
 		{
-			if (!Initialized || WFUApplication.Running)
+			if (!Initialized || !WFUApplication.Running)
 				return;
 
 			if (OnDebugOutput != null)
@@ -132,6 +132,7 @@ namespace WiFindUs
 			V("Freed OK.");
 
 			I(WFUApplication.Name + " logging session closed.");
+
 			outFile.Flush();
 			outFile.Close();
 			outFile.Dispose();
