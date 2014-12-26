@@ -41,8 +41,6 @@ namespace WiFindUs.Eye.Wave
         private Camera3D cameraTransform;
         private bool autoUpdateCamera = true;
         private bool cameraDirty = false;
-        private static readonly Color[] colours = new Color[] { Color.Blue, Color.Red, Color.Green };
-        private static int lastColor = 0;
         private Ray cameraRay;
         
         //camera frustum
@@ -492,7 +490,7 @@ namespace WiFindUs.Eye.Wave
 
         private void HostApplication_ScreenResized(MapApplication obj)
         {
-            UpdateCameraFrustum();
+            UpdateCameraPosition();
         }
     }
 }

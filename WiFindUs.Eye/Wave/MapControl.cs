@@ -187,7 +187,6 @@ namespace WiFindUs.Eye.Wave
         {
             if (!IsDesignMode && mapApp != null)
                 mapApp.ResizeScreen(BackBufferWidth, BackBufferHeight);
-
             base.OnResize(e);
         }
 

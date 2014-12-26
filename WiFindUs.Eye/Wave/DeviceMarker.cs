@@ -110,20 +110,6 @@ namespace WiFindUs.Eye.Wave
             if (device == null)
                 throw new ArgumentNullException("device", "Device cannot be null!");
             this.device = device;
-            device.OnDeviceLocationChanged += OnDeviceLocationChanged;
-            device.OnDeviceTimedOutChanged += OnDeviceTimedOutChanged;
-            device.OnDeviceUserChanged += OnDeviceUserChanged;
-            device.SelectedChanged += DeviceSelectedChanged;
-        }
-
-        void device_SelectedChanged(ISelectableEntity obj)
-        {
-            throw new NotImplementedException();
-        }
-
-        void device_OnDeviceUserChanged(Device obj)
-        {
-            throw new NotImplementedException();
         }
 
         public static Entity Create(Device device)
@@ -168,6 +154,13 @@ namespace WiFindUs.Eye.Wave
         {
             base.Initialize();
             scene = Owner.Scene as MapScene;
+
+            device.OnDeviceLocationChanged += OnDeviceLocationChanged;
+            device.OnDeviceTimedOutChanged += OnDeviceTimedOutChanged;
+            device.OnDeviceUserChanged += OnDeviceUserChanged;
+            device.SelectedChanged += DeviceSelectedChanged;
+
+            DeviceSelectedChanged(device);
             UpdateDeviceState();
         }
 
