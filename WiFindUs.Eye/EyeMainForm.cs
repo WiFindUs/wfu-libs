@@ -25,7 +25,6 @@ namespace WiFindUs.Eye
         private List<IUpdateable> updateables = new List<IUpdateable>();
         private bool serverMode = false;
         private MapControl map;
-        private SelectableEntityGroup defaultEntityGroup = new SelectableEntityGroup();
 
         //non-mysql collections (client mode):
         private Dictionary<long, Device> devices;
@@ -122,13 +121,6 @@ namespace WiFindUs.Eye
                 map.ApplicationStarting += MapApplicationStarting;
                 map.SceneStarted += MapSceneStarted;
             }
-        }
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ISelectableEntityGroup DefaultEntitySelectionGroup
-        {
-            get { return defaultEntityGroup; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -507,26 +499,24 @@ namespace WiFindUs.Eye
 
         private void OnDeviceLoaded(Device device)
         {
-            device.SelectionGroup = DefaultEntitySelectionGroup;
             updateables.Add(device);
             device.CheckTimeout();
         }
 
         private void OnNodeLoaded(Node node)
         {
-            node.SelectionGroup = DefaultEntitySelectionGroup;
             updateables.Add(node);
             node.CheckTimeout();
         }
 
         private void OnUserLoaded(User user)
         {
-            user.SelectionGroup = DefaultEntitySelectionGroup;
+
         }
 
         private void OnWaypointLoaded(Waypoint waypoint)
         {
-            waypoint.SelectionGroup = DefaultEntitySelectionGroup;
+
         }
 
         private void TimerTick(object sender, EventArgs e)

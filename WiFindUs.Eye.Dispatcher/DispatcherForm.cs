@@ -25,6 +25,7 @@ namespace WiFindUs.Eye.Dispatcher
         private MiniMapControl minimap;
         private FormWindowState oldWindowState;
         private Rectangle oldBounds;
+        private ISelectableEntityGroup globalSelectionGroup = new SelectableEntityGroup();
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -75,6 +76,13 @@ namespace WiFindUs.Eye.Dispatcher
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ISelectableEntityGroup GlobalSelectionGroup
+        {
+            get { return globalSelectionGroup; }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -88,6 +96,9 @@ namespace WiFindUs.Eye.Dispatcher
             //controls
             workingAreaToolStripContainer.ContentPanel.Controls.Add(Map = new MapControl(){ Dock = DockStyle.Fill });
             minimapTab.Controls.Add(minimap = new MiniMapControl() { Dock = DockStyle.Fill });
+            devicesFlowPanel.SelectionGroup = globalSelectionGroup;
+            usersFlowPanel.SelectionGroup = globalSelectionGroup;
+            incidentsFlowPanel.SelectionGroup = globalSelectionGroup;
 
             //events
             WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
@@ -170,9 +181,7 @@ namespace WiFindUs.Eye.Dispatcher
                 Invoke(new Action<Device>(OnDeviceLoaded), device);
                 return;
             }
-            DeviceListItem dlc = new DeviceListItem(device);
-            dlc.Theme = Theme;
-            devicesFlowPanel.Controls.Add(dlc);
+            devicesFlowPanel.Controls.Add(new DeviceListItem(device));
         }
 
         private void OnUserLoaded(User user)
@@ -182,9 +191,7 @@ namespace WiFindUs.Eye.Dispatcher
                 Invoke(new Action<User>(OnUserLoaded), user);
                 return;
             }
-            UserListItem ulc = new UserListItem(user);
-            ulc.Theme = Theme;
-            usersFlowPanel.Controls.Add(ulc);
+            usersFlowPanel.Controls.Add(new UserListItem(user));
         }
 
         private void OnWaypointLoaded(Waypoint waypoint)
@@ -197,9 +204,7 @@ namespace WiFindUs.Eye.Dispatcher
                 Invoke(new Action<Waypoint>(OnWaypointLoaded), waypoint);
                 return;
             }
-            WaypointListItem ilc = new WaypointListItem(waypoint);
-            ilc.Theme = Theme;
-            incidentsFlowPanel.Controls.Add(ilc);
+            incidentsFlowPanel.Controls.Add(new WaypointListItem(waypoint));
         }
     }
 }
