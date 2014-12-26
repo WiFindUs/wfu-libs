@@ -36,10 +36,10 @@ namespace WiFindUs.Eye
                 if (group == value)
                     return;
                 if (group != null)
-                    group.RemoveSelectableEntity(this);
+                    group.Remove(this);
                 group = value;
                 if (group != null)
-                    group.AddSelectableEntity(this);
+                    group.Add(this);
             }
         }
     }

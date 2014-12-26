@@ -9,29 +9,31 @@ namespace WiFindUs.Eye
     public interface ISelectableEntityGroup
     {
         //selection list logic
+        ISelectableEntity[] Entities { get; }
         ISelectableEntity[] SelectedEntities { get; }
-        void AddSelectableEntity(params ISelectableEntity[] entities);
-        void RemoveSelectableEntity(params ISelectableEntity[] entities);
+        void Add(params ISelectableEntity[] entities);
+        void Remove(params ISelectableEntity[] entities);
+        void Clear();
 
         //entire collection selection
-        void SelectAllEntities();
-        void ClearEntitySelection();
-        void InvertEntitySelection();
+        void SelectAll();
+        void ClearSelection();
+        void InvertSelection();
 
         //adding to selection
-        void AddToEntitySelection(params ISelectableEntity[] entities);
-        void AddToEntitySelection(IEnumerable<ISelectableEntity> entities);
+        void AddToSelection(params ISelectableEntity[] entities);
+        void AddToSelection(IEnumerable<ISelectableEntity> entities);
 
         //removing from selection
-        void RemoveFromEntitySelection(params ISelectableEntity[] entities);
-        void RemoveFromEntitySelection(IEnumerable<ISelectableEntity> entities);
+        void RemoveFromSelection(params ISelectableEntity[] entities);
+        void RemoveFromSelection(IEnumerable<ISelectableEntity> entities);
         
         //setting selection
-        void SetEntitySelection(params ISelectableEntity[] entity);
-        void SetEntitySelection(IEnumerable<ISelectableEntity> entities);
+        void SetSelection(params ISelectableEntity[] entity);
+        void SetSelection(IEnumerable<ISelectableEntity> entities);
 
         //toggling selection
-        void ToggleEntitySelection(params ISelectableEntity[] entity);
-        void ToggleEntitySelection(IEnumerable<ISelectableEntity> entities);
+        void ToggleSelection(params ISelectableEntity[] entity);
+        void ToggleSelection(IEnumerable<ISelectableEntity> entities);
     }
 }

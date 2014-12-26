@@ -97,7 +97,7 @@ namespace WiFindUs.Eye.Controls
         protected override void OnMouseClick(MouseEventArgs e)
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
-                entity.SelectionGroup.SetEntitySelection(entity);
+                entity.SelectionGroup.SetSelection(entity);
             else
                 base.OnMouseClick(e);
         }

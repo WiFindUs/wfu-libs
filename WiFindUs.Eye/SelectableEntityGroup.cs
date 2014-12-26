@@ -9,7 +9,15 @@ namespace WiFindUs.Eye
     public class SelectableEntityGroup : ISelectableEntityGroup
     {
         private List<ISelectableEntity> managedEntities = new List<ISelectableEntity>();
-        
+
+        public ISelectableEntity[] Entities
+        {
+            get
+            {
+                return managedEntities.ToArray();
+            }
+        }
+
         public ISelectableEntity[] SelectedEntities
         {
             get
@@ -22,7 +30,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public void AddSelectableEntity(params ISelectableEntity[] entities)
+        public void Add(params ISelectableEntity[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
@@ -36,7 +44,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public void RemoveSelectableEntity(params ISelectableEntity[] entities)
+        public void Remove(params ISelectableEntity[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
@@ -51,25 +59,30 @@ namespace WiFindUs.Eye
             }
         }
 
-        public void SelectAllEntities()
+        public void Clear()
+        {
+            Remove(managedEntities.ToArray());
+        }
+
+        public void SelectAll()
         {
             foreach (ISelectableEntity entity in managedEntities)
                 entity.Selected = true;
         }
 
-        public void ClearEntitySelection()
+        public void ClearSelection()
         {
             foreach (ISelectableEntity entity in managedEntities)
                 entity.Selected = false;
         }
 
-        public void InvertEntitySelection()
+        public void InvertSelection()
         {
             foreach (ISelectableEntity entity in managedEntities)
                 entity.Selected = !entity.Selected;
         }
 
-        public void AddToEntitySelection(params ISelectableEntity[] entities)
+        public void AddToSelection(params ISelectableEntity[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
@@ -81,12 +94,12 @@ namespace WiFindUs.Eye
             }
         }
 
-        public void AddToEntitySelection(IEnumerable<ISelectableEntity> entities)
+        public void AddToSelection(IEnumerable<ISelectableEntity> entities)
         {
-            AddToEntitySelection(entities.ToArray());
+            AddToSelection(entities.ToArray());
         }
 
-        public void RemoveFromEntitySelection(params ISelectableEntity[] entities)
+        public void RemoveFromSelection(params ISelectableEntity[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
@@ -98,16 +111,16 @@ namespace WiFindUs.Eye
             }
         }
 
-        public void RemoveFromEntitySelection(IEnumerable<ISelectableEntity> entities)
+        public void RemoveFromSelection(IEnumerable<ISelectableEntity> entities)
         {
-            RemoveFromEntitySelection(entities.ToArray());
+            RemoveFromSelection(entities.ToArray());
         }
 
-        public void SetEntitySelection(params ISelectableEntity[] entities)
+        public void SetSelection(params ISelectableEntity[] entities)
         {
             if (entities == null || entities.Length == 0)
             {
-                ClearEntitySelection();
+                ClearSelection();
                 return;
             }
 
@@ -124,12 +137,12 @@ namespace WiFindUs.Eye
                 entity.Selected = false;
         }
 
-        public void SetEntitySelection(IEnumerable<ISelectableEntity> entities)
+        public void SetSelection(IEnumerable<ISelectableEntity> entities)
         {
-            SetEntitySelection(entities.ToArray());
+            SetSelection(entities.ToArray());
         }
 
-        public void ToggleEntitySelection(params ISelectableEntity[] entities)
+        public void ToggleSelection(params ISelectableEntity[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
@@ -141,9 +154,9 @@ namespace WiFindUs.Eye
             }
         }
 
-        public void ToggleEntitySelection(IEnumerable<ISelectableEntity> entities)
+        public void ToggleSelection(IEnumerable<ISelectableEntity> entities)
         {
-            ToggleEntitySelection(entities.ToArray());
+            ToggleSelection(entities.ToArray());
         }
     }
 }
