@@ -14,6 +14,9 @@ namespace WiFindUs.Eye
         void Add(params ISelectableEntity[] entities);
         void Remove(params ISelectableEntity[] entities);
         void Clear();
+        event Action<ISelectableEntityGroup> SelectionChanged;
+        void NotifySelectionChanged(ISelectableEntity sender);
+        bool CaptureNotifies { get; set; }
 
         //entire collection selection
         void SelectAll();

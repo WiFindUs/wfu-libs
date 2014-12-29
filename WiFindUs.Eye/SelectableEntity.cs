@@ -22,6 +22,8 @@ namespace WiFindUs.Eye
                 selected = value;
                 if (SelectedChanged != null)
                     SelectedChanged(this);
+                if (group != null)
+                    group.NotifySelectionChanged(this);
             }
         }       
 
