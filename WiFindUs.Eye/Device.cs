@@ -12,7 +12,7 @@ using WiFindUs.Extensions;
 namespace WiFindUs.Eye
 {
     public partial class Device
-        : SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable
+        : SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, IActionSubscriber
     {
 #if DEBUG
         public const long TIMEOUT = 60 * 60 * 24 * 365; //one year
@@ -251,6 +251,26 @@ namespace WiFindUs.Eye
             if (OnDeviceUpdated != null)
                 OnDeviceUpdated(this);
             CheckTimeout();
+        }
+
+        public bool ActionEnabled(uint index)
+        {
+            return true;
+        }
+
+        public Image ActionImage(uint index)
+        {
+            return null;
+        }
+
+        public string ActionText(uint index)
+        {
+            return "Action " + index;
+        }
+
+        public void ActionTriggered(uint index)
+        {
+
         }
     }
 }

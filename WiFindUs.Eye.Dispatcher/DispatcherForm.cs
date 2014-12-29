@@ -26,6 +26,7 @@ namespace WiFindUs.Eye.Dispatcher
         private FormWindowState oldWindowState;
         private Rectangle oldBounds;
         private ISelectableEntityGroup globalSelectionGroup = new SelectableEntityGroup();
+        private ActionPanel actionPanel;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -99,11 +100,13 @@ namespace WiFindUs.Eye.Dispatcher
             devicesFlowPanel.SelectionGroup = globalSelectionGroup;
             usersFlowPanel.SelectionGroup = globalSelectionGroup;
             incidentsFlowPanel.SelectionGroup = globalSelectionGroup;
+            actionsTab.Controls.Add(actionPanel = new ActionPanel(3,3) { Dock = DockStyle.Fill });
 
             //events
             WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
             WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
             WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
+            globalSelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
 
             //load
             this.SuspendAllLayout();
@@ -205,6 +208,18 @@ namespace WiFindUs.Eye.Dispatcher
                 return;
             }
             incidentsFlowPanel.Controls.Add(new WaypointListItem(waypoint));
+        }
+
+        private void OnSelectionGroupSelectionChanged(ISelectableEntityGroup obj)
+        {
+            if (obj != globalSelectionGroup)
+                return;
+
+            ISelectableEntity[] selectedEntities = globalSelectionGroup.SelectedEntities;
+            if (selectedEntities == null || selectedEntities.Length == 0)
+                actionPanel.ActionSubscriber = null;
+            else if (selectedEntities.Length == 1)
+                actionPanel.ActionSubscriber = selectedEntities[0] as IActionSubscriber;
         }
     }
 }
