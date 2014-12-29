@@ -68,5 +68,28 @@ namespace WiFindUs.Eye.Controls
             if (elc.Entity.SelectionGroup == defaultSelectionGroup)
                 elc.Entity.SelectionGroup = null;
         }
+
+        protected override void OnClick(EventArgs e)
+        {
+            base.OnClick(e);
+
+            //do we have any entities?
+            if (entities == null || entities.Count == 0)
+                return;
+
+            //check for any currently selected entities
+            ISelectableEntity[] selectedEntities = SelectionGroup.SelectedEntities;
+            if (selectedEntities == null || selectedEntities.Length == 0)
+                return;
+
+            //check if any of the currently selected elements are in this list
+            foreach (ISelectableEntity entity in selectedEntities)
+                if (entities.Contains(entity))
+                {
+                    SelectionGroup.ClearSelection();
+                    break;
+                }
+            
+        }
     }
 }
