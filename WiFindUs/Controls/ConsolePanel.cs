@@ -91,6 +91,10 @@ namespace WiFindUs.Controls
                     input.Text = "";
                     Debugger.C(">" + command);
                 }
+
+                command = command.ToLower();
+                if (command.CompareTo("clear") == 0)
+                    console.Clear();
                 e.Handled = true;
             }
 		}
