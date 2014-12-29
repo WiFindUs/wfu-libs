@@ -32,7 +32,7 @@ namespace WiFindUs.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Theme Theme
+        public virtual Theme Theme
         {
             get
             {
