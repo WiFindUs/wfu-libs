@@ -10,6 +10,11 @@ namespace WiFindUs.Eye
 {
     public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable
     {
+#if DEBUG
+        public const long TIMEOUT = 60 * 60 * 24 * 365; //one year
+#else
+        public const long TIMEOUT = 300;
+#endif        
         public static event Action<Node> OnNodeLoaded;
         public event Action<Node> OnNodeUpdated;
         public event Action<Node> OnNodeNumberChanged;
@@ -99,7 +104,7 @@ namespace WiFindUs.Eye
 
         public void CheckTimeout()
         {
-            TimedOut = UpdateAge > 300;
+            TimedOut = UpdateAge > TIMEOUT;
         }
 
         public bool Loaded

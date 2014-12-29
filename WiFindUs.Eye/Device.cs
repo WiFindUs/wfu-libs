@@ -14,8 +14,12 @@ namespace WiFindUs.Eye
     public partial class Device
         : SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable
     {
+#if DEBUG
+        public const long TIMEOUT = 60 * 60 * 24 * 365; //one year
+#else
         public const long TIMEOUT = 60;
-        
+#endif
+
         public static event Action<Device> OnDeviceLoaded;
         public event Action<Device> OnDeviceUpdated;
         public event Action<Device> OnDeviceTypeChanged;
