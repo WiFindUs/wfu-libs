@@ -245,6 +245,7 @@ namespace WiFindUs.Eye.Wave
                     return;
                 RenderManager.DebugLines = value;
                 WaveServices.ScreenContextManager.SetDiagnosticsActive(value);
+                Debugger.C(value ? "Debug drawing enabled. Press F2 to disable." : "Debug drawing disabled.");
             }
         }
 
