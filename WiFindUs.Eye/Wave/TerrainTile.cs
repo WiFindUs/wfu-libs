@@ -18,7 +18,7 @@ namespace WiFindUs.Eye.Wave
 {
     public class TerrainTile : Behavior
     {
-        public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError;
+        public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError, CenterLocationChanged;
         
         private static Material placeHolderMaterial, placeHolderMaterialAlt,
             loadingMaterial, downloadingMaterial, errorMaterial, creatingTextureMaterial,
@@ -90,6 +90,9 @@ namespace WiFindUs.Eye.Wave
                 }
                 else
                     mapImageFileExists = File.Exists(ImagePath);
+
+                if (CenterLocationChanged != null)
+                    CenterLocationChanged(this);
             }
         }
 

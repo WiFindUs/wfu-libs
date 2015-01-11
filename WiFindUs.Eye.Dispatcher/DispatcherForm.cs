@@ -106,6 +106,7 @@ namespace WiFindUs.Eye.Dispatcher
             WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
             WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
             WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
+            WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
             globalSelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
 
             //load
@@ -129,6 +130,12 @@ namespace WiFindUs.Eye.Dispatcher
             windowStatusStrip.BackColor = colour;
         }
 
+        public override void OnThemeChanged()
+        {
+            base.OnThemeChanged();
+            windowStatusStrip.ForeColor = Theme.TextLightColour;
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
@@ -146,12 +153,6 @@ namespace WiFindUs.Eye.Dispatcher
             
             if (startFullScreen)
                 FullScreen = true;
-        }
-
-        protected override void OnThemeChanged(Theme theme)
-        {
-            base.OnThemeChanged(theme);
-            windowStatusStrip.ForeColor = theme.TextLightColour;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -210,6 +211,16 @@ namespace WiFindUs.Eye.Dispatcher
             incidentsFlowPanel.Controls.Add(new WaypointListItem(waypoint));
         }
 
+        private void OnNodeLoaded(Node node)
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new Action<Node>(OnNodeLoaded), node);
+                return;
+            }
+            nodesFlowPanel.Controls.Add(new NodeListItem(node));
+        }
+
         private void OnSelectionGroupSelectionChanged(ISelectableEntityGroup obj)
         {
             if (obj != globalSelectionGroup)
@@ -220,6 +231,33 @@ namespace WiFindUs.Eye.Dispatcher
                 actionPanel.ActionSubscriber = null;
             else if (selectedEntities.Length == 1)
                 actionPanel.ActionSubscriber = selectedEntities[0] as IActionSubscriber;
+            else
+            {
+                Type firstType = null;
+                bool same = true;
+                foreach (ISelectableEntity entity in selectedEntities)
+                {
+                    Type t = entity.GetType();
+                    if (firstType == null)
+                        firstType = t;
+                    else if (t != firstType && !firstType.IsAssignableFrom(t) && !t.IsAssignableFrom(firstType))
+                        same = false;
+                }
+                   
+                if (same)
+                {
+                    if (firstType == typeof(Device) || typeof(Device).IsAssignableFrom(firstType))
+                    {
+                        Device[] devices = new Device[selectedEntities.Length];
+                        for (int i = 0; i < selectedEntities.Length; i++)
+                            devices[i] = selectedEntities[i] as Device;
+                        actionPanel.ActionSubscriber = new DeviceGroupActionSubscriber(devices);
+                        return;
+                    }
+                }
+
+                actionPanel.ActionSubscriber = null;
+            }
         }
     }
 }
