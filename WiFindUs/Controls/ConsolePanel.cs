@@ -36,6 +36,7 @@ namespace WiFindUs.Controls
                 BackColor = input.BackColor = theme.ControlDarkColour;
                 Font = input.Font = theme.ConsoleFont;
                 ForeColor = input.ForeColor = theme.TextLightColour;
+                OnThemeChanged();
             }
         }
 
@@ -72,6 +73,15 @@ namespace WiFindUs.Controls
 		}
 
         /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public virtual void OnThemeChanged()
+        {
+
+        }
+
+        /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
@@ -98,5 +108,5 @@ namespace WiFindUs.Controls
                 e.Handled = true;
             }
 		}
-	}
+    }
 }

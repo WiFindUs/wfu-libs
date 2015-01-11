@@ -61,7 +61,7 @@ namespace WiFindUs.Forms
                 theme = value;
                 BackColor = theme.ControlLightColour;
                 Font = theme.WindowFont;
-                OnThemeChanged(theme);
+                OnThemeChanged();
                 this.RecurseControls(control =>
                 {
                     IThemeable themable = control as IThemeable;
@@ -114,6 +114,15 @@ namespace WiFindUs.Forms
         }
 
         /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public virtual void OnThemeChanged()
+        {
+
+        }
+
+        /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
@@ -140,11 +149,6 @@ namespace WiFindUs.Forms
         }
 
         protected virtual void OnFirstShown(EventArgs e)
-        {
-
-        }
-
-        protected virtual void OnThemeChanged(Theme theme)
         {
 
         }

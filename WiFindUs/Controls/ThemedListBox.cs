@@ -45,6 +45,7 @@ namespace WiFindUs.Controls
                 BackColor = theme.ControlLightColour;
                 ForeColor = theme.TextLightColour;
                 Font = theme.WindowFont;
+                OnThemeChanged();
             }
         }
 
@@ -67,6 +68,15 @@ namespace WiFindUs.Controls
                 ControlStyles.ResizeRedraw |
                 ControlStyles.UserPaint,
                 true);
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public virtual void OnThemeChanged()
+        {
+
         }
 
         /////////////////////////////////////////////////////////////////////

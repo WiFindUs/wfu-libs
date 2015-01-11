@@ -64,6 +64,7 @@ namespace WiFindUs.Controls
                     tab.BackColor = theme.ControlMidColour;
                     tab.Font = theme.WindowFont;
                 }
+                OnThemeChanged();
             }
         }
 
@@ -101,6 +102,15 @@ namespace WiFindUs.Controls
                 System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
                 System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
                 true);
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public virtual void OnThemeChanged()
+        {
+
         }
 
         /////////////////////////////////////////////////////////////////////

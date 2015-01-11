@@ -62,6 +62,7 @@ namespace WiFindUs.Eye.Controls
                 theme = value;
                 BackColor = theme.ControlLightColour;
                 Font = theme.WindowFont;
+                OnThemeChanged();
             }
         }
 
@@ -85,6 +86,15 @@ namespace WiFindUs.Eye.Controls
                 System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
                 true);
             UpdateStyles();
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public virtual void OnThemeChanged()
+        {
+
         }
 
         public Point LocationToScreen(ILocation loc)

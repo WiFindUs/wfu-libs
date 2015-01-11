@@ -103,6 +103,7 @@ namespace WiFindUs.Eye.Wave
                 BackColor = theme.ControlDarkColour;
                 ForeColor = theme.TextLightColour;
                 Font = theme.WindowFont;
+                OnThemeChanged();
 
                 if (Scene != null)
                     Scene.Theme = value;
@@ -130,6 +131,11 @@ namespace WiFindUs.Eye.Wave
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
+
+        public virtual void OnThemeChanged()
+        {
+
+        }
 
         public void StartMapApplication()
         {
@@ -183,6 +189,12 @@ namespace WiFindUs.Eye.Wave
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            Focus();
+        }
+
         protected override void OnResize(EventArgs e)
         {
             if (!IsDesignMode && mapApp != null)
@@ -205,7 +217,7 @@ namespace WiFindUs.Eye.Wave
                 string text = design ? "Wave Engine Map Renderer Control" : "Waiting for map scene to initialize...";
                 var sizeText = e.Graphics.MeasureString(text, Font);
                 using (Font f = new Font(Font.FontFamily, Font.Size + 6.0f, Font.Style | FontStyle.Bold))
-                    e.Graphics.DrawString(text, f, design ? Brushes.Black : theme.TextMidBrush, (Width - sizeText.Width) / 2, (Height - sizeText.Height) / 2);
+                    e.Graphics.DrawString(text, f, design ? Brushes.Black : theme.TextMidBrush, (Width - sizeText.Width) / 2, (Height - sizeText.Height) / 2, StringFormat.GenericTypographic);
             }
         }
 

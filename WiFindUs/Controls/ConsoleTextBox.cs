@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -12,6 +13,7 @@ namespace WiFindUs.Controls
     public class ConsoleTextBox : RichTextBox, IThemeable
     {
         private static readonly int MAX_CONSOLE_LINES = 16384;
+        private int mouseDown = 0;
         
         private readonly Color[] colors = new Color[6];
         private Theme theme;
@@ -20,6 +22,8 @@ namespace WiFindUs.Controls
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Theme Theme
         {
             get
@@ -42,6 +46,8 @@ namespace WiFindUs.Controls
                 colors[3] = theme.ErrorColour; //error
                 colors[4] = theme.ErrorColour; //exception
                 colors[5] = theme.HighlightLightColour; //prompts/console
+
+                OnThemeChanged();
             }
         }
 
@@ -56,17 +62,55 @@ namespace WiFindUs.Controls
             ScrollBars = RichTextBoxScrollBars.Vertical;
             Margin = new Padding(0);
 		    TabStop = false;
-		    //SetStyle(ControlStyles.Selectable, false);
-		    //SetStyle(ControlStyles.UserMouse, true);
-		    //SetStyle(ControlStyles.SupportsTransparentBackColor, true);
 
             //events
             Debugger.OnDebugOutput += OnDebugOutput;
 	    }
 
         /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public virtual void OnThemeChanged()
+        {
+
+        }
+
+        /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
+
+        protected override void DefWndProc(ref Message m)
+        {
+            base.DefWndProc(ref m);
+            /*
+            if (m.Msg == 277)
+            {
+
+
+
+                eventFired++;
+
+                if (eventFired == 2)
+                {
+
+                    thumbDown(this, System.EventArgs.Empty);
+
+                    eventFired = 0;
+
+                }
+
+
+
+            }
+
+
+
+            if (m.Msg == 277 && (int)m.WParam == 8)
+
+                thumbUp(this, System.EventArgs.Empty);
+             * */
+        }
 
         protected virtual void OnDebugOutput(Debugger.Verbosity level, string prefix, string text)
         {
@@ -87,7 +131,8 @@ namespace WiFindUs.Controls
             SelectionLength = 0;
             SelectionColor = colors[(int)level];
             AppendText(prefix + text + "\n");
-            SendMessage(Handle, 277, (IntPtr)7, IntPtr.Zero);
+            if (mouseDown == 0)
+                SendMessage(Handle, 277, (IntPtr)7, IntPtr.Zero);
         }
 
         protected override void WndProc(ref Message m)
