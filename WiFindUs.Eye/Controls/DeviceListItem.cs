@@ -37,6 +37,18 @@ namespace WiFindUs.Eye.Controls
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected override String EntityDetailString
+        {
+            get
+            {
+                return String.Format("{0}\n{1}",
+                    device.User != null ? "in use by " + device.User.FullName : "",
+                    device.HasLatLong ? WiFindUs.Eye.Location.ToString(device) : "");
+            }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -54,6 +66,10 @@ namespace WiFindUs.Eye.Controls
             device.OnDeviceBatteryChanged += device_OnDeviceBatteryChanged;
             device.OnDeviceAssignedWaypointChanged += device_OnDeviceAssignedWaypointChanged;
         }
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
 
         private void device_OnDeviceAssignedWaypointChanged(Device obj)
         {

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WiFindUs.Controls;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Controls
 {
@@ -35,10 +36,16 @@ namespace WiFindUs.Eye.Controls
         
         public EntityList()
         {
-            SuspendLayout();
+            FlowDirection = FlowDirection.TopDown;
+            AutoScroll = true;
+            VScroll = true;
             WrapContents = false;
-            FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
-            ResumeLayout(true);
+        }
+
+        protected override void OnResize(EventArgs eventargs)
+        {
+            base.OnResize(eventargs);
+            ResizeEntityItems();
         }
 
         protected override void OnControlAdded(ControlEventArgs e)
@@ -51,9 +58,10 @@ namespace WiFindUs.Eye.Controls
             if (entities.Contains(elc.Entity))
                 throw new ArgumentOutOfRangeException("e", "An EntityListItem representing that entity is already present in this EntityList!");
             elc.Theme = Theme;
-            elc.Width = ClientRectangle.Width - 1;
             entities.Add(elc.Entity);
             elc.Entity.SelectionGroup = SelectionGroup;
+
+            ResizeEntityItems();
         }
 
         protected override void OnControlRemoved(ControlEventArgs e)
@@ -72,6 +80,7 @@ namespace WiFindUs.Eye.Controls
         protected override void OnClick(EventArgs e)
         {
             base.OnClick(e);
+            Focus();
 
             //do we have any entities?
             if (entities == null || entities.Count == 0)
@@ -89,7 +98,20 @@ namespace WiFindUs.Eye.Controls
                     SelectionGroup.ClearSelection();
                     break;
                 }
-            
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            Focus();
+        }
+
+        private void ResizeEntityItems()
+        {
+            this.SuspendAllLayout();
+            foreach (EntityListItem elitems in Controls.OfType<EntityListItem>())
+                elitems.Width = ClientRectangle.Width - 1;
+            this.ResumeAllLayout(true);
         }
     }
 }

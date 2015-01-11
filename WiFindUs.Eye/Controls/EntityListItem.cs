@@ -47,6 +47,13 @@ namespace WiFindUs.Eye.Controls
         {
             get { return MouseHovering || entity.Selected ? Theme.ControlLightColour : Theme.ControlDarkColour;  }
         }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected virtual String EntityDetailString
+        {
+            get { return ""; }
+        }
         
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
@@ -60,9 +67,34 @@ namespace WiFindUs.Eye.Controls
             entity.SelectedChanged += OnEntitySelectedChanged;
         }
 
+        //
+
+        public override void OnThemeChanged()
+        {
+            base.OnThemeChanged();
+
+            SuspendLayout();
+            Height = CalculateHeight();
+            ResumeLayout(true);
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            Focus();
+        }
+
+        protected override void OnFontChanged(EventArgs e)
+        {
+            base.OnFontChanged(e);
+
+            SuspendLayout();
+            Height = CalculateHeight();
+            ResumeLayout(true);
+        }
 
         protected override void OnPaintBackground(PaintEventArgs e)
         {
@@ -85,7 +117,36 @@ namespace WiFindUs.Eye.Controls
             if (image != null)
                 e.Graphics.DrawImage(image, 4, 4, 40, 40);
             else
-                e.Graphics.FillRectangle(MouseHovering || entity.Selected ? Theme.ControlLightBrush : Theme.ControlDarkBrush, 4, 4, 40, 40);
+            {
+                using (Brush brush = new SolidBrush(ImagePlaceholderColour))
+                    e.Graphics.FillRectangle(brush,
+                        4, 4, 40, 40);
+            }
+
+            //entity text
+            string text = entity.ToString();
+            SizeF sz = e.Graphics.MeasureString(
+                text,
+                Font,
+                ClientRectangle.Width,
+                StringFormat.GenericTypographic);
+            e.Graphics.DrawString(
+                text,
+                Font,
+                Theme.TextLightBrush,
+                new Point(48, 4),
+                StringFormat.GenericTypographic);
+
+            //detail string
+            text = EntityDetailString;
+            if (text.Length <= 0)
+                return;
+            e.Graphics.DrawString(
+                text,
+                Font,
+                Theme.TextMidBrush,
+                new Point(48, 4 + (int)sz.Height),
+                StringFormat.GenericTypographic);
         }
 
         protected override void OnMouseHoverChanged()
@@ -98,8 +159,13 @@ namespace WiFindUs.Eye.Controls
         {
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
+                Focus();
                 if (Control.ModifierKeys == Keys.Control)
                     entity.SelectionGroup.ToggleSelection(entity);
+                else if (Control.ModifierKeys == Keys.Shift)
+                {
+
+                }
                 else
                     entity.SelectionGroup.SetSelection(entity);
             }
@@ -112,6 +178,11 @@ namespace WiFindUs.Eye.Controls
             if (entity != this.entity)
                 return;
             Refresh();
+        }
+
+        protected virtual int CalculateHeight()
+        {
+            return Math.Max(48, System.Windows.Forms.TextRenderer.MeasureText("1\n2\n3", Font).Height + 8);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -8,13 +9,9 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-    public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable
+    public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable, IActionSubscriber
     {
-#if DEBUG
-        public const long TIMEOUT = 60 * 60 * 24 * 365; //one year
-#else
         public const long TIMEOUT = 300;
-#endif        
         public static event Action<Node> OnNodeLoaded;
         public event Action<Node> OnNodeUpdated;
         public event Action<Node> OnNodeNumberChanged;
@@ -96,6 +93,10 @@ namespace WiFindUs.Eye
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
+        public override string ToString()
+        {
+            return String.Format("Node[{0:X}]", ID);
+        }
 
         public double DistanceTo(ILocation other)
         {
@@ -110,6 +111,36 @@ namespace WiFindUs.Eye
         public bool Loaded
         {
             get { return loaded; }
+        }
+
+        public bool ActionEnabled(uint index)
+        {
+            switch (index)
+            {
+                case 1: return true;
+                case 2: return true;
+            }
+            return false;
+        }
+
+        public Image ActionImage(uint index)
+        {
+            return null;
+        }
+
+        public string ActionText(uint index)
+        {
+            switch (index)
+            {
+                case 1: return "Zoom To";
+                case 2: return "Track";
+            }
+            return "";
+        }
+
+        public void ActionTriggered(uint index)
+        {
+
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -172,5 +203,7 @@ namespace WiFindUs.Eye
             if (OnNodeVoltageChanged != null)
                 OnNodeVoltageChanged(this);
         }
+
+
     }
 }

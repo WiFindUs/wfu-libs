@@ -340,6 +340,7 @@ namespace WiFindUs.Eye
                     device.Type = devicePacket.DeviceType;
                 else 
                     device.Updated = DateTime.UtcNow.ToUnixTimestamp();
+                device.IPAddress = devicePacket.Packet.Address;
 
                 //update database
                 eyeContext.SubmitChanges();

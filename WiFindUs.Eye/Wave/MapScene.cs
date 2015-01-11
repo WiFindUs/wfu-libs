@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Cameras;
@@ -42,6 +43,7 @@ namespace WiFindUs.Eye.Wave
         private bool autoUpdateCamera = true;
         private bool cameraDirty = false;
         private Ray cameraRay;
+        private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
         
         //camera frustum
         private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
@@ -66,6 +68,7 @@ namespace WiFindUs.Eye.Wave
                     camera.BackgroundColor = new Color(
                         theme.ControlDarkColour.R, theme.ControlDarkColour.G,
                         theme.ControlDarkColour.B, theme.ControlDarkColour.A);
+                OnThemeChanged();
             }
         }
 
@@ -233,6 +236,11 @@ namespace WiFindUs.Eye.Wave
             get { return hostGame.HostControl; }
         }
 
+        public List<DeviceMarker> DeviceMarkers
+        {
+            get { return deviceMarkers; }
+        }
+
         public bool DebugMode
         {
             get
@@ -264,7 +272,12 @@ namespace WiFindUs.Eye.Wave
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
-        
+
+        public virtual void OnThemeChanged()
+        {
+
+        }
+
         public Vector3 LocationToVector(ILocation loc)
         {
             if (baseTile == null)
@@ -276,7 +289,7 @@ namespace WiFindUs.Eye.Wave
         {
             if (baseTile == null || baseTile.Region == null)
                 return WiFindUs.Eye.Location.EMPTY;
-            
+
             return new Location(
                 baseTile.Region.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LatitudinalSpan,
                 baseTile.Region.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LongitudinalSpan
@@ -287,7 +300,7 @@ namespace WiFindUs.Eye.Wave
         {
             if (groundPlaneCollider == null)
                 return null;
-            
+
             //convert screen to world
             Vector3 screenCoords = new Vector3(x, y, 0.0f);
             Vector3 screenCoordsFar = new Vector3(x, y, 1.0f);
@@ -323,7 +336,6 @@ namespace WiFindUs.Eye.Wave
 #if DEBUG
             DebugMode = true;
 #endif
-            
             //set up camera
             Debugger.V("MapScene: initializing camera");
             cameraRay = new Ray();
@@ -380,6 +392,13 @@ namespace WiFindUs.Eye.Wave
                 Device_OnDeviceLoaded(device);
             }
             Device.OnDeviceLoaded += Device_OnDeviceLoaded;
+            foreach (Node node in eyeForm.Nodes)
+            {
+                if (!node.Loaded)
+                    continue;
+                Node_OnNodeLoaded(node);
+            }
+            Node.OnNodeLoaded += Node_OnNodeLoaded;
             if (SceneStarted != null)
                 SceneStarted(this);
         }
@@ -427,7 +446,14 @@ namespace WiFindUs.Eye.Wave
 
         private void Device_OnDeviceLoaded(Device device)
         {
-            EntityManager.Add(DeviceMarker.Create(device));
+            Entity marker = DeviceMarker.Create(device);
+            deviceMarkers.Add(marker.FindComponent<DeviceMarker>());
+            EntityManager.Add(marker);
+        }
+
+        private void Node_OnNodeLoaded(Node node)
+        {
+            EntityManager.Add(NodeMarker.Create(node));
         }
 
         private void CreateTileLayer(uint layer)

@@ -14,12 +14,7 @@ namespace WiFindUs.Eye
     public partial class Device
         : SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, IActionSubscriber
     {
-#if DEBUG
-        public const long TIMEOUT = 60 * 60 * 24 * 365; //one year
-#else
         public const long TIMEOUT = 60;
-#endif
-
         public static event Action<Device> OnDeviceLoaded;
         public event Action<Device> OnDeviceUpdated;
         public event Action<Device> OnDeviceTypeChanged;
@@ -198,6 +193,40 @@ namespace WiFindUs.Eye
             get { return loaded; }
         }
 
+        public bool ActionEnabled(uint index)
+        {
+            switch (index)
+            {
+                case 0: return true;
+                case 1: return true;
+                case 2: return true;
+                case 9: return true;
+            }
+            return false;
+        }
+
+        public Image ActionImage(uint index)
+        {
+            return null;
+        }
+
+        public string ActionText(uint index)
+        {
+            switch (index)
+            {
+                case 0: return "Dispatch";
+                case 1: return "Zoom To";
+                case 2: return "Track";
+                case 8: return "Cancel";
+            }
+            return "";
+        }
+
+        public void ActionTriggered(uint index)
+        {
+
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
@@ -251,26 +280,6 @@ namespace WiFindUs.Eye
             if (OnDeviceUpdated != null)
                 OnDeviceUpdated(this);
             CheckTimeout();
-        }
-
-        public bool ActionEnabled(uint index)
-        {
-            return true;
-        }
-
-        public Image ActionImage(uint index)
-        {
-            return null;
-        }
-
-        public string ActionText(uint index)
-        {
-            return "Action " + index;
-        }
-
-        public void ActionTriggered(uint index)
-        {
-
         }
     }
 }

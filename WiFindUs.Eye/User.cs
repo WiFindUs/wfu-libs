@@ -12,8 +12,28 @@ namespace WiFindUs.Eye
         public event Action<User> OnUserTypeChanged;
         public event Action<User> OnUserFirstNameChanged;
         public event Action<User> OnUserMiddleNameChanged;
-        public event Action<User> OnUserNameLastChanged;
+        public event Action<User> OnUserLastNameChanged;
         private bool loaded = false;
+
+        /////////////////////////////////////////////////////////////////////
+        // PROPERTIES
+        /////////////////////////////////////////////////////////////////////
+
+        public string FullName
+        {
+            get { return String.Format("{0} {1}{2}",
+                NameFirst, (NameMiddle.Length == 0 ? "" : NameMiddle + " "), NameLast);
+            }
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PUBLIC METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        public override string ToString()
+        {
+            return String.Format("User[{0:X}] {1}", ID, FullName);
+        }
 
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
@@ -41,8 +61,8 @@ namespace WiFindUs.Eye
 
         partial void OnNameLastChanged()
         {
-            if (OnUserNameLastChanged != null)
-                OnUserNameLastChanged(this);
+            if (OnUserLastNameChanged != null)
+                OnUserLastNameChanged(this);
         }
 
         partial void OnTypeChanged()

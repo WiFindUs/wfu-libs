@@ -58,6 +58,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeviceGroupActionSubscriber.cs" />
     <Compile Include="DispatcherForm.cs">
       <SubType>Form</SubType>
     </Compile>
