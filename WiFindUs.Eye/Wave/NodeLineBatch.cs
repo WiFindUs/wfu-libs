@@ -26,7 +26,7 @@ namespace WiFindUs.Eye.Wave
 
         protected override void Initialize()
         {
-            node = nodeMarker.Node;
+            node = nodeMarker.Entity;
             eyeForm = (WFUApplication.MainForm as EyeMainForm);
         }
 
@@ -34,9 +34,9 @@ namespace WiFindUs.Eye.Wave
         {
             foreach (DeviceMarker marker in nodeMarker.Scene.DeviceMarkers)
             {
-                if (marker.Device == null || marker.Device.TimedOut)
+                if (marker.Entity == null || marker.Entity.TimedOut)
                     continue;
-                IPAddress addr = marker.Device.IPAddress;
+                IPAddress addr = marker.Entity.IPAddress;
                 if (addr == null)
                     continue;
                 String addrString = addr.ToString();

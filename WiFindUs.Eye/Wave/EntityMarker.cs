@@ -10,25 +10,33 @@ using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Materials;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
-    public abstract class EntityMarker : Behavior
+    public abstract class EntityMarker<T> : Behavior where T : class, ILocatable, ISelectableEntity, IUpdateable
     {
-        private ISelectableEntity entity;
-        private ILocatable locatable;
+        private const float MAX_SPIN_RATE = 5.0f;
+        protected readonly T entity;
         private MapScene scene;
         private Entity selectionRing = null;
         private static Material placeHolderMaterial, selectedMaterial;
-        private readonly static Dictionary<string, Material> UserTypeColours = new Dictionary<string, Material>();
+        private readonly static Dictionary<string, Material> typeColours = new Dictionary<string, Material>();
+        private Transform3D transform3D;
+        private MaterialsMap materialsMap;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        public ISelectableEntity Entity
+        public T Entity
         {
             get { return entity; }
+        }
+
+        public virtual bool VisibleOnTimeout
+        {
+            get { return false; }
         }
 
         public static Material PlaceHolderMaterial
@@ -56,25 +64,41 @@ namespace WiFindUs.Eye.Wave
             get { return PlaceHolderMaterial; }
         }
 
+        public virtual float RotationSpeed
+        {
+            get
+            {
+                if (entity.TimedOut)
+                    return 0.0f;
+
+                long age = entity.UpdateAge;
+                if (age == 0)
+                    return MAX_SPIN_RATE;
+                else if (age >= Device.TIMEOUT)
+                    return 0.0f;
+                else
+                    return MAX_SPIN_RATE * (1.0f - (entity.UpdateAge / (float)entity.TimeoutLength));
+            }
+        }
+
         public MapScene Scene
         {
             get { return scene; }
         }
 
-        public abstract Transform3D Transform3D { get; }
-
-        public abstract MaterialsMap MaterialsMap { get; }
+        public Transform3D Transform3D
+        {
+            get { return transform3D; }
+        }
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public EntityMarker(ISelectableEntity entity)
+        public EntityMarker(T entity)
         {
             if (entity == null)
                 throw new ArgumentNullException("entity", "Entity cannot be null!");
-            if ((locatable = (entity as ILocatable)) == null)
-                throw new ArgumentOutOfRangeException("entity", "Entity must implement ILocatable!");
             this.entity = entity;
         }
 
@@ -82,20 +106,17 @@ namespace WiFindUs.Eye.Wave
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
-        public static Material UserTypeMaterial(User user)
+        public static Material TypeMaterial(String type)
         {
             Material material = PlaceHolderMaterial;
-            if (user == null)
-                return material;
-            string type = user.Type;
             if (type == null || (type = type.Trim().ToLower()).Length == 0)
                 return material;
 
-            if (!UserTypeColours.TryGetValue(type, out material))
+            if (!typeColours.TryGetValue(type, out material))
             {
                 System.Drawing.Color col
                     = WFUApplication.Config.Get("type_" + type + ".colour", System.Drawing.Color.Gray);
-                UserTypeColours[type] = material
+                typeColours[type] = material
                     = new BasicMaterial(new Color(col.R, col.G, col.B, col.A)) { LightingEnabled = true };
             }
             return material;     
@@ -108,10 +129,28 @@ namespace WiFindUs.Eye.Wave
         protected override void Initialize()
         {
             base.Initialize();
+            transform3D = Owner.FindComponent<Transform3D>();
+            materialsMap = Owner.FindComponent<MaterialsMap>();
             scene = Owner.Scene as MapScene;
             selectionRing = Owner.ChildEntities.First<Entity>();
             entity.SelectedChanged += SelectedChanged;
+            entity.LocationChanged += LocationChanged;
+            entity.TimedOutChanged += TimedOutChanged;
             scene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
+        }
+
+        protected override void Update(TimeSpan gameTime)
+        {
+            if (entity == null || transform3D == null || !Owner.IsVisible)
+                return;
+            float rot = RotationSpeed;
+            if (!rot.Tolerance(0.0f, 0.0001f))
+            {
+                transform3D.Rotation = new Vector3(
+                    transform3D.Rotation.X,
+                    transform3D.Rotation.Y + rot * (float)gameTime.TotalSeconds,
+                    transform3D.Rotation.Z);
+            }
         }
 
         protected virtual void BaseTileCenterLocationChanged(TerrainTile obj)
@@ -119,7 +158,17 @@ namespace WiFindUs.Eye.Wave
             UpdateMarkerState();
         }
 
+        protected virtual void LocationChanged(ILocatable obj)
+        {
+            UpdateMarkerState();
+        }
+
         protected virtual void SelectedChanged(ISelectableEntity obj)
+        {
+            UpdateMarkerState();
+        }
+
+        protected virtual void TimedOutChanged(IUpdateable obj)
         {
             UpdateMarkerState();
         }
@@ -132,17 +181,18 @@ namespace WiFindUs.Eye.Wave
             bool active = Scene != null
                 && Scene.BaseTile != null
                 && Scene.BaseTile.Region != null
-                && locatable.Location.HasLatLong
-                && Scene.BaseTile.Region.Contains(locatable.Location);
+                && (VisibleOnTimeout || !entity.TimedOut)
+                && entity.Location.HasLatLong
+                && Scene.BaseTile.Region.Contains(entity.Location);
 
             Owner.IsActive = Owner.IsVisible = active;
             selectionRing.IsActive = selectionRing.IsVisible = active && entity.Selected;
             if (active)
             {
-                Vector3 pos = scene.LocationToVector(locatable.Location);
+                Vector3 pos = scene.LocationToVector(entity.Location);
                 pos.Y += 5.0f;
-                Transform3D.Position = pos;
-                MaterialsMap.DefaultMaterial = CurrentMaterial;
+                transform3D.Position = pos;
+                materialsMap.DefaultMaterial = CurrentMaterial;
             }
         }
     }

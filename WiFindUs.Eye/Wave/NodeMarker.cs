@@ -11,41 +11,16 @@ using WaveEngine.Framework.Physics3D;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class NodeMarker : EntityMarker
+    public class NodeMarker : EntityMarker<Node>
     {
-        private Node node;
-        [RequiredComponent]
-        private Transform3D transform3D;
-        [RequiredComponent]
-        private MaterialsMap materialsMap;
-
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
-
-        public Node Node
-        {
-            get { return node; }
-        }
-
-        public override Transform3D Transform3D
-        {
-            get { return transform3D; }
-        }
-
-        public override MaterialsMap MaterialsMap
-        {
-            get { return materialsMap; }
-        }
-
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        private NodeMarker(Node node)
-            : base(node)
+        public NodeMarker(Node n)
+            : base(n)
         {
-            this.node = node;
+
         }
 
         public static Entity Create(Node node)
@@ -64,37 +39,6 @@ namespace WiFindUs.Eye.Wave
                     .AddComponent(Model.CreateTorus(18, 1, 10))
                     .AddComponent(new ModelRenderer())
                 );
-        }
-
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            node.OnNodeLocationChanged += OnNodeLocationChanged;
-            node.OnNodeTimedOutChanged += OnNodeTimedOutChanged;
-            UpdateMarkerState();
-        }
-
-        protected override void Update(TimeSpan gameTime)
-        {
-
-        }
-
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
-
-        private void OnNodeLocationChanged(Node node)
-        {
-            UpdateMarkerState();
-        }
-
-        private void OnNodeTimedOutChanged(Node node)
-        {
-            UpdateMarkerState();
         }
     }
 }
