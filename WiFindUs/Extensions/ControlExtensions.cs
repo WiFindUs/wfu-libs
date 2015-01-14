@@ -29,6 +29,10 @@ namespace WiFindUs.Extensions
             {
                 return;
             }
+            catch (InvalidAsynchronousStateException)
+            {
+                return;
+            }
         }
 
         public static void IncrementThreadSafe(this ProgressBar progressBar, int value)
