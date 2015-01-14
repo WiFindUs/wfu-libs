@@ -44,6 +44,7 @@ namespace WiFindUs.Eye.Wave
         private bool cameraDirty = false;
         private Ray cameraRay;
         private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
+        private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
         
         //camera frustum
         private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
@@ -239,6 +240,11 @@ namespace WiFindUs.Eye.Wave
         public List<DeviceMarker> DeviceMarkers
         {
             get { return deviceMarkers; }
+        }
+
+        public List<NodeMarker> NodeMarkers
+        {
+            get { return nodeMarkers; }
         }
 
         public bool DebugMode
@@ -453,7 +459,9 @@ namespace WiFindUs.Eye.Wave
 
         private void Node_OnNodeLoaded(Node node)
         {
-            EntityManager.Add(NodeMarker.Create(node));
+            Entity marker = NodeMarker.Create(node);
+            nodeMarkers.Add(marker.FindComponent<NodeMarker>());
+            EntityManager.Add(marker);
         }
 
         private void CreateTileLayer(uint layer)
