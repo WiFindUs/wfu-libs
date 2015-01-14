@@ -25,7 +25,7 @@ namespace WiFindUs.Eye.Dispatcher
         private MiniMapControl minimap;
         private FormWindowState oldWindowState;
         private Rectangle oldBounds;
-        private ISelectableEntityGroup globalSelectionGroup = new SelectableEntityGroup();
+        private ISelectableGroup globalSelectionGroup = new SelectableEntityGroup();
         private ActionPanel actionPanel;
 
         /////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ namespace WiFindUs.Eye.Dispatcher
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ISelectableEntityGroup GlobalSelectionGroup
+        public ISelectableGroup GlobalSelectionGroup
         {
             get { return globalSelectionGroup; }
         }
@@ -222,12 +222,12 @@ namespace WiFindUs.Eye.Dispatcher
             nodesFlowPanel.Controls.Add(new NodeListItem(node));
         }
 
-        private void OnSelectionGroupSelectionChanged(ISelectableEntityGroup obj)
+        private void OnSelectionGroupSelectionChanged(ISelectableGroup obj)
         {
             if (obj != globalSelectionGroup)
                 return;
 
-            ISelectableEntity[] selectedEntities = globalSelectionGroup.SelectedEntities;
+            ISelectable[] selectedEntities = globalSelectionGroup.SelectedEntities;
             if (selectedEntities == null || selectedEntities.Length == 0)
                 actionPanel.ActionSubscriber = null;
             else if (selectedEntities.Length == 1)
@@ -236,7 +236,7 @@ namespace WiFindUs.Eye.Dispatcher
             {
                 Type firstType = null;
                 bool same = true;
-                foreach (ISelectableEntity entity in selectedEntities)
+                foreach (ISelectable entity in selectedEntities)
                 {
                     Type t = entity.GetType();
                     if (firstType == null)
