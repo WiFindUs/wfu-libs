@@ -60,9 +60,9 @@ namespace WiFindUs.Eye.Controls
             
             device.OnDeviceTypeChanged += device_OnDeviceTypeChanged;
             device.OnDeviceUserChanged += device_OnDeviceUserChanged;
-            device.OnDeviceLocationChanged += device_OnDeviceLocationChanged;
-            device.OnDeviceUpdated += device_OnDeviceUpdated;
-            device.OnDeviceTimedOutChanged += device_OnDeviceTimedOutChanged;
+            device.LocationChanged += device_OnDeviceLocationChanged;
+            device.WhenUpdated += device_OnDeviceUpdated;
+            device.TimedOutChanged += device_OnDeviceTimedOutChanged;
             device.OnDeviceBatteryChanged += device_OnDeviceBatteryChanged;
             device.OnDeviceAssignedWaypointChanged += device_OnDeviceAssignedWaypointChanged;
         }
@@ -101,22 +101,22 @@ namespace WiFindUs.Eye.Controls
             {
 
                 using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic)
-                    {
-                        Alignment = StringAlignment.Far,
-                        LineAlignment = StringAlignment.Far
-                    })
+                    {Alignment = StringAlignment.Far})
                 {
-                    SizeF sz = e.Graphics.MeasureString(
-                        text,
-                        Font,
-                        ClientRectangle.Width,
-                        sf);
-                    e.Graphics.DrawString(
-                        text,
-                        Font,
-                        Theme.TextMidBrush,
-                        new Point(rect.Left - p, rect.Bottom),
-                        sf);
+                    using (Font f = new Font(Font.FontFamily, Font.Size - 2.0f))
+                    {
+                        SizeF sz = e.Graphics.MeasureString(
+                            text,
+                            f,
+                            ClientRectangle.Width,
+                            sf);
+                        e.Graphics.DrawString(
+                            text,
+                            f,
+                            Theme.TextMidBrush,
+                            new Point(rect.Left - p, rect.Top),
+                            sf);
+                    }
                 }
             }
         }
@@ -135,17 +135,17 @@ namespace WiFindUs.Eye.Controls
             this.RefreshThreadSafe();
         }
 
-        private void device_OnDeviceTimedOutChanged(Device obj)
+        private void device_OnDeviceTimedOutChanged(IUpdateable obj)
         {
             this.RefreshThreadSafe();
         }
 
-        private void device_OnDeviceUpdated(Device obj)
+        private void device_OnDeviceUpdated(IUpdateable obj)
         {
             this.RefreshThreadSafe();
         }
 
-        private void device_OnDeviceLocationChanged(Device obj)
+        private void device_OnDeviceLocationChanged(ILocatable obj)
         {
             this.RefreshThreadSafe();
         }
