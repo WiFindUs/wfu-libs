@@ -5,7 +5,7 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public partial class NodeHistory : ILocation, ILocatable
+    public partial class NodeHistory : ILocation
     {
         public static event Action<NodeHistory> OnNodeHistoryLoaded;
         private bool loaded = false;
@@ -33,12 +33,7 @@ namespace WiFindUs.Eye
                     && !Altitude.HasValue;
             }
         }
-
-        public ILocation Location
-        {
-            get { return this; }
-        }
-        
+       
         public double DistanceTo(ILocation other)
         {
             return WiFindUs.Eye.Location.Distance(this, other);

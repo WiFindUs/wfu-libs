@@ -12,5 +12,8 @@ namespace WiFindUs.Eye
         void CheckTimeout();
         long UpdateAge { get; }
         long Updated { get; }
+        long TimeoutLength { get; }
+        event Action<IUpdateable> WhenUpdated;
+        event Action<IUpdateable> TimedOutChanged;
     }
 }

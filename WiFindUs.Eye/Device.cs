@@ -16,15 +16,15 @@ namespace WiFindUs.Eye
     {
         public const long TIMEOUT = 60;
         public static event Action<Device> OnDeviceLoaded;
-        public event Action<Device> OnDeviceUpdated;
         public event Action<Device> OnDeviceTypeChanged;
-        public event Action<Device> OnDeviceLocationChanged;
         public event Action<Device> OnDeviceAtmosphereChanged;
         public event Action<Device> OnDeviceBatteryChanged;
         public event Action<Device> OnDeviceIPAddressChanged;
         public event Action<Device> OnDeviceUserChanged;
         public event Action<Device> OnDeviceAssignedWaypointChanged;
-        public event Action<Device> OnDeviceTimedOutChanged;
+        public event Action<IUpdateable> WhenUpdated;
+        public event Action<IUpdateable> TimedOutChanged;
+        public event Action<ILocatable> LocationChanged;
         private bool timedOut = false, loaded = false;
 
         /////////////////////////////////////////////////////////////////////
@@ -54,8 +54,8 @@ namespace WiFindUs.Eye
                     Latitude = value.Latitude;
                 }
 
-                if (OnDeviceLocationChanged != null)
-                    OnDeviceLocationChanged(this);
+                if (LocationChanged != null)
+                    LocationChanged(this);
             }
         }
 
@@ -84,6 +84,27 @@ namespace WiFindUs.Eye
 
                 if (OnDeviceAtmosphereChanged != null)
                     OnDeviceAtmosphereChanged(this);
+            }
+        }
+
+        public IBatteryStats BatteryStats
+        {
+            get
+            {
+                return this;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    Charging = null;
+                    BatteryLevel = null;
+                }
+                else
+                {
+                    Charging = value.Charging;
+                    BatteryLevel = value.BatteryLevel;
+                }
             }
         }
 
@@ -150,9 +171,14 @@ namespace WiFindUs.Eye
                     return;
 
                 timedOut = value;
-                if (OnDeviceTimedOutChanged != null)
-                    OnDeviceTimedOutChanged(this);
+                if (TimedOutChanged != null)
+                    TimedOutChanged(this);
             }
+        }
+
+        public long TimeoutLength
+        {
+            get { return TIMEOUT; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -167,20 +193,6 @@ namespace WiFindUs.Eye
         public double DistanceTo(ILocation other)
         {
             return WiFindUs.Eye.Location.Distance(this, other);
-        }
-
-        public void SetBatteryStats(IBatteryStats stats)
-        {
-            if (stats == null)
-            {
-                Charging = null;
-                BatteryLevel = null;
-            }
-            else
-            {
-                Charging = stats.Charging;
-                BatteryLevel = stats.BatteryLevel;
-            }
         }
 
         public void CheckTimeout()
@@ -277,8 +289,8 @@ namespace WiFindUs.Eye
 
         partial void OnUpdatedChanged()
         {
-            if (OnDeviceUpdated != null)
-                OnDeviceUpdated(this);
+            if (WhenUpdated != null)
+                WhenUpdated(this);
             CheckTimeout();
         }
     }

@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-    public class DevicePacket : ILocation, ILocatable, IBatteryStats
+    public class DevicePacket : ILocation, IBatteryStats
     {
         private static readonly Regex PACKET_KVP
             = new Regex("^([a-zA-Z0-9_\\-.]+)\\s*[:=]\\s*(.+)\\s*$");
-        
         private EyePacket packet;
         private double? latitude, longitude, altitude, accuracy, batteryLevel;
         private bool? charging;
@@ -83,11 +82,6 @@ namespace WiFindUs.Eye
             return WiFindUs.Eye.Location.Distance(this, other);
         }
 
-        public ILocation Location
-        {
-            get { return this; }
-        }
-
         public bool? Charging
         {
             get { return charging; }
@@ -142,13 +136,14 @@ namespace WiFindUs.Eye
 
         public override string ToString()
         {
-            return String.Format("[{0}, {{{1}, {2}, {3}, {4}}}, {5}, {6}]",
+            return String.Format("DevicePacket:[{7}, {0}, Location:[{1}, {2}, {3}, {4}], Battery:[{5:P0}{6}]]",
                 packet.ToString(),
                 latitude.HasValue ? latitude.Value.ToString() : "null",
                 longitude.HasValue ? longitude.Value.ToString() : "null",
                 accuracy.HasValue ? accuracy.Value.ToString() : "null",
                 altitude.HasValue ? altitude.Value.ToString() : "null",
                 batteryLevel.GetValueOrDefault(),
+                charging.GetValueOrDefault() ? ", charging" : "",
                 deviceType);
         }
     }

@@ -10,7 +10,7 @@ namespace WiFindUs.Eye
     public partial class Waypoint : SelectableEntity, ILocation, ILocatable
     {
         public static event Action<Waypoint> OnWaypointLoaded;
-        public event Action<Waypoint> OnWaypointLocationChanged;
+        public event Action<ILocatable> LocationChanged;
         public event Action<Waypoint> OnWaypointTypeChanged;
         public event Action<Waypoint> OnWaypointCategoryChanged;
         public event Action<Waypoint> OnWaypointDescriptionChanged;
@@ -30,6 +30,26 @@ namespace WiFindUs.Eye
             get
             {
                 return this;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    Altitude = null;
+                    //Accuracy = null;
+                    Longitude = null;
+                    Latitude = null;
+                }
+                else
+                {
+                    Altitude = value.Altitude;
+                    //Accuracy = value.Accuracy;
+                    Longitude = value.Longitude;
+                    Latitude = value.Latitude;
+                }
+
+                if (LocationChanged != null)
+                    LocationChanged(this);
             }
         }
 
@@ -126,20 +146,20 @@ namespace WiFindUs.Eye
 
         partial void OnLatitudeChanged()
         {
-            if (OnWaypointLocationChanged != null)
-                OnWaypointLocationChanged(this);
+            if (LocationChanged != null)
+                LocationChanged(this);
         }
 
         partial void OnLongitudeChanged()
         {
-            if (OnWaypointLocationChanged != null)
-                OnWaypointLocationChanged(this);
+            if (LocationChanged != null)
+                LocationChanged(this);
         }
 
         partial void OnAltitudeChanged()
         {
-            if (OnWaypointLocationChanged != null)
-                OnWaypointLocationChanged(this);
+            if (LocationChanged != null)
+                LocationChanged(this);
         }
 
         partial void OnCategoryChanged()

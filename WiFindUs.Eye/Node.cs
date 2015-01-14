@@ -13,12 +13,12 @@ namespace WiFindUs.Eye
     {
         public const long TIMEOUT = 300;
         public static event Action<Node> OnNodeLoaded;
-        public event Action<Node> OnNodeUpdated;
+        public event Action<IUpdateable> WhenUpdated;
+        public event Action<IUpdateable> TimedOutChanged;
         public event Action<Node> OnNodeNumberChanged;
         public event Action<Node> OnNodeIPAddressChanged;
-        public event Action<Node> OnNodeLocationChanged;
+        public event Action<ILocatable> LocationChanged;
         public event Action<Node> OnNodeVoltageChanged;
-        public event Action<Node> OnNodeTimedOutChanged;
         private bool timedOut = false, loaded = false;
 
         /////////////////////////////////////////////////////////////////////
@@ -30,6 +30,26 @@ namespace WiFindUs.Eye
             get
             {
                 return this;
+            }
+            set
+            {
+                if (value == null)
+                {
+                    Altitude = null;
+                    Accuracy = null;
+                    Longitude = null;
+                    Latitude = null;
+                }
+                else
+                {
+                    Altitude = value.Altitude;
+                    Accuracy = value.Accuracy;
+                    Longitude = value.Longitude;
+                    Latitude = value.Latitude;
+                }
+
+                if (LocationChanged != null)
+                    LocationChanged(this);
             }
         }
 
@@ -85,9 +105,14 @@ namespace WiFindUs.Eye
                     return;
 
                 timedOut = value;
-                if (OnNodeTimedOutChanged != null)
-                    OnNodeTimedOutChanged(this);
+                if (TimedOutChanged != null)
+                    TimedOutChanged(this);
             }
+        }
+
+        public long TimeoutLength
+        {
+            get { return TIMEOUT; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -163,26 +188,26 @@ namespace WiFindUs.Eye
 
         partial void OnAccuracyChanged()
         {
-            if (OnNodeLocationChanged != null)
-                OnNodeLocationChanged(this);
+            if (LocationChanged != null)
+                LocationChanged(this);
         }
 
         partial void OnAltitudeChanged()
         {
-            if (OnNodeLocationChanged != null)
-                OnNodeLocationChanged(this);
+            if (LocationChanged != null)
+                LocationChanged(this);
         }
 
         partial void OnLatitudeChanged()
         {
-            if (OnNodeLocationChanged != null)
-                OnNodeLocationChanged(this);
+            if (LocationChanged != null)
+                LocationChanged(this);
         }
 
         partial void OnLongitudeChanged()
         {
-            if (OnNodeLocationChanged != null)
-                OnNodeLocationChanged(this);
+            if (LocationChanged != null)
+                LocationChanged(this);
         }
 
         partial void OnNumberChanged()
@@ -193,8 +218,8 @@ namespace WiFindUs.Eye
 
         partial void OnUpdatedChanged()
         {
-            if (OnNodeUpdated != null)
-                OnNodeUpdated(this);
+            if (WhenUpdated != null)
+                WhenUpdated(this);
             CheckTimeout();
         }
 

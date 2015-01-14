@@ -5,7 +5,7 @@ using System.Text;
 
 namespace WiFindUs.Eye
 {
-    public partial class DeviceHistory : ILocation, ILocatable, IAtmosphere, IAtmospheric
+    public partial class DeviceHistory : ILocation, IAtmosphere
     {
         public static event Action<DeviceHistory> OnDeviceHistoryLoaded;
         private bool loaded = false;
@@ -43,16 +43,6 @@ namespace WiFindUs.Eye
                     && !Accuracy.HasValue
                     && !Altitude.HasValue;
             }
-        }
-        
-        public ILocation Location
-        {
-            get { return this; }
-        }
-
-        public IAtmosphere Atmosphere
-        {
-            get { return this; }
         }
 
         public double DistanceTo(ILocation other)
