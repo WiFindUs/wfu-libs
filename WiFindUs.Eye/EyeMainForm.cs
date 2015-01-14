@@ -318,8 +318,8 @@ namespace WiFindUs.Eye
                     return;
                 }
                 
-                if (sender.LogPackets)
-                    Debugger.V(devicePacket.ToString());
+                //if (sender.LogPackets)
+                //    Debugger.V(devicePacket.ToString());
 
                 //first get user
                 bool newUser = false;
@@ -341,8 +341,7 @@ namespace WiFindUs.Eye
                 else 
                     device.Updated = DateTime.UtcNow.ToUnixTimestamp();
                 device.IPAddress = devicePacket.Packet.Address;
-                device.BatteryLevel = devicePacket.BatteryLevel;
-                device.Charging = devicePacket.Charging;
+                device.BatteryStats = devicePacket;
 
                 //update database
                 eyeContext.SubmitChanges();
