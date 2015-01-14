@@ -134,7 +134,7 @@ namespace WiFindUs.Eye.Controls
                 text,
                 Font,
                 Theme.TextLightBrush,
-                new Point(48, 4),
+                new Point(48, 0),
                 StringFormat.GenericTypographic);
 
             //detail string
@@ -145,7 +145,7 @@ namespace WiFindUs.Eye.Controls
                 text,
                 Font,
                 Theme.TextMidBrush,
-                new Point(48, 4 + (int)sz.Height),
+                new Point(48, (int)sz.Height),
                 StringFormat.GenericTypographic);
         }
 
@@ -182,7 +182,7 @@ namespace WiFindUs.Eye.Controls
 
         protected virtual int CalculateHeight()
         {
-            return Math.Max(48, System.Windows.Forms.TextRenderer.MeasureText("1\n2\n3", Font).Height + 8);
+            return Math.Max(48, System.Windows.Forms.TextRenderer.MeasureText("Tj\nTj\nTj", Font).Height);
         }
     }
 }
