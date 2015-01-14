@@ -52,7 +52,7 @@ namespace WiFindUs.Eye.Wave
                 .AddChild(new Entity() { IsActive = false, IsVisible = false }
                     .AddComponent(new Transform3D())
                     .AddComponent(new MaterialsMap(SelectedMaterial))
-                    .AddComponent(Model.CreateTorus(16, 1, 10))
+                    .AddComponent(Model.CreateTorus(13, 1, 10))
                     .AddComponent(new ModelRenderer())
                 );
         }
