@@ -100,6 +100,7 @@ namespace WiFindUs.Eye.Dispatcher
             devicesFlowPanel.SelectionGroup = globalSelectionGroup;
             usersFlowPanel.SelectionGroup = globalSelectionGroup;
             incidentsFlowPanel.SelectionGroup = globalSelectionGroup;
+            nodesFlowPanel.SelectionGroup = globalSelectionGroup;
             actionsTab.Controls.Add(actionPanel = new ActionPanel(3,3) { Dock = DockStyle.Fill });
 
             //events
