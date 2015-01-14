@@ -9,21 +9,22 @@ using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
+using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
-    public abstract class EntityMarker<T> : Behavior where T : class, ILocatable, ISelectableEntity, IUpdateable
+    public class EntityMarker<T> : Marker where T : class, ILocatable, ISelectable, IUpdateable
     {
-        private const float MAX_SPIN_RATE = 5.0f;
         protected readonly T entity;
-        private MapScene scene;
-        private Entity selectionRing = null;
+
+        private Entity selectionRing = null, model = null;
         private static Material placeHolderMaterial, selectedMaterial;
         private readonly static Dictionary<string, Material> typeColours = new Dictionary<string, Material>();
-        private Transform3D transform3D;
-        private MaterialsMap materialsMap;
+        private Transform3D modelTransform, selectionRingTransform;
+        private MaterialsMap modelMaterialsMap;
+        private BoxCollider modelCollider;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -36,7 +37,14 @@ namespace WiFindUs.Eye.Wave
 
         public virtual bool VisibleOnTimeout
         {
-            get { return false; }
+            get
+            {
+#if DEBUG
+                return true;
+#else
+                return false;
+#endif
+            }
         }
 
         public static Material PlaceHolderMaterial
@@ -44,7 +52,13 @@ namespace WiFindUs.Eye.Wave
             get
             {
                 if (placeHolderMaterial == null)
-                    placeHolderMaterial = new BasicMaterial(Color.Gray) { LightingEnabled = true };
+                    placeHolderMaterial = new BasicMaterial(Color.Gray)
+                    {
+                        LightingEnabled = true,
+                        AmbientLightColor = Color.White * 0.5f,
+                        SpecularPower = 2
+                    };
+                    
                 return placeHolderMaterial;
             }
         }
@@ -54,7 +68,11 @@ namespace WiFindUs.Eye.Wave
             get
             {
                 if (selectedMaterial == null)
-                    selectedMaterial = new BasicMaterial(Color.Yellow) { LightingEnabled = false, Alpha = 0.01f, LayerType = DefaultLayers.Alpha };
+                    selectedMaterial = new BasicMaterial(Color.Yellow)
+                    {
+                        LayerType = DefaultLayers.Alpha,
+                        Alpha = 0.05f
+                    };
                 return selectedMaterial;
             }
         }
@@ -74,21 +92,22 @@ namespace WiFindUs.Eye.Wave
                 long age = entity.UpdateAge;
                 if (age == 0)
                     return MAX_SPIN_RATE;
-                else if (age >= Device.TIMEOUT)
+                else if (age >= entity.TimeoutLength)
                     return 0.0f;
                 else
                     return MAX_SPIN_RATE * (1.0f - (entity.UpdateAge / (float)entity.TimeoutLength));
             }
         }
 
-        public MapScene Scene
+        public override BoxCollider BoxCollider
         {
-            get { return scene; }
+            get { return modelCollider; }
         }
 
-        public Transform3D Transform3D
+        public override bool Selected
         {
-            get { return transform3D; }
+            get { return entity.Selected; }
+            set { entity.Selected = value; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -117,9 +136,14 @@ namespace WiFindUs.Eye.Wave
                 System.Drawing.Color col
                     = WFUApplication.Config.Get("type_" + type + ".colour", System.Drawing.Color.Gray);
                 typeColours[type] = material
-                    = new BasicMaterial(new Color(col.R, col.G, col.B, col.A)) { LightingEnabled = true };
+                    = new BasicMaterial(new Color(col.R, col.G, col.B, col.A))
+                    {
+                        LightingEnabled = true,
+                        AmbientLightColor = Color.White * 0.5f,
+                        SpecularPower = 2
+                    };
             }
-            return material;     
+            return material;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -129,27 +153,48 @@ namespace WiFindUs.Eye.Wave
         protected override void Initialize()
         {
             base.Initialize();
-            transform3D = Owner.FindComponent<Transform3D>();
-            materialsMap = Owner.FindComponent<MaterialsMap>();
-            scene = Owner.Scene as MapScene;
-            selectionRing = Owner.ChildEntities.First<Entity>();
+            model = Owner.FindChild("model");
+            if (model != null)
+            {
+                modelMaterialsMap = model.FindComponent<MaterialsMap>();
+                modelTransform = model.FindComponent<Transform3D>();
+                modelCollider = model.FindComponent<BoxCollider>();
+            }
+            selectionRing = Owner.FindChild("selection");
+            if (selectionRing != null)
+                selectionRingTransform = selectionRing.FindComponent<Transform3D>();
+
             entity.SelectedChanged += SelectedChanged;
             entity.LocationChanged += LocationChanged;
             entity.TimedOutChanged += TimedOutChanged;
-            scene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
+            Scene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
+
+            UpdateMarkerState();
         }
 
         protected override void Update(TimeSpan gameTime)
         {
-            if (entity == null || transform3D == null || !Owner.IsVisible)
+            if (entity == null || !Owner.IsVisible)
                 return;
-            float rot = RotationSpeed;
-            if (!rot.Tolerance(0.0f, 0.0001f))
+
+            if (model != null && modelTransform != null)
             {
-                transform3D.Rotation = new Vector3(
-                    transform3D.Rotation.X,
-                    transform3D.Rotation.Y + rot * (float)gameTime.TotalSeconds,
-                    transform3D.Rotation.Z);
+                float rot = RotationSpeed;
+                if (!rot.Tolerance(0.0f, 0.0001f))
+                {
+                    modelTransform.Rotation = new Vector3(
+                        modelTransform.Rotation.X,
+                        modelTransform.Rotation.Y + rot * (float)gameTime.TotalSeconds,
+                        modelTransform.Rotation.Z);
+                }
+            }
+
+            if (entity.Selected && selectionRing != null && selectionRingTransform != null)
+            {
+                selectionRingTransform.Rotation = new Vector3(
+                    selectionRingTransform.Rotation.X,
+                    selectionRingTransform.Rotation.Y + 1.0f * (float)gameTime.TotalSeconds,
+                    selectionRingTransform.Rotation.Z);
             }
         }
 
@@ -163,7 +208,7 @@ namespace WiFindUs.Eye.Wave
             UpdateMarkerState();
         }
 
-        protected virtual void SelectedChanged(ISelectableEntity obj)
+        protected virtual void SelectedChanged(ISelectable obj)
         {
             UpdateMarkerState();
         }
@@ -175,24 +220,27 @@ namespace WiFindUs.Eye.Wave
 
         protected virtual void UpdateMarkerState()
         {
-            if (Scene == null)
-                return;
-
-            bool active = Scene != null
-                && Scene.BaseTile != null
+            bool active = Scene.BaseTile != null
                 && Scene.BaseTile.Region != null
                 && (VisibleOnTimeout || !entity.TimedOut)
                 && entity.Location.HasLatLong
                 && Scene.BaseTile.Region.Contains(entity.Location);
 
             Owner.IsActive = Owner.IsVisible = active;
-            selectionRing.IsActive = selectionRing.IsVisible = active && entity.Selected;
+            if (model != null)
+            {
+                model.IsActive = model.IsVisible = active;
+                if (modelCollider != null)
+                    modelCollider.IsActive = active;
+            }
+            if (selectionRing != null)
+                selectionRing.IsActive = selectionRing.IsVisible = active && entity.Selected;
             if (active)
             {
-                Vector3 pos = scene.LocationToVector(entity.Location);
-                pos.Y += 5.0f;
-                transform3D.Position = pos;
-                materialsMap.DefaultMaterial = CurrentMaterial;
+                if (Transform3D != null)
+                    Transform3D.Position = Scene.LocationToVector(entity.Location);
+                if (modelMaterialsMap != null)
+                    modelMaterialsMap.DefaultMaterial = CurrentMaterial;
             }
         }
     }

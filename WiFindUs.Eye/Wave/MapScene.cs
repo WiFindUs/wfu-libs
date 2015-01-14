@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
@@ -45,6 +46,7 @@ namespace WiFindUs.Eye.Wave
         private Ray cameraRay;
         private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
         private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
+        private List<Marker> allMarkers = new List<Marker>();
         
         //camera frustum
         private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
@@ -307,17 +309,8 @@ namespace WiFindUs.Eye.Wave
             if (groundPlaneCollider == null)
                 return null;
 
-            //convert screen to world
-            Vector3 screenCoords = new Vector3(x, y, 0.0f);
-            Vector3 screenCoordsFar = new Vector3(x, y, 1.0f);
-            screenCoords = cameraTransform.Unproject(ref screenCoords);
-            screenCoordsFar = cameraTransform.Unproject(ref screenCoordsFar);
-
-            //update ray
-            Vector3 rayDirection = screenCoordsFar - screenCoords;
-            rayDirection.Normalize();
-            cameraRay.Direction = rayDirection;
-            cameraRay.Position = screenCoords;
+            //set up ray
+            ConfigureScreenRay(x,y);
 
             //test for collision with ground plane
             float? result = groundPlaneCollider.Intersects(ref cameraRay);
@@ -326,6 +319,30 @@ namespace WiFindUs.Eye.Wave
 
             //return result
             return VectorToLocation(cameraRay.Position + cameraRay.Direction * result.Value);
+        }
+
+        public Marker[] MarkersFromScreenRay(int x, int y)
+        {
+            if (deviceMarkers.Count == 0 && nodeMarkers.Count == 0)
+                return new Marker[0];
+
+            List<Marker> markers = new List<Marker>();
+
+            //set up ray
+            ConfigureScreenRay(x, y);
+
+            //check nodes
+            foreach (Marker marker in allMarkers)
+                if (marker.Transform3D != null
+                    && marker.BoxCollider != null
+                    && marker.BoxCollider.Intersects(ref cameraRay).HasValue)
+                    markers.Add(marker);
+
+            //sort based on distance
+            return markers.OrderBy(o =>
+            {
+                return Vector3.DistanceSquared(o.Transform3D.Position, cameraRay.Position);
+            }).ToArray();
         }
 
         public void CancelThreads()
@@ -361,9 +378,12 @@ namespace WiFindUs.Eye.Wave
 
             //create global lighting
             Debugger.V("MapScene: creating lighting");
-            Vector3 sun = new Vector3(0f, 100f, 25f);
+            Vector3 sun = new Vector3(0f, 100f, 35f);
             sun.Normalize();
-            DirectionalLight skylight = new DirectionalLight("SkyLight", sun);
+            DirectionalLight skylight = new DirectionalLight("SkyLight", sun)
+            {
+                Color = Color.Gray
+            };
             EntityManager.Add(skylight);
 
             //create terrain layers
@@ -452,16 +472,20 @@ namespace WiFindUs.Eye.Wave
 
         private void Device_OnDeviceLoaded(Device device)
         {
-            Entity marker = DeviceMarker.Create(device);
-            deviceMarkers.Add(marker.FindComponent<DeviceMarker>());
-            EntityManager.Add(marker);
+            Entity entity = DeviceMarker.Create(device);
+            DeviceMarker marker = entity.FindComponent<DeviceMarker>();
+            deviceMarkers.Add(marker);
+            allMarkers.Add(marker);
+            EntityManager.Add(entity);
         }
 
         private void Node_OnNodeLoaded(Node node)
         {
-            Entity marker = NodeMarker.Create(node);
-            nodeMarkers.Add(marker.FindComponent<NodeMarker>());
-            EntityManager.Add(marker);
+            Entity entity = NodeMarker.Create(node);
+            NodeMarker marker = entity.FindComponent<NodeMarker>();
+            nodeMarkers.Add(marker);
+            allMarkers.Add(marker);
+            EntityManager.Add(entity);
         }
 
         private void CreateTileLayer(uint layer)
@@ -526,6 +550,21 @@ namespace WiFindUs.Eye.Wave
         private void HostApplication_ScreenResized(MapApplication obj)
         {
             UpdateCameraPosition();
+        }
+
+        private void ConfigureScreenRay(int x, int y)
+        {
+            //convert screen to world
+            Vector3 screenCoords = new Vector3(x, y, 0.0f);
+            Vector3 screenCoordsFar = new Vector3(x, y, 1.0f);
+            screenCoords = cameraTransform.Unproject(ref screenCoords);
+            screenCoordsFar = cameraTransform.Unproject(ref screenCoordsFar);
+
+            //update ray
+            Vector3 rayDirection = screenCoordsFar - screenCoords;
+            rayDirection.Normalize();
+            cameraRay.Direction = rayDirection;
+            cameraRay.Position = screenCoords;
         }
     }
 }
