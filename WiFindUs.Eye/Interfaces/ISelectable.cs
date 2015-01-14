@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-    public interface ISelectableEntity
+    public interface ISelectable
     {
         bool Selected { get; set; }
-        event Action<ISelectableEntity> SelectedChanged;
-        ISelectableEntityGroup SelectionGroup { get; set; }
+        event Action<ISelectable> SelectedChanged;
+        ISelectableGroup SelectionGroup { get; set; }
     }
 }

@@ -11,11 +11,11 @@ namespace WiFindUs.Eye.Controls
 {
     public class EntityList : ThemedFlowLayoutPanel
     {
-        private ISelectableEntityGroup selectionGroup = null;
-        private ISelectableEntityGroup defaultSelectionGroup = new SelectableEntityGroup();
-        private List<ISelectableEntity> entities = new List<ISelectableEntity>();
-        
-        public ISelectableEntityGroup SelectionGroup
+        private ISelectableGroup selectionGroup = null;
+        private ISelectableGroup defaultSelectionGroup = new SelectableEntityGroup();
+        private List<ISelectable> entities = new List<ISelectable>();
+
+        public ISelectableGroup SelectionGroup
         {
             get
             {
@@ -25,11 +25,11 @@ namespace WiFindUs.Eye.Controls
             {
                 if (entities.Count > 0)
                     throw new InvalidOperationException("You can only change the selection group of an entity list when it is empty!");
-                ISelectableEntityGroup newValue = value == defaultSelectionGroup ? null : value;
+                ISelectableGroup newValue = value == defaultSelectionGroup ? null : value;
                 if (selectionGroup == newValue)
                     return;
                 selectionGroup = newValue;
-                foreach (ISelectableEntity entity in entities)
+                foreach (ISelectable entity in entities)
                     entity.SelectionGroup = SelectionGroup;
             }
         }
@@ -87,12 +87,12 @@ namespace WiFindUs.Eye.Controls
                 return;
 
             //check for any currently selected entities
-            ISelectableEntity[] selectedEntities = SelectionGroup.SelectedEntities;
+            ISelectable[] selectedEntities = SelectionGroup.SelectedEntities;
             if (selectedEntities == null || selectedEntities.Length == 0)
                 return;
 
             //check if any of the currently selected elements are in this list
-            foreach (ISelectableEntity entity in selectedEntities)
+            foreach (ISelectable entity in selectedEntities)
                 if (entities.Contains(entity))
                 {
                     SelectionGroup.ClearSelection();

@@ -13,7 +13,7 @@ namespace WiFindUs.Eye.Controls
 {
     public class EntityListItem : ThemedPanel
     {
-        private ISelectableEntity entity;
+        private ISelectable entity;
         private Image image;
 
         /////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ namespace WiFindUs.Eye.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ISelectableEntity Entity
+        public ISelectable Entity
         {
             get { return entity; }
         }
@@ -59,7 +59,7 @@ namespace WiFindUs.Eye.Controls
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-        public EntityListItem(ISelectableEntity entity)
+        public EntityListItem(ISelectable entity)
         {
             if (entity == null)
                 throw new ArgumentNullException("entity", "Entity cannot be null!");
@@ -173,7 +173,7 @@ namespace WiFindUs.Eye.Controls
                 base.OnMouseClick(e);
         }
 
-        protected virtual void OnEntitySelectedChanged(ISelectableEntity entity)
+        protected virtual void OnEntitySelectedChanged(ISelectable entity)
         {
             if (entity != this.entity)
                 return;

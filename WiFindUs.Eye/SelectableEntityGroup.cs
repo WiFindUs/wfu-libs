@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-    public class SelectableEntityGroup : ISelectableEntityGroup
+    public class SelectableEntityGroup : ISelectableGroup
     {
-        private List<ISelectableEntity> managedEntities = new List<ISelectableEntity>();
+        private List<ISelectable> managedEntities = new List<ISelectable>();
         private int capturedChangeNotifications = 0;
         private bool capturingNotifications = false;
 
@@ -16,7 +16,7 @@ namespace WiFindUs.Eye
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        public event Action<ISelectableEntityGroup> SelectionChanged;
+        public event Action<ISelectableGroup> SelectionChanged;
 
         public bool CaptureNotifies
         {
@@ -38,7 +38,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public ISelectableEntity[] Entities
+        public ISelectable[] Entities
         {
             get
             {
@@ -46,12 +46,12 @@ namespace WiFindUs.Eye
             }
         }
 
-        public ISelectableEntity[] SelectedEntities
+        public ISelectable[] SelectedEntities
         {
             get
             {
-                List<ISelectableEntity> selectedEntities = new List<ISelectableEntity>();
-                foreach (ISelectableEntity entity in managedEntities)
+                List<ISelectable> selectedEntities = new List<ISelectable>();
+                foreach (ISelectable entity in managedEntities)
                     if (entity.Selected)
                         selectedEntities.Add(entity);
                 return selectedEntities.ToArray();
@@ -62,7 +62,7 @@ namespace WiFindUs.Eye
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
-        public void NotifySelectionChanged(ISelectableEntity sender)
+        public void NotifySelectionChanged(ISelectable sender)
         {
             if (sender == null || sender.SelectionGroup != this)
                 return;
@@ -72,11 +72,11 @@ namespace WiFindUs.Eye
                 SelectionChanged(this);
         }
 
-        public void Add(params ISelectableEntity[] entities)
+        public void Add(params ISelectable[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
-            foreach (ISelectableEntity entity in entities)
+            foreach (ISelectable entity in entities)
             {
                 if (entity == null)
                     continue;
@@ -87,11 +87,11 @@ namespace WiFindUs.Eye
             }
         }
 
-        public void Remove(params ISelectableEntity[] entities)
+        public void Remove(params ISelectable[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
-            foreach (ISelectableEntity entity in entities)
+            foreach (ISelectable entity in entities)
             {
                 if (entity == null)
                     continue;
@@ -110,7 +110,7 @@ namespace WiFindUs.Eye
         public void SelectAll()
         {
             CaptureNotifies = true;
-            foreach (ISelectableEntity entity in managedEntities)
+            foreach (ISelectable entity in managedEntities)
                 entity.Selected = true;
             CaptureNotifies = false;
         }
@@ -118,7 +118,7 @@ namespace WiFindUs.Eye
         public void ClearSelection()
         {
             CaptureNotifies = true;
-            foreach (ISelectableEntity entity in managedEntities)
+            foreach (ISelectable entity in managedEntities)
                 entity.Selected = false;
             CaptureNotifies = false;
         }
@@ -126,17 +126,17 @@ namespace WiFindUs.Eye
         public void InvertSelection()
         {
             CaptureNotifies = true;
-            foreach (ISelectableEntity entity in managedEntities)
+            foreach (ISelectable entity in managedEntities)
                 entity.Selected = !entity.Selected;
             CaptureNotifies = false;
         }
 
-        public void AddToSelection(params ISelectableEntity[] entities)
+        public void AddToSelection(params ISelectable[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
             CaptureNotifies = true;
-            foreach (ISelectableEntity entity in entities)
+            foreach (ISelectable entity in entities)
             {
                 if (entity == null || entity.SelectionGroup != this)
                     continue;
@@ -145,17 +145,17 @@ namespace WiFindUs.Eye
             CaptureNotifies = false;
         }
 
-        public void AddToSelection(IEnumerable<ISelectableEntity> entities)
+        public void AddToSelection(IEnumerable<ISelectable> entities)
         {
             AddToSelection(entities.ToArray());
         }
 
-        public void RemoveFromSelection(params ISelectableEntity[] entities)
+        public void RemoveFromSelection(params ISelectable[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
             CaptureNotifies = true;
-            foreach (ISelectableEntity entity in entities)
+            foreach (ISelectable entity in entities)
             {
                 if (entity == null || entity.SelectionGroup != this)
                     continue;
@@ -164,12 +164,12 @@ namespace WiFindUs.Eye
             CaptureNotifies = false;
         }
 
-        public void RemoveFromSelection(IEnumerable<ISelectableEntity> entities)
+        public void RemoveFromSelection(IEnumerable<ISelectable> entities)
         {
             RemoveFromSelection(entities.ToArray());
         }
 
-        public void SetSelection(params ISelectableEntity[] entities)
+        public void SetSelection(params ISelectable[] entities)
         {
             if (entities == null || entities.Length == 0)
             {
@@ -178,8 +178,8 @@ namespace WiFindUs.Eye
             }
 
             CaptureNotifies = true;
-            List<ISelectableEntity> leftOver = new List<ISelectableEntity>(managedEntities);
-            foreach (ISelectableEntity entity in entities)
+            List<ISelectable> leftOver = new List<ISelectable>(managedEntities);
+            foreach (ISelectable entity in entities)
             {
                 if (entity == null || entity.SelectionGroup != this)
                     continue;
@@ -187,22 +187,22 @@ namespace WiFindUs.Eye
                 leftOver.Remove(entity);
             }
 
-            foreach (ISelectableEntity entity in leftOver)
+            foreach (ISelectable entity in leftOver)
                 entity.Selected = false;
             CaptureNotifies = false;
         }
 
-        public void SetSelection(IEnumerable<ISelectableEntity> entities)
+        public void SetSelection(IEnumerable<ISelectable> entities)
         {
             SetSelection(entities.ToArray());
         }
 
-        public void ToggleSelection(params ISelectableEntity[] entities)
+        public void ToggleSelection(params ISelectable[] entities)
         {
             if (entities == null || entities.Length == 0)
                 return;
             CaptureNotifies = true;
-            foreach (ISelectableEntity entity in entities)
+            foreach (ISelectable entity in entities)
             {
                 if (entity == null || entity.SelectionGroup != this)
                     continue;
@@ -211,7 +211,7 @@ namespace WiFindUs.Eye
             CaptureNotifies = false;
         }
 
-        public void ToggleSelection(IEnumerable<ISelectableEntity> entities)
+        public void ToggleSelection(IEnumerable<ISelectable> entities)
         {
             ToggleSelection(entities.ToArray());
         }

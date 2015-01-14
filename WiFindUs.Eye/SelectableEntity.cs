@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-    public class SelectableEntity : ISelectableEntity
+    public class SelectableEntity : ISelectable
     {
         private bool selected = false;
-        private ISelectableEntityGroup group = null;
-        public event Action<ISelectableEntity> SelectedChanged;
+        private ISelectableGroup group = null;
+        public event Action<ISelectable> SelectedChanged;
 
         public bool Selected
         {
@@ -27,7 +27,7 @@ namespace WiFindUs.Eye
             }
         }       
 
-        public ISelectableEntityGroup SelectionGroup
+        public ISelectableGroup SelectionGroup
         {
             get
             {
