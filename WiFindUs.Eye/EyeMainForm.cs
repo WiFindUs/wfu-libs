@@ -341,6 +341,8 @@ namespace WiFindUs.Eye
                 else 
                     device.Updated = DateTime.UtcNow.ToUnixTimestamp();
                 device.IPAddress = devicePacket.Packet.Address;
+                device.BatteryLevel = devicePacket.BatteryLevel;
+                device.Charging = devicePacket.Charging;
 
                 //update database
                 eyeContext.SubmitChanges();

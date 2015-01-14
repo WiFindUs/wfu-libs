@@ -44,8 +44,8 @@ namespace WiFindUs.Eye.Controls
             get
             {
                 return String.Format("{0}\n{1}",
-                    device.User != null ? "in use by " + device.User.FullName : "",
-                    device.HasLatLong ? WiFindUs.Eye.Location.ToString(device) : "");
+                    device.TimedOut ? "Timed out." : (device.User != null ? "in use by " + device.User.FullName : "No assigned user."),
+                    device.TimedOut ? "" : (device.HasLatLong ? WiFindUs.Eye.Location.ToString(device) : ""));
             }
         }
 
@@ -65,6 +65,60 @@ namespace WiFindUs.Eye.Controls
             device.OnDeviceTimedOutChanged += device_OnDeviceTimedOutChanged;
             device.OnDeviceBatteryChanged += device_OnDeviceBatteryChanged;
             device.OnDeviceAssignedWaypointChanged += device_OnDeviceAssignedWaypointChanged;
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PROTECTED METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            if (device == null || device.TimedOut)
+                return;
+
+            int w = 6;
+            int p = 2;
+            Rectangle rect = new Rectangle(ClientRectangle.Width - w - p, p, w, ClientRectangle.Height - p*2 - 1);
+            e.Graphics.FillRectangle(Theme.ControlMidBrush, rect);
+            if (device.BatteryLevel.HasValue)
+            {
+                double pc = device.BatteryLevel.Value;
+                int height = (int)(rect.Height * pc);
+                e.Graphics.FillRectangle(
+                    pc >= 0.75 ? Brushes.LimeGreen : (pc >= 0.5 ? Brushes.Yellow : (pc >= 0.25 ? Brushes.Orange : Brushes.Red)),
+                    rect.X, rect.Bottom - height, rect.Width, height
+                    );
+            }
+
+            using (Pen pen = new Pen(Theme.ControlDarkColour))
+                e.Graphics.DrawRectangle(pen, rect);
+
+            string text = (device.BatteryLevel.HasValue ? String.Format("{0:P0}", device.BatteryLevel.Value) : " ") + "\n"
+                + (device.Charging.HasValue && device.Charging.Value ? "Charging" : " ");
+            if (text.Trim().Length > 0)
+            {
+
+                using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic)
+                    {
+                        Alignment = StringAlignment.Far,
+                        LineAlignment = StringAlignment.Far
+                    })
+                {
+                    SizeF sz = e.Graphics.MeasureString(
+                        text,
+                        Font,
+                        ClientRectangle.Width,
+                        sf);
+                    e.Graphics.DrawString(
+                        text,
+                        Font,
+                        Theme.TextMidBrush,
+                        new Point(rect.Left - p, rect.Bottom),
+                        sf);
+                }
+            }
         }
 
         /////////////////////////////////////////////////////////////////////
