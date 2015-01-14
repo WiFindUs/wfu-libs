@@ -16,16 +16,17 @@ namespace WiFindUs.Eye.Wave
         private KeyboardState oldKeyboardState;
         private MouseState oldMouseState;
         private System.Windows.Forms.Cursor cursor = null;
+        private MapScene mapScene;
+        private Input input;
         
         protected override void ResolveDependencies()
         {
-
+            mapScene = Scene as MapScene;
+            input = WaveServices.Input;
         }
 
         protected override void Update(TimeSpan gameTime)
         {
-            MapScene mapScene = Scene as MapScene;
-            Input input = WaveServices.Input;
             if (mapScene == null || input == null)
                 return;
 
@@ -33,15 +34,24 @@ namespace WiFindUs.Eye.Wave
             cursor = null;
             mapScene.CameraAutoUpdate = false;
 
+            //left mouse click
+            if (LeftMousePressed(ref input.MouseState, ref oldMouseState))
+            {
+                Marker[] markers = mapScene.MarkersFromScreenRay(input.MouseState.X, input.MouseState.Y);
+                if (markers.Length > 0)
+                    foreach (Marker marker in markers)
+                        marker.Selected = true;
+            }
+
             //arrows and WSAD for pan
             Vector3 moveDelta = new Vector3();
-            if (IsLeft(input))
+            if (IsLeft(ref input))
                 moveDelta.X -= 1;
-            if (IsForward(input))
+            if (IsForward(ref input))
                 moveDelta.Z -= 1;
-            if (IsRight(input))
+            if (IsRight(ref input))
                 moveDelta.X += 1;
-            if (IsBack(input))
+            if (IsBack(ref input))
                 moveDelta.Z += 1;
             if (moveDelta.LengthSquared() > 0.0f)
             {
@@ -89,31 +99,31 @@ namespace WiFindUs.Eye.Wave
         // KEYBOARD BUTTONS
         /////////////////////////////////////////////////////////////////////
 
-        private bool IsShift(Input input)
+        private bool IsShift(ref Input input)
         {
             return input.KeyboardState.RightShift == ButtonState.Pressed
                 || input.KeyboardState.LeftShift == ButtonState.Pressed;
         }
 
-        private bool IsLeft(Input input)
+        private bool IsLeft(ref Input input)
         {
             return input.KeyboardState.Left == ButtonState.Pressed
                 || input.KeyboardState.A == ButtonState.Pressed;
         }
 
-        private bool IsRight(Input input)
+        private bool IsRight(ref Input input)
         {
             return input.KeyboardState.Right == ButtonState.Pressed
                 || input.KeyboardState.D == ButtonState.Pressed;
         }
 
-        private bool IsForward(Input input)
+        private bool IsForward(ref Input input)
         {
             return input.KeyboardState.Up == ButtonState.Pressed
                 || input.KeyboardState.W == ButtonState.Pressed;
         }
 
-        private bool IsBack(Input input)
+        private bool IsBack(ref Input input)
         {
             return input.KeyboardState.Down == ButtonState.Pressed
                 || input.KeyboardState.S == ButtonState.Pressed;
