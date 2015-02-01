@@ -12,7 +12,9 @@ using WaveEngine.Framework.Services;
 namespace WiFindUs.Eye.Wave
 {
     public class MapSceneInputBehaviour : SceneBehavior
-    {        
+    {
+        public event Action<Marker[]> SceneClicked;
+        
         private KeyboardState oldKeyboardState;
         private MouseState oldMouseState;
         private System.Windows.Forms.Cursor cursor = null;
@@ -35,13 +37,8 @@ namespace WiFindUs.Eye.Wave
             mapScene.CameraAutoUpdate = false;
 
             //left mouse click
-            if (LeftMousePressed(ref input.MouseState, ref oldMouseState))
-            {
-                Marker[] markers = mapScene.MarkersFromScreenRay(input.MouseState.X, input.MouseState.Y);
-                if (markers.Length > 0)
-                    foreach (Marker marker in markers)
-                        marker.Selected = true;
-            }
+            if (LeftMousePressed(ref input.MouseState, ref oldMouseState) && SceneClicked != null)
+                SceneClicked(mapScene.MarkersFromScreenRay(input.MouseState.X, input.MouseState.Y));
 
             //arrows and WSAD for pan
             Vector3 moveDelta = new Vector3();

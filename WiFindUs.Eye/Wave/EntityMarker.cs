@@ -15,7 +15,7 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class EntityMarker<T> : Marker where T : class, ILocatable, ISelectable, IUpdateable
+    public class EntityMarker<T> : Marker, ISelectableProxy where T : class, ILocatable, ISelectable, IUpdateable
     {
         protected readonly T entity;
 
@@ -108,6 +108,11 @@ namespace WiFindUs.Eye.Wave
         {
             get { return entity.Selected; }
             set { entity.Selected = value; }
+        }
+
+        public ISelectable Selectable
+        {
+            get { return entity; }
         }
 
         /////////////////////////////////////////////////////////////////////

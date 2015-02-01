@@ -116,6 +116,7 @@
     <Compile Include="Device.cs" />
     <Compile Include="DevicePacket.cs" />
     <Compile Include="Interfaces\IActionSubscriber.cs" />
+    <Compile Include="Interfaces\ISelectableProxy.cs" />
     <Compile Include="SelectableEntity.cs" />
     <Compile Include="SelectableEntityGroup.cs" />
     <Compile Include="Extensions\ConfigFileExtensions.cs" />

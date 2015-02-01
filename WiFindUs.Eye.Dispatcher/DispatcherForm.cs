@@ -167,6 +167,7 @@ namespace WiFindUs.Eye.Dispatcher
             Map.AltEnterPressed += mapControl_AltEnterPressed;
             Map.Scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
             minimap.Scene = Map.Scene;
+            Map.Scene.InputBehaviour.SceneClicked += InputBehaviour_SceneClicked;
         }
 
         private void BaseTile_TextureImageLoadingFinished(TerrainTile obj)
@@ -258,6 +259,38 @@ namespace WiFindUs.Eye.Dispatcher
                 }
 
                 actionPanel.ActionSubscriber = null;
+            }
+        }
+
+        private void InputBehaviour_SceneClicked(Marker[] clickedMarkers)
+        {
+            if (clickedMarkers == null || clickedMarkers.Length == 0)
+            {
+                globalSelectionGroup.ClearSelection();
+                return;
+            }
+            
+            List<ISelectable> selectables = new List<ISelectable>();
+            foreach (Marker marker in clickedMarkers)
+            {
+                ISelectableProxy sp = marker as ISelectableProxy;
+                if (sp != null)
+                    selectables.Add(sp.Selectable);
+            }
+
+            Debugger.C("selectables: {0}", selectables.Count);
+
+            if (selectables.Count == 0)
+                globalSelectionGroup.ClearSelection();
+            else if (selectables.Count == 1 || globalSelectionGroup.SelectedEntities.Length == 0)
+                globalSelectionGroup.SetSelection(selectables[0]);
+            else
+            {
+                ISelectable[] intersection = globalSelectionGroup.SelectedEntities.Intersect(selectables).ToArray();
+                if (intersection.Length == 0)
+                    globalSelectionGroup.SetSelection(selectables[0]);
+                else
+                    globalSelectionGroup.SetSelection(selectables[((selectables.IndexOf(intersection[intersection.Length-1]) + 1) % selectables.Count)]);
             }
         }
     }
