@@ -44,11 +44,11 @@ namespace WiFindUs.Eye.Wave
             Vector3 moveDelta = new Vector3();
             if (IsLeft(ref input))
                 moveDelta.X -= 1;
-            if (IsForward(ref input))
+            if (IsForward(ref input) && !IsShift(ref input))
                 moveDelta.Z -= 1;
             if (IsRight(ref input))
                 moveDelta.X += 1;
-            if (IsBack(ref input))
+            if (IsBack(ref input) && !IsShift(ref input))
                 moveDelta.Z += 1;
             if (moveDelta.LengthSquared() > 0.0f)
             {
@@ -77,8 +77,14 @@ namespace WiFindUs.Eye.Wave
                 mapScene.CameraTarget += moveDelta;
 
             //mouse wheel for zooming and tilting
+            int zoomOffset = 0;
             if (input.MouseState.Wheel != oldMouseState.Wheel)
-                 mapScene.CameraZoom -= (input.MouseState.Wheel - oldMouseState.Wheel) * 5;
+                 zoomOffset -= (input.MouseState.Wheel - oldMouseState.Wheel) * 5;
+            if (IsShift(ref input) && IsForward(ref input))
+                zoomOffset -= 5;
+            if (IsShift(ref input) && IsBack(ref input))
+                zoomOffset += 5;
+            mapScene.CameraZoom += zoomOffset;
 
             //check debug hotkey
             if (oldKeyboardState.F2 == ButtonState.Release && input.KeyboardState.F2 == ButtonState.Pressed)
