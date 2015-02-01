@@ -11,6 +11,11 @@ namespace WiFindUs.Eye.Dispatcher
     {
         private Device[] devices;
 
+        public String ActionDescription
+        {
+            get { return String.Format("{0} devices", devices.Length); }
+        }
+
         public DeviceGroupActionSubscriber(params Device[] devices)
         {
             if (devices == null)
@@ -25,9 +30,9 @@ namespace WiFindUs.Eye.Dispatcher
             switch (index)
             {
                 case 0: return true;
-                case 1: return true;
-                case 2: return true;
-                case 9: return true;
+                //case 1: return true;
+                //case 2: return true;
+                case 8: return true;
             }
             return false;
         }
@@ -42,8 +47,8 @@ namespace WiFindUs.Eye.Dispatcher
             switch (index)
             {
                 case 0: return "Dispatch All";
-                case 1: return "Zoom To";
-                case 2: return "Track All";
+                //case 1: return "Zoom To";
+                //case 2: return "Track All";
                 case 8: return "Cancel All";
             }
             return "";

@@ -168,6 +168,11 @@ namespace WiFindUs.Eye
 
         }
 
+        public String ActionDescription
+        {
+            get { return this.ToString(); }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////

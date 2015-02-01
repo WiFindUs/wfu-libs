@@ -13,5 +13,6 @@ namespace WiFindUs.Eye
         Image ActionImage(uint index);
         String ActionText(uint index);
         void ActionTriggered(uint index);
+        String ActionDescription { get; }
     }
 }

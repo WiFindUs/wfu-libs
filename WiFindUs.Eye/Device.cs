@@ -181,6 +181,11 @@ namespace WiFindUs.Eye
             get { return TIMEOUT; }
         }
 
+        public String ActionDescription
+        {
+            get { return this.ToString(); }
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
