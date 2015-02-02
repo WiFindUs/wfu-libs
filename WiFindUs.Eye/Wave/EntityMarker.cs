@@ -130,6 +130,15 @@ namespace WiFindUs.Eye.Wave
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
 
+        public static Color TypeColor(String type)
+        {
+            if (type == null || (type = type.Trim().ToLower()).Length == 0)
+                return Color.Gray;
+            System.Drawing.Color col
+                = WFUApplication.Config.Get("type_" + type + ".colour", System.Drawing.Color.Gray);
+            return new Color(col.R, col.G, col.B, col.A);
+        }
+
         public static Material TypeMaterial(String type)
         {
             Material material = PlaceHolderMaterial;
@@ -138,10 +147,8 @@ namespace WiFindUs.Eye.Wave
 
             if (!typeColours.TryGetValue(type, out material))
             {
-                System.Drawing.Color col
-                    = WFUApplication.Config.Get("type_" + type + ".colour", System.Drawing.Color.Gray);
                 typeColours[type] = material
-                    = new BasicMaterial(new Color(col.R, col.G, col.B, col.A))
+                    = new BasicMaterial(TypeColor(type))
                     {
                         LightingEnabled = true,
                         AmbientLightColor = Color.White * 0.5f,
