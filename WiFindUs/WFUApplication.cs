@@ -643,7 +643,11 @@ namespace WiFindUs
             Debugger.I("Loading config files...");
             String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             config = new ConfigFile(files);
+#if DEBUG
             config.LogMissingKeys = config.Get("config.log_missing_keys", false);
+#else
+            config.LogMissingKeys = config.Get("config.log_missing_keys", true);
+#endif
             Debugger.V(config.ToString());
             Debugger.I("Finished loading config files.");
             return true;
