@@ -24,7 +24,7 @@ namespace WiFindUs.Eye.Wave
             loadingMaterial, downloadingMaterial, errorMaterial, creatingTextureMaterial,
             loadedMaterial;
         private const int MAX_CONCURRENT_TEXTURE_CREATIONS = 1;
-        private const int MAX_CONCURRENT_LOADS = 10;
+        private readonly int MAX_CONCURRENT_LOADS = Environment.ProcessorCount;
         private const int MAX_CONCURRENT_DOWNLOADS = 1;
         private const int TILE_IMAGE_SIZE = 640;
         private static readonly string IMAGE_FORMAT = "png";
@@ -280,20 +280,18 @@ namespace WiFindUs.Eye.Wave
                 8.0 + (MapScene.MIN_LEVEL - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM)//smallest chunks will be sized at this power of two
                 + (WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM)
                 - layer) / 10.0f;
-            
-            Entity tileEntity = new Entity()
+
+            Entity tileEntity = new Entity() { IsVisible = false, IsActive = false }
             .AddComponent(new Transform3D())
             .AddComponent(new MaterialsMap((row + column) % 2 == 0 ? PlaceHolderMaterial : PlaceHolderMaterialAlt))
             .AddComponent(Model.CreatePlane(Vector3.UnitY, size))
             .AddComponent(new ModelRenderer())
-            .AddComponent(new BoxCollider() { IsActive = false })
+            .AddComponent(new BoxCollider() { IsActive = false, DebugLineColor = Color.Brown })
             .AddComponent(new TerrainTile(
                 layer == 0 ? null : baseTile,
                 MapScene.MIN_LEVEL + layer,
                 row, column,
                 size));
-            tileEntity.IsVisible = false;
-            tileEntity.IsActive = false;
 
             return tileEntity;
         }
@@ -356,10 +354,6 @@ namespace WiFindUs.Eye.Wave
                 return;
             }
 
-            //don't bother loading images or creating textures for tiles that are not visible
-            if (!Owner.IsVisible || !Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider))
-                return;
-
             //the image has already been loaded, create a texture from it
             if (TileImage != null)
             {
@@ -387,7 +381,11 @@ namespace WiFindUs.Eye.Wave
 
         protected override void Update(TimeSpan gameTime)
         {
-            if (!errorState && !textured && threadObject == null)
+            if (!errorState 
+                && !textured
+                && threadObject == null
+                && Owner.IsVisible
+                && Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider))
                 CheckTextureState();
         }
 
