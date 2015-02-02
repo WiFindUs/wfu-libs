@@ -167,7 +167,7 @@ namespace WiFindUs.Eye.Dispatcher
             Map.AltEnterPressed += mapControl_AltEnterPressed;
             Map.Scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
             minimap.Scene = Map.Scene;
-            Map.Scene.InputBehaviour.SceneClicked += InputBehaviour_SceneClicked;
+            Map.Scene.InputBehaviour.MousePressed += InputBehaviour_MousePressed;
         }
 
         private void BaseTile_TextureImageLoadingFinished(TerrainTile obj)
@@ -262,8 +262,13 @@ namespace WiFindUs.Eye.Dispatcher
             }
         }
 
-        private void InputBehaviour_SceneClicked(Marker[] clickedMarkers)
+        private void InputBehaviour_MousePressed(MapSceneInput.MapSceneMouseEventArgs args)
         {
+            if (args.Button != MapSceneInput.MouseButtons.Left)
+                return;
+
+            Marker[] clickedMarkers = args.Scene.MarkersFromScreenRay(args.X, args.Y);
+
             if (clickedMarkers == null || clickedMarkers.Length == 0)
             {
                 globalSelectionGroup.ClearSelection();
