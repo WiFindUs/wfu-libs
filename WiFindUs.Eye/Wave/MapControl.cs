@@ -224,16 +224,19 @@ namespace WiFindUs.Eye.Wave
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-
             if (!CheckInputManager())
                 return;
-            input.MouseState.X = e.X;
-            input.MouseState.Y = e.Y;
+
+            UpdateMousePosition(e);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+            if (!CheckInputManager())
+                return;
+
+            UpdateMousePosition(e);
             SetMouseButtonState(e, true);
             this.Focus();
         }
@@ -241,6 +244,10 @@ namespace WiFindUs.Eye.Wave
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+            if (!CheckInputManager())
+                return;
+
+            UpdateMousePosition(e);
             SetMouseButtonState(e, false);
         }
 
@@ -249,7 +256,9 @@ namespace WiFindUs.Eye.Wave
             base.OnMouseWheel(e);
             if (!CheckInputManager())
                 return;
-            this.input.MouseState.Wheel += e.Delta > 0 ? 1 : -1;
+
+            UpdateMousePosition(e);
+            input.MouseState.Wheel += e.Delta > 0 ? 1 : -1;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -257,15 +266,8 @@ namespace WiFindUs.Eye.Wave
             base.OnKeyDown(e);
             if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
             {
-                if (e.Modifiers == Keys.Alt)
-                {
-                    if ((e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return) && AltEnterPressed != null)
-                    {
-                        AltEnterPressed(this);
-                        e.Handled = true;
-                    }
-                    return;
-                }
+                if (e.Modifiers == Keys.Alt && (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return) && AltEnterPressed != null)
+                    AltEnterPressed(this);
                 SetKeyboardButtonState(e, true);
                 e.Handled = true;
             }
@@ -276,8 +278,6 @@ namespace WiFindUs.Eye.Wave
             base.OnKeyUp(e);
             if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
             {
-                if (e.Modifiers == Keys.Alt)
-                    return;
                 SetKeyboardButtonState(e, false);
                 e.Handled = true;
             }
@@ -286,6 +286,12 @@ namespace WiFindUs.Eye.Wave
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        private void UpdateMousePosition(MouseEventArgs args)
+        {
+            input.MouseState.X = args.X;
+            input.MouseState.Y = args.Y;
+        }
 
         private bool CheckInputManager()
         {
@@ -462,16 +468,17 @@ namespace WiFindUs.Eye.Wave
                 case System.Windows.Forms.Keys.Left:
                     this.input.KeyboardState.Left = state;
                     break;
-                case System.Windows.Forms.Keys.LMenu:
-                    this.input.KeyboardState.LeftAlt = state;
-                    break;
-                case System.Windows.Forms.Keys.LControlKey:
+                case System.Windows.Forms.Keys.ControlKey:
                     this.input.KeyboardState.LeftControl = state;
+                    this.input.KeyboardState.RightControl = state;
                     break;
-                case System.Windows.Forms.Keys.LShiftKey:
-                case System.Windows.Forms.Keys.Shift:
                 case System.Windows.Forms.Keys.ShiftKey:
                     this.input.KeyboardState.LeftShift = state;
+                    this.input.KeyboardState.RightShift = state;
+                    break;
+                case System.Windows.Forms.Keys.Menu:
+                    this.input.KeyboardState.LeftAlt = state;
+                    this.input.KeyboardState.RightAlt = state;
                     break;
                 case System.Windows.Forms.Keys.LWin:
                     this.input.KeyboardState.LeftWindows = state;
@@ -496,15 +503,6 @@ namespace WiFindUs.Eye.Wave
                     break;
                 case System.Windows.Forms.Keys.Right:
                     this.input.KeyboardState.Right = state;
-                    break;
-                case System.Windows.Forms.Keys.RMenu:
-                    this.input.KeyboardState.RightAlt = state;
-                    break;
-                case System.Windows.Forms.Keys.RControlKey:
-                    this.input.KeyboardState.RightControl = state;
-                    break;
-                case System.Windows.Forms.Keys.RShiftKey:
-                    this.input.KeyboardState.RightShift = state;
                     break;
                 case System.Windows.Forms.Keys.RWin:
                     this.input.KeyboardState.RightWindows = state;
