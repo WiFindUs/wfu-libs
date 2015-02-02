@@ -38,8 +38,8 @@ namespace WiFindUs.Eye.Wave
         private BoxCollider groundPlaneCollider;
         private TerrainTile baseTile;
         private uint visibleLayer = uint.MaxValue;
-        private int cameraZoom = 100; //percentage; 100 is all the way zoomed out
-        private int cameraTilt = 0; //percentage; 100 is completely vertical
+        private float cameraZoom = 1.0f; //percentage
+        private float cameraTilt = 0.0f; //percentage
         private Camera3D cameraTransform;
         private bool autoUpdateCamera = true;
         private bool cameraDirty = false;
@@ -119,7 +119,7 @@ namespace WiFindUs.Eye.Wave
                         = tile.Owner.IsActive
                         = tile.Owner.FindComponent<BoxCollider>().IsActive
                         = false;
-                },(int)visibleLayer, (int)visibleLayer);
+                }, -1, -1, (int)layer);
 
                 visibleLayer = layer;
 
@@ -138,16 +138,16 @@ namespace WiFindUs.Eye.Wave
             get { return (uint)tiles.Length; }
         }
 
-        public int CameraZoom
+        public float CameraZoom
         {
             get { return cameraZoom; }
             set
             {
-                int zoom = value < 0 ? 0 : (value > 100 ? 100 : value);
-                if (zoom == cameraZoom)
+                float zoom = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
+                if (zoom.Tolerance(cameraZoom,0.001f))
                     return;
                 cameraZoom = zoom;
-                VisibleLayer = (uint)((1.0f - ((float)cameraZoom / 100.0f)) * (float)tiles.Length);
+                VisibleLayer = (uint)((1.0f - cameraZoom) * (float)tiles.Length);
                 if (autoUpdateCamera)
                     UpdateCameraPosition();
                 else
@@ -155,13 +155,13 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
-        public int CameraTilt
+        public float CameraTilt
         {
             get { return cameraTilt; }
             set
             {
-                int tilt = value < 0 ? 0 : (value > 100 ? 100 : value);
-                if (tilt == cameraTilt)
+                float tilt = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
+                if (tilt.Tolerance(cameraTilt, 0.001f))
                     return;
                 cameraTilt = tilt;
                 if (autoUpdateCamera)
@@ -403,7 +403,7 @@ namespace WiFindUs.Eye.Wave
             groundPlane = new Entity()
                 .AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
                 .AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 50f))
-                .AddComponent(groundPlaneCollider = new BoxCollider());
+                .AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red });
             EntityManager.Add(groundPlane);
 
             //add scene behaviours
@@ -445,8 +445,8 @@ namespace WiFindUs.Eye.Wave
                 return;
 
             //set position
-            float angle = CAM_MIN_ANGLE + ((CAM_MAX_ANGLE - CAM_MIN_ANGLE) * ((float)cameraTilt / 100.0f));
-            float distance = CAM_MIN_ZOOM + ((CAM_MAX_ZOOM - CAM_MIN_ZOOM) * ((float)cameraZoom / 100.0f));
+            float angle = CAM_MIN_ANGLE + ((CAM_MAX_ANGLE - CAM_MIN_ANGLE) * cameraTilt);
+            float distance = CAM_MIN_ZOOM + ((CAM_MAX_ZOOM - CAM_MIN_ZOOM) * cameraZoom);
             Vector3 direction = new Vector3(0f, (float)Math.Sin(angle), (float)Math.Cos(angle));
             direction.Normalize();
             cameraTransform.Position = new Vector3(
@@ -509,7 +509,6 @@ namespace WiFindUs.Eye.Wave
                     EntityManager.Add(tileEntity);
                     if (layer == 0)
                         baseTile = tileEntity.FindComponent<TerrainTile>();
-                    
                 }
             }
         }

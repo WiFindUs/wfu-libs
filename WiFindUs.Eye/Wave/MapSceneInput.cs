@@ -54,7 +54,6 @@ namespace WiFindUs.Eye.Wave
 
         private KeyboardState oldKeyboardState;
         private MouseState oldMouseState;
-        private System.Windows.Forms.Cursor cursor = null;
         private MapScene mapScene;
         private Input input;
         
@@ -72,10 +71,9 @@ namespace WiFindUs.Eye.Wave
                 return;
 
             //initial state
-            cursor = null;
             Vector3 moveDelta = new Vector3();
-            int zoomDelta = 0;
-            int tiltDelta = 0;
+            float zoomDelta = 0;
+            float tiltDelta = 0;
             KeyboardModifiers modifiers = GetModifiers(ref input.KeyboardState);
 
             //check debug hotkey
@@ -125,7 +123,7 @@ namespace WiFindUs.Eye.Wave
                     moveDelta.Z -= 1.0f;
                 if (WasKeyHeld(Keys.Down))
                     moveDelta.Z += 1.0f;
-                if (!moveDelta.LengthSquared().Tolerance(0.0f,0.1f))
+                if (!moveDelta.LengthSquared().Tolerance(0.0f,0.01f))
                 {
                     moveDelta.Normalize();
                     moveDelta *= (float)gameTime.TotalSeconds * 1000.0f;
@@ -134,50 +132,42 @@ namespace WiFindUs.Eye.Wave
             //camera panning with middle mouse
             if (WasMouseHeld(MouseButtons.Middle))
             {
-                float zoomDiff = 1.0f + ((float)mapScene.CameraZoom / 100.0f);
+                float zoomDiff = 1.0f + mapScene.CameraZoom;
                 moveDelta.X += (oldMouseState.X - input.MouseState.X) * zoomDiff;
                 moveDelta.Z += (oldMouseState.Y - input.MouseState.Y) * zoomDiff;
-                cursor = System.Windows.Forms.Cursors.Hand;
             }
             //tilting camera with left + right mouse
             else if (WasMouseHeld(MouseButtons.Left) && WasMouseHeld(MouseButtons.Right))
-            {
-                tiltDelta = (int)(oldMouseState.Y - input.MouseState.Y);
-                cursor = System.Windows.Forms.Cursors.SizeNS;
-            }
+                tiltDelta = (float)(oldMouseState.Y - input.MouseState.Y) * 0.01f;
 
             //zooming with mousewheel
             if (input.MouseState.Wheel != oldMouseState.Wheel)
-                zoomDelta -= (input.MouseState.Wheel - oldMouseState.Wheel) * 5;
+                zoomDelta -= (float)(input.MouseState.Wheel - oldMouseState.Wheel) * 0.05f;
 
             //tilting camera with shift + up/down
             if (modifiers == KeyboardModifiers.Shift)
             {
                 if (WasKeyHeld(Keys.Up))
-                    zoomDelta -= 5;
+                    zoomDelta -= 0.05f;
                 if (WasKeyHeld(Keys.Down))
-                    zoomDelta += 5;
+                    zoomDelta += 0.05f;
             }
 
             //tilting camera with control + up/down
             if (modifiers == KeyboardModifiers.Control)
             {
                 if (WasKeyHeld(Keys.Up))
-                    tiltDelta -= 5;
+                    tiltDelta -= (float)gameTime.TotalSeconds;
                 if (WasKeyHeld(Keys.Down))
-                    tiltDelta += 5;
+                    tiltDelta += (float)gameTime.TotalSeconds;
             }
 
             //apply changes
             mapScene.CameraAutoUpdate = false;
-            if (!moveDelta.LengthSquared().Tolerance(0.0f,0.1f))
+            if (!moveDelta.LengthSquared().Tolerance(0.0f,0.01f))
                 mapScene.CameraTarget += moveDelta;
-            if (zoomDelta != 0)
-                mapScene.CameraZoom += zoomDelta;
-            if (tiltDelta != 0)
-                mapScene.CameraTilt += tiltDelta;
-            if (cursor != mapScene.HostControl.Cursor)
-                mapScene.HostControl.Cursor = cursor ?? System.Windows.Forms.Cursors.Default;
+            mapScene.CameraZoom += zoomDelta;
+            mapScene.CameraTilt += tiltDelta;
             mapScene.CameraAutoUpdate = true;
 
             //state
