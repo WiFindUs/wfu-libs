@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,7 @@ namespace WiFindUs.Forms
         private string statusString = "";
         private List<Func<bool>> tasks;
         public event Action<PaintEventArgs> PreDraw, PostDraw;
+        private Brush bgBrush = null;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -75,10 +77,35 @@ namespace WiFindUs.Forms
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
+        public override void OnThemeChanged()
+        {
+            base.OnThemeChanged();
+            if (bgBrush != null)
+            {
+                bgBrush.Dispose();
+                bgBrush = null;
+            }
+        }
+
         protected override void OnResize(EventArgs e)
         {
             RecalculateActiveArea();
             base.OnResize(e);            
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs e)
+        {
+            base.OnPaintBackground(e);
+            if (IsDesignMode)
+                return;
+
+            Rectangle gradRect = new Rectangle(0, 0, ClientRectangle.Width, ClientRectangle.Height / 3);
+
+            if (bgBrush == null)
+                bgBrush = new LinearGradientBrush(gradRect,
+                    Theme.ControlDarkColour, Theme.ControlLightColour,
+                    90);
+            e.Graphics.FillRectangle(bgBrush, gradRect);
         }
 
         protected override void OnPaint(PaintEventArgs e)
