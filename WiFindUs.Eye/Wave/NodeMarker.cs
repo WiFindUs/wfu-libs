@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
@@ -36,7 +37,7 @@ namespace WiFindUs.Eye.Wave
                     .AddComponent(new MaterialsMap(PlaceHolderMaterial))
                     .AddComponent(Model.CreateCube(10f))
                     .AddComponent(new ModelRenderer())
-                    .AddComponent(new BoxCollider() { IsActive = false }))
+                    .AddComponent(new BoxCollider() { IsActive = false, DebugLineColor = Color.Cyan }))
                 //selection ring
                 .AddChild(new Entity("selection") { IsActive = false, IsVisible = false }
                     .AddComponent(new Transform3D() { Position = new Vector3(0.0f, 5.0f, 0.0f) })

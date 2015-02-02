@@ -18,6 +18,7 @@ namespace WiFindUs.Eye.Wave
 {
     public class DeviceMarker : EntityMarker<Device>
     {
+        
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
@@ -56,7 +57,7 @@ namespace WiFindUs.Eye.Wave
                     .AddComponent(new MaterialsMap(PlaceHolderMaterial))
                     .AddComponent(Model.CreateCone(10f, 6f, 5))
                     .AddComponent(new ModelRenderer())
-                    .AddComponent(new BoxCollider() { IsActive = false }))
+                    .AddComponent(new BoxCollider() { IsActive = false, DebugLineColor = Color.Gray }))
                 //selection ring
                 .AddChild(new Entity("selection") { IsActive = false, IsVisible = false }
                     .AddComponent(new Transform3D()
@@ -86,6 +87,8 @@ namespace WiFindUs.Eye.Wave
         private void OnDeviceUserChanged(Device device)
         {
             UpdateMarkerState();
+            if (BoxCollider != null)
+                BoxCollider.DebugLineColor = entity.User == null ? Color.Gray : TypeColor(entity.User.Type);
         }
     }
 }
