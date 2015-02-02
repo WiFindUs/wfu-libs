@@ -167,7 +167,7 @@
     <Compile Include="Wave\MapApplication.cs" />
     <Compile Include="Wave\MapGame.cs" />
     <Compile Include="Wave\MapScene.cs" />
-    <Compile Include="Wave\MapSceneInputBehaviour.cs" />
+    <Compile Include="Wave\MapSceneInput.cs" />
     <Compile Include="Controls\MiniMapControl.cs">
       <SubType>Component</SubType>
     </Compile>

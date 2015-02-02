@@ -47,7 +47,7 @@ namespace WiFindUs.Eye.Wave
         private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
         private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
         private List<Marker> allMarkers = new List<Marker>();
-        private MapSceneInputBehaviour inputBehaviour;
+        private MapSceneInput inputBehaviour;
         
         //camera frustum
         private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
@@ -266,7 +266,7 @@ namespace WiFindUs.Eye.Wave
             }
         }
 
-        public MapSceneInputBehaviour InputBehaviour
+        public MapSceneInput InputBehaviour
         {
             get { return inputBehaviour; }
         }
@@ -408,7 +408,7 @@ namespace WiFindUs.Eye.Wave
 
             //add scene behaviours
             Debugger.V("MapScene: creating behaviours");
-            AddSceneBehavior(inputBehaviour = new MapSceneInputBehaviour(), SceneBehavior.Order.PostUpdate);
+            AddSceneBehavior(inputBehaviour = new MapSceneInput(), SceneBehavior.Order.PostUpdate);
         }
 
         protected override void Start()
