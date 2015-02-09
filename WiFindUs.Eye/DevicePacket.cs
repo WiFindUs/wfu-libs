@@ -126,7 +126,8 @@ namespace WiFindUs.Eye
                     case "user":
                         try
                         {
-                            userID = Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber);
+                            if (match.Groups[2].Value.CompareTo("-1") != 0)
+                                userID = Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber);
                         }
                         catch (FormatException) { }
                         break;
