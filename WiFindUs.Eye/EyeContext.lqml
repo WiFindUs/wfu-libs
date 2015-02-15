@@ -25,30 +25,18 @@
       <Association Name="User_Device" ed:AssociationGuid="757b82a5-d585-4fcd-b6d8-03447a4aaf74" Member="User" ed:Guid="4d42c578-1f9d-4728-bdde-facbac34151e" ThisKey="UserID" OtherKey="ID" Type="User" DeleteRule="SET NULL" IsForeignKey="true" Cardinality="One" />
     </Type>
   </Table>
-  <Table Name="wfu_eye_db.NodeHistories" Member="NodeHistories">
-    <Type Name="NodeHistory" ed:Guid="fa7781c4-0b2e-4992-bb27-2ff5020de8d9">
-      <Column Name="NodeID" Type="System.Int64" DbType="bigint NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="b4969674-1da3-4303-9dae-6c654c14469a" />
-      <Column Name="Created" Type="System.Int64" DbType="bigint NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="6e186d10-ce3f-4c17-af5e-45e6424d9547" />
-      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="b477d023-4eff-42b6-9845-620bb7a2c3c5" />
-      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="287cc1b1-6cd4-468f-af2c-30c967fc6ed3" />
-      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="28f39636-bd86-47d2-ba75-3ca424c94640" />
-      <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="8c28b42d-21dd-4369-9062-bd27615228ad" />
-      <Association Name="Node_NodeHistory" ed:AssociationGuid="26cc16ce-8554-4d5f-9b93-008129a5964f" Member="Node" ed:Guid="fdccd140-f2e7-480b-b1eb-b8eb9dd42339" ThisKey="NodeID" OtherKey="ID" Type="Node" DeleteRule="CASCADE" IsForeignKey="true" />
-    </Type>
-  </Table>
   <Table Name="wfu_eye_db.Nodes" Member="Nodes">
     <Type Name="Node" ed:Guid="33ef44af-e972-4aa7-954d-af427bccf80d">
       <Column Name="ID" Type="System.Int64" DbType="bigint NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="0cf91426-55bc-493a-8620-1b04e560e63c" />
       <Column Name="Created" Type="System.Int64" DbType="bigint NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="True" ed:Guid="acda245e-03cd-400e-acf7-7da677020055" />
       <Column Name="Updated" Type="System.Int64" DbType="bigint NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="True" ed:Guid="4224bc15-973b-4943-ad47-b438798ffc8e" />
-      <Column Name="Number" Type="System.Int64" DbType="bigint NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="True" ed:Guid="fa56060b-566f-44ff-b49a-02619fce08c4" />
+      <Column Name="Number" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="False" ed:Guid="fa56060b-566f-44ff-b49a-02619fce08c4" />
       <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="e2c60de2-e8c3-4025-8b62-a94e7567d431" />
       <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="e6a92d2d-bd09-4051-a3af-6824c348a115" />
       <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="63373c21-60e8-4918-8a58-a7fd73b01d24" />
       <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="0adb3e28-e9bf-46d4-aa1c-ad757d5d80ce" />
       <Column Name="Voltage" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="60e4164a-068e-4202-bae4-bb31fe1c9d88" />
       <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="False" ed:Guid="b52ef8f4-eae8-4855-87a8-ffad37a68925" />
-      <Association Name="Node_NodeHistory" ed:AssociationGuid="26cc16ce-8554-4d5f-9b93-008129a5964f" Member="History" ed:Guid="a54d85d2-d9a6-4441-8794-6b479bbd2e4d" ThisKey="ID" OtherKey="NodeID" Type="NodeHistory" />
     </Type>
   </Table>
   <Table Name="wfu_eye_db.Users" Member="Users">

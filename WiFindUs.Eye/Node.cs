@@ -19,11 +19,131 @@ namespace WiFindUs.Eye
         public event Action<Node> OnNodeIPAddressChanged;
         public event Action<ILocatable> LocationChanged;
         public event Action<Node> OnNodeVoltageChanged;
+
+        public event Action<Node> OnMeshPointChanged;
+        public event Action<Node> OnAPDaemonRunningChanged;
+        public event Action<Node> OnDHCPDaemonRunningChanged;
+        public event Action<Node> OnGPSDaemonRunningChanged;
+        public event Action<Node> OnVisibleSatellitesChanged;
+        public event Action<Node> OnMeshPeersChanged;
+
         private bool timedOut = false, loaded = false;
+        private bool? meshPoint = null, apDaemon = null, dhcpDaemon = null, gpsDaemon = null;
+        private int? satellites = null;
+        private readonly List<Node> meshPeers = new List<Node>();
+
+        //mp:1 ap:1 dhcp:1 gps:1 sats:10 mpl:1,2,3
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
+
+        
+        //private readonly List<Node> meshPeers = new List<Node>();
+        public List<Node> MeshPeers
+        {
+            get { return new List<Node>(meshPeers); }
+            set
+            {
+                if (value == null || value.Count == 0)
+                {
+                    if (meshPeers.Count > 0)
+                    {
+                        meshPeers.Clear();
+                        if (OnMeshPeersChanged != null)
+                            OnMeshPeersChanged(this);
+                    }
+                    return;
+                }
+
+                if (meshPeers.Count == 0)
+                {
+                    meshPeers.AddRange(value);
+                    if (OnMeshPeersChanged != null)
+                        OnMeshPeersChanged(this);
+                    return;
+                }
+
+                bool areEquivalent = (value.Count == meshPeers.Count) && !value.Except(meshPeers).Any();
+                if (!areEquivalent)
+                {
+                    meshPeers.Clear();
+                    meshPeers.AddRange(value);
+                    if (OnMeshPeersChanged != null)
+                        OnMeshPeersChanged(this);
+                }
+            }
+        }
+
+        public int? VisibleSatellites
+        {
+            get { return satellites; }
+            set
+            {
+                if (satellites != value)
+                {
+                    satellites = value;
+                    if (OnVisibleSatellitesChanged != null)
+                        OnVisibleSatellitesChanged(this);
+                }
+            }
+        }
+
+        public bool? IsGPSDaemonRunning
+        {
+            get { return gpsDaemon; }
+            set
+            {
+                if (gpsDaemon != value)
+                {
+                    gpsDaemon = value;
+                    if (OnGPSDaemonRunningChanged != null)
+                        OnGPSDaemonRunningChanged(this);
+                }
+            }
+        }
+
+        public bool? IsDHCPDaemonRunning
+        {
+            get { return dhcpDaemon; }
+            set
+            {
+                if (dhcpDaemon != value)
+                {
+                    dhcpDaemon = value;
+                    if (OnDHCPDaemonRunningChanged != null)
+                        OnDHCPDaemonRunningChanged(this);
+                }
+            }
+        }
+
+        public bool? IsMeshPoint
+        {
+            get { return meshPoint; }
+            set
+            {
+                if (meshPoint != value)
+                {
+                    meshPoint = value;
+                    if (OnMeshPointChanged != null)
+                        OnMeshPointChanged(this);
+                }
+            }
+        }
+
+        public bool? IsAPDaemonRunning
+        {
+            get { return apDaemon; }
+            set
+            {
+                if (apDaemon != value)
+                {
+                    apDaemon = value;
+                    if (OnAPDaemonRunningChanged != null)
+                        OnAPDaemonRunningChanged(this);
+                }
+            }
+        }
 
         public ILocation Location
         {

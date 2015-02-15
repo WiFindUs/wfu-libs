@@ -37,14 +37,7 @@ namespace WiFindUs.Eye.Wave
 
         public virtual bool VisibleOnTimeout
         {
-            get
-            {
-#if DEBUG
-                return true;
-#else
-                return false;
-#endif
-            }
+            get { return false; }
         }
 
         public static Material PlaceHolderMaterial

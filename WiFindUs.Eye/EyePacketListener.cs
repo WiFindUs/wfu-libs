@@ -15,7 +15,7 @@ namespace WiFindUs.Eye
         public event Action<EyePacketListener, EyePacket> PacketReceived;
         
         private static readonly Regex REGEX_EYE_MESSAGE = new Regex(
-            @"^EYE\|(DEV|NODE)\|([0-9A-F]+)\|([0-9A-F]+)\|\s*(.+)\s*$", RegexOptions.Compiled);
+            @"^EYE\{([A-Za-z]+)\|([0-9A-Fa-f]+)\|([0-9A-Fa-f]+)\s*(?:\{\s*(.*)\s*\}\s*)?\}$", RegexOptions.Compiled);
         private int port = 33339;
         private Thread thread;
         private bool cancel = false;
@@ -130,16 +130,16 @@ namespace WiFindUs.Eye
                         break;
                     if (bytes == null)
                         continue;
-                    string message = Encoding.UTF8.GetString(bytes);
+                    string message = Encoding.UTF8.GetString(bytes).Trim();
 
                     Match match = REGEX_EYE_MESSAGE.Match(message);
                     if (!match.Success)
                         continue;
 
                     //get identifiers
-                    string type = match.Groups[1].Value;
-                    long timestamp = Int64.Parse(match.Groups[3].Value, System.Globalization.NumberStyles.HexNumber);
-                    long id = Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber);
+                    string type = match.Groups[1].Value.Trim().ToUpper();
+                    long timestamp = Int64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
+                    long id = Int64.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
 
                     //check for existing timestamp
                     Dictionary<long, long> idTimestamps = null;
@@ -158,14 +158,29 @@ namespace WiFindUs.Eye
                         Debugger.V(message);
                     if (PacketReceived != null)
                     {
-                        EyePacket packet = new EyePacket(
-                            endPoint, //sender
-                            type, //type
-                            id, //id
-                            timestamp, //timestamp
-                            match.Groups[4].Value //payload
-                            );
-
+                        Type eyePacketType = (typeof(EyePacket));
+                        switch (type)
+                        {
+                            case "DEV": eyePacketType = typeof(DevicePacket); break;
+                            case "NODE": eyePacketType = typeof(NodePacket); break;
+                        }
+                        EyePacket packet = (EyePacket)eyePacketType.GetConstructor(
+                            new Type[]
+                            {
+                                typeof(IPEndPoint),
+                                typeof(String),
+                                typeof(long),
+                                typeof(long),
+                                typeof(String)
+                            })
+                            .Invoke(new object[]
+                            {
+                                endPoint, //sender
+                                type, //type
+                                id, //id
+                                timestamp, //timestamp
+                                match.Groups[4].Value //payload
+                            });
                         PacketReceived(this, packet);
                     }
                 }

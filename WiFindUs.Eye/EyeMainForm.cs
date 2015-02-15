@@ -30,7 +30,6 @@ namespace WiFindUs.Eye
         private Dictionary<long, Device> devices;
         private Dictionary<long, Node> nodes;
         private Dictionary<long, List<DeviceHistory>> deviceHistories; //device id, history list
-        private Dictionary<long, List<NodeHistory>> nodeHistories;
         private Dictionary<long, User> users;
         private Dictionary<long, Waypoint> waypoints;
 
@@ -85,7 +84,6 @@ namespace WiFindUs.Eye
                 tasks.Add(PreCacheDevices);
                 tasks.Add(PreCacheDeviceHistories);
                 tasks.Add(PreCacheNodes);
-                tasks.Add(PreCacheNodeHistories);
                 tasks.Add(PreCacheWaypoints);
                 tasks.Add(StartServerThread);
                 return tasks;
@@ -143,6 +141,54 @@ namespace WiFindUs.Eye
         {
             if (Map != null)
                 Map.Render();
+        }
+
+        public Node Node(long id, out bool isNew)
+        {
+            isNew = false;
+            if (id < 0)
+                return null;
+
+            //fetch
+            Node node = null;
+            if (ServerMode)
+            {
+                try
+                {
+                    var nod = from n in eyeContext.Nodes where n.ID == id select n;
+                    foreach (Node n in nod) //force load
+                    {
+                        if (node == null)
+                            node = n;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debugger.Ex(e);
+                    return null;
+                }
+            }
+            else
+                nodes.TryGetValue(id, out node);
+
+            //create
+            if (node == null)
+            {
+                long ts = DateTime.UtcNow.ToUnixTimestamp();
+                node = new Node()
+                {
+                    ID = id,
+                    Created = ts,
+                    Updated = ts
+                };
+                if (ServerMode)
+                    eyeContext.Nodes.InsertOnSubmit(node);
+                else
+                    nodes[id] = node;
+                isNew = true;
+            }
+
+            return node;
         }
 
         public Device Device(long id, out bool isNew)
@@ -297,57 +343,6 @@ namespace WiFindUs.Eye
             base.OnDisposing();
         }
 
-        private void EyePacketReceived(EyePacketListener sender, EyePacket obj)
-        {
-            if (!ServerMode)
-                return;
-            
-            if (obj.Type.CompareTo("DEV") == 0)
-            {
-                //parse packet for validity
-                DevicePacket devicePacket;
-                try
-                {
-                    devicePacket = new DevicePacket(obj);
-                    if (devicePacket.ID <= -1)
-                        return;
-                }
-                catch (Exception)
-                {
-                    Debugger.E("Malformed device update packet recieved from " + obj.Address.ToString());
-                    return;
-                }
-                
-                //if (sender.LogPackets)
-                //    Debugger.V(devicePacket.ToString());
-
-                //first get user
-                bool newUser = false;
-                User user = User(devicePacket.UserID, out newUser);
-
-                //now get device
-                bool newDevice = false;
-                Device device = Device(devicePacket.ID, out newDevice);
-                if (device == null) //error
-                {
-                    Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
-                    return;
-                }
-                device.User = user;
-                if (!WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
-                    device.Location = devicePacket;
-                if (newDevice)
-                    device.Type = devicePacket.DeviceType;
-                else 
-                    device.Updated = DateTime.UtcNow.ToUnixTimestamp();
-                device.IPAddress = devicePacket.Packet.Address;
-                device.BatteryStats = devicePacket;
-
-                //update database
-                eyeContext.SubmitChanges();
-            }
-        }
-
         protected virtual void MapSceneStarted(MapScene obj)
         {
             ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
@@ -361,6 +356,91 @@ namespace WiFindUs.Eye
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        private void EyePacketReceived(EyePacketListener sender, EyePacket obj)
+        {
+            if (!ServerMode || obj == null)
+                return;
+            
+            if (obj is NodePacket)
+            {
+                NodePacket nodePacket = obj as NodePacket;
+                
+                //get node
+                bool newNode = false;
+                Node node = Node(nodePacket.ID, out newNode);
+                if (node == null) //error
+                {
+                    Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
+                    return;
+                }
+                node.Updated = DateTime.UtcNow.ToUnixTimestamp();
+                node.IPAddress = nodePacket.Address;
+                if (nodePacket.Number.HasValue)
+                    node.Number = nodePacket.Number;
+                if (!nodePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(node.Location, nodePacket))
+                    node.Location = nodePacket;
+                if (nodePacket.IsAPDaemonRunning.HasValue)
+                    node.IsAPDaemonRunning = nodePacket.IsAPDaemonRunning;
+                if (nodePacket.IsDHCPDaemonRunning.HasValue)
+                    node.IsDHCPDaemonRunning = nodePacket.IsDHCPDaemonRunning;
+                if (nodePacket.IsGPSDaemonRunning.HasValue)
+                    node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
+                if (nodePacket.IsMeshPoint.HasValue)
+                    node.IsMeshPoint = nodePacket.IsMeshPoint;
+                if (nodePacket.VisibleSatellites.HasValue)
+                    node.VisibleSatellites = nodePacket.VisibleSatellites;
+                if (nodePacket.MeshPeers != null)
+                {
+                    List<Node> peers = new List<Node>();
+                    foreach (int nodeNumber in nodePacket.MeshPeers)
+                    {
+                        if (nodeNumber <= 0 || nodeNumber >= 255)
+                            continue;
+                        var peer = from p in eyeContext.Nodes where p.Number == nodeNumber select p;
+                        foreach (Node p in peer)
+                        {
+                            if (!peers.Contains(p))
+                                peers.Add(p);
+                        }
+                    }
+                    node.MeshPeers = peers;
+                }
+            }
+            else if (obj is DevicePacket)
+            {
+                DevicePacket devicePacket = obj as DevicePacket;
+
+                //get user
+                User user = null;
+                if (devicePacket.UserID.HasValue)
+                {
+                    bool newUser = false;
+                    user = devicePacket.UserID.Value == -1 ? null : User(devicePacket.UserID.Value, out newUser);
+                }
+
+                //get device
+                bool newDevice = false;
+                Device device = Device(devicePacket.ID, out newDevice);
+                if (device == null) //error
+                {
+                    Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
+                    return;
+                }
+                device.Updated = DateTime.UtcNow.ToUnixTimestamp();
+                device.IPAddress = devicePacket.Address;
+                if (devicePacket.UserID.HasValue)
+                    device.User = user;
+                if (!devicePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
+                    device.Location = devicePacket;
+                if (devicePacket.DeviceType != null)
+                    device.Type = devicePacket.DeviceType;
+                if (!devicePacket.EmptyBatteryStats)
+                    device.BatteryStats = devicePacket;
+            }
+
+            eyeContext.SubmitChanges();
+        }
 
         private bool InitializeApplicationMode()
         {
@@ -400,7 +480,6 @@ namespace WiFindUs.Eye
                 devices = new Dictionary<long, Device>();
                 nodes = new Dictionary<long, Node>();
                 deviceHistories = new Dictionary<long, List<DeviceHistory>>();
-                nodeHistories = new Dictionary<long, List<NodeHistory>>();
                 users = new Dictionary<long, User>();
                 waypoints = new Dictionary<long, Waypoint>();
 
@@ -452,16 +531,6 @@ namespace WiFindUs.Eye
                 return true;
             WFUApplication.SplashStatus = "Pre-caching nodes";
             foreach (Node node in eyeContext.Nodes)
-                ;
-            return true;
-        }
-
-        private bool PreCacheNodeHistories()
-        {
-            if (!ServerMode)
-                return true;
-            WFUApplication.SplashStatus = "Pre-caching node history";
-            foreach (NodeHistory history in eyeContext.NodeHistories)
                 ;
             return true;
         }

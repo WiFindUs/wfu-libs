@@ -9,5 +9,6 @@ namespace WiFindUs.Eye
     {
         bool? Charging { get; }
         double? BatteryLevel { get; }
+        bool EmptyBatteryStats { get; }
     }
 }

@@ -1,26 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-    public class DevicePacket : ILocation, IBatteryStats
+    public class DevicePacket : EyePacket, ILocation, IBatteryStats
     {
-        private static readonly Regex PACKET_KVP
-            = new Regex("^([a-zA-Z0-9_\\-.]+)\\s*[:=]\\s*(.+)\\s*$");
-        private EyePacket packet;
         private double? latitude, longitude, altitude, accuracy, batteryLevel;
         private bool? charging;
-        private string deviceType = "PHO";
-        private long userID = -1;
-
-        public EyePacket Packet
-        {
-            get { return packet; }
-        }
+        private string deviceType = null;
+        private long? userID;
 
         public double? Latitude
         {
@@ -47,12 +40,7 @@ namespace WiFindUs.Eye
             get { return deviceType; }
         }
 
-        public long ID
-        {
-            get { return packet.ID; }
-        }
-
-        public long UserID
+        public long? UserID
         {
             get { return userID; }
         }
@@ -92,21 +80,27 @@ namespace WiFindUs.Eye
             get { return batteryLevel; }
         }
 
-        public DevicePacket(EyePacket packet)
+        public bool EmptyBatteryStats
+        {
+            get
+            {
+                return !Charging.HasValue && !BatteryLevel.HasValue;
+            }
+        }
+
+        public DevicePacket(IPEndPoint sender, string type, long id, long timestamp, string payload)
+            : base(sender, type, id, timestamp, payload)
         {
             //check packet
-            if (packet == null)
-                throw new ArgumentNullException("packet");
-            if (packet.Type.CompareTo("DEV") != 0)
-                throw new ArgumentOutOfRangeException("packet", "Attempt to create a DevicePacket from an EyePacket type other than DEV!");
+            if (type.CompareTo("DEV") != 0)
+                throw new ArgumentOutOfRangeException("packet", "Attempt to create a DevicePacket from an eye packet other than type DEV!");
             
             //check for payload
-            if (packet.Payload == null || packet.Payload.Length == 0)
-                throw new ArgumentOutOfRangeException("packet", "EyePacket did not contain a payload!");
-            this.packet = packet;
-            string[] payloads = packet.Payload.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+            if (Payload.Length == 0)
+                return;
+            string[] payloads = Payload.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             if (payloads == null || payloads.Length == 0)
-                throw new ArgumentOutOfRangeException("packet", "EyePacket did not contain a useful payload!");
+                return;
 
             //parse arguments
             foreach (string token in payloads)
@@ -114,38 +108,28 @@ namespace WiFindUs.Eye
                 Match match = PACKET_KVP.Match(token);
                 if (!match.Success)
                     continue;
+                String val = match.Groups[2].Value.Trim();
                 switch (match.Groups[1].Value.ToLower())
                 {
-                    case "dt": deviceType = match.Groups[2].Value; break;
-                    case "lat": latitude = Double.Parse(match.Groups[2].Value); break;
-                    case "long": longitude = Double.Parse(match.Groups[2].Value); break;
-                    case "acc": accuracy = Double.Parse(match.Groups[2].Value); break;
-                    case "alt": altitude = Double.Parse(match.Groups[2].Value); break;
-                    case "chg": charging = Int32.Parse(match.Groups[2].Value) == 1; break;
-                    case "batt": batteryLevel = Double.Parse(match.Groups[2].Value); break;
+                    case "dt": deviceType = val; break;
+                    case "lat": latitude = Double.Parse(val); break;
+                    case "long": longitude = Double.Parse(val); break;
+                    case "acc": accuracy = Double.Parse(val); break;
+                    case "alt": altitude = Double.Parse(val); break;
+                    case "chg": charging = Int32.Parse(val) == 1; break;
+                    case "batt": batteryLevel = Double.Parse(val); break;
                     case "user":
                         try
                         {
-                            if (match.Groups[2].Value.CompareTo("-1") != 0)
-                                userID = Int64.Parse(match.Groups[2].Value, System.Globalization.NumberStyles.HexNumber);
+                            if (val.CompareTo("-1") == 0)
+                                userID = -1;
+                            else
+                                userID = Int64.Parse(val, System.Globalization.NumberStyles.HexNumber);
                         }
                         catch (FormatException) { }
                         break;
                 }
             }
-        }
-
-        public override string ToString()
-        {
-            return String.Format("DevicePacket:[{7}, {0}, Location:[{1}, {2}, {3}, {4}], Battery:[{5:P0}{6}]]",
-                packet.ToString(),
-                latitude.HasValue ? latitude.Value.ToString() : "null",
-                longitude.HasValue ? longitude.Value.ToString() : "null",
-                accuracy.HasValue ? accuracy.Value.ToString() : "null",
-                altitude.HasValue ? altitude.Value.ToString() : "null",
-                batteryLevel.GetValueOrDefault(),
-                charging.GetValueOrDefault() ? ", charging" : "",
-                deviceType);
         }
     }
 }

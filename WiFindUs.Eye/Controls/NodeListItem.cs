@@ -12,6 +12,8 @@ namespace WiFindUs.Eye.Controls
 {
     public class NodeListItem : EntityListItem
     {
+        private Node node;
+        
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
@@ -20,7 +22,26 @@ namespace WiFindUs.Eye.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Node Node
         {
-            get { return Entity as Node; }
+            get { return node; }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected override String EntityTitleString
+        {
+            get { return String.Format("Node #{0:X}", node.ID); }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected override String EntityDetailString
+        {
+            get
+            {
+                return String.Format("{0}\n{1}",
+                    node.TimedOut ? "Timed out." : "Assigned to station #" + node.Number,
+                    node.TimedOut ? "" : (node.HasLatLong ? WiFindUs.Eye.Location.ToString(node) : ""));
+            }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -30,7 +51,16 @@ namespace WiFindUs.Eye.Controls
         public NodeListItem(Node node)
             : base(node)
         {
+            this.node = node;
+        }
 
+        /////////////////////////////////////////////////////////////////////
+        // PROTECTED METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        protected override int CalculateHeight()
+        {
+            return (base.CalculateHeight() * 3) / 2;
         }
     }
 }

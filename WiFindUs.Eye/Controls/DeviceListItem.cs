@@ -39,6 +39,13 @@ namespace WiFindUs.Eye.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected override String EntityTitleString
+        {
+            get { return String.Format("Device #{0:X}", device.ID); }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected override String EntityDetailString
         {
             get

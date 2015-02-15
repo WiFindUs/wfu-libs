@@ -50,6 +50,13 @@ namespace WiFindUs.Eye.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        protected virtual String EntityTitleString
+        {
+            get { return Entity.ToString(); }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected virtual String EntityDetailString
         {
             get { return ""; }
@@ -65,6 +72,7 @@ namespace WiFindUs.Eye.Controls
                 throw new ArgumentNullException("entity", "Entity cannot be null!");
             this.entity = entity;
             entity.SelectedChanged += OnEntitySelectedChanged;
+            Height = CalculateHeight();
         }
 
         //
@@ -81,6 +89,7 @@ namespace WiFindUs.Eye.Controls
         /////////////////////////////////////////////////////////////////////
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
+
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -124,7 +133,7 @@ namespace WiFindUs.Eye.Controls
             }
 
             //entity text
-            string text = entity.ToString();
+            string text = EntityTitleString;
             SizeF sz = e.Graphics.MeasureString(
                 text,
                 Font,
@@ -182,7 +191,8 @@ namespace WiFindUs.Eye.Controls
 
         protected virtual int CalculateHeight()
         {
-            return Math.Max(48, System.Windows.Forms.TextRenderer.MeasureText("Tj\nTj\nTj", Font).Height);
+            return Math.Max(48, System.Windows.Forms.TextRenderer.MeasureText("Tj\nTj\nTj", Font).Height)
+                + (Height - ClientRectangle.Height);
         }
     }
 }

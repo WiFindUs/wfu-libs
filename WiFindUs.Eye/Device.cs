@@ -108,6 +108,14 @@ namespace WiFindUs.Eye
             }
         }
 
+        public bool EmptyBatteryStats
+        {
+            get
+            {
+                return !Charging.HasValue && !BatteryLevel.HasValue;
+            }
+        }
+
         public bool EmptyAtmosphere
         {
             get
