@@ -283,8 +283,6 @@ namespace WiFindUs.Eye.Dispatcher
                     selectables.Add(sp.Selectable);
             }
 
-            Debugger.C("selectables: {0}", selectables.Count);
-
             if (selectables.Count == 0)
                 globalSelectionGroup.ClearSelection();
             else if (selectables.Count == 1 || globalSelectionGroup.SelectedEntities.Length == 0)

@@ -99,8 +99,6 @@ namespace WiFindUs.Eye
         public NodePacket(IPEndPoint sender, string type, long id, long timestamp, string payload)
             : base(sender, type, id, timestamp, payload)
         {
-            Debugger.C("NodePacket()");
-            
             //check packet
             if (type.CompareTo("NODE") != 0)
                 throw new ArgumentOutOfRangeException("packet", "Attempt to create a NodePacket from an eye packet other than type NODE!");
