@@ -40,7 +40,12 @@ namespace WiFindUs.Eye.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected override String EntityDetailString
         {
-            get { return user.Type; }
+            get
+            {
+                if (user == null)
+                    return "";
+                return user.Type;
+            }
         }
 
         /////////////////////////////////////////////////////////////////////

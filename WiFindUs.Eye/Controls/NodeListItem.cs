@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace WiFindUs.Eye.Controls
     public class NodeListItem : EntityListItem
     {
         private Node node;
-        
+       
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
@@ -29,7 +30,12 @@ namespace WiFindUs.Eye.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected override String EntityTitleString
         {
-            get { return String.Format("Node #{0:X}", node.ID); }
+            get
+            {
+                if (node == null)
+                    return "";
+                return String.Format("Node #{0:X}", node.ID);
+            }
         }
 
         [Browsable(false)]
@@ -38,9 +44,11 @@ namespace WiFindUs.Eye.Controls
         {
             get
             {
-                return String.Format("{0}\n{1}",
-                    node.TimedOut ? "Timed out." : "Assigned to station #" + node.Number,
-                    node.TimedOut ? "" : (node.HasLatLong ? WiFindUs.Eye.Location.ToString(node) : ""));
+                if (node == null)
+                    return "";
+                return String.Format("{0}\n{1}\n\n",
+                    node.Number.HasValue ? "Assigned to station #" + node.Number.Value : "Not assigned to station." ,
+                    node.TimedOut ? "Timed out." : (node.HasLatLong ? WiFindUs.Eye.Location.ToString(node) : ""));
             }
         }
 
@@ -65,6 +73,60 @@ namespace WiFindUs.Eye.Controls
             node.OnVisibleSatellitesChanged += node_OnVisibleSatellitesChanged;
             node.TimedOutChanged += node_TimedOutChanged;
             node.WhenUpdated += node_WhenUpdated;
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PROTECTED METHODS
+        /////////////////////////////////////////////////////////////////////
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+
+            if (node == null || node.TimedOut)
+                return;
+
+            NodeListStatusItem[] statuses = new NodeListStatusItem[] {
+                new NodeListStatusItem("MP", node.IsMeshPoint),
+                new NodeListStatusItem("AP", node.IsAPDaemonRunning),
+                new NodeListStatusItem("DHCP", node.IsDHCPDaemonRunning),
+                new NodeListStatusItem("GPS", node.IsGPSDaemonRunning)
+            };
+
+            using (Font f = new Font(Font.FontFamily, Font.Size - 2.0f))
+            {
+                int hstep = ClientRectangle.Width / 5;
+                int vstep = f.Height * 2;
+                for (int i = 0; i < statuses.Length; i++)
+                    statuses[i].Paint(e.Graphics, Theme, f, ((i % 4) + 1) * hstep, 48 + (i / 4) * vstep);
+            }
+        }
+
+        /////////////////////////////////////////////////////////////////////
+        // PRIVATE METHODS
+        /////////////////////////////////////////////////////////////////////
+
+        private class NodeListStatusItem
+        {
+            public readonly String Caption;
+            public readonly bool? Status;
+
+            public NodeListStatusItem(string caption, bool? status)
+            {
+                Caption = caption;
+                Status = status;
+            }
+
+            public void Paint(Graphics g, Theme t, Font f, int x, int y)
+            {
+                using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic) { Alignment = StringAlignment.Center })
+                {
+                    g.DrawString(Caption + ":\n" +
+                    (Status.HasValue ? (Status.Value ? "OK" : "Fail") : "Waiting"),
+                    f,
+                    (Status.HasValue ? (Status.Value ? t.OKBrush : t.ErrorBrush) : t.WarningBrush),
+                    x, y, sf);
+                }
+            }
         }
 
         private void node_WhenUpdated(IUpdateable obj)
@@ -110,15 +172,6 @@ namespace WiFindUs.Eye.Controls
         private void node_LocationChanged(ILocatable obj)
         {
             this.RefreshThreadSafe();
-        }
-
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
-
-        protected override int CalculateHeight()
-        {
-            return (base.CalculateHeight() * 3) / 2;
         }
     }
 }

@@ -179,6 +179,13 @@ namespace WiFindUs.Eye
                     return;
 
                 timedOut = value;
+                if (timedOut)
+                {
+                    BatteryStats = null;
+                    Atmosphere = null;
+                    Location = null;
+                    IPAddress = null;
+                }
                 if (TimedOutChanged != null)
                     TimedOutChanged(this);
             }
@@ -192,6 +199,11 @@ namespace WiFindUs.Eye
         public String ActionDescription
         {
             get { return this.ToString(); }
+        }
+
+        public bool Loaded
+        {
+            get { return loaded; }
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -211,11 +223,6 @@ namespace WiFindUs.Eye
         public void CheckTimeout()
         {
             TimedOut = UpdateAge > TIMEOUT;
-        }
-
-        public bool Loaded
-        {
-            get { return loaded; }
         }
 
         public bool ActionEnabled(uint index)

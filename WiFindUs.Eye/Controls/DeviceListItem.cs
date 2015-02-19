@@ -41,7 +41,12 @@ namespace WiFindUs.Eye.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected override String EntityTitleString
         {
-            get { return String.Format("Device #{0:X}", device.ID); }
+            get
+            {
+                if (device == null)
+                    return "";
+                return String.Format("Device #{0:X}", device.ID);
+            }
         }
 
         [Browsable(false)]
@@ -50,9 +55,11 @@ namespace WiFindUs.Eye.Controls
         {
             get
             {
+                if (device == null)
+                    return "";
                 return String.Format("{0}\n{1}",
-                    device.TimedOut ? "Timed out." : (device.User != null ? "in use by " + device.User.FullName : "No assigned user."),
-                    device.TimedOut ? "" : (device.HasLatLong ? WiFindUs.Eye.Location.ToString(device) : ""));
+                    device.User != null ? "in use by " + device.User.FullName : "No assigned user.",
+                    device.TimedOut ? "Timed out." : (device.HasLatLong ? WiFindUs.Eye.Location.ToString(device) : ""));
             }
         }
 

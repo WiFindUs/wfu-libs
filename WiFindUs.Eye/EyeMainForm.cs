@@ -17,11 +17,14 @@ namespace WiFindUs.Eye
 {
     public class EyeMainForm : MainForm, IMapForm
     {
+        private const long TIMEOUT_CHECK_INTERVAL = 1000;
+        private const long SQL_AUTO_SUBMIT_INTERVAL = 10000;
+        
         private EyeContext eyeContext = null;
         private EyePacketListener eyeListener = null;
         private Timer timer;
-        private long sqlSubmitInterval = 10000, sqlSubmitTimer = 0;
-        private long timeoutCheckInterval = 1000, timeoutCheckTimer = 0;
+        private long sqlSubmitTimer = 0;
+        private long timeoutCheckTimer = 0;
         private List<IUpdateable> updateables = new List<IUpdateable>();
         private bool serverMode = false;
         private MapControl map;
@@ -159,7 +162,10 @@ namespace WiFindUs.Eye
                     foreach (Node n in nod) //force load
                     {
                         if (node == null)
+                        {
                             node = n;
+                            break;
+                        }
                     }
                 }
                 catch (Exception e)
@@ -207,7 +213,10 @@ namespace WiFindUs.Eye
                     foreach (Device d in dev) //force load
                     {
                         if (device == null)
+                        {
                             device = d;
+                            break;
+                        }
                     }
                 }
                 catch (Exception e)
@@ -255,7 +264,10 @@ namespace WiFindUs.Eye
                     foreach (User u in usr) //force load
                     {
                         if (user == null)
+                        {
                             user = u;
+                            break;
+                        }
                     }
                 }
                 catch (Exception e)
@@ -297,6 +309,10 @@ namespace WiFindUs.Eye
             base.OnFirstShown(e);
             if (DesignMode)
                 return;
+
+            //attach server thread listener
+            if (ServerMode)
+                eyeListener.PacketReceived += EyePacketReceived;
 
             //start map scene
             if (Map != null)
@@ -374,6 +390,8 @@ namespace WiFindUs.Eye
                     Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
                     return;
                 }
+                if (!node.Loaded)
+                    return;
                 node.Updated = DateTime.UtcNow.ToUnixTimestamp();
                 node.IPAddress = nodePacket.Address;
                 if (nodePacket.Number.HasValue)
@@ -385,7 +403,12 @@ namespace WiFindUs.Eye
                 if (nodePacket.IsDHCPDaemonRunning.HasValue)
                     node.IsDHCPDaemonRunning = nodePacket.IsDHCPDaemonRunning;
                 if (nodePacket.IsGPSDaemonRunning.HasValue)
+                {
                     node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
+                    if (!nodePacket.IsGPSDaemonRunning.Value && !node.EmptyLocation)
+                        node.Location = null;
+                }
+
                 if (nodePacket.IsMeshPoint.HasValue)
                     node.IsMeshPoint = nodePacket.IsMeshPoint;
                 if (nodePacket.VisibleSatellites.HasValue)
@@ -411,14 +434,6 @@ namespace WiFindUs.Eye
             {
                 DevicePacket devicePacket = obj as DevicePacket;
 
-                //get user
-                User user = null;
-                if (devicePacket.UserID.HasValue)
-                {
-                    bool newUser = false;
-                    user = devicePacket.UserID.Value == -1 ? null : User(devicePacket.UserID.Value, out newUser);
-                }
-
                 //get device
                 bool newDevice = false;
                 Device device = Device(devicePacket.ID, out newDevice);
@@ -427,6 +442,17 @@ namespace WiFindUs.Eye
                     Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
                     return;
                 }
+                if (!device.Loaded)
+                    return;
+
+                //get user
+                User user = null;
+                if (devicePacket.UserID.HasValue)
+                {
+                    bool newUser = false;
+                    user = devicePacket.UserID.Value == -1 ? null : User(devicePacket.UserID.Value, out newUser);
+                }
+
                 device.Updated = DateTime.UtcNow.ToUnixTimestamp();
                 device.IPAddress = devicePacket.Address;
                 if (devicePacket.UserID.HasValue)
@@ -469,9 +495,6 @@ namespace WiFindUs.Eye
                     return false;
                 }
 
-                sqlSubmitInterval = WFUApplication.Config.Get("mysql.auto_submit_rate", 0, 10000);
-                timeoutCheckInterval = WFUApplication.Config.Get("server.timeout_check_rate", 0, 1000);
-
                 Debugger.I("Application running in SERVER mode.");
             }
             else
@@ -500,8 +523,15 @@ namespace WiFindUs.Eye
             if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching users";
-            foreach (User user in eyeContext.Users)
-                ;
+            try
+            {
+                foreach (User user in eyeContext.Users)
+                    ;
+            }
+            catch (Exception e)
+            {
+                Debugger.Ex(e);
+            }
             return true;
         }
 
@@ -510,8 +540,15 @@ namespace WiFindUs.Eye
             if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching devices";
-            foreach (Device device in eyeContext.Devices)
-                ;
+            try
+            {
+                foreach (Device device in eyeContext.Devices)
+                    ;
+            }
+            catch (Exception e)
+            {
+                Debugger.Ex(e);
+            }
             return true;
         }
 
@@ -520,8 +557,15 @@ namespace WiFindUs.Eye
             if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching device history";
-            foreach (DeviceHistory history in eyeContext.DeviceHistories)
-                ;
+            try
+            {
+                foreach (DeviceHistory history in eyeContext.DeviceHistories)
+                    ;
+            }
+            catch (Exception e)
+            {
+                Debugger.Ex(e);
+            }
             return true;
         }
 
@@ -530,8 +574,15 @@ namespace WiFindUs.Eye
             if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching nodes";
-            foreach (Node node in eyeContext.Nodes)
-                ;
+            try
+            {
+                foreach (Node node in eyeContext.Nodes)
+                    ;
+            }
+            catch (Exception e)
+            {
+                Debugger.Ex(e);
+            }
             return true;
         }
 
@@ -540,8 +591,15 @@ namespace WiFindUs.Eye
             if (!ServerMode)
                 return true;
             WFUApplication.SplashStatus = "Pre-caching waypoints";
-            foreach (Waypoint waypoint in eyeContext.Waypoints)
-                ;
+            try
+            {
+                foreach (Waypoint waypoint in eyeContext.Waypoints)
+                    ;
+            }
+            catch (Exception e)
+            {
+                Debugger.Ex(e);
+            }
             return true;
         }
 
@@ -563,21 +621,19 @@ namespace WiFindUs.Eye
                 MessageBox.Show(message + "\n\nThe application will now exit.", "Server thread creation error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
-
-            eyeListener.PacketReceived += EyePacketReceived;
             return true;
         }
 
         private void OnDeviceLoaded(Device device)
         {
-            updateables.Add(device);
             device.CheckTimeout();
+            updateables.Add(device);
         }
 
         private void OnNodeLoaded(Node node)
         {
-            updateables.Add(node);
             node.CheckTimeout();
+            updateables.Add(node);
         }
 
         private void OnUserLoaded(User user)
@@ -595,25 +651,19 @@ namespace WiFindUs.Eye
             if (!ServerMode)
                 return;
 
-            if (timeoutCheckInterval > 0)
+            timeoutCheckTimer += timer.Interval;
+            if (timeoutCheckTimer >= TIMEOUT_CHECK_INTERVAL)
             {
-                timeoutCheckTimer += timer.Interval;
-                if (timeoutCheckTimer >= timeoutCheckInterval)
-                {
-                    timeoutCheckTimer = 0;
-                    foreach (IUpdateable updateable in updateables)
-                        updateable.CheckTimeout();
-                }
+                timeoutCheckTimer = 0;
+                foreach (IUpdateable updateable in updateables)
+                    updateable.CheckTimeout();
             }
 
-            if (sqlSubmitInterval > 0)
+            sqlSubmitTimer += timer.Interval;
+            if (sqlSubmitTimer >= SQL_AUTO_SUBMIT_INTERVAL)
             {
-                sqlSubmitTimer += timer.Interval;
-                if (sqlSubmitTimer >= sqlSubmitInterval)
-                {
-                    sqlSubmitTimer = 0;
-                    eyeContext.SubmitChangesThreaded();
-                }
+                sqlSubmitTimer = 0;
+                eyeContext.SubmitChangesThreaded();
             }
         }
 

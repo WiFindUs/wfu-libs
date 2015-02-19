@@ -20,8 +20,8 @@ namespace WiFindUs.Eye
         
         private static readonly double EARTH_RADIUS_MEAN = 6378.1370;
         private static readonly double EPSILON_HORIZONTAL = 0.00000001;
-        private static readonly double EPSILON_ACCURACY = 0.5;
-        private static readonly double EPSILON_ALTITUDE = 1.0;
+        private static readonly double EPSILON_ACCURACY = 0.1;
+        private static readonly double EPSILON_ALTITUDE = 0.5;
         private double? latitude = null;
         private double? longitude = null;
         private double? altitude = null;

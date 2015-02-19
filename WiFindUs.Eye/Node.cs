@@ -11,7 +11,7 @@ namespace WiFindUs.Eye
 {
     public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable, IActionSubscriber
     {
-        public const long TIMEOUT = 300;
+        public const long TIMEOUT = 60;
         public static event Action<Node> OnNodeLoaded;
         public event Action<IUpdateable> WhenUpdated;
         public event Action<IUpdateable> TimedOutChanged;
@@ -32,14 +32,10 @@ namespace WiFindUs.Eye
         private int? satellites = null;
         private readonly List<Node> meshPeers = new List<Node>();
 
-        //mp:1 ap:1 dhcp:1 gps:1 sats:10 mpl:1,2,3
-
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        
-        //private readonly List<Node> meshPeers = new List<Node>();
         public List<Node> MeshPeers
         {
             get { return new List<Node>(meshPeers); }
@@ -225,6 +221,17 @@ namespace WiFindUs.Eye
                     return;
 
                 timedOut = value;
+                if (timedOut)
+                {
+                    MeshPeers = null;
+                    VisibleSatellites = null;
+                    IsGPSDaemonRunning = null;
+                    IsDHCPDaemonRunning = null;
+                    IsMeshPoint = null;
+                    IsAPDaemonRunning = null;
+                    IPAddress = null;
+                    Voltage = null;
+                }
                 if (TimedOutChanged != null)
                     TimedOutChanged(this);
             }
