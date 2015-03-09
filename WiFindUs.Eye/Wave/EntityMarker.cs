@@ -82,7 +82,7 @@ namespace WiFindUs.Eye.Wave
                 if (entity.TimedOut)
                     return 0.0f;
 
-                long age = entity.UpdateAge;
+                ulong age = entity.UpdateAge;
                 if (age == 0)
                     return MAX_SPIN_RATE;
                 else if (age >= entity.TimeoutLength)

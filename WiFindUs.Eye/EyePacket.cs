@@ -16,16 +16,16 @@ namespace WiFindUs.Eye
         private IPAddress address;
         private int port;
         private string type;
-        private long id;
-        private long timestamp;
+        private ulong id;
+        private ulong timestamp;
         private string payload;
 
-        public long ID
+        public ulong ID
         {
             get { return id; }
         }
 
-        public long Timestamp
+        public ulong Timestamp
         {
             get { return timestamp; }
         }
@@ -50,14 +50,12 @@ namespace WiFindUs.Eye
             get { return payload; }
         }
 
-        public EyePacket(IPEndPoint sender, string type, long id, long timestamp, string payload)
+        public EyePacket(IPEndPoint sender, string type, ulong id, ulong timestamp, string payload)
         {
             if (sender == null)
                 throw new ArgumentNullException("sender", "Sender cannot be null");
             if (sender.Address == null || sender.Address == IPAddress.None)
                 throw new ArgumentOutOfRangeException("sender", "Sender did not contain valid IPv4 addressing information");
-            if (id <= -1)
-                throw new ArgumentOutOfRangeException("id", "ID cannot be less than zero");
             this.address = sender.Address;
             this.port = sender.Port;
             this.type = (type ?? "");

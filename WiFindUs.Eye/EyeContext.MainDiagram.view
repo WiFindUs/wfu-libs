@@ -857,7 +857,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>668ce08c-c8ae-42b7-ba8c-e780995ae971</Path>
+                      <Path>62ec4a06-8c73-4c10-9f9e-0539c4bd2d06</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -873,7 +873,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>62a0b841-9b32-44ab-8535-4c8be4ee4a7c</Path>
+                      <Path>19f04102-66dd-4601-afa3-1b2dc2625e6e</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -889,7 +889,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>6be173e4-244a-4b4d-8788-db280854f13a</Path>
+                      <Path>07dbc49b-5f7f-459f-a099-c72e9d5d01b5</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -1310,7 +1310,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>161b4187-55f7-4e66-b7fa-9cda12330db8</Path>
+                      <Path>764a72c8-3255-45ec-9a12-01c106ea0f24</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -2022,8 +2022,8 @@
           <ScaleMode>Free</ScaleMode>
           <Scale>0.82</Scale>
           <Location>
-            <X>-190.243904098452 px</X>
-            <Y>-96.3414642549852 px</Y>
+            <X>-437.804881867591 px</X>
+            <Y>76.8292689628363 px</Y>
           </Location>
         </ViewPort>
         <Oid xsi:type="SchemaModelOID">

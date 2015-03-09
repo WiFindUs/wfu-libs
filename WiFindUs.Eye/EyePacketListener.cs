@@ -21,7 +21,7 @@ namespace WiFindUs.Eye
         private bool cancel = false;
         private UdpClient listener = null;
         private bool disposed = false;
-        private Dictionary<string, Dictionary<long, long>> timestamps = new Dictionary<string, Dictionary<long, long>>();
+        private Dictionary<string, Dictionary<ulong, ulong>> timestamps = new Dictionary<string, Dictionary<ulong, ulong>>();
         private bool logPackets = false;
 
         /////////////////////////////////////////////////////////////////////
@@ -138,16 +138,17 @@ namespace WiFindUs.Eye
 
                     //get identifiers
                     string type = match.Groups[1].Value.Trim().ToUpper();
-                    long timestamp = Int64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
-                    long id = Int64.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
+                    ulong id = UInt64.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
+                    ulong timestamp = UInt64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
+                    
 
                     //check for existing timestamp
-                    Dictionary<long, long> idTimestamps = null;
+                    Dictionary<ulong, ulong> idTimestamps = null;
                     if (!timestamps.TryGetValue(type, out idTimestamps))
-                        idTimestamps = timestamps[type] = new Dictionary<long, long>();
-                    long lastTimeStamp;
+                        idTimestamps = timestamps[type] = new Dictionary<ulong, ulong>();
+                    ulong lastTimeStamp;
                     if (!idTimestamps.TryGetValue(id, out lastTimeStamp))
-                        lastTimeStamp = -1;
+                        lastTimeStamp = 0;
 
                     //check timestamp age, discard if same or older
                     if (timestamp <= lastTimeStamp)
@@ -169,8 +170,8 @@ namespace WiFindUs.Eye
                             {
                                 typeof(IPEndPoint),
                                 typeof(String),
-                                typeof(long),
-                                typeof(long),
+                                typeof(ulong),
+                                typeof(ulong),
                                 typeof(String)
                             })
                             .Invoke(new object[]

@@ -96,7 +96,7 @@ namespace WiFindUs.Eye
             return WiFindUs.Eye.Location.Distance(this, other);
         }
 
-        public NodePacket(IPEndPoint sender, string type, long id, long timestamp, string payload)
+        public NodePacket(IPEndPoint sender, string type, ulong id, ulong timestamp, string payload)
             : base(sender, type, id, timestamp, payload)
         {
             //check packet

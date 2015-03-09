@@ -13,7 +13,7 @@ namespace WiFindUs.Eye
         private double? latitude, longitude, altitude, accuracy, batteryLevel;
         private bool? charging;
         private string deviceType = null;
-        private long? userID;
+        private ulong? userID;
 
         public double? Latitude
         {
@@ -40,7 +40,7 @@ namespace WiFindUs.Eye
             get { return deviceType; }
         }
 
-        public long? UserID
+        public ulong? UserID
         {
             get { return userID; }
         }
@@ -88,7 +88,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public DevicePacket(IPEndPoint sender, string type, long id, long timestamp, string payload)
+        public DevicePacket(IPEndPoint sender, string type, ulong id, ulong timestamp, string payload)
             : base(sender, type, id, timestamp, payload)
         {
             //check packet
@@ -121,7 +121,7 @@ namespace WiFindUs.Eye
                     case "user":
                         try
                         {
-                            userID = Int64.Parse(val, System.Globalization.NumberStyles.HexNumber);
+                            userID = UInt64.Parse(val, System.Globalization.NumberStyles.HexNumber);
                         }
                         catch (FormatException) { }
                         break;

@@ -11,7 +11,7 @@ namespace WiFindUs.Eye
 {
     public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable, IActionSubscriber
     {
-        public const long TIMEOUT = 60;
+        public const ulong TIMEOUT = 60;
         public static event Action<Node> OnNodeLoaded;
         public event Action<IUpdateable> WhenUpdated;
         public event Action<IUpdateable> TimedOutChanged;
@@ -201,7 +201,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public long UpdateAge
+        public ulong UpdateAge
         {
             get
             {
@@ -237,7 +237,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public long TimeoutLength
+        public ulong TimeoutLength
         {
             get { return TIMEOUT; }
         }

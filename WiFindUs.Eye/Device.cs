@@ -14,7 +14,7 @@ namespace WiFindUs.Eye
     public partial class Device
         : SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, IActionSubscriber
     {
-        public const long TIMEOUT = 60;
+        public const ulong TIMEOUT = 60;
         public static event Action<Device> OnDeviceLoaded;
         public event Action<Device> OnDeviceTypeChanged;
         public event Action<Device> OnDeviceAtmosphereChanged;
@@ -159,7 +159,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public long UpdateAge
+        public ulong UpdateAge
         {
             get
             {
@@ -191,7 +191,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public long TimeoutLength
+        public ulong TimeoutLength
         {
             get { return TIMEOUT; }
         }

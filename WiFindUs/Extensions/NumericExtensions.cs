@@ -95,9 +95,9 @@ namespace WiFindUs.Extensions
         // DATETIMES
         /////////////////////////////////////////////////////////////////////
 
-        public static long ToUnixTimestamp(this DateTime dt)
+        public static ulong ToUnixTimestamp(this DateTime dt)
         {
-            return (long)(dt.Subtract(new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds;
+            return (ulong)(dt.Subtract(new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds;
         }
 
         public static DateTime ToDateTime(this long unixTimestamp)

@@ -30,11 +30,11 @@ namespace WiFindUs.Eye
         private MapControl map;
 
         //non-mysql collections (client mode):
-        private Dictionary<long, Device> devices;
-        private Dictionary<long, Node> nodes;
-        private Dictionary<long, List<DeviceHistory>> deviceHistories; //device id, history list
-        private Dictionary<long, User> users;
-        private Dictionary<long, Waypoint> waypoints;
+        private Dictionary<ulong, Device> devices;
+        private Dictionary<ulong, Node> nodes;
+        private Dictionary<ulong, List<DeviceHistory>> deviceHistories; //device id, history list
+        private Dictionary<ulong, User> users;
+        private Dictionary<ulong, Waypoint> waypoints;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -146,7 +146,7 @@ namespace WiFindUs.Eye
                 Map.Render();
         }
 
-        public Node Node(long id, out bool isNew)
+        public Node Node(ulong id, out bool isNew)
         {
             isNew = false;
             if (id < 0)
@@ -180,7 +180,7 @@ namespace WiFindUs.Eye
             //create
             if (node == null)
             {
-                long ts = DateTime.UtcNow.ToUnixTimestamp();
+                ulong ts = DateTime.UtcNow.ToUnixTimestamp();
                 node = new Node()
                 {
                     ID = id,
@@ -197,7 +197,7 @@ namespace WiFindUs.Eye
             return node;
         }
 
-        public Device Device(long id, out bool isNew)
+        public Device Device(ulong id, out bool isNew)
         {
             isNew = false;
             if (id < 0)
@@ -231,7 +231,7 @@ namespace WiFindUs.Eye
             //create
             if (device == null)
             {
-                long ts = DateTime.UtcNow.ToUnixTimestamp();
+                ulong ts = DateTime.UtcNow.ToUnixTimestamp();
                 device = new Device()
                 {
                     ID = id,
@@ -248,7 +248,7 @@ namespace WiFindUs.Eye
             return device;
         }
 
-        public User User(long id, out bool isNew)
+        public User User(ulong id, out bool isNew)
         {
             isNew = false;
             if (id < 0)
@@ -500,11 +500,11 @@ namespace WiFindUs.Eye
             else
             {
                 WFUApplication.SplashStatus = "Initializing entity collections";
-                devices = new Dictionary<long, Device>();
-                nodes = new Dictionary<long, Node>();
-                deviceHistories = new Dictionary<long, List<DeviceHistory>>();
-                users = new Dictionary<long, User>();
-                waypoints = new Dictionary<long, Waypoint>();
+                devices = new Dictionary<ulong, Device>();
+                nodes = new Dictionary<ulong, Node>();
+                deviceHistories = new Dictionary<ulong, List<DeviceHistory>>();
+                users = new Dictionary<ulong, User>();
+                waypoints = new Dictionary<ulong, Waypoint>();
 
                 Debugger.I("Application running in CLIENT mode.");
             }
