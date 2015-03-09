@@ -74,5 +74,12 @@ namespace WiFindUs.Eye
                 id.ToString("X"),
                 timestamp, payload);
         }
+
+        protected static Double? LocationComponent(string input)
+        {
+            if (input == null || input.Length == 0 || input.CompareTo("?") == 0)
+                return null;
+            return Double.Parse(input);
+        }
     }
 }

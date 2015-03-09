@@ -112,19 +112,16 @@ namespace WiFindUs.Eye
                 switch (match.Groups[1].Value.ToLower())
                 {
                     case "dt": deviceType = val; break;
-                    case "lat": latitude = Double.Parse(val); break;
-                    case "long": longitude = Double.Parse(val); break;
-                    case "acc": accuracy = Double.Parse(val); break;
-                    case "alt": altitude = Double.Parse(val); break;
+                    case "lat": latitude = LocationComponent(val); break;
+                    case "long": longitude = LocationComponent(val); break;
+                    case "acc": accuracy = LocationComponent(val); break;
+                    case "alt": altitude = LocationComponent(val); break;
                     case "chg": charging = Int32.Parse(val) == 1; break;
                     case "batt": batteryLevel = Double.Parse(val); break;
                     case "user":
                         try
                         {
-                            if (val.CompareTo("-1") == 0)
-                                userID = -1;
-                            else
-                                userID = Int64.Parse(val, System.Globalization.NumberStyles.HexNumber);
+                            userID = Int64.Parse(val, System.Globalization.NumberStyles.HexNumber);
                         }
                         catch (FormatException) { }
                         break;

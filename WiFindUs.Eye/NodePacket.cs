@@ -119,11 +119,10 @@ namespace WiFindUs.Eye
                 String val = match.Groups[2].Value.Trim();
                 switch (match.Groups[1].Value.ToLower())
                 {
-                    //[11:49:13 PM,013] EYE{1|mp:1|ap:1|dhcp:1|gps:1|sats:10}}
-                    case "lat": latitude = Double.Parse(val); break;
-                    case "long": longitude = Double.Parse(val); break;
-                    case "acc": accuracy = Double.Parse(val); break;
-                    case "alt": altitude = Double.Parse(val); break;
+                    case "lat": latitude = LocationComponent(val); break;
+                    case "long": longitude = LocationComponent(val); break;
+                    case "acc": accuracy = LocationComponent(val); break;
+                    case "alt": altitude = LocationComponent(val); break;
                     case "num": number = Int64.Parse(val); break;
                     case "sats": satellites = Int32.Parse(val); break;
                     case "mp": meshPoint = Int32.Parse(val) == 1; break;

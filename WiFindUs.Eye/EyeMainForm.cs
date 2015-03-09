@@ -450,7 +450,7 @@ namespace WiFindUs.Eye
                 if (devicePacket.UserID.HasValue)
                 {
                     bool newUser = false;
-                    user = devicePacket.UserID.Value == -1 ? null : User(devicePacket.UserID.Value, out newUser);
+                    user = devicePacket.UserID.Value <= 0 ? null : User(devicePacket.UserID.Value, out newUser);
                 }
 
                 device.Updated = DateTime.UtcNow.ToUnixTimestamp();
