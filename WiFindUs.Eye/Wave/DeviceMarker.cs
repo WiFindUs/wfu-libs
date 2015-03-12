@@ -77,7 +77,15 @@ namespace WiFindUs.Eye.Wave
         {
             base.Initialize();
             entity.OnDeviceUserChanged += OnDeviceUserChanged;
+            entity.OnGPSEnabledChanged += OnDeviceGPSStateChanged;
+            entity.OnGPSFixedChanged += OnDeviceGPSStateChanged;
             UpdateMarkerState();
+        }
+
+        protected override bool UpdateVisibilityCheck()
+        {
+            return entity.IsGPSEnabled.GetValueOrDefault()
+                && entity.IsGPSFixed.GetValueOrDefault() && base.UpdateVisibilityCheck();
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -89,6 +97,11 @@ namespace WiFindUs.Eye.Wave
             UpdateMarkerState();
             if (BoxCollider != null)
                 BoxCollider.DebugLineColor = entity.User == null ? Color.Gray : TypeColor(entity.User.Type);
+        }
+
+        private void OnDeviceGPSStateChanged(Device device)
+        {
+            UpdateMarkerState();
         }
     }
 }

@@ -223,13 +223,19 @@ namespace WiFindUs.Eye.Wave
             UpdateMarkerState();
         }
 
+        protected virtual bool UpdateVisibilityCheck()
+        {
+            return true;
+        }
+
         protected virtual void UpdateMarkerState()
         {
             bool active = Scene.BaseTile != null
                 && Scene.BaseTile.Region != null
                 && (VisibleOnTimeout || !entity.TimedOut)
                 && entity.Location.HasLatLong
-                && Scene.BaseTile.Region.Contains(entity.Location);
+                && Scene.BaseTile.Region.Contains(entity.Location)
+                && UpdateVisibilityCheck();
 
             Owner.IsActive = Owner.IsVisible = active;
             if (model != null)
