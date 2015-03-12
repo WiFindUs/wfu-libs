@@ -13,7 +13,7 @@ namespace WiFindUs.Eye
         private double? latitude, longitude, altitude, accuracy, batteryLevel;
         private bool? charging;
         private string deviceType = null;
-        private ulong? userID;
+        private uint? userID;
 
         public double? Latitude
         {
@@ -40,7 +40,7 @@ namespace WiFindUs.Eye
             get { return deviceType; }
         }
 
-        public ulong? UserID
+        public uint? UserID
         {
             get { return userID; }
         }
@@ -88,45 +88,35 @@ namespace WiFindUs.Eye
             }
         }
 
-        public DevicePacket(IPEndPoint sender, string type, ulong id, ulong timestamp, string payload)
+        public DevicePacket(IPEndPoint sender, string type, uint id, ulong timestamp, string payload)
             : base(sender, type, id, timestamp, payload)
         {
             //check packet
             if (type.CompareTo("DEV") != 0)
                 throw new ArgumentOutOfRangeException("packet", "Attempt to create a DevicePacket from an eye packet other than type DEV!");
-            
-            //check for payload
-            if (Payload.Length == 0)
-                return;
-            string[] payloads = Payload.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-            if (payloads == null || payloads.Length == 0)
-                return;
+        }
 
-            //parse arguments
-            foreach (string token in payloads)
+        protected override bool ProcessPayloadKVP(string key, string value)
+        {
+            switch (key)
             {
-                Match match = PACKET_KVP.Match(token);
-                if (!match.Success)
-                    continue;
-                String val = match.Groups[2].Value.Trim();
-                switch (match.Groups[1].Value.ToLower())
-                {
-                    case "dt": deviceType = val; break;
-                    case "lat": latitude = LocationComponent(val); break;
-                    case "long": longitude = LocationComponent(val); break;
-                    case "acc": accuracy = LocationComponent(val); break;
-                    case "alt": altitude = LocationComponent(val); break;
-                    case "chg": charging = Int32.Parse(val) == 1; break;
-                    case "batt": batteryLevel = Double.Parse(val); break;
-                    case "user":
-                        try
-                        {
-                            userID = UInt64.Parse(val, System.Globalization.NumberStyles.HexNumber);
-                        }
-                        catch (FormatException) { }
-                        break;
-                }
+                case "dt": deviceType = value; return true;
+                case "lat": latitude = LocationComponent(value); return true;
+                case "long": longitude = LocationComponent(value); return true;
+                case "acc": accuracy = LocationComponent(value); return true;
+                case "alt": altitude = LocationComponent(value); return true;
+                case "chg": charging = UInt32.Parse(value) == 1; return true;
+                case "batt": batteryLevel = Double.Parse(value); return true;
+                case "user":
+                    try
+                    {
+                        userID = UInt32.Parse(value, System.Globalization.NumberStyles.HexNumber);
+                    }
+                    catch (FormatException) { }
+                    return true;
             }
+
+            return false;
         }
     }
 }

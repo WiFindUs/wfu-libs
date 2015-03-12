@@ -8,19 +8,19 @@ using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-    public class EyePacket
+    public abstract class EyePacket
     {
-        protected static readonly Regex PACKET_KVP
-            = new Regex("^([a-zA-Z0-9_\\-.]+)\\s*[:=]\\s*(.+)\\s*$");
+        private static readonly Regex PACKET_KVP
+            = new Regex("^([a-zA-Z0-9_\\-.]+)\\s*[:=]\\s*(.+)\\s*$", RegexOptions.Compiled);
         
         private IPAddress address;
         private int port;
         private string type;
-        private ulong id;
+        private uint id;
         private ulong timestamp;
         private string payload;
 
-        public ulong ID
+        public uint ID
         {
             get { return id; }
         }
@@ -50,7 +50,7 @@ namespace WiFindUs.Eye
             get { return payload; }
         }
 
-        public EyePacket(IPEndPoint sender, string type, ulong id, ulong timestamp, string payload)
+        public EyePacket(IPEndPoint sender, string type, uint id, ulong timestamp, string payload)
         {
             if (sender == null)
                 throw new ArgumentNullException("sender", "Sender cannot be null");
@@ -61,7 +61,23 @@ namespace WiFindUs.Eye
             this.type = (type ?? "");
             this.id = id;
             this.timestamp = timestamp;
+            
+            //check for payload
             this.payload = (payload ?? "").Trim();
+            if (this.payload.Length == 0)
+                return;
+            string[] payloads = Payload.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+            if (payloads == null || payloads.Length == 0)
+                return;
+            
+            //parse payload arguments
+            foreach (string token in payloads)
+            {
+                Match match = PACKET_KVP.Match(token);
+                if (!match.Success)
+                    continue;
+                ProcessPayloadKVP(match.Groups[1].Value.Trim().ToLower(), match.Groups[2].Value.Trim());
+            }
         }
 
         public override string ToString()
@@ -79,5 +95,7 @@ namespace WiFindUs.Eye
                 return null;
             return Double.Parse(input);
         }
+
+        protected abstract bool ProcessPayloadKVP(string key, string value);
     }
 }

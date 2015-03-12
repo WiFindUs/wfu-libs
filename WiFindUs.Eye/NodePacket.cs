@@ -11,10 +11,10 @@ namespace WiFindUs.Eye
     public class NodePacket : EyePacket, ILocation
     {
         private double? latitude, longitude, altitude, accuracy;
-        private int? satellites;
-        private long? number;
+        private uint? satellites;
+        private uint? number;
         private bool? meshPoint, apDaemon, dhcpDaemon, gpsDaemon;
-        private int[] meshPeers;
+        private uint[] meshPeers;
 
         public double? Latitude
         {
@@ -36,7 +36,7 @@ namespace WiFindUs.Eye
             get { return altitude; }
         }
 
-        public int? VisibleSatellites
+        public uint? VisibleSatellites
         {
             get { return satellites; }
         }
@@ -81,12 +81,12 @@ namespace WiFindUs.Eye
             }
         }
 
-        public long? Number
+        public uint? Number
         {
             get { return number; }
         }
 
-        public int[] MeshPeers
+        public uint[] MeshPeers
         {
             get { return meshPeers; }
         }
@@ -96,74 +96,64 @@ namespace WiFindUs.Eye
             return WiFindUs.Eye.Location.Distance(this, other);
         }
 
-        public NodePacket(IPEndPoint sender, string type, ulong id, ulong timestamp, string payload)
+        public NodePacket(IPEndPoint sender, string type, uint id, ulong timestamp, string payload)
             : base(sender, type, id, timestamp, payload)
         {
             //check packet
             if (type.CompareTo("NODE") != 0)
                 throw new ArgumentOutOfRangeException("packet", "Attempt to create a NodePacket from an eye packet other than type NODE!");
-            
-            //check for payload
-            if (Payload.Length == 0)
-                return;
-            string[] payloads = Payload.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-            if (payloads == null || payloads.Length == 0)
-                return;
+        }
 
-            //parse arguments
-            foreach (string token in payloads)
+        protected override bool ProcessPayloadKVP(string key, string value)
+        {
+            switch (key)
             {
-                Match match = PACKET_KVP.Match(token);
-                if (!match.Success)
-                    continue;
-                String val = match.Groups[2].Value.Trim();
-                switch (match.Groups[1].Value.ToLower())
-                {
-                    case "lat": latitude = LocationComponent(val); break;
-                    case "long": longitude = LocationComponent(val); break;
-                    case "acc": accuracy = LocationComponent(val); break;
-                    case "alt": altitude = LocationComponent(val); break;
-                    case "num": number = Int64.Parse(val); break;
-                    case "sats": satellites = Int32.Parse(val); break;
-                    case "mp": meshPoint = Int32.Parse(val) == 1; break;
-                    case "ap": apDaemon = Int32.Parse(val) == 1; break;
-                    case "dhcp": dhcpDaemon = Int32.Parse(val) == 1; break;
-                    case "gps": gpsDaemon = Int32.Parse(val) == 1; break;
-                    case "mpl":
-                        if (val.CompareTo("0") == 0)
+                case "lat": latitude = LocationComponent(value); return true;
+                case "long": longitude = LocationComponent(value); return true;
+                case "acc": accuracy = LocationComponent(value); return true;
+                case "alt": altitude = LocationComponent(value); return true;
+                case "num": number = UInt32.Parse(value); return true;
+                case "sats": satellites = UInt32.Parse(value); return true;
+                case "mp": meshPoint = UInt32.Parse(value) == 1; return true;
+                case "ap": apDaemon = UInt32.Parse(value) == 1; return true;
+                case "dhcp": dhcpDaemon = UInt32.Parse(value) == 1; return true;
+                case "gps": gpsDaemon = UInt32.Parse(value) == 1; return true;
+                case "mpl":
+                    if (value.CompareTo("0") == 0)
+                    {
+                        meshPeers = new uint[0];
+                        return true;
+                    }
+                    string[] peers = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (peers.Length == 0)
+                    {
+                        meshPeers = new uint[0];
+                        return true;
+                    }
+                    List<uint> peerList = new List<uint>();
+                    foreach (String peer in peers)
+                    {
+                        String p = peer.Trim();
+                        if (p.Length == 0)
+                            continue;
+                        try
                         {
-                            meshPeers = new int[0];
-                            break;
-                        }
-                        string[] peers = match.Groups[2].Value.Trim().Split( new char[] {','}, StringSplitOptions.RemoveEmptyEntries);
-                        if (peers.Length == 0)
-                        {
-                            meshPeers = new int[0];
-                            break;
-                        }
-                        List<int> peerList = new List<int>();
-                        foreach (String peer in peers)
-                        {
-                            String p = peer.Trim();
-                            if (p.Length == 0)
+                            uint n = UInt32.Parse(p);
+                            if (n == 0 || n >= 255 || peerList.Contains(n))
                                 continue;
-                            try
-                            {
-                                int n = Int32.Parse(p);
-                                if (n <= 0 || n >= 255 || peerList.Contains(n))
-                                    continue;
-                                peerList.Add(n);
-                            }
-                            catch
-                            {
-                                continue;
-                            }
+                            peerList.Add(n);
                         }
-                        peerList.Sort();
-                        meshPeers = peerList.ToArray();
-                        break;
-                }
+                        catch
+                        {
+                            continue;
+                        }
+                    }
+                    peerList.Sort();
+                    meshPeers = peerList.ToArray();
+                    return true;
             }
+
+            return false;
         }
     }
 }
