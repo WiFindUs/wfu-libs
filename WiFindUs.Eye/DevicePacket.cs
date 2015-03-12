@@ -12,6 +12,7 @@ namespace WiFindUs.Eye
     {
         private double? latitude, longitude, altitude, accuracy, batteryLevel;
         private bool? charging;
+        private bool? gpsEnabled, gpsHasFix;
         private string deviceType = null;
         private uint? userID;
 
@@ -38,6 +39,16 @@ namespace WiFindUs.Eye
         public string DeviceType
         {
             get { return deviceType; }
+        }
+
+        public bool? IsGPSEnabled
+        {
+            get { return gpsEnabled; }
+        }
+
+        public bool? IsGPSFixed
+        {
+            get { return gpsHasFix; }
         }
 
         public uint? UserID
@@ -98,24 +109,23 @@ namespace WiFindUs.Eye
 
         protected override bool ProcessPayloadKVP(string key, string value)
         {
-            switch (key)
+            try
             {
-                case "dt": deviceType = value; return true;
-                case "lat": latitude = LocationComponent(value); return true;
-                case "long": longitude = LocationComponent(value); return true;
-                case "acc": accuracy = LocationComponent(value); return true;
-                case "alt": altitude = LocationComponent(value); return true;
-                case "chg": charging = UInt32.Parse(value) == 1; return true;
-                case "batt": batteryLevel = Double.Parse(value); return true;
-                case "user":
-                    try
-                    {
-                        userID = UInt32.Parse(value, System.Globalization.NumberStyles.HexNumber);
-                    }
-                    catch (FormatException) { }
-                    return true;
+                switch (key)
+                {
+                    case "dt": deviceType = value; return true;
+                    case "gps": gpsEnabled = UInt32.Parse(value) == 1; return true;
+                    case "fix": gpsHasFix = UInt32.Parse(value) == 1; return true;
+                    case "lat": latitude = LocationComponent(value); return true;
+                    case "long": longitude = LocationComponent(value); return true;
+                    case "acc": accuracy = LocationComponent(value); return true;
+                    case "alt": altitude = LocationComponent(value); return true;
+                    case "chg": charging = UInt32.Parse(value) == 1; return true;
+                    case "batt": batteryLevel = Double.Parse(value); return true;
+                    case "user": userID = UInt32.Parse(value, System.Globalization.NumberStyles.HexNumber); return true;
+                }
             }
-
+            catch (FormatException) { }
             return false;
         }
     }
