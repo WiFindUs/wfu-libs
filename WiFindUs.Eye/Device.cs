@@ -25,7 +25,11 @@ namespace WiFindUs.Eye
         public event Action<IUpdateable> WhenUpdated;
         public event Action<IUpdateable> TimedOutChanged;
         public event Action<ILocatable> LocationChanged;
+        public event Action<Device> OnGPSEnabledChanged;
+        public event Action<Device> OnGPSFixedChanged;
+        
         private bool timedOut = false, loaded = false;
+        private bool? gpsEnabled = null, gpsHasFix = null;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -84,6 +88,40 @@ namespace WiFindUs.Eye
 
                 if (OnDeviceAtmosphereChanged != null)
                     OnDeviceAtmosphereChanged(this);
+            }
+        }
+
+        public bool? IsGPSEnabled
+        {
+            get { return gpsEnabled; }
+            set
+            {
+                if (gpsEnabled != value)
+                {
+                    gpsEnabled = value;
+                    if (OnGPSEnabledChanged != null)
+                        OnGPSEnabledChanged(this);
+
+                    if (!gpsEnabled.GetValueOrDefault())
+                        IsGPSFixed = false;
+                }
+            }
+        }
+
+        public bool? IsGPSFixed
+        {
+            get { return gpsHasFix; }
+            set
+            {
+                if (gpsHasFix != value)
+                {
+                    gpsHasFix = value;
+                    if (OnGPSFixedChanged != null)
+                        OnGPSFixedChanged(this);
+
+                    if (!gpsHasFix.GetValueOrDefault())
+                        Location = null;
+                }
             }
         }
 
