@@ -26,6 +26,8 @@ namespace WiFindUs.Eye
         private List<IUpdateable> updateables = new List<IUpdateable>();
         private bool serverMode = false;
         private MapControl map;
+        private double deviceMaxAccuracy = 20.0;
+        private double nodeMaxAccuracy = 20.0;
 
         //non-mysql collections (client mode):
         private Dictionary<ulong, Device> devices;
@@ -417,16 +419,46 @@ namespace WiFindUs.Eye
                 user = devicePacket.UserID.Value <= 0 ? null : User(devicePacket.UserID.Value, out newUser);
             }
 
+            //device stats
             device.Updated = DateTime.UtcNow.ToUnixTimestamp();
             device.IPAddress = devicePacket.Address;
             if (devicePacket.UserID.HasValue)
                 device.User = user;
-            if (!devicePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
-                device.Location = devicePacket;
             if (devicePacket.DeviceType != null)
                 device.Type = devicePacket.DeviceType;
-            if (!devicePacket.EmptyBatteryStats)
-                device.BatteryStats = devicePacket;
+            if (devicePacket.Charging.HasValue)
+                device.Charging = devicePacket.Charging;
+            if (devicePacket.BatteryLevel.HasValue)
+                device.BatteryLevel = devicePacket.BatteryLevel;
+
+            //location
+            if (devicePacket.IsGPSEnabled.HasValue)
+                device.IsGPSEnabled = devicePacket.IsGPSEnabled;
+            if (device.IsGPSEnabled.GetValueOrDefault())
+            {
+                if (devicePacket.IsGPSFixed.HasValue)
+                    device.IsGPSFixed = devicePacket.IsGPSFixed;
+                if (device.IsGPSFixed.GetValueOrDefault())
+                {
+                    if (devicePacket.Accuracy.HasValue)
+                        device.Accuracy = devicePacket.Accuracy;
+                    if (device.Accuracy.HasValue && device.Accuracy.Value <= deviceMaxAccuracy)
+                    {
+                        if (devicePacket.Latitude.HasValue)
+                            device.Latitude = devicePacket.Latitude;
+                        if (devicePacket.Longitude.HasValue)
+                            device.Longitude = devicePacket.Longitude;
+                        if (devicePacket.Altitude.HasValue)
+                            device.Altitude = devicePacket.Altitude;
+                    }
+                    else
+                    {
+                        device.Latitude = null;
+                        device.Longitude = null;
+                        device.Altitude = null;
+                    }
+                }
+            }
 
             eyeContext.SubmitChanges();
         }
@@ -467,19 +499,32 @@ namespace WiFindUs.Eye
             node.IPAddress = nodePacket.Address;
             if (nodePacket.Number.HasValue)
                 node.Number = nodePacket.Number;
-            if (!nodePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(node.Location, nodePacket))
-                node.Location = nodePacket;
+            if (nodePacket.IsGPSDaemonRunning.HasValue)
+                node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
+            if (nodePacket.IsGPSDaemonRunning.GetValueOrDefault())
+            {
+                if (nodePacket.Accuracy.HasValue)
+                    node.Accuracy = nodePacket.Accuracy;
+                if (node.Accuracy.HasValue && node.Accuracy.Value <= nodeMaxAccuracy)
+                {
+                    if (nodePacket.Latitude.HasValue)
+                        node.Latitude = nodePacket.Latitude;
+                    if (nodePacket.Longitude.HasValue)
+                        node.Longitude = nodePacket.Longitude;
+                    if (nodePacket.Altitude.HasValue)
+                        node.Altitude = nodePacket.Altitude;
+                }
+                else
+                {
+                    node.Latitude = null;
+                    node.Longitude = null;
+                    node.Altitude = null;
+                }
+            }
             if (nodePacket.IsAPDaemonRunning.HasValue)
                 node.IsAPDaemonRunning = nodePacket.IsAPDaemonRunning;
             if (nodePacket.IsDHCPDaemonRunning.HasValue)
                 node.IsDHCPDaemonRunning = nodePacket.IsDHCPDaemonRunning;
-            if (nodePacket.IsGPSDaemonRunning.HasValue)
-            {
-                node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
-                if (!nodePacket.IsGPSDaemonRunning.Value && !node.EmptyLocation)
-                    node.Location = null;
-            }
-
             if (nodePacket.IsMeshPoint.HasValue)
                 node.IsMeshPoint = nodePacket.IsMeshPoint;
             if (nodePacket.VisibleSatellites.HasValue)
@@ -530,6 +575,9 @@ namespace WiFindUs.Eye
                     MessageBox.Show(message + "\n\nThe application will now exit.", "MySQL Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return false;
                 }
+
+                deviceMaxAccuracy = WFUApplication.Config.Get("server.max_node_accuracy", 20.0).Clamp(5.0,100.0);
+                nodeMaxAccuracy = WFUApplication.Config.Get("server.max_node_accuracy", 20.0).Clamp(5.0, 100.0);
 
                 Debugger.I("Application running in SERVER mode.");
             }

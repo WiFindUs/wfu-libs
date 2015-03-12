@@ -59,7 +59,10 @@ namespace WiFindUs.Eye.Controls
                     return "";
                 return String.Format("{0}\n{1}",
                     device.User != null ? "in use by " + device.User.FullName : "No assigned user.",
-                    device.TimedOut ? "Timed out." : (device.HasLatLong ? WiFindUs.Eye.Location.ToString(device) : ""));
+                    device.TimedOut ? "Timed out." :
+                        (!device.IsGPSEnabled.GetValueOrDefault() ? "GPS disabled." : 
+                            (!device.IsGPSFixed.GetValueOrDefault() ? "Waiting for GPS fix..." : 
+                                (!device.HasLatLong ? "Waiting for accurate location..." : WiFindUs.Eye.Location.ToString(device)))));
             }
         }
 
@@ -79,6 +82,8 @@ namespace WiFindUs.Eye.Controls
             device.TimedOutChanged += device_OnDeviceTimedOutChanged;
             device.OnDeviceBatteryChanged += device_OnDeviceBatteryChanged;
             device.OnDeviceAssignedWaypointChanged += device_OnDeviceAssignedWaypointChanged;
+            device.OnGPSEnabledChanged += device_OnGPSEnabledChanged;
+            device.OnGPSFixedChanged += device_OnGPSFixedChanged;
         }
 
         /////////////////////////////////////////////////////////////////////
@@ -138,6 +143,17 @@ namespace WiFindUs.Eye.Controls
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        
+        private void device_OnGPSFixedChanged(Device obj)
+        {
+            this.RefreshThreadSafe();
+        }
+
+        private void device_OnGPSEnabledChanged(Device obj)
+        {
+            this.RefreshThreadSafe();
+        }
 
         private void device_OnDeviceAssignedWaypointChanged(Device obj)
         {
