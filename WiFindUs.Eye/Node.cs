@@ -95,6 +95,9 @@ namespace WiFindUs.Eye
                     gpsDaemon = value;
                     if (OnGPSDaemonRunningChanged != null)
                         OnGPSDaemonRunningChanged(this);
+
+                    if (!gpsDaemon.GetValueOrDefault())
+                        Location = null;
                 }
             }
         }
