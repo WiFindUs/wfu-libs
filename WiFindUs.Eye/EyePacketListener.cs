@@ -22,7 +22,7 @@ namespace WiFindUs.Eye
         private bool cancel = false;
         private UdpClient listener = null;
         private bool disposed = false;
-        private Dictionary<string, Dictionary<ulong, ulong>> timestamps = new Dictionary<string, Dictionary<ulong, ulong>>();
+        private Dictionary<string, Dictionary<uint, ulong>> timestamps = new Dictionary<string, Dictionary<uint, ulong>>();
         private bool logPackets = false;
 
         /////////////////////////////////////////////////////////////////////
@@ -138,13 +138,13 @@ namespace WiFindUs.Eye
 
                     //get identifiers
                     string type = match.Groups[1].Value.Trim().ToUpper();
-                    ulong id = UInt64.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
+                    uint id = UInt32.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
                     ulong timestamp = UInt64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
 
                     //check for existing timestamp
-                    Dictionary<ulong, ulong> idTimestamps = null;
+                    Dictionary<uint, ulong> idTimestamps = null;
                     if (!timestamps.TryGetValue(type, out idTimestamps))
-                        idTimestamps = timestamps[type] = new Dictionary<ulong, ulong>();
+                        idTimestamps = timestamps[type] = new Dictionary<uint, ulong>();
                     ulong lastTimeStamp;
                     if (!idTimestamps.TryGetValue(id, out lastTimeStamp))
                         lastTimeStamp = 0;
