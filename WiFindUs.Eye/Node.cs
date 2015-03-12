@@ -29,7 +29,7 @@ namespace WiFindUs.Eye
 
         private bool timedOut = false, loaded = false;
         private bool? meshPoint = null, apDaemon = null, dhcpDaemon = null, gpsDaemon = null;
-        private int? satellites = null;
+        private uint? satellites = null;
         private readonly List<Node> meshPeers = new List<Node>();
 
         /////////////////////////////////////////////////////////////////////
@@ -71,7 +71,7 @@ namespace WiFindUs.Eye
             }
         }
 
-        public int? VisibleSatellites
+        public uint? VisibleSatellites
         {
             get { return satellites; }
             set

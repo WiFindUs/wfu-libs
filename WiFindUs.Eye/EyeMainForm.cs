@@ -146,7 +146,7 @@ namespace WiFindUs.Eye
                 Map.Render();
         }
 
-        public Node Node(ulong id, out bool isNew)
+        public Node Node(uint id, out bool isNew)
         {
             isNew = false;
             if (id < 0)
@@ -197,7 +197,7 @@ namespace WiFindUs.Eye
             return node;
         }
 
-        public Device Device(ulong id, out bool isNew)
+        public Device Device(uint id, out bool isNew)
         {
             isNew = false;
             if (id < 0)
@@ -248,7 +248,7 @@ namespace WiFindUs.Eye
             return device;
         }
 
-        public User User(ulong id, out bool isNew)
+        public User User(uint id, out bool isNew)
         {
             isNew = false;
             if (id < 0)
@@ -312,7 +312,10 @@ namespace WiFindUs.Eye
 
             //attach server thread listener
             if (ServerMode)
-                eyeListener.PacketReceived += EyePacketReceived;
+            {
+                eyeListener.DevicePacketReceived += DevicePacketReceived;
+                eyeListener.NodePacketReceived += NodePacketReceived;
+            }
 
             //start map scene
             if (Map != null)
@@ -342,7 +345,8 @@ namespace WiFindUs.Eye
             
             if (eyeListener != null)
             {
-                eyeListener.PacketReceived -= EyePacketReceived;
+                eyeListener.DevicePacketReceived -= DevicePacketReceived;
+                eyeListener.NodePacketReceived -= NodePacketReceived;
                 eyeListener.Dispose();
                 eyeListener = null;
             }
@@ -373,96 +377,96 @@ namespace WiFindUs.Eye
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        private void EyePacketReceived(EyePacketListener sender, EyePacket obj)
+
+        private void DevicePacketReceived(EyePacketListener sender, DevicePacket devicePacket)
         {
-            if (!ServerMode || obj == null)
+            if (!ServerMode || devicePacket == null)
                 return;
-            
-            if (obj is NodePacket)
-            {
-                NodePacket nodePacket = obj as NodePacket;
-                
-                //get node
-                bool newNode = false;
-                Node node = Node(nodePacket.ID, out newNode);
-                if (node == null) //error
-                {
-                    Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
-                    return;
-                }
-                if (!node.Loaded)
-                    return;
-                node.Updated = DateTime.UtcNow.ToUnixTimestamp();
-                node.IPAddress = nodePacket.Address;
-                if (nodePacket.Number.HasValue)
-                    node.Number = nodePacket.Number;
-                if (!nodePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(node.Location, nodePacket))
-                    node.Location = nodePacket;
-                if (nodePacket.IsAPDaemonRunning.HasValue)
-                    node.IsAPDaemonRunning = nodePacket.IsAPDaemonRunning;
-                if (nodePacket.IsDHCPDaemonRunning.HasValue)
-                    node.IsDHCPDaemonRunning = nodePacket.IsDHCPDaemonRunning;
-                if (nodePacket.IsGPSDaemonRunning.HasValue)
-                {
-                    node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
-                    if (!nodePacket.IsGPSDaemonRunning.Value && !node.EmptyLocation)
-                        node.Location = null;
-                }
 
-                if (nodePacket.IsMeshPoint.HasValue)
-                    node.IsMeshPoint = nodePacket.IsMeshPoint;
-                if (nodePacket.VisibleSatellites.HasValue)
-                    node.VisibleSatellites = nodePacket.VisibleSatellites;
-                if (nodePacket.MeshPeers != null)
-                {
-                    List<Node> peers = new List<Node>();
-                    foreach (int nodeNumber in nodePacket.MeshPeers)
-                    {
-                        if (nodeNumber <= 0 || nodeNumber >= 255)
-                            continue;
-                        var peer = from p in eyeContext.Nodes where p.Number == nodeNumber select p;
-                        foreach (Node p in peer)
-                        {
-                            if (!peers.Contains(p))
-                                peers.Add(p);
-                        }
-                    }
-                    node.MeshPeers = peers;
-                }
+            //get device
+            bool newDevice = false;
+            Device device = Device(devicePacket.ID, out newDevice);
+            if (device == null) //error
+            {
+                Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
+                return;
             }
-            else if (obj is DevicePacket)
+            if (!device.Loaded)
+                return;
+
+            //get user
+            User user = null;
+            if (devicePacket.UserID.HasValue)
             {
-                DevicePacket devicePacket = obj as DevicePacket;
+                bool newUser = false;
+                user = devicePacket.UserID.Value <= 0 ? null : User(devicePacket.UserID.Value, out newUser);
+            }
 
-                //get device
-                bool newDevice = false;
-                Device device = Device(devicePacket.ID, out newDevice);
-                if (device == null) //error
+            device.Updated = DateTime.UtcNow.ToUnixTimestamp();
+            device.IPAddress = devicePacket.Address;
+            if (devicePacket.UserID.HasValue)
+                device.User = user;
+            if (!devicePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
+                device.Location = devicePacket;
+            if (devicePacket.DeviceType != null)
+                device.Type = devicePacket.DeviceType;
+            if (!devicePacket.EmptyBatteryStats)
+                device.BatteryStats = devicePacket;
+
+            eyeContext.SubmitChanges();
+        }
+
+        private void NodePacketReceived(EyePacketListener sender, NodePacket nodePacket)
+        {
+            if (!ServerMode || nodePacket == null)
+                return;
+
+            //get node
+            bool newNode = false;
+            Node node = Node(nodePacket.ID, out newNode);
+            if (node == null) //error
+            {
+                Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
+                return;
+            }
+            if (!node.Loaded)
+                return;
+            node.Updated = DateTime.UtcNow.ToUnixTimestamp();
+            node.IPAddress = nodePacket.Address;
+            if (nodePacket.Number.HasValue)
+                node.Number = nodePacket.Number;
+            if (!nodePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(node.Location, nodePacket))
+                node.Location = nodePacket;
+            if (nodePacket.IsAPDaemonRunning.HasValue)
+                node.IsAPDaemonRunning = nodePacket.IsAPDaemonRunning;
+            if (nodePacket.IsDHCPDaemonRunning.HasValue)
+                node.IsDHCPDaemonRunning = nodePacket.IsDHCPDaemonRunning;
+            if (nodePacket.IsGPSDaemonRunning.HasValue)
+            {
+                node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
+                if (!nodePacket.IsGPSDaemonRunning.Value && !node.EmptyLocation)
+                    node.Location = null;
+            }
+
+            if (nodePacket.IsMeshPoint.HasValue)
+                node.IsMeshPoint = nodePacket.IsMeshPoint;
+            if (nodePacket.VisibleSatellites.HasValue)
+                node.VisibleSatellites = nodePacket.VisibleSatellites;
+            if (nodePacket.MeshPeers != null)
+            {
+                List<Node> peers = new List<Node>();
+                foreach (int nodeNumber in nodePacket.MeshPeers)
                 {
-                    Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
-                    return;
+                    if (nodeNumber <= 0 || nodeNumber >= 255)
+                        continue;
+                    var peer = from p in eyeContext.Nodes where p.Number == nodeNumber select p;
+                    foreach (Node p in peer)
+                    {
+                        if (!p.TimedOut && p != node && !peers.Contains(p))
+                            peers.Add(p);
+                    }
                 }
-                if (!device.Loaded)
-                    return;
-
-                //get user
-                User user = null;
-                if (devicePacket.UserID.HasValue)
-                {
-                    bool newUser = false;
-                    user = devicePacket.UserID.Value <= 0 ? null : User(devicePacket.UserID.Value, out newUser);
-                }
-
-                device.Updated = DateTime.UtcNow.ToUnixTimestamp();
-                device.IPAddress = devicePacket.Address;
-                if (devicePacket.UserID.HasValue)
-                    device.User = user;
-                if (!devicePacket.EmptyLocation && !WiFindUs.Eye.Location.Equals(device.Location, devicePacket))
-                    device.Location = devicePacket;
-                if (devicePacket.DeviceType != null)
-                    device.Type = devicePacket.DeviceType;
-                if (!devicePacket.EmptyBatteryStats)
-                    device.BatteryStats = devicePacket;
+                node.MeshPeers = peers;
             }
 
             eyeContext.SubmitChanges();
