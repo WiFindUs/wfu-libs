@@ -12,7 +12,8 @@ namespace WiFindUs.Eye
 {
     public class EyePacketListener : IDisposable
     {
-        public event Action<EyePacketListener, EyePacket> PacketReceived;
+        public event Action<EyePacketListener, DevicePacket> DevicePacketReceived;
+        public event Action<EyePacketListener, NodePacket> NodePacketReceived;
         
         private static readonly Regex REGEX_EYE_MESSAGE = new Regex(
             @"^EYE\{([A-Za-z]+)\|([0-9A-Fa-f]+)\|([0-9A-Fa-f]+)\s*(?:\{\s*(.*)\s*\}\s*)?\}$", RegexOptions.Compiled);
@@ -89,7 +90,8 @@ namespace WiFindUs.Eye
             if (disposing)
             {
                 Stop();
-                PacketReceived = null;
+                DevicePacketReceived = null;
+                NodePacketReceived = null;
                 thread = null;
             }
 
@@ -122,9 +124,7 @@ namespace WiFindUs.Eye
                     {
                         bytes = listener.Receive(ref endPoint);
                     }
-                    catch (Exception)
-                    {
-                    }
+                    catch (Exception) { }
 
                     if (cancel)
                         break;
@@ -140,7 +140,6 @@ namespace WiFindUs.Eye
                     string type = match.Groups[1].Value.Trim().ToUpper();
                     ulong id = UInt64.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
                     ulong timestamp = UInt64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
-                    
 
                     //check for existing timestamp
                     Dictionary<ulong, ulong> idTimestamps = null;
@@ -157,20 +156,27 @@ namespace WiFindUs.Eye
 
                     if (logPackets)
                         Debugger.V(message);
-                    if (PacketReceived != null)
+
+                    Type eyePacketType = null;
+                    switch (type)
                     {
-                        Type eyePacketType = (typeof(EyePacket));
-                        switch (type)
-                        {
-                            case "DEV": eyePacketType = typeof(DevicePacket); break;
-                            case "NODE": eyePacketType = typeof(NodePacket); break;
-                        }
+                        case "DEV":
+                            if (DevicePacketReceived != null)
+                                eyePacketType = typeof(DevicePacket);
+                            break;
+                        case "NODE":
+                            if (NodePacketReceived != null)
+                                eyePacketType = typeof(NodePacket);
+                            break;
+                    }
+                    if (eyePacketType != null)
+                    {
                         EyePacket packet = (EyePacket)eyePacketType.GetConstructor(
                             new Type[]
                             {
                                 typeof(IPEndPoint),
                                 typeof(String),
-                                typeof(ulong),
+                                typeof(uint),
                                 typeof(ulong),
                                 typeof(String)
                             })
@@ -182,7 +188,11 @@ namespace WiFindUs.Eye
                                 timestamp, //timestamp
                                 match.Groups[4].Value //payload
                             });
-                        PacketReceived(this, packet);
+                        switch (type)
+                        {
+                            case "DEV": DevicePacketReceived(this, packet as DevicePacket); break;
+                            case "NODE": NodePacketReceived(this, packet as NodePacket); break;
+                        }
                     }
                 }
                 if (listener != null)
