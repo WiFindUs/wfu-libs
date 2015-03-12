@@ -121,7 +121,6 @@
     <Compile Include="SelectableEntity.cs" />
     <Compile Include="SelectableEntityGroup.cs" />
     <Compile Include="Extensions\ConfigFileExtensions.cs" />
-    <Compile Include="EyeContext.cs" />
     <Compile Include="EyeMainForm.cs">
       <SubType>Form</SubType>
     </Compile>

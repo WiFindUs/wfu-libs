@@ -18,12 +18,10 @@ namespace WiFindUs.Eye
     public class EyeMainForm : MainForm, IMapForm
     {
         private const long TIMEOUT_CHECK_INTERVAL = 1000;
-        private const long SQL_AUTO_SUBMIT_INTERVAL = 10000;
         
-        private EyeContext eyeContext = null;
+        private volatile EyeContext eyeContext = null;
         private EyePacketListener eyeListener = null;
         private Timer timer;
-        private long sqlSubmitTimer = 0;
         private long timeoutCheckTimer = 0;
         private List<IUpdateable> updateables = new List<IUpdateable>();
         private bool serverMode = false;
@@ -383,6 +381,23 @@ namespace WiFindUs.Eye
             if (!ServerMode || devicePacket == null)
                 return;
 
+            if (InvokeRequired)
+            {
+                try
+                {
+                    Invoke(new Action<EyePacketListener, DevicePacket>(DevicePacketReceived), new object[] { sender, devicePacket });
+                }
+                catch (ObjectDisposedException)
+                {
+                    return;
+                }
+                catch (InvalidAsynchronousStateException)
+                {
+                    return;
+                }
+                return;
+            }
+
             //get device
             bool newDevice = false;
             Device device = Device(devicePacket.ID, out newDevice);
@@ -420,6 +435,23 @@ namespace WiFindUs.Eye
         {
             if (!ServerMode || nodePacket == null)
                 return;
+
+            if (InvokeRequired)
+            {
+                try
+                {
+                    Invoke(new Action<EyePacketListener, NodePacket>(NodePacketReceived), new object[] { sender, nodePacket });
+                }
+                catch (ObjectDisposedException)
+                {
+                    return;
+                }
+                catch (InvalidAsynchronousStateException)
+                {
+                    return;
+                }
+                return;
+            }
 
             //get node
             bool newNode = false;
@@ -661,13 +693,6 @@ namespace WiFindUs.Eye
                 timeoutCheckTimer = 0;
                 foreach (IUpdateable updateable in updateables)
                     updateable.CheckTimeout();
-            }
-
-            sqlSubmitTimer += timer.Interval;
-            if (sqlSubmitTimer >= SQL_AUTO_SUBMIT_INTERVAL)
-            {
-                sqlSubmitTimer = 0;
-                eyeContext.SubmitChangesThreaded();
             }
         }
 
