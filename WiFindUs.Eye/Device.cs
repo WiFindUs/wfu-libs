@@ -30,6 +30,8 @@ namespace WiFindUs.Eye
         
         private bool timedOut = false, loaded = false;
         private bool? gpsEnabled = null, gpsHasFix = null;
+        private StackedLock locationEventLock = new StackedLock();
+        private bool fireLocationEvents = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -43,6 +45,7 @@ namespace WiFindUs.Eye
             }
             set
             {
+                locationEventLock.Lock();
                 if (value == null)
                 {
                     Altitude = null;
@@ -57,9 +60,7 @@ namespace WiFindUs.Eye
                     Longitude = value.Longitude;
                     Latitude = value.Latitude;
                 }
-
-                if (LocationChanged != null)
-                    LocationChanged(this);
+                locationEventLock.Unlock();
             }
         }
 
@@ -223,6 +224,8 @@ namespace WiFindUs.Eye
                     Atmosphere = null;
                     Location = null;
                     IPAddress = null;
+                    IsGPSEnabled = null;
+                    IsGPSFixed = null;
                 }
                 if (TimedOutChanged != null)
                     TimedOutChanged(this);
@@ -297,9 +300,65 @@ namespace WiFindUs.Eye
 
         }
 
+        public void LockLocationEvents()
+        {
+            locationEventLock.Lock();
+        }
+
+        public void UnlockLocationEvents()
+        {
+            locationEventLock.Unlock();
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        partial void OnCreated()
+        {
+            locationEventLock.OnLocked += OnLocationLocked;
+            locationEventLock.OnUnlocked += OnLocationUnlocked;
+        }
+
+        private void OnLocationLocked(StackedLock obj)
+        {
+            fireLocationEvents = false;
+        }
+
+        private void OnLocationUnlocked(StackedLock obj)
+        {
+            if (fireLocationEvents && LocationChanged != null)
+                LocationChanged(this);
+            fireLocationEvents = false;
+        }
+
+        private void FireLocationChangedEvent()
+        {
+            if (locationEventLock.IsLocked)
+                fireLocationEvents = true;
+            else if (LocationChanged != null)
+                LocationChanged(this);
+        }
+
+        partial void OnLatitudeChanged()
+        {
+            FireLocationChangedEvent();
+        }
+
+        partial void OnLongitudeChanged()
+        {
+            FireLocationChangedEvent();
+        }
+
+        partial void OnAltitudeChanged()
+        {
+            FireLocationChangedEvent();
+        }
+
+        partial void OnAccuracyChanged()
+        {
+            FireLocationChangedEvent();
+        }
 
         partial void OnLoaded()
         {

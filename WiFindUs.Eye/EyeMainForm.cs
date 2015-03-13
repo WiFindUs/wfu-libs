@@ -440,6 +440,7 @@ namespace WiFindUs.Eye
                     device.IsGPSFixed = devicePacket.IsGPSFixed;
                 if (device.IsGPSFixed.GetValueOrDefault())
                 {
+                    device.LockLocationEvents();
                     if (devicePacket.Accuracy.HasValue)
                         device.Accuracy = devicePacket.Accuracy;
                     if (device.Accuracy.HasValue && device.Accuracy.Value <= deviceMaxAccuracy)
@@ -457,6 +458,7 @@ namespace WiFindUs.Eye
                         device.Longitude = null;
                         device.Altitude = null;
                     }
+                    device.UnlockLocationEvents();
                 }
             }
 
@@ -503,6 +505,7 @@ namespace WiFindUs.Eye
                 node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
             if (nodePacket.IsGPSDaemonRunning.GetValueOrDefault())
             {
+                node.LockLocationEvents();
                 if (nodePacket.Accuracy.HasValue)
                     node.Accuracy = nodePacket.Accuracy;
                 if (node.Accuracy.HasValue && node.Accuracy.Value <= nodeMaxAccuracy)
@@ -520,6 +523,7 @@ namespace WiFindUs.Eye
                     node.Longitude = null;
                     node.Altitude = null;
                 }
+                node.UnlockLocationEvents();
             }
             if (nodePacket.IsAPDaemonRunning.HasValue)
                 node.IsAPDaemonRunning = nodePacket.IsAPDaemonRunning;

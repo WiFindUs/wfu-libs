@@ -31,6 +31,8 @@ namespace WiFindUs.Eye
         private bool? meshPoint = null, apDaemon = null, dhcpDaemon = null, gpsDaemon = null;
         private uint? satellites = null;
         private readonly List<Node> meshPeers = new List<Node>();
+        private StackedLock locationEventLock = new StackedLock();
+        private bool fireLocationEvents = false;
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
@@ -152,6 +154,7 @@ namespace WiFindUs.Eye
             }
             set
             {
+                locationEventLock.Lock();
                 if (value == null)
                 {
                     Altitude = null;
@@ -166,9 +169,7 @@ namespace WiFindUs.Eye
                     Longitude = value.Longitude;
                     Latitude = value.Latitude;
                 }
-
-                if (LocationChanged != null)
-                    LocationChanged(this);
+                locationEventLock.Unlock();
             }
         }
 
@@ -234,6 +235,7 @@ namespace WiFindUs.Eye
                     IsAPDaemonRunning = null;
                     IPAddress = null;
                     Voltage = null;
+                    Location = null;
                 }
                 if (TimedOutChanged != null)
                     TimedOutChanged(this);
@@ -303,9 +305,45 @@ namespace WiFindUs.Eye
             get { return this.ToString(); }
         }
 
+        public void LockLocationEvents()
+        {
+            locationEventLock.Lock();
+        }
+
+        public void UnlockLocationEvents()
+        {
+            locationEventLock.Unlock();
+        }
+
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        partial void OnCreated()
+        {
+            locationEventLock.OnLocked += OnLocationLocked;
+            locationEventLock.OnUnlocked += OnLocationUnlocked;
+        }
+
+        private void OnLocationLocked(StackedLock obj)
+        {
+            fireLocationEvents = false;
+        }
+
+        private void OnLocationUnlocked(StackedLock obj)
+        {
+            if (fireLocationEvents && LocationChanged != null)
+                LocationChanged(this);
+            fireLocationEvents = false;
+        }
+
+        private void FireLocationChangedEvent()
+        {
+            if (locationEventLock.IsLocked)
+                fireLocationEvents = true;
+            else if (LocationChanged != null)
+                LocationChanged(this);
+        }
 
         partial void OnLoaded()
         {
@@ -323,26 +361,22 @@ namespace WiFindUs.Eye
 
         partial void OnAccuracyChanged()
         {
-            if (LocationChanged != null)
-                LocationChanged(this);
+            FireLocationChangedEvent();
         }
 
         partial void OnAltitudeChanged()
         {
-            if (LocationChanged != null)
-                LocationChanged(this);
+            FireLocationChangedEvent();
         }
 
         partial void OnLatitudeChanged()
         {
-            if (LocationChanged != null)
-                LocationChanged(this);
+            FireLocationChangedEvent();
         }
 
         partial void OnLongitudeChanged()
         {
-            if (LocationChanged != null)
-                LocationChanged(this);
+            FireLocationChangedEvent();
         }
 
         partial void OnNumberChanged()
