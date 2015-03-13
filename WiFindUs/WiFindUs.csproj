@@ -95,6 +95,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="StackedLock.cs" />
     <Compile Include="WFUApplication.cs" />
   </ItemGroup>
   <ItemGroup>
