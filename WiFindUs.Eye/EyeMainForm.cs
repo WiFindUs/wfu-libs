@@ -408,8 +408,8 @@ namespace WiFindUs.Eye
                 Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
                 return;
             }
-            if (!device.Loaded)
-                return;
+            //if (!device.Loaded)
+              //  return;
 
             //get user
             User user = null;
@@ -495,8 +495,8 @@ namespace WiFindUs.Eye
                 Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
                 return;
             }
-            if (!node.Loaded)
-                return;
+            //if (!node.Loaded)
+              //  return;
             node.Updated = DateTime.UtcNow.ToUnixTimestamp();
             node.IPAddress = nodePacket.Address;
             if (nodePacket.Number.HasValue)
