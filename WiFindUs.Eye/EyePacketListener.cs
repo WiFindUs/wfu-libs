@@ -194,6 +194,8 @@ namespace WiFindUs.Eye
                             case "NODE": NodePacketReceived(this, packet as NodePacket); break;
                         }
                     }
+                    else
+                        Debugger.W("EyePacket received with unknown type: \"{0}\"", type);
                 }
                 if (listener != null)
                 {
