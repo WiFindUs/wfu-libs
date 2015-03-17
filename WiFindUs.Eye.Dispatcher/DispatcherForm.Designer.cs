@@ -44,6 +44,8 @@
             this.usersFlowPanel = new WiFindUs.Eye.Controls.EntityList();
             this.incidentsTab = new System.Windows.Forms.TabPage();
             this.incidentsFlowPanel = new WiFindUs.Eye.Controls.EntityList();
+            this.nodesTab = new System.Windows.Forms.TabPage();
+            this.nodesFlowPanel = new WiFindUs.Eye.Controls.EntityList();
             this.controlsOuterSplitter = new System.Windows.Forms.SplitContainer();
             this.actionTabs = new WiFindUs.Controls.ThemedTabControl();
             this.actionsTab = new System.Windows.Forms.TabPage();
@@ -54,8 +56,6 @@
             this.consolePanel = new WiFindUs.Controls.ConsolePanel();
             this.mapTabs = new WiFindUs.Controls.ThemedTabControl();
             this.minimapTab = new System.Windows.Forms.TabPage();
-            this.nodesTab = new System.Windows.Forms.TabPage();
-            this.nodesFlowPanel = new WiFindUs.Eye.Controls.EntityList();
             this.workingAreaToolStripContainer.SuspendLayout();
             this.windowStatusStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.windowSplitter)).BeginInit();
@@ -70,6 +70,7 @@
             this.devicesTab.SuspendLayout();
             this.usersTab.SuspendLayout();
             this.incidentsTab.SuspendLayout();
+            this.nodesTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.controlsOuterSplitter)).BeginInit();
             this.controlsOuterSplitter.Panel1.SuspendLayout();
             this.controlsOuterSplitter.Panel2.SuspendLayout();
@@ -82,7 +83,6 @@
             this.infoTabs.SuspendLayout();
             this.consoleTab.SuspendLayout();
             this.mapTabs.SuspendLayout();
-            this.nodesTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // workingAreaToolStripContainer
@@ -91,11 +91,11 @@
             // workingAreaToolStripContainer.ContentPanel
             // 
             this.workingAreaToolStripContainer.ContentPanel.Margin = new System.Windows.Forms.Padding(0);
-            this.workingAreaToolStripContainer.ContentPanel.Size = new System.Drawing.Size(483, 279);
+            this.workingAreaToolStripContainer.ContentPanel.Size = new System.Drawing.Size(483, 282);
             this.workingAreaToolStripContainer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.workingAreaToolStripContainer.Location = new System.Drawing.Point(0, 0);
             this.workingAreaToolStripContainer.Name = "workingAreaToolStripContainer";
-            this.workingAreaToolStripContainer.Size = new System.Drawing.Size(483, 304);
+            this.workingAreaToolStripContainer.Size = new System.Drawing.Size(483, 307);
             this.workingAreaToolStripContainer.TabIndex = 0;
             this.workingAreaToolStripContainer.Text = "toolStripContainer1";
             // 
@@ -132,7 +132,7 @@
             // 
             this.windowSplitter.Panel2.Controls.Add(this.controlsOuterSplitter);
             this.windowSplitter.Size = new System.Drawing.Size(784, 540);
-            this.windowSplitter.SplitterDistance = 304;
+            this.windowSplitter.SplitterDistance = 307;
             this.windowSplitter.SplitterWidth = 1;
             this.windowSplitter.TabIndex = 2;
             // 
@@ -152,7 +152,7 @@
             // workingAreaSplitter.Panel2
             // 
             this.workingAreaSplitter.Panel2.Controls.Add(this.workingAreaToolStripContainer);
-            this.workingAreaSplitter.Size = new System.Drawing.Size(784, 304);
+            this.workingAreaSplitter.Size = new System.Drawing.Size(784, 307);
             this.workingAreaSplitter.SplitterDistance = 300;
             this.workingAreaSplitter.SplitterWidth = 1;
             this.workingAreaSplitter.TabIndex = 1;
@@ -166,13 +166,13 @@
             this.entityTabs.Dock = System.Windows.Forms.DockStyle.Fill;
             this.entityTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
             this.entityTabs.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.entityTabs.ItemSize = new System.Drawing.Size(80, 20);
+            this.entityTabs.ItemSize = new System.Drawing.Size(70, 30);
             this.entityTabs.Location = new System.Drawing.Point(0, 0);
             this.entityTabs.Margin = new System.Windows.Forms.Padding(0);
             this.entityTabs.Name = "entityTabs";
             this.entityTabs.Padding = new System.Drawing.Point(0, 0);
             this.entityTabs.SelectedIndex = 0;
-            this.entityTabs.Size = new System.Drawing.Size(300, 304);
+            this.entityTabs.Size = new System.Drawing.Size(300, 307);
             this.entityTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
             this.entityTabs.TabIndex = 1;
             // 
@@ -184,7 +184,7 @@
             this.devicesTab.Location = new System.Drawing.Point(4, 24);
             this.devicesTab.Margin = new System.Windows.Forms.Padding(0);
             this.devicesTab.Name = "devicesTab";
-            this.devicesTab.Size = new System.Drawing.Size(292, 276);
+            this.devicesTab.Size = new System.Drawing.Size(292, 279);
             this.devicesTab.TabIndex = 0;
             this.devicesTab.Text = "Devices";
             // 
@@ -198,7 +198,7 @@
             this.devicesFlowPanel.Name = "devicesFlowPanel";
             selectableEntityGroup1.CaptureNotifies = false;
             this.devicesFlowPanel.SelectionGroup = selectableEntityGroup1;
-            this.devicesFlowPanel.Size = new System.Drawing.Size(292, 276);
+            this.devicesFlowPanel.Size = new System.Drawing.Size(292, 279);
             this.devicesFlowPanel.TabIndex = 0;
             this.devicesFlowPanel.WrapContents = false;
             // 
@@ -209,7 +209,7 @@
             this.usersTab.Font = new System.Drawing.Font("Segoe UI", 9F);
             this.usersTab.Location = new System.Drawing.Point(4, 24);
             this.usersTab.Name = "usersTab";
-            this.usersTab.Size = new System.Drawing.Size(292, 276);
+            this.usersTab.Size = new System.Drawing.Size(292, 279);
             this.usersTab.TabIndex = 1;
             this.usersTab.Text = "Users";
             // 
@@ -223,7 +223,7 @@
             this.usersFlowPanel.Name = "usersFlowPanel";
             selectableEntityGroup2.CaptureNotifies = false;
             this.usersFlowPanel.SelectionGroup = selectableEntityGroup2;
-            this.usersFlowPanel.Size = new System.Drawing.Size(292, 276);
+            this.usersFlowPanel.Size = new System.Drawing.Size(292, 279);
             this.usersFlowPanel.TabIndex = 1;
             this.usersFlowPanel.WrapContents = false;
             // 
@@ -232,9 +232,9 @@
             this.incidentsTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
             this.incidentsTab.Controls.Add(this.incidentsFlowPanel);
             this.incidentsTab.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.incidentsTab.Location = new System.Drawing.Point(4, 24);
+            this.incidentsTab.Location = new System.Drawing.Point(4, 34);
             this.incidentsTab.Name = "incidentsTab";
-            this.incidentsTab.Size = new System.Drawing.Size(292, 276);
+            this.incidentsTab.Size = new System.Drawing.Size(292, 269);
             this.incidentsTab.TabIndex = 2;
             this.incidentsTab.Text = "Incidents";
             // 
@@ -248,154 +248,9 @@
             this.incidentsFlowPanel.Name = "incidentsFlowPanel";
             selectableEntityGroup3.CaptureNotifies = false;
             this.incidentsFlowPanel.SelectionGroup = selectableEntityGroup3;
-            this.incidentsFlowPanel.Size = new System.Drawing.Size(292, 276);
+            this.incidentsFlowPanel.Size = new System.Drawing.Size(292, 269);
             this.incidentsFlowPanel.TabIndex = 2;
             this.incidentsFlowPanel.WrapContents = false;
-            // 
-            // controlsOuterSplitter
-            // 
-            this.controlsOuterSplitter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.controlsOuterSplitter.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.controlsOuterSplitter.IsSplitterFixed = true;
-            this.controlsOuterSplitter.Location = new System.Drawing.Point(0, 0);
-            this.controlsOuterSplitter.Margin = new System.Windows.Forms.Padding(0);
-            this.controlsOuterSplitter.Name = "controlsOuterSplitter";
-            // 
-            // controlsOuterSplitter.Panel1
-            // 
-            this.controlsOuterSplitter.Panel1.Controls.Add(this.actionTabs);
-            // 
-            // controlsOuterSplitter.Panel2
-            // 
-            this.controlsOuterSplitter.Panel2.Controls.Add(this.controlsInnerSplitter);
-            this.controlsOuterSplitter.Size = new System.Drawing.Size(784, 235);
-            this.controlsOuterSplitter.SplitterDistance = 300;
-            this.controlsOuterSplitter.SplitterWidth = 1;
-            this.controlsOuterSplitter.TabIndex = 0;
-            // 
-            // actionTabs
-            // 
-            this.actionTabs.Controls.Add(this.actionsTab);
-            this.actionTabs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.actionTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
-            this.actionTabs.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.actionTabs.ItemSize = new System.Drawing.Size(80, 20);
-            this.actionTabs.Location = new System.Drawing.Point(0, 0);
-            this.actionTabs.Margin = new System.Windows.Forms.Padding(0);
-            this.actionTabs.Name = "actionTabs";
-            this.actionTabs.Padding = new System.Drawing.Point(0, 0);
-            this.actionTabs.SelectedIndex = 0;
-            this.actionTabs.Size = new System.Drawing.Size(300, 235);
-            this.actionTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
-            this.actionTabs.TabIndex = 0;
-            // 
-            // actionsTab
-            // 
-            this.actionsTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.actionsTab.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.actionsTab.Location = new System.Drawing.Point(4, 24);
-            this.actionsTab.Margin = new System.Windows.Forms.Padding(0);
-            this.actionsTab.Name = "actionsTab";
-            this.actionsTab.Size = new System.Drawing.Size(292, 207);
-            this.actionsTab.TabIndex = 0;
-            this.actionsTab.Text = "Actions";
-            // 
-            // controlsInnerSplitter
-            // 
-            this.controlsInnerSplitter.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.controlsInnerSplitter.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.controlsInnerSplitter.IsSplitterFixed = true;
-            this.controlsInnerSplitter.Location = new System.Drawing.Point(0, 0);
-            this.controlsInnerSplitter.Margin = new System.Windows.Forms.Padding(0);
-            this.controlsInnerSplitter.Name = "controlsInnerSplitter";
-            // 
-            // controlsInnerSplitter.Panel1
-            // 
-            this.controlsInnerSplitter.Panel1.Controls.Add(this.infoTabs);
-            // 
-            // controlsInnerSplitter.Panel2
-            // 
-            this.controlsInnerSplitter.Panel2.Controls.Add(this.mapTabs);
-            this.controlsInnerSplitter.Size = new System.Drawing.Size(483, 235);
-            this.controlsInnerSplitter.SplitterDistance = 232;
-            this.controlsInnerSplitter.SplitterWidth = 1;
-            this.controlsInnerSplitter.TabIndex = 0;
-            // 
-            // infoTabs
-            // 
-            this.infoTabs.Controls.Add(this.infoTab);
-            this.infoTabs.Controls.Add(this.consoleTab);
-            this.infoTabs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.infoTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
-            this.infoTabs.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.infoTabs.ItemSize = new System.Drawing.Size(100, 20);
-            this.infoTabs.Location = new System.Drawing.Point(0, 0);
-            this.infoTabs.Margin = new System.Windows.Forms.Padding(0);
-            this.infoTabs.Name = "infoTabs";
-            this.infoTabs.Padding = new System.Drawing.Point(0, 0);
-            this.infoTabs.SelectedIndex = 0;
-            this.infoTabs.Size = new System.Drawing.Size(232, 235);
-            this.infoTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
-            this.infoTabs.TabIndex = 0;
-            // 
-            // infoTab
-            // 
-            this.infoTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.infoTab.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.infoTab.Location = new System.Drawing.Point(4, 24);
-            this.infoTab.Margin = new System.Windows.Forms.Padding(0);
-            this.infoTab.Name = "infoTab";
-            this.infoTab.Size = new System.Drawing.Size(224, 207);
-            this.infoTab.TabIndex = 0;
-            this.infoTab.Text = "Information";
-            // 
-            // consoleTab
-            // 
-            this.consoleTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.consoleTab.Controls.Add(this.consolePanel);
-            this.consoleTab.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.consoleTab.Location = new System.Drawing.Point(4, 24);
-            this.consoleTab.Margin = new System.Windows.Forms.Padding(0);
-            this.consoleTab.Name = "consoleTab";
-            this.consoleTab.Size = new System.Drawing.Size(221, 210);
-            this.consoleTab.TabIndex = 1;
-            this.consoleTab.Text = "Console";
-            // 
-            // consolePanel
-            // 
-            this.consolePanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.consolePanel.Location = new System.Drawing.Point(0, 0);
-            this.consolePanel.Margin = new System.Windows.Forms.Padding(0);
-            this.consolePanel.Name = "consolePanel";
-            this.consolePanel.Size = new System.Drawing.Size(221, 210);
-            this.consolePanel.TabIndex = 0;
-            // 
-            // mapTabs
-            // 
-            this.mapTabs.Controls.Add(this.minimapTab);
-            this.mapTabs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.mapTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
-            this.mapTabs.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.mapTabs.ItemSize = new System.Drawing.Size(80, 20);
-            this.mapTabs.Location = new System.Drawing.Point(0, 0);
-            this.mapTabs.Margin = new System.Windows.Forms.Padding(0);
-            this.mapTabs.Name = "mapTabs";
-            this.mapTabs.Padding = new System.Drawing.Point(0, 0);
-            this.mapTabs.SelectedIndex = 0;
-            this.mapTabs.Size = new System.Drawing.Size(250, 235);
-            this.mapTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
-            this.mapTabs.TabIndex = 0;
-            // 
-            // minimapTab
-            // 
-            this.minimapTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-            this.minimapTab.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.minimapTab.Location = new System.Drawing.Point(4, 24);
-            this.minimapTab.Margin = new System.Windows.Forms.Padding(0);
-            this.minimapTab.Name = "minimapTab";
-            this.minimapTab.Size = new System.Drawing.Size(242, 207);
-            this.minimapTab.TabIndex = 0;
-            this.minimapTab.Text = "Minimap";
             // 
             // nodesTab
             // 
@@ -421,6 +276,151 @@
             this.nodesFlowPanel.TabIndex = 0;
             this.nodesFlowPanel.WrapContents = false;
             // 
+            // controlsOuterSplitter
+            // 
+            this.controlsOuterSplitter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.controlsOuterSplitter.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+            this.controlsOuterSplitter.IsSplitterFixed = true;
+            this.controlsOuterSplitter.Location = new System.Drawing.Point(0, 0);
+            this.controlsOuterSplitter.Margin = new System.Windows.Forms.Padding(0);
+            this.controlsOuterSplitter.Name = "controlsOuterSplitter";
+            // 
+            // controlsOuterSplitter.Panel1
+            // 
+            this.controlsOuterSplitter.Panel1.Controls.Add(this.actionTabs);
+            // 
+            // controlsOuterSplitter.Panel2
+            // 
+            this.controlsOuterSplitter.Panel2.Controls.Add(this.controlsInnerSplitter);
+            this.controlsOuterSplitter.Size = new System.Drawing.Size(784, 232);
+            this.controlsOuterSplitter.SplitterDistance = 300;
+            this.controlsOuterSplitter.SplitterWidth = 1;
+            this.controlsOuterSplitter.TabIndex = 0;
+            // 
+            // actionTabs
+            // 
+            this.actionTabs.Controls.Add(this.actionsTab);
+            this.actionTabs.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.actionTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
+            this.actionTabs.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.actionTabs.ItemSize = new System.Drawing.Size(80, 30);
+            this.actionTabs.Location = new System.Drawing.Point(0, 0);
+            this.actionTabs.Margin = new System.Windows.Forms.Padding(0);
+            this.actionTabs.Name = "actionTabs";
+            this.actionTabs.Padding = new System.Drawing.Point(0, 0);
+            this.actionTabs.SelectedIndex = 0;
+            this.actionTabs.Size = new System.Drawing.Size(300, 232);
+            this.actionTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
+            this.actionTabs.TabIndex = 0;
+            // 
+            // actionsTab
+            // 
+            this.actionsTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.actionsTab.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.actionsTab.Location = new System.Drawing.Point(4, 34);
+            this.actionsTab.Margin = new System.Windows.Forms.Padding(0);
+            this.actionsTab.Name = "actionsTab";
+            this.actionsTab.Size = new System.Drawing.Size(292, 194);
+            this.actionsTab.TabIndex = 0;
+            this.actionsTab.Text = "Actions";
+            // 
+            // controlsInnerSplitter
+            // 
+            this.controlsInnerSplitter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.controlsInnerSplitter.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.controlsInnerSplitter.IsSplitterFixed = true;
+            this.controlsInnerSplitter.Location = new System.Drawing.Point(0, 0);
+            this.controlsInnerSplitter.Margin = new System.Windows.Forms.Padding(0);
+            this.controlsInnerSplitter.Name = "controlsInnerSplitter";
+            // 
+            // controlsInnerSplitter.Panel1
+            // 
+            this.controlsInnerSplitter.Panel1.Controls.Add(this.infoTabs);
+            // 
+            // controlsInnerSplitter.Panel2
+            // 
+            this.controlsInnerSplitter.Panel2.Controls.Add(this.mapTabs);
+            this.controlsInnerSplitter.Size = new System.Drawing.Size(483, 232);
+            this.controlsInnerSplitter.SplitterDistance = 235;
+            this.controlsInnerSplitter.SplitterWidth = 1;
+            this.controlsInnerSplitter.TabIndex = 0;
+            // 
+            // infoTabs
+            // 
+            this.infoTabs.Controls.Add(this.infoTab);
+            this.infoTabs.Controls.Add(this.consoleTab);
+            this.infoTabs.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.infoTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
+            this.infoTabs.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.infoTabs.ItemSize = new System.Drawing.Size(100, 30);
+            this.infoTabs.Location = new System.Drawing.Point(0, 0);
+            this.infoTabs.Margin = new System.Windows.Forms.Padding(0);
+            this.infoTabs.Name = "infoTabs";
+            this.infoTabs.Padding = new System.Drawing.Point(0, 0);
+            this.infoTabs.SelectedIndex = 0;
+            this.infoTabs.Size = new System.Drawing.Size(235, 232);
+            this.infoTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
+            this.infoTabs.TabIndex = 0;
+            // 
+            // infoTab
+            // 
+            this.infoTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.infoTab.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.infoTab.Location = new System.Drawing.Point(4, 24);
+            this.infoTab.Margin = new System.Windows.Forms.Padding(0);
+            this.infoTab.Name = "infoTab";
+            this.infoTab.Size = new System.Drawing.Size(227, 204);
+            this.infoTab.TabIndex = 0;
+            this.infoTab.Text = "Information";
+            // 
+            // consoleTab
+            // 
+            this.consoleTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.consoleTab.Controls.Add(this.consolePanel);
+            this.consoleTab.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.consoleTab.Location = new System.Drawing.Point(4, 34);
+            this.consoleTab.Margin = new System.Windows.Forms.Padding(0);
+            this.consoleTab.Name = "consoleTab";
+            this.consoleTab.Size = new System.Drawing.Size(227, 194);
+            this.consoleTab.TabIndex = 1;
+            this.consoleTab.Text = "Console";
+            // 
+            // consolePanel
+            // 
+            this.consolePanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.consolePanel.Location = new System.Drawing.Point(0, 0);
+            this.consolePanel.Margin = new System.Windows.Forms.Padding(0);
+            this.consolePanel.Name = "consolePanel";
+            this.consolePanel.Size = new System.Drawing.Size(227, 194);
+            this.consolePanel.TabIndex = 0;
+            // 
+            // mapTabs
+            // 
+            this.mapTabs.Controls.Add(this.minimapTab);
+            this.mapTabs.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.mapTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
+            this.mapTabs.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.mapTabs.ItemSize = new System.Drawing.Size(80, 30);
+            this.mapTabs.Location = new System.Drawing.Point(0, 0);
+            this.mapTabs.Margin = new System.Windows.Forms.Padding(0);
+            this.mapTabs.Name = "mapTabs";
+            this.mapTabs.Padding = new System.Drawing.Point(0, 0);
+            this.mapTabs.SelectedIndex = 0;
+            this.mapTabs.Size = new System.Drawing.Size(247, 232);
+            this.mapTabs.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
+            this.mapTabs.TabIndex = 0;
+            // 
+            // minimapTab
+            // 
+            this.minimapTab.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+            this.minimapTab.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.minimapTab.Location = new System.Drawing.Point(4, 34);
+            this.minimapTab.Margin = new System.Windows.Forms.Padding(0);
+            this.minimapTab.Name = "minimapTab";
+            this.minimapTab.Size = new System.Drawing.Size(239, 194);
+            this.minimapTab.TabIndex = 0;
+            this.minimapTab.Text = "Minimap";
+            // 
             // DispatcherForm
             // 
             this.ClientSize = new System.Drawing.Size(784, 562);
@@ -445,6 +445,7 @@
             this.devicesTab.ResumeLayout(false);
             this.usersTab.ResumeLayout(false);
             this.incidentsTab.ResumeLayout(false);
+            this.nodesTab.ResumeLayout(false);
             this.controlsOuterSplitter.Panel1.ResumeLayout(false);
             this.controlsOuterSplitter.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.controlsOuterSplitter)).EndInit();
@@ -457,7 +458,6 @@
             this.infoTabs.ResumeLayout(false);
             this.consoleTab.ResumeLayout(false);
             this.mapTabs.ResumeLayout(false);
-            this.nodesTab.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
