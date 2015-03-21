@@ -47,6 +47,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\ConsolePanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\ConsolePanel.Designer.cs">
+      <DependentUpon>ConsolePanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\ConsoleTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -59,12 +65,16 @@
     <Compile Include="Controls\ThemedFlowLayoutPanel.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Controls\ThemedUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Controls\ThemedPanel.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\ThemedTabControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="DebuggerLogItem.cs" />
     <Compile Include="Extensions\ControlExtensions.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
     <Compile Include="Forms\BaseForm.cs">
@@ -81,9 +91,6 @@
     </Compile>
     <Compile Include="HashCode.cs" />
     <Compile Include="IO\ConfigFile.cs" />
-    <Compile Include="Controls\ConsolePanel.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Debugger.cs" />
     <Compile Include="Forms\MainForm.cs">
       <SubType>Form</SubType>
@@ -99,6 +106,9 @@
     <Compile Include="WFUApplication.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Controls\ConsolePanel.resx">
+      <DependentUpon>ConsolePanel.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\SplashForm.resx">
       <DependentUpon>SplashForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -110,6 +120,7 @@
   <ItemGroup>
     <None Include="Resources\wfu-logo-small.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
