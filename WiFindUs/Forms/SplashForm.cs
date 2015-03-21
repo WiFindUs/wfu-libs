@@ -99,13 +99,17 @@ namespace WiFindUs.Forms
             if (IsDesignMode)
                 return;
 
-            Rectangle gradRect = new Rectangle(0, 0, ClientRectangle.Width, ClientRectangle.Height / 3);
-
+            ///background gradient
+            Rectangle gradRect = new Rectangle(0, 0, ClientRectangle.Width, ClientRectangle.Height / 2);
             if (bgBrush == null)
                 bgBrush = new LinearGradientBrush(gradRect,
                     Theme.ControlDarkColour, Theme.ControlLightColour,
                     90);
             e.Graphics.FillRectangle(bgBrush, gradRect);
+
+            //lines at top and bottom
+            e.Graphics.FillRectangle(Theme.HighlightLightBrush, 0, 0, ClientRectangle.Width, 8);
+            e.Graphics.FillRectangle(Theme.HighlightMidBrush, 0, ClientRectangle.Height-4, ClientRectangle.Width, 4);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -226,6 +230,7 @@ namespace WiFindUs.Forms
                     break;
                 }
                 worker.ReportProgress(MathHelper.WholePercentage(i + 1, tasks.Count));
+                Thread.Sleep(1000);
             }
         }
 

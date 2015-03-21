@@ -13,7 +13,7 @@ namespace WiFindUs.Controls
         private bool disposed = false;
         //fonts
         private Font windowFont = new Font("Segoe UI", 9.0f);
-        private Font titleFont = new Font("Segoe UI", 32.0f);
+        private Font titleFont = new Font("Segoe UI", 44.0f);
         private Font subtitleFont = new Font("Segoe UI", 14.0f);
         private Font consoleFont = new Font("Consolas", 10.0f);
         //brushes
