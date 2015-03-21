@@ -17,7 +17,6 @@ namespace WiFindUs.Eye.Controls
         private Theme theme;
         private WiFindUs.Eye.Wave.MapScene scene;
         private Rectangle mapArea = Rectangle.Empty;
-        private bool mouseEntered = false;
         private bool mouseDown = false;
 
         /////////////////////////////////////////////////////////////////////
@@ -186,15 +185,14 @@ namespace WiFindUs.Eye.Controls
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
                 mouseDown = true;
-                if (mouseEntered)
-                    MoveByMouse(e);
+                MoveByMouse(e);
             }
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
-            if (mouseDown && mouseEntered)
+            if (mouseDown)
                 MoveByMouse(e);
         }
 
@@ -203,18 +201,6 @@ namespace WiFindUs.Eye.Controls
             base.OnMouseUp(e);
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
                 mouseDown = false;
-        }
-
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            base.OnMouseEnter(e);
-            mouseEntered = true;
-        }
-
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            mouseEntered = false;
         }
 
         /////////////////////////////////////////////////////////////////////
