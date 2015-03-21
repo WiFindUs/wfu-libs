@@ -88,7 +88,8 @@ namespace WiFindUs.Controls
                 toggles[i].FlatAppearance.CheckedBackColor = ConsoleTextBox.Colours[verbosities[i]];
                 toggles[i].Checked = console.AllowedVerbosities.HasFlag(verbosities[i]);
                 toggles[i].CheckedChanged += ToggleCheckedChanged;
-                toggles[i].ForeColor = toggles[i].Checked ? Theme.ControlDarkColour : Theme.TextDarkColour;
+                if (!IsDesignMode)
+                    toggles[i].ForeColor = toggles[i].Checked ? Theme.ControlDarkColour : Theme.TextDarkColour;
                 if (!Debugger.AllowedVerbosities.HasFlag(verbosities[i]))
                     toggles[i].Enabled = false;
             }
