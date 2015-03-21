@@ -104,7 +104,7 @@ namespace WiFindUs.Eye
 
         private void ListenThread()
         {
-            Debugger.I("Eye listener thread started.");
+            Debugger.V("Eye listener thread started.");
             try
             {
                 listener = new UdpClient(port);

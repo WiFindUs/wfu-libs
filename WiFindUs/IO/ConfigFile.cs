@@ -701,7 +701,7 @@ namespace WiFindUs.IO
 				SetValue(match.Groups[1].Value, index, value);
 			}
 
-            Debugger.I("Loaded config file '" + file + "'.");
+            Debugger.V("Loaded config file '" + file + "'.");
 		}
 
 		private static String CheckKey(String key, bool allowEmpty = false)
@@ -762,7 +762,8 @@ namespace WiFindUs.IO
             if (index >= values.Count)
             {
                 if (logMissing)
-                    Debugger.V("ConfigFile: Attempt to access undefined key \"{0}[{1}]\" was ignored.", key, index);
+                    Debugger.V("ConfigFile: Attempt to access undefined key \"{0}{1}\" was ignored.", key,
+                        index == 0 ? "" : String.Format("[{0}]",index));
                 return "";
             }
 

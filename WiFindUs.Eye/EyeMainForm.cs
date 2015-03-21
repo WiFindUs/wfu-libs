@@ -570,7 +570,7 @@ namespace WiFindUs.Eye
                     options.LoadWith<Device>(d => d.AssignedWaypoint);
                     eyeContext.LoadOptions = options;
 
-                    Debugger.I("MySQL connection created OK.");
+                    Debugger.V("MySQL connection created OK.");
                 }
                 catch (Exception ex)
                 {
