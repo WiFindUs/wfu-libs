@@ -110,10 +110,10 @@ namespace WiFindUs.Eye
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        protected MapControl Map
+        public MapControl Map
         {
             get { return map; }
-            set
+            protected set
             {
                 if (map != null || value == null)
                     return;
