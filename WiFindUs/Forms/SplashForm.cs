@@ -230,7 +230,6 @@ namespace WiFindUs.Forms
                     break;
                 }
                 worker.ReportProgress(MathHelper.WholePercentage(i + 1, tasks.Count));
-                Thread.Sleep(1000);
             }
         }
 
