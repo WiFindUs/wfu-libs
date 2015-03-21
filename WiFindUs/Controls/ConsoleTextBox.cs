@@ -12,15 +12,39 @@ namespace WiFindUs.Controls
 {
     public class ConsoleTextBox : RichTextBox, IThemeable
     {
-        private static readonly int MAX_CONSOLE_LINES = 16384;
-        private int mouseDown = 0;
-        
-        private readonly Color[] colors = new Color[6];
+        private const int MAX_LINES = 4096;
         private Theme theme;
+        private Debugger.Verbosity allowedVerbosities = Debugger.Verbosity.All ^ Debugger.Verbosity.Verbose;
+        public static readonly Dictionary<Debugger.Verbosity, Color> Colours = new Dictionary<Debugger.Verbosity, Color>()
+        {
+            { Debugger.Verbosity.Verbose, ColorTranslator.FromHtml("#999999")},
+            { Debugger.Verbosity.Information, ColorTranslator.FromHtml("#FFFFFF")},
+            { Debugger.Verbosity.Warning, ColorTranslator.FromHtml("#FFA600")},
+            { Debugger.Verbosity.Error, ColorTranslator.FromHtml("#DF3F26")},
+            { Debugger.Verbosity.Exception, ColorTranslator.FromHtml("#df3f26")},
+            { Debugger.Verbosity.Console, ColorTranslator.FromHtml("#1c97ea")}
+        };
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public Debugger.Verbosity AllowedVerbosities
+        {
+            get
+            {
+                return allowedVerbosities;
+            }
+            set
+            {
+                if (value == allowedVerbosities)
+                    return;
+                allowedVerbosities = value;
+                FillLogFromHistory();
+            }
+        }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -40,13 +64,6 @@ namespace WiFindUs.Controls
                 Font = theme.ConsoleFont;
                 ForeColor = theme.TextLightColour;
 
-                colors[0] = theme.TextDarkColour; //verbose
-                colors[1] = theme.TextLightColour; //info
-                colors[2] = theme.WarningColour; //warning
-                colors[3] = theme.ErrorColour; //error
-                colors[4] = theme.ErrorColour; //exception
-                colors[5] = theme.HighlightLightColour; //prompts/console
-
                 OnThemeChanged();
             }
         }
@@ -62,9 +79,9 @@ namespace WiFindUs.Controls
             ScrollBars = RichTextBoxScrollBars.Vertical;
             Margin = new Padding(0);
 		    TabStop = false;
-
-            //events
-            Debugger.OnDebugOutput += OnDebugOutput;
+#if DEBUG
+            allowedVerbosities |= Debugger.Verbosity.Verbose;
+#endif
 	    }
 
         /////////////////////////////////////////////////////////////////////
@@ -80,59 +97,40 @@ namespace WiFindUs.Controls
         // PROTECTED METHODS
         /////////////////////////////////////////////////////////////////////
 
-        protected override void DefWndProc(ref Message m)
+        protected virtual void FillLogFromHistory()
         {
-            base.DefWndProc(ref m);
-            /*
-            if (m.Msg == 277)
-            {
-
-
-
-                eventFired++;
-
-                if (eventFired == 2)
-                {
-
-                    thumbDown(this, System.EventArgs.Empty);
-
-                    eventFired = 0;
-
-                }
-
-
-
-            }
-
-
-
-            if (m.Msg == 277 && (int)m.WParam == 8)
-
-                thumbUp(this, System.EventArgs.Empty);
-             * */
+            Clear();
+            DebuggerLogItem[] items = Debugger.LogHistory;
+            foreach (DebuggerLogItem item in items)
+                if (allowedVerbosities.HasFlag(item.Verbosity))
+                    PrintLogItem(item);
+            SendMessage(Handle, 277, (IntPtr)7, IntPtr.Zero);
         }
 
-        protected virtual void OnDebugOutput(Debugger.Verbosity level, string prefix, string text)
+        protected override void OnHandleCreated(EventArgs e)
         {
+            base.OnHandleCreated(e);
+            FillLogFromHistory();
+            Debugger.OnDebugOutput += OnDebugOutput;
+        }
+
+        protected virtual void OnDebugOutput(DebuggerLogItem logItem)
+        {
+            if (!allowedVerbosities.HasFlag(logItem.Verbosity))
+                return;
+            
             if (InvokeRequired)
             {
                 try
                 {
-                    Invoke(new Debugger.LogDelegate(OnDebugOutput), new object[] { level, prefix, text });
+                    Invoke(new Action<DebuggerLogItem>(OnDebugOutput), new object[] { logItem });
                 }
                 catch (Exception) { }
                 return;
             }
 
-            if (Lines.Length >= MAX_CONSOLE_LINES)
-                Clear();
-
-            SelectionStart = TextLength;
-            SelectionLength = 0;
-            SelectionColor = colors[(int)level];
-            AppendText(prefix + text + "\n");
-            if (mouseDown == 0)
-                SendMessage(Handle, 277, (IntPtr)7, IntPtr.Zero);
+            PrintLogItem(logItem);
+            SendMessage(Handle, 277, (IntPtr)7, IntPtr.Zero);
         }
 
         protected override void WndProc(ref Message m)
@@ -144,6 +142,21 @@ namespace WiFindUs.Controls
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
+
+        private void PrintLogItem(DebuggerLogItem logItem)
+        {
+            //delete a big chunk of the text, keeping only the last third
+            if (Lines.Length >= MAX_LINES)
+            {
+                Select(0, GetFirstCharIndexFromLine(2 * Lines.Length / 3));
+                SelectedText = "";
+            }
+
+            SelectionStart = TextLength;
+            SelectionLength = 0;
+            SelectionColor = Colours[logItem.Verbosity];
+            AppendText(logItem.ToString() + "\n");
+        }
 
         [DllImport("user32.dll", EntryPoint = "HideCaret")]
         private static extern long HideCaret(IntPtr hwnd);
