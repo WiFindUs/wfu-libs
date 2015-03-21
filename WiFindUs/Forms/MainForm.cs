@@ -51,7 +51,6 @@ namespace WiFindUs.Forms
         protected override void OnFirstShown(EventArgs e)
         {
             base.OnFirstShown(e);
-            Debugger.FlushToConsoles();
             Screen startScreen = null;
             int configMonitor = WFUApplication.Config.Get("display.start_screen", -1);
             Debugger.V("Start screen: " + configMonitor);

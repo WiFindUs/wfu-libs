@@ -10,53 +10,33 @@ namespace WiFindUs
 {
 	public static class Debugger
 	{
-		public enum Verbosity
+		[Flags]
+        public enum Verbosity
 		{
-			/// <summary>
-			/// 0: All messages are output by the Debugger.
-			/// </summary>
-			Verbose = 0,
-
-			/// <summary>
-			/// 1: Only messages with a verbosity level of Information and higher are output by the Debugger.
-			/// </summary>
-			Information = 1,
-
-			/// <summary>
-			/// 2: Only messages with a verbosity level of Warning and higher are output by the Debugger.
-			/// </summary>
-			Warning = 2,
-
-			/// <summary>
-			/// 3: Only messages with a verbosity level of Error and higher are output by the Debugger.
-			/// </summary>
-			Error = 3,
-
-			/// <summary>
-			/// 4: Only Exceptions are output by the Debugger.
-			/// </summary>
-			Exception = 4,
-
-			/// <summary>
-			/// 5: Console Messages. You cannot use this as as minimum level.
-			/// </summary>
-			Console = 5
+            None = 0,
+			Verbose = 1,
+			Information = 2,
+			Warning = 4,
+			Error = 8,
+			Exception = 16,
+			Console = 32,
+            All = 63
 		};
-		public delegate void LogDelegate(Verbosity level, string prefix, string text);
 
-		private static Verbosity minLevel;
+        public const int MAX_HISTORY_LENGTH = 2048;
+
+        private static Verbosity allowedFlags;
 		private static StreamWriter outFile = null;
 		private static DateTime runningSince;
 		private static PerformanceCounter cpuCounter;
 		private static PerformanceCounter ramCounter;
-        private static List<object[]> logHistory = new List<object[]>();
-        private static bool initialflush = false;
+        private static LinkedList<DebuggerLogItem> logHistory = new LinkedList<DebuggerLogItem>();
 
         /////////////////////////////////////////////////////////////////////
         // PROPERTIES
         /////////////////////////////////////////////////////////////////////
 
-        public static event LogDelegate OnDebugOutput;
+        public static event Action<DebuggerLogItem> OnDebugOutput;
         public static DateTime RunningSince
         {
             get { return runningSince; }
@@ -80,18 +60,32 @@ namespace WiFindUs
         {
             get { return new TimeSpan(0, 0, 0, 0, Environment.TickCount); }
         }
+        public static DebuggerLogItem[] LogHistory
+        {
+            get
+            {
+                DebuggerLogItem[] array = null;
+                lock(logHistory)
+                    array = logHistory.ToArray();
+                return array;
+            }
+        }
+        public static Verbosity AllowedVerbosities
+        {
+            get { return Debugger.allowedFlags; }
+        }
 
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
 
-		public static void Initialize(string path, Verbosity minLevel)
+		public static void Initialize(string path, Verbosity allowedFlags)
 		{
-			if (Initialized || !WFUApplication.Running)
+			if (Initialized || !WFUApplication.Running || allowedFlags == Verbosity.None)
 				return;
 
 			//initialization
-			Debugger.minLevel = minLevel >= Verbosity.Console ? Verbosity.Exception : minLevel;
+            Debugger.allowedFlags = allowedFlags;
 			runningSince = DateTime.Now;
 			outFile = new System.IO.StreamWriter(path, false);
 
@@ -102,16 +96,16 @@ namespace WiFindUs
 			ramCounter = new PerformanceCounter("Memory", "Available MBytes");
 
 			//initial logging
-			I(WFUApplication.Company + " " + WFUApplication.Name + " logging session opened.");
-			I("Windows version: " + Environment.OSVersion.ToString());
-			I("Dot NET version: " + Environment.Version.ToString());
-			I("Machine name: " + Environment.MachineName);
-			I("User Name: " + Environment.UserName);
-			I("Processor Count: " + Environment.ProcessorCount.ToString());
-			I("Processor Usage: " + cpuCounter.NextValue() + "%");
-			I("Available RAM: " + ramCounter.NextValue() + "Mb");
+			V(WFUApplication.Company + " " + WFUApplication.Name + " logging session opened.");
+            V("Windows version: " + Environment.OSVersion.ToString());
+            V("Dot NET version: " + Environment.Version.ToString());
+            V("Machine name: " + Environment.MachineName);
+            V("User Name: " + Environment.UserName);
+            V("Processor Count: " + Environment.ProcessorCount.ToString());
+            V("Processor Usage: " + cpuCounter.NextValue() + "%");
+            V("Available RAM: " + ramCounter.NextValue() + "Mb");
 			TimeSpan uptime = SystemUptime;
-			I(String.Format("System uptime: {0} hours, {1} minutes, {2} seconds.", uptime.Hours, uptime.Minutes, uptime.Seconds));
+            V(String.Format("System uptime: {0} hours, {1} minutes, {2} seconds.", uptime.Hours, uptime.Minutes, uptime.Seconds));
 		}
 
         /////////////////////////////////////////////////////////////////////
@@ -129,6 +123,7 @@ namespace WiFindUs
 			V("Freeing Debugger resources...");
 			cpuCounter.Dispose();
 			ramCounter.Dispose();
+            logHistory.Clear();
 			V("Freed OK.");
 
 			I(WFUApplication.Name + " logging session closed.");
@@ -141,27 +136,37 @@ namespace WiFindUs
 
 		public static void V(string text, params object[] args)
 		{
+            if (!allowedFlags.HasFlag(Verbosity.Verbose))
+                return;
             Log(Verbosity.Verbose, text, args);
 		}
 
         public static void I(string text, params object[] args)
 		{
+            if (!allowedFlags.HasFlag(Verbosity.Information))
+                return;
             Log(Verbosity.Information, text, args);
 		}
 
         public static void W(string text, params object[] args)
 		{
+            if (!allowedFlags.HasFlag(Verbosity.Warning))
+                return;
             Log(Verbosity.Warning, text, args);
 		}
 
         public static void E(string text, params object[] args)
 		{
+            if (!allowedFlags.HasFlag(Verbosity.Error))
+                return;
             Log(Verbosity.Error, text, args);
 		}
 
 		public static void Ex(Exception e, bool printStackTrace = false)
 		{
-			string log = "EXCEPTION THROWN!";
+            if (!allowedFlags.HasFlag(Verbosity.Exception))
+                return;
+            string log = "EXCEPTION THROWN!";
 			log += "\n  Type: " + e.GetType().FullName;
 			log += "\n  Message: " + e.Message;
 			if (e.InnerException != null)
@@ -187,62 +192,58 @@ namespace WiFindUs
 
 		public static void C(string text, params object[] args)
 		{
+            if (!allowedFlags.HasFlag(Verbosity.Console))
+                return;
             Log(Verbosity.Console, text, args);
 		}
-
-        public static void FlushToConsoles()
-        {
-            if (Flush())
-                initialflush = true;
-        }
 
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
 
-        private static bool Flush()
-        {
-            if (OnDebugOutput == null)
-                return false;
-
-            try
-            {
-                foreach (object[] arr in logHistory)
-                {
-                    try
-                    {
-                        OnDebugOutput((Verbosity)arr[0], arr[1] as string, arr[2] as string);
-                    }
-                    catch (ObjectDisposedException) { }
-                }
-                
-            }
-            catch (InvalidOperationException) {  }
-            logHistory.Clear();
-            return true;
-        }
-
-        private static void Log(Verbosity level, string text, params object[] args)
+        private static void Log(Verbosity verbosity, string text, params object[] args)
 		{
-			if (level < minLevel)
-				return;
-
-            string prefix = String.Format("[{0},{1}] ", DateTime.Now.ToLongTimeString(), Thread.CurrentThread.ManagedThreadId.ToString("D3"));
+            //parse args
             if (args != null && args.Length > 0)
                 text = String.Format(text, args);
-			if (level < Verbosity.Console)
+
+            //generate string
+            DebuggerLogItem logItem = new DebuggerLogItem(verbosity, text);
+            string itemText = logItem.ToString();
+
+#if DEBUG
+            //print to system console
+            System.Diagnostics.Debugger.Log((int)verbosity, verbosity.ToString(), itemText + "\n");
+#endif
+
+            //print to log file
+            if (outFile != null && verbosity != Verbosity.Console)
 			{
-				System.Diagnostics.Debugger.Log((int)level, level.ToString(), prefix + text + "\n");
-				if (outFile != null)
-				{
-					outFile.WriteLine(prefix + text);
-					outFile.Flush();
-				}
+                outFile.WriteLine(itemText);
+				outFile.Flush();
 			}
 
-            logHistory.Add(new object[] { level, prefix, text });
-            if (initialflush)
-                Flush();
+            //add to history buffer
+            lock (logHistory)
+            {
+                int lengthDelta = (logHistory.Count + 1) - MAX_HISTORY_LENGTH;
+                while (lengthDelta > 0)
+                {
+                    logHistory.RemoveFirst();
+                    lengthDelta--;
+                }
+                logHistory.AddLast(logItem);
+            }
+            
+            //fire event handler
+            if (OnDebugOutput!= null)
+            {
+                try
+                {
+                    OnDebugOutput(logItem);
+                }
+                catch (ObjectDisposedException) { }
+            }
 		}
 	}
 }

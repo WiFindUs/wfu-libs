@@ -22,12 +22,6 @@ namespace WiFindUs
         private static AssemblyName entryAssemblyNameObject = null;
         private static Assembly entryAssembly = null;
         private static string logPath = "";
-        private static Debugger.Verbosity initialDebugLevel
-#if DEBUG
-            = Debugger.Verbosity.Verbose;
-#else
-            = Debugger.Verbosity.Information;
-#endif
         private static bool usesMutex = false;
         private static string applicationDescription = "A WiFindUs application.";
         private static string applicationCompany = "WiFindUs";
@@ -168,15 +162,6 @@ namespace WiFindUs
 		{
 			get { return appDataFolderName; } 
 			set { if (!readOnly) appDataFolderName = value; }
-		}
-
-		/// <summary>
-		/// The built-in debugger will automatically use this as the default verbosity level.
-		/// </summary>
-		public static Debugger.Verbosity InitialVerbosity
-		{
-			get { return initialDebugLevel; }
-			set { if (!readOnly) initialDebugLevel = value; }
 		}
 
 		/// <summary>
@@ -432,7 +417,7 @@ namespace WiFindUs
             get { return splashForm == null ? "" : splashForm.Status; }
             set
             {
-                Debugger.I("Splash loading: " + (value ?? ""));
+                Debugger.V("Splash loading: " + (value ?? ""));
                 if (splashForm != null)
                     splashForm.Status = value;
             }
@@ -504,14 +489,6 @@ namespace WiFindUs
 				args[i] = args[i].Substring(1).ToLower();
 				switch (args[i])
 				{
-					case "0":
-					case "1":
-					case "2":
-					case "3":
-					case "4":
-						InitialVerbosity = (Debugger.Verbosity)Int32.Parse(args[i]);
-						break;
-
 					case "conf":
 						if (i == args.Length-1)
 							break;
@@ -605,7 +582,7 @@ namespace WiFindUs
         private static bool InitializeDebugger()
         {
             splashForm.Status = "Initializing debugger";
-            Debugger.Initialize(LogPath, InitialVerbosity);
+            Debugger.Initialize(LogPath,Debugger.Verbosity.All);
             return true;
         }
 
@@ -614,14 +591,12 @@ namespace WiFindUs
             splashForm.Status = "Verifying file paths";
             
             //check data directory
-            Debugger.V("Testing for presence of DataPath (\"" + DataPath + "\")");
             if (!Directory.Exists(DataPath))
             {
                 try
                 {
-                    Debugger.W("AppDataPath \"" + DataPath + "\" doesn't exist; creating...");
                     Directory.CreateDirectory(DataPath);
-                    Debugger.W("Created OK.");
+                    Debugger.I("DataPath \"" + DataPath + "\" didn't exist; Created OK.");
                 }
                 catch (Exception exc)
                 {
@@ -631,7 +606,7 @@ namespace WiFindUs
                 }
             }
             else
-                Debugger.V("AppDataPath found OK.");
+                Debugger.V("DataPath found OK.");
             
             return true;
         }
@@ -640,16 +615,15 @@ namespace WiFindUs
         {
             splashForm.Status = "Loading configuration files";
             
-            Debugger.I("Loading config files...");
             String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
             config = new ConfigFile(files);
 #if DEBUG
-            config.LogMissingKeys = config.Get("config.log_missing_keys", false);
-#else
             config.LogMissingKeys = config.Get("config.log_missing_keys", true);
-#endif
             Debugger.V(config.ToString());
-            Debugger.I("Finished loading config files.");
+#else
+            config.LogMissingKeys = config.Get("config.log_missing_keys", false);
+#endif
+            
             return true;
         }
 
