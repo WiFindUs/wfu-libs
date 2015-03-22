@@ -42,6 +42,25 @@ namespace WiFindUs.Extensions
 			}
 		}
 
+		public static void DrawImageSafe(this Graphics graphics, Image image, Rectangle area, Brush fallback)
+		{
+			//draw base image
+			bool imageError = image == null;
+			if (!imageError)
+			{
+				try
+				{
+					graphics.DrawImage(image, area);
+				}
+				catch
+				{
+					imageError = true;
+				}
+			}
+			if (imageError && fallback != null)
+				graphics.FillRectangle(fallback, area);
+		}
+
 
 		/// <summary>
 		/// Resizes an image.

@@ -33,11 +33,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			{
 				if (value == scene)
 					return;
-				if (scene != null)
-					scene.CameraFrustumChanged -= scene_CameraFrustumChanged;
 				scene = value;
-				if (scene != null)
-					scene.CameraFrustumChanged += scene_CameraFrustumChanged;
+				scene.CameraController.Updated += CameraController_Updated;
 				Refresh();
 			}
 		}
@@ -130,7 +127,7 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			base.OnPaint(e);
 
-			if (IsDesignMode || scene == null || scene.BaseTile == null)
+			if (IsDesignMode || scene == null || scene.BaseTile == null || scene.CameraController == null)
 				return;
 
 			//initialize render state
@@ -138,31 +135,24 @@ namespace WiFindUs.Eye.Wave.Controls
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
 			//draw base image
-			bool imageError = scene.BaseTile.TileImage == null;
-			if (!imageError)
-			{
-				try
-				{
-					e.Graphics.DrawImage(scene.BaseTile.TileImage, mapArea);
-				}
-				catch
-				{
-					imageError = true;
-				}
-			}
-			if (imageError)
-				e.Graphics.DrawRectangle(Pens.White, mapArea);
+			e.Graphics.DrawImageSafe(scene.BaseTile.TileImage, mapArea, Brushes.White);
+
+			//get frustum coords
+			ILocation nw = scene.CameraController.FrustumNorthWest;
+			ILocation ne = scene.CameraController.FrustumNorthEast;
+			ILocation sw = scene.CameraController.FrustumSouthWest;
+			ILocation se = scene.CameraController.FrustumSouthEast;
 
 			//generate frustum poly
 			Point[] points = new Point[4];
-			points[0] = scene.CameraNorthWest == null
-				? new Point(mapArea.Left, mapArea.Top) : LocationToScreen(scene.CameraNorthWest);
-			points[1] = scene.CameraNorthEast == null
-				? new Point(mapArea.Right, mapArea.Top) : LocationToScreen(scene.CameraNorthEast);
-			points[2] = scene.CameraSouthEast == null
-				? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(scene.CameraSouthEast);
-			points[3] = scene.CameraSouthWest == null
-				? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(scene.CameraSouthWest);
+			points[0] = nw == null
+				? new Point(mapArea.Left, mapArea.Top) : LocationToScreen(nw);
+			points[1] = ne == null
+				? new Point(mapArea.Right, mapArea.Top) : LocationToScreen(ne);
+			points[2] = se == null
+				? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(se);
+			points[3] = sw == null
+				? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(sw);
 
 			//darken non-focal area
 			GraphicsPath path = new GraphicsPath();
@@ -174,16 +164,7 @@ namespace WiFindUs.Eye.Wave.Controls
 
 			//draw frustum
 			using (Pen p = new Pen(Color.FromArgb(140, 255, 255, 255), 1f))
-			{
-				//poly
 				e.Graphics.DrawPolygon(p, points);
-
-				//position + target
-				Point pos = LocationToScreen(scene.CameraLocation);
-				Point target = LocationToScreen(scene.CameraAimLocation);
-				e.Graphics.DrawLine(p, pos, target);
-				e.Graphics.DrawCircle(p, target.X, target.Y, 4f);
-			}
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
@@ -221,12 +202,12 @@ namespace WiFindUs.Eye.Wave.Controls
 				|| scene.BaseTile.Region == null)
 				return;
 
-			scene.CameraTarget = scene.LocationToVector(
+			scene.CameraController.Target =
 				ScreenToLocation(
 				new Point(
 					e.X < mapArea.Left ? mapArea.Left : (e.X > mapArea.Right ? mapArea.Right : e.X),
 					e.Y < mapArea.Top ? mapArea.Top : (e.Y > mapArea.Bottom ? mapArea.Bottom : e.Y)
-					)));
+					));
 		}
 
 		private void RecalculateMapArea()
@@ -237,7 +218,7 @@ namespace WiFindUs.Eye.Wave.Controls
 				size, size);
 		}
 
-		private void scene_CameraFrustumChanged(WiFindUs.Eye.Wave.MapScene obj)
+		private void CameraController_Updated(MapSceneCamera obj)
 		{
 			Refresh();
 		}

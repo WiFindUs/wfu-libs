@@ -65,9 +65,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MapSceneCamera.cs" />
     <Compile Include="Controls\MiniMapControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="MapSceneEntityBehavior.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Adapter\IMapForm.cs" />
     <Compile Include="Adapter\MapApplication.cs" />

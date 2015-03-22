@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Cameras;
@@ -10,7 +9,6 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
 using WaveEngine.Framework.Services;
 using WiFindUs.Controls;
-using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
@@ -20,12 +18,7 @@ namespace WiFindUs.Eye.Wave
 	public class MapScene : Scene, IThemeable
 	{
 		public event Action<MapScene> SceneStarted;
-		public event Action<MapScene> CameraChanged, CameraFrustumChanged;
 
-		private const float CAM_MIN_ZOOM = 100.0f;
-		private const float CAM_MAX_ZOOM = 2000.0f;
-		private const float CAM_MIN_ANGLE = (float)(Math.PI / 7.0);
-		private const float CAM_MAX_ANGLE = (float)(Math.PI / 2.01);
 		private const float ZOOM_RATE = 1.0f;
 		private const float TILT_RATE = 1.0f;
 		public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM + 1;
@@ -40,19 +33,12 @@ namespace WiFindUs.Eye.Wave
 		private BoxCollider groundPlaneCollider;
 		private TerrainTile baseTile;
 		private uint visibleLayer = uint.MaxValue;
-		private float cameraZoom = 1.0f; //percentage
-		private float cameraTilt = 0.0f; //percentage
-		private Camera3D cameraTransform;
-		private bool autoUpdateCamera = true;
-		private bool cameraDirty = false;
-		private Ray cameraRay;
+
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
 		private List<Marker> allMarkers = new List<Marker>();
 		private MapSceneInput inputBehaviour;
-
-		//camera frustum
-		private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
+		private MapSceneCamera cameraController;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -88,18 +74,6 @@ namespace WiFindUs.Eye.Wave
 				Debugger.I("Setting map center to " + value.ToString());
 				center = value;
 				UpdateTileLocations();
-				UpdateCameraPosition();
-			}
-		}
-
-		public bool CameraAutoUpdate
-		{
-			get { return autoUpdateCamera; }
-			set
-			{
-				autoUpdateCamera = value;
-				if (autoUpdateCamera && cameraDirty)
-					UpdateCameraPosition();
 			}
 		}
 
@@ -109,7 +83,7 @@ namespace WiFindUs.Eye.Wave
 			{
 				return visibleLayer;
 			}
-			protected set
+			set
 			{
 				uint layer = value >= tiles.Length ? (uint)tiles.Length - 1 : value;
 				if (layer == visibleLayer)
@@ -140,91 +114,9 @@ namespace WiFindUs.Eye.Wave
 			get { return (uint)tiles.Length; }
 		}
 
-		public float CameraZoom
-		{
-			get { return cameraZoom; }
-			set
-			{
-				float zoom = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
-				if (zoom.Tolerance(cameraZoom, 0.001f))
-					return;
-				cameraZoom = zoom;
-				VisibleLayer = (uint)((1.0f - cameraZoom) * (float)tiles.Length);
-				if (autoUpdateCamera)
-					UpdateCameraPosition();
-				else
-					cameraDirty = true;
-			}
-		}
-
-		public float CameraTilt
-		{
-			get { return cameraTilt; }
-			set
-			{
-				float tilt = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
-				if (tilt.Tolerance(cameraTilt, 0.001f))
-					return;
-				cameraTilt = tilt;
-				if (autoUpdateCamera)
-					UpdateCameraPosition();
-				else
-					cameraDirty = true;
-			}
-		}
-
-		public Vector3 CameraTarget
-		{
-			get { return cameraTransform == null ? Vector3.Zero : cameraTransform.LookAt; }
-			set
-			{
-				if (cameraTransform == null)
-					return;
-				cameraTransform.LookAt = new Vector3(
-					value.X < baseTile.TopLeft.X ? baseTile.TopLeft.X : (value.X > baseTile.BottomRight.X ? baseTile.BottomRight.X : value.X),
-					value.Y,
-					value.Z < baseTile.TopLeft.Z ? baseTile.TopLeft.Z : (value.Z > baseTile.BottomRight.Z ? baseTile.BottomRight.Z : value.Z)
-					);
-				if (autoUpdateCamera)
-					UpdateCameraPosition();
-				else
-					cameraDirty = true;
-			}
-		}
-
 		public TerrainTile BaseTile
 		{
 			get { return baseTile; }
-		}
-
-		public ILocation CameraNorthWest
-		{
-			get { return cameraNW; }
-		}
-
-		public ILocation CameraNorthEast
-		{
-			get { return cameraNE; }
-		}
-
-		public ILocation CameraSouthEast
-		{
-			get { return cameraSE; }
-		}
-
-		public ILocation CameraSouthWest
-		{
-			get { return cameraSW; }
-		}
-
-		public ILocation CameraLocation
-		{
-			get { return cameraPos; }
-		}
-
-		public ILocation CameraAimLocation
-		{
-			get { return cameraAim; }
 		}
 
 		public MapGame HostGame
@@ -252,6 +144,11 @@ namespace WiFindUs.Eye.Wave
 			get { return nodeMarkers; }
 		}
 
+		public List<Marker> AllMarkers
+		{
+			get { return allMarkers; }
+		}
+
 		public bool DebugMode
 		{
 			get
@@ -273,6 +170,16 @@ namespace WiFindUs.Eye.Wave
 			get { return inputBehaviour; }
 		}
 
+		public MapSceneCamera CameraController
+		{
+			get { return cameraController; }
+		}
+
+		public BoxCollider GroundPlane
+		{
+			get { return groundPlaneCollider; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -282,7 +189,6 @@ namespace WiFindUs.Eye.Wave
 			if (hostGame == null)
 				throw new ArgumentNullException("hostGame", "MapScene cannot be instantiated outside of a host MapGame.");
 			this.hostGame = hostGame;
-			HostApplication.ScreenResized += HostApplication_ScreenResized;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -312,46 +218,7 @@ namespace WiFindUs.Eye.Wave
 				);
 		}
 
-		public ILocation LocationFromScreenRay(int x, int y)
-		{
-			if (groundPlaneCollider == null)
-				return null;
 
-			//set up ray
-			ConfigureScreenRay(x, y);
-
-			//test for collision with ground plane
-			float? result = groundPlaneCollider.Intersects(ref cameraRay);
-			if (!result.HasValue)
-				return null;
-
-			//return result
-			return VectorToLocation(cameraRay.Position + cameraRay.Direction * result.Value);
-		}
-
-		public Marker[] MarkersFromScreenRay(int x, int y)
-		{
-			if (deviceMarkers.Count == 0 && nodeMarkers.Count == 0)
-				return new Marker[0];
-
-			List<Marker> markers = new List<Marker>();
-
-			//set up ray
-			ConfigureScreenRay(x, y);
-
-			//check nodes
-			foreach (Marker marker in allMarkers)
-				if (marker.Transform3D != null
-					&& marker.BoxCollider != null
-					&& marker.BoxCollider.Intersects(ref cameraRay).HasValue)
-					markers.Add(marker);
-
-			//sort based on distance
-			return markers.OrderBy(o =>
-			{
-				return Vector3.DistanceSquared(o.Transform3D.Position, cameraRay.Position);
-			}).ToArray();
-		}
 
 		public void CancelThreads()
 		{
@@ -369,7 +236,6 @@ namespace WiFindUs.Eye.Wave
 #endif
 			//set up camera
 			Debugger.V("MapScene: initializing camera");
-			cameraRay = new Ray();
 			camera = new FixedCamera("camera", Vector3.Up * 200.0f, Vector3.Zero)
 			{
 				NearPlane = 1f,
@@ -380,9 +246,8 @@ namespace WiFindUs.Eye.Wave
 					theme.ControlDarkColour.B, theme.ControlDarkColour.A)
 					: Color.CornflowerBlue
 			};
-			cameraTransform = camera.Entity.FindComponent<Camera3D>();
+			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapSceneCamera());
 			EntityManager.Add(camera);
-			UpdateCameraPosition();
 
 			//create global lighting
 			Debugger.V("MapScene: creating lighting");
@@ -440,43 +305,6 @@ namespace WiFindUs.Eye.Wave
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		private void UpdateCameraPosition()
-		{
-			if (cameraTransform == null)
-				return;
-
-			//set position
-			float angle = CAM_MIN_ANGLE + ((CAM_MAX_ANGLE - CAM_MIN_ANGLE) * cameraTilt);
-			float distance = CAM_MIN_ZOOM + ((CAM_MAX_ZOOM - CAM_MIN_ZOOM) * cameraZoom);
-			Vector3 direction = new Vector3(0f, (float)Math.Sin(angle), (float)Math.Cos(angle));
-			direction.Normalize();
-			cameraTransform.Position = new Vector3(
-				cameraTransform.LookAt.X,
-				cameraTransform.LookAt.Y + (direction.Y * distance),
-				cameraTransform.LookAt.Z + (direction.Z * distance));
-
-			//update location 'frustum'
-			UpdateCameraFrustum();
-
-			//state
-			cameraDirty = false;
-			if (CameraChanged != null)
-				CameraChanged(this);
-		}
-
-		private void UpdateCameraFrustum()
-		{
-			cameraPos = VectorToLocation(cameraTransform.Position);
-			cameraAim = VectorToLocation(cameraTransform.LookAt);
-			cameraNW = LocationFromScreenRay(0, 0);
-			cameraNE = LocationFromScreenRay(HostApplication.Width, 0);
-			cameraSE = LocationFromScreenRay(HostApplication.Width, HostApplication.Height);
-			cameraSW = LocationFromScreenRay(0, HostApplication.Height);
-
-			if (CameraFrustumChanged != null)
-				CameraFrustumChanged(this);
-		}
 
 		private void Device_OnDeviceLoaded(Device device)
 		{
@@ -552,26 +380,6 @@ namespace WiFindUs.Eye.Wave
 					baseTile.Region.NorthWest.Longitude.Value + longSize * ((float)tile.Column + 0.5f)//long
 					);
 			}, 1);
-		}
-
-		private void HostApplication_ScreenResized(MapApplication obj)
-		{
-			UpdateCameraPosition();
-		}
-
-		private void ConfigureScreenRay(int x, int y)
-		{
-			//convert screen to world
-			Vector3 screenCoords = new Vector3(x, y, 0.0f);
-			Vector3 screenCoordsFar = new Vector3(x, y, 1.0f);
-			screenCoords = cameraTransform.Unproject(ref screenCoords);
-			screenCoordsFar = cameraTransform.Unproject(ref screenCoordsFar);
-
-			//update ray
-			Vector3 rayDirection = screenCoordsFar - screenCoords;
-			rayDirection.Normalize();
-			cameraRay.Direction = rayDirection;
-			cameraRay.Position = screenCoords;
 		}
 	}
 }

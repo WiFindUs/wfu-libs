@@ -124,13 +124,15 @@ namespace WiFindUs.Eye.Wave
 					moveDelta *= (float)gameTime.TotalSeconds * 1000.0f;
 				}
 			}
+
 			//camera panning with middle mouse
 			if (WasMouseHeld(MouseButtons.Middle))
 			{
-				float zoomDiff = 1.0f + mapScene.CameraZoom;
+				float zoomDiff = 1.0f + mapScene.CameraController.Zoom;
 				moveDelta.X += (oldMouseState.X - input.MouseState.X) * zoomDiff;
 				moveDelta.Z += (oldMouseState.Y - input.MouseState.Y) * zoomDiff;
 			}
+
 			//tilting camera with left + right mouse
 			else if (WasMouseHeld(MouseButtons.Left) && WasMouseHeld(MouseButtons.Right))
 				tiltDelta = (float)(oldMouseState.Y - input.MouseState.Y) * 0.01f;
@@ -158,12 +160,15 @@ namespace WiFindUs.Eye.Wave
 			}
 
 			//apply changes
-			mapScene.CameraAutoUpdate = false;
 			if (!moveDelta.LengthSquared().Tolerance(0.0f, 0.01f))
-				mapScene.CameraTarget += moveDelta;
-			mapScene.CameraZoom += zoomDelta;
-			mapScene.CameraTilt += tiltDelta;
-			mapScene.CameraAutoUpdate = true;
+			{
+				mapScene.CameraController.Target = mapScene.VectorToLocation(
+					mapScene.CameraController.TargetVector + moveDelta);
+			}
+			if (!zoomDelta.Tolerance(0.0f, 0.01f))
+				mapScene.CameraController.Zoom += zoomDelta;
+			if (!tiltDelta.Tolerance(0.0f, 0.01f))
+				mapScene.CameraController.Tilt += tiltDelta;
 
 			//state
 			oldKeyboardState = input.KeyboardState;

@@ -260,7 +260,7 @@ namespace WiFindUs.Eye.Dispatcher
 			if (args.Button != MapSceneInput.MouseButtons.Left)
 				return;
 
-			Marker[] clickedMarkers = args.Scene.MarkersFromScreenRay(args.X, args.Y);
+			Marker[] clickedMarkers = args.Scene.CameraController.MarkersFromScreenRay(args.X, args.Y);
 
 			if (clickedMarkers == null || clickedMarkers.Length == 0)
 			{

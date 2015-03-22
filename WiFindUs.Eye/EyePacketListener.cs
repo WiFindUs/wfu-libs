@@ -171,21 +171,21 @@ namespace WiFindUs.Eye
 					{
 						EyePacket packet = (EyePacket)eyePacketType.GetConstructor(
 							new Type[]
-                            {
-                                typeof(IPEndPoint),
-                                typeof(String),
-                                typeof(uint),
-                                typeof(ulong),
-                                typeof(String)
-                            })
+							{
+								typeof(IPEndPoint),
+								typeof(String),
+								typeof(uint),
+								typeof(ulong),
+								typeof(String)
+							})
 							.Invoke(new object[]
-                            {
-                                endPoint, //sender
-                                type, //type
-                                id, //id
-                                timestamp, //timestamp
-                                match.Groups[4].Value //payload
-                            });
+							{
+								endPoint, //sender
+								type, //type
+								id, //id
+								timestamp, //timestamp
+								match.Groups[4].Value //payload
+							});
 						switch (type)
 						{
 							case "DEV": DevicePacketReceived(this, packet as DevicePacket); break;
