@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Eye.Controls
+namespace WiFindUs.Eye.Wave.Controls
 {
     public class MiniMapControl : Control, IThemeable
     {

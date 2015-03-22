@@ -8,6 +8,15 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WiFindUs.Eye", "WiFindUs.Eye\WiFindUs.Eye.csproj", "{87C53E35-435B-42A3-9C15-B9AAEC2C8B34}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WiFindUs.Eye.Dispatcher", "WiFindUs.Eye.Dispatcher\WiFindUs.Eye.Dispatcher.csproj", "{C0256143-E51B-4B8E-95BD-D9CA97D737B3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{218E7F4E-C133-441A-83A0-242E40A9BEDE} = {218E7F4E-C133-441A-83A0-242E40A9BEDE}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WiFindUs.Eye.Wave", "WiFindUs.Eye.Wave\WiFindUs.Eye.Wave.csproj", "{218E7F4E-C133-441A-83A0-242E40A9BEDE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{87C53E35-435B-42A3-9C15-B9AAEC2C8B34} = {87C53E35-435B-42A3-9C15-B9AAEC2C8B34}
+		{C861E53E-C50A-41BA-B08C-237F9A2637AF} = {C861E53E-C50A-41BA-B08C-237F9A2637AF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +36,10 @@ Global
 		{C0256143-E51B-4B8E-95BD-D9CA97D737B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0256143-E51B-4B8E-95BD-D9CA97D737B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0256143-E51B-4B8E-95BD-D9CA97D737B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{218E7F4E-C133-441A-83A0-242E40A9BEDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{218E7F4E-C133-441A-83A0-242E40A9BEDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{218E7F4E-C133-441A-83A0-242E40A9BEDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{218E7F4E-C133-441A-83A0-242E40A9BEDE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

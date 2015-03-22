@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WiFindUs.Controls;
-using WiFindUs.Eye.Wave;
 using WiFindUs.Forms;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Extensions;
@@ -12,11 +11,10 @@ using System.Collections;
 using System.Windows.Forms;
 using Devart.Data.Linq;
 using System.ComponentModel;
-using WiFindUs.Eye.Wave.Adapter;
 
 namespace WiFindUs.Eye
 {
-    public class EyeMainForm : MainForm, IMapForm
+    public class EyeMainForm : MainForm
     {
         private const long TIMEOUT_CHECK_INTERVAL = 1000;
         
@@ -26,7 +24,6 @@ namespace WiFindUs.Eye
         private long timeoutCheckTimer = 0;
         private List<IUpdateable> updateables = new List<IUpdateable>();
         private bool serverMode = false;
-        private MapControl map;
         private double deviceMaxAccuracy = 20.0;
         private double nodeMaxAccuracy = 20.0;
 
@@ -109,22 +106,6 @@ namespace WiFindUs.Eye
             }
         }
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public MapControl Map
-        {
-            get { return map; }
-            protected set
-            {
-                if (map != null || value == null)
-                    return;
-                map = value;
-                map.Theme = Theme;
-                map.ApplicationStarting += MapApplicationStarting;
-                map.SceneStarted += MapSceneStarted;
-            }
-        }
-
         /////////////////////////////////////////////////////////////////////
         // CONSTRUCTORS
         /////////////////////////////////////////////////////////////////////
@@ -140,12 +121,6 @@ namespace WiFindUs.Eye
         /////////////////////////////////////////////////////////////////////
         // PUBLIC METHODS
         /////////////////////////////////////////////////////////////////////
-
-        public void RenderMap()
-        {
-            if (Map != null)
-                Map.Render();
-        }
 
         public Node Node(uint id, out bool isNew)
         {
@@ -308,7 +283,7 @@ namespace WiFindUs.Eye
         protected override void OnFirstShown(EventArgs e)
         {
             base.OnFirstShown(e);
-            if (DesignMode)
+            if (IsDesignMode)
                 return;
 
             //attach server thread listener
@@ -317,10 +292,6 @@ namespace WiFindUs.Eye
                 eyeListener.DevicePacketReceived += DevicePacketReceived;
                 eyeListener.NodePacketReceived += NodePacketReceived;
             }
-
-            //start map scene
-            if (Map != null)
-                Map.StartMapApplication();
 
             //start timer
             timer = new Timer();
@@ -331,12 +302,6 @@ namespace WiFindUs.Eye
 
         protected override void OnDisposing()
         {            
-            if (Map != null)
-            {
-                Map.CancelThreads();
-                Map.Dispose();
-            }
-
             if (timer != null)
             {
                 timer.Tick -= TimerTick;
@@ -364,20 +329,9 @@ namespace WiFindUs.Eye
             base.OnDisposing();
         }
 
-        protected virtual void MapSceneStarted(MapScene obj)
-        {
-            ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
-            if (location == null)
-                Debugger.E("Could not parse map.center from config files!");
-            else
-                obj.CenterLocation = location;
-            Map.Scene.Theme = Theme;
-        }
-
         /////////////////////////////////////////////////////////////////////
         // PRIVATE METHODS
         /////////////////////////////////////////////////////////////////////
-
 
         private void DevicePacketReceived(EyePacketListener sender, DevicePacket devicePacket)
         {
@@ -749,10 +703,6 @@ namespace WiFindUs.Eye
             }
         }
 
-        private void MapApplicationStarting(MapControl map)
-        {
-            if (WFUApplication.Config != null)
-                map.BackBufferScale = WFUApplication.Config.Get("map.resolution_scale", 1.0f);
-        }
+
     }
 }

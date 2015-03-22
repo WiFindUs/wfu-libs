@@ -19,10 +19,11 @@ using WiFindUs.Eye.Extensions;
 using WiFindUs.Eye.Controls;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Eye.Wave.Adapter;
+using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Dispatcher
 {
-    public partial class DispatcherForm : EyeMainForm
+    public partial class DispatcherForm : WaveMainForm
     {
         private MiniMapControl minimap;
         private FormWindowState oldWindowState;
