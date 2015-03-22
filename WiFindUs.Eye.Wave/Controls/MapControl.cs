@@ -188,14 +188,18 @@ namespace WiFindUs.Eye.Wave.Controls
 		protected override void OnMouseEnter(EventArgs e)
 		{
 			base.OnMouseEnter(e);
+#if !DEBUG
 			Cursor.Hide();
+#endif
 			Focus();
 		}
 
 		protected override void OnMouseLeave(EventArgs e)
 		{
 			base.OnMouseLeave(e);
+#if !DEBUG
 			Cursor.Show();
+#endif
 		}
 
 		protected override void OnResize(EventArgs e)
