@@ -52,7 +52,7 @@ namespace WiFindUs
 		{
 			return String.Format("[{0}, {1}, {2}] {3}",
 				timestamp.ToString("H:mm:ss"),
-				threadID.ToString("D2"),
+				WFUApplication.UIThreadID >= 0 && WFUApplication.UIThreadID == threadID ? "UI" : threadID.ToString("D2"),
 				Enum.GetName(typeof(Debugger.Verbosity), verbosity).Substring(0, 1),
 				message);
 		}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
@@ -74,6 +75,7 @@ namespace WiFindUs.Forms
 
 		public BaseForm()
 		{
+			WFUApplication.UIThreadID = Thread.CurrentThread.ManagedThreadId;
 			AutoScaleMode = AutoScaleMode.None;
 			ShowIcon = true;
 			Icon = WFUApplication.Icon;

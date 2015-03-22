@@ -44,10 +44,24 @@ namespace WiFindUs
 		private static Theme theme = new Theme();
 		private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
 		private static Action<MainForm> mainLaunchAction = null;
+		private static int uiThreadID = -1;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
+
+		/// <summary>
+		/// Gets the ManagedThreadID of the current WinForms UI thread.
+		/// </summary>
+		public static int UIThreadID
+		{
+			get { return uiThreadID; }
+			set
+			{
+				if (uiThreadID < 0)
+					uiThreadID = value < 0 ? -1 : value;
+			}
+		}
 
 		/// <summary>
 		/// Returns if a WFUApplication is already running.
@@ -619,7 +633,7 @@ namespace WiFindUs
 			config.LogMissingKeys = config.Get("config.log_missing_keys", true);
 			Debugger.V(config.ToString());
 #else
-            config.LogMissingKeys = config.Get("config.log_missing_keys", false);
+			config.LogMissingKeys = config.Get("config.log_missing_keys", false);
 #endif
 
 			return true;
@@ -632,7 +646,6 @@ namespace WiFindUs
 				theme.Dispose();
 				theme = null;
 			}
-
 
 			if (imageLoader != null)
 			{
