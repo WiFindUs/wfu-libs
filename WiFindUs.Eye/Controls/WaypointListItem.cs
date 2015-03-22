@@ -2,27 +2,27 @@
 
 namespace WiFindUs.Eye.Controls
 {
-    public class WaypointListItem : EntityListItem
-    {
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+	public class WaypointListItem : EntityListItem
+	{
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Waypoint Waypoint
-        {
-            get { return Entity as Waypoint; }
-        }
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public Waypoint Waypoint
+		{
+			get { return Entity as Waypoint; }
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// CONSTRUCTORS
+		/////////////////////////////////////////////////////////////////////
 
-        public WaypointListItem(Waypoint waypoint)
-            : base(waypoint)
-        {
+		public WaypointListItem(Waypoint waypoint)
+			: base(waypoint)
+		{
 
-        }
-    }
+		}
+	}
 }

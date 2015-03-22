@@ -2,11 +2,11 @@
 
 namespace WiFindUs.Eye
 {
-    public interface ILocatable
-    {
-        ILocation Location { get; }
-        event Action<ILocatable> LocationChanged;
-        void LockLocationEvents();
-        void UnlockLocationEvents();
-    }
+	public interface ILocatable
+	{
+		ILocation Location { get; }
+		event Action<ILocatable> LocationChanged;
+		void LockLocationEvents();
+		void UnlockLocationEvents();
+	}
 }

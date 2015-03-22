@@ -6,159 +6,159 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Forms
 {
-    public class BaseForm : Form, IThemeable
+	public class BaseForm : Form, IThemeable
 	{
-        private Theme theme;
-        private bool firstShown = false;
-        
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+		private Theme theme;
+		private bool firstShown = false;
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDesignMode
-        {
-            get
-            {
-                return DesignMode || this.IsDesignMode();
-            }
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        protected override bool ShowWithoutActivation
-        {
-            get { return true; }
-        }
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool IsDesignMode
+		{
+			get
+			{
+				return DesignMode || this.IsDesignMode();
+			}
+		}
 
-        protected override CreateParams CreateParams
-        {
-            get
-            {
-                CreateParams cp = base.CreateParams;
-                if (!IsDesignMode)
-                    cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
-                return cp;
-            }
-        }
+		protected override bool ShowWithoutActivation
+		{
+			get { return true; }
+		}
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Theme Theme
-        {
-            get
-            {
-                return theme;
-            }
-            set
-            {
-                if (value == null || value == theme)
-                    return;
+		protected override CreateParams CreateParams
+		{
+			get
+			{
+				CreateParams cp = base.CreateParams;
+				if (!IsDesignMode)
+					cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
+				return cp;
+			}
+		}
 
-                theme = value;
-                BackColor = theme.ControlLightColour;
-                Font = theme.WindowFont;
-                OnThemeChanged();
-                this.RecurseControls(control =>
-                {
-                    IThemeable themable = control as IThemeable;
-                    if (themable != null)
-                        themable.Theme = value;
-                });
-                Refresh();
-            }
-        }
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public Theme Theme
+		{
+			get
+			{
+				return theme;
+			}
+			set
+			{
+				if (value == null || value == theme)
+					return;
 
-        /////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        /////////////////////////////////////////////////////////////////////
+				theme = value;
+				BackColor = theme.ControlLightColour;
+				Font = theme.WindowFont;
+				OnThemeChanged();
+				this.RecurseControls(control =>
+				{
+					IThemeable themable = control as IThemeable;
+					if (themable != null)
+						themable.Theme = value;
+				});
+				Refresh();
+			}
+		}
 
-        public BaseForm()
-        {
-            AutoScaleMode = AutoScaleMode.None;
-            ShowIcon = true;
-            Icon = WFUApplication.Icon;
-            ResizeRedraw = true;
-            Text = WFUApplication.Name;
+		/////////////////////////////////////////////////////////////////////
+		// CONSTRUCTORS
+		/////////////////////////////////////////////////////////////////////
 
-            if (IsDesignMode)
-            {
-                theme = WFUApplication.Theme;
-                return;
-            }
+		public BaseForm()
+		{
+			AutoScaleMode = AutoScaleMode.None;
+			ShowIcon = true;
+			Icon = WFUApplication.Icon;
+			ResizeRedraw = true;
+			Text = WFUApplication.Name;
 
-            DoubleBuffered = true;
-            SetStyle(
-                System.Windows.Forms.ControlStyles.UserPaint |
-                System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
-                System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
-                true);
-            UpdateStyles();
-        }
+			if (IsDesignMode)
+			{
+				theme = WFUApplication.Theme;
+				return;
+			}
 
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
+			DoubleBuffered = true;
+			SetStyle(
+				System.Windows.Forms.ControlStyles.UserPaint |
+				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
+				System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
+				true);
+			UpdateStyles();
+		}
 
-        public virtual void ShowForm(bool forcerefresh = true)
-        {
-            Visible = true;
-            Show();
-            BringToFront();
-            Focus();
-            if (forcerefresh)
-                Refresh();
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
+		public virtual void ShowForm(bool forcerefresh = true)
+		{
+			Visible = true;
+			Show();
+			BringToFront();
+			Focus();
+			if (forcerefresh)
+				Refresh();
+		}
 
-        public virtual void OnThemeChanged()
-        {
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        }
+		public virtual void OnThemeChanged()
+		{
 
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
+		}
 
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-            if (IsDesignMode)
-                return;
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
 
-            Theme = WFUApplication.Theme;
-            Refresh();
-        }
+		protected override void OnLoad(EventArgs e)
+		{
+			base.OnLoad(e);
+			if (IsDesignMode)
+				return;
 
-        protected override void OnShown(EventArgs e)
-        {
-            base.OnShown(e);
-            if (IsDesignMode)
-                return;
-            if (!firstShown)
-            {
-                firstShown = true;
-                OnFirstShown(e);
-            }
-        }
+			Theme = WFUApplication.Theme;
+			Refresh();
+		}
 
-        protected virtual void OnFirstShown(EventArgs e)
-        {
+		protected override void OnShown(EventArgs e)
+		{
+			base.OnShown(e);
+			if (IsDesignMode)
+				return;
+			if (!firstShown)
+			{
+				firstShown = true;
+				OnFirstShown(e);
+			}
+		}
 
-        }
+		protected virtual void OnFirstShown(EventArgs e)
+		{
 
-        protected virtual void OnDisposing()
-        {
+		}
 
-        }
+		protected virtual void OnDisposing()
+		{
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-                OnDisposing();
-            base.Dispose(disposing);
-        }
-    }
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+				OnDisposing();
+			base.Dispose(disposing);
+		}
+	}
 }

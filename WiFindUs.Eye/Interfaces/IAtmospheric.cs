@@ -1,8 +1,8 @@
 ﻿
 namespace WiFindUs.Eye
 {
-    public interface IAtmospheric
-    {
-        IAtmosphere Atmosphere { get; }
-    }
+	public interface IAtmospheric
+	{
+		IAtmosphere Atmosphere { get; }
+	}
 }

@@ -2,66 +2,66 @@
 
 namespace WiFindUs.Eye
 {
-    public partial class DeviceHistory : ILocation, IAtmosphere
-    {
-        public static event Action<DeviceHistory> OnDeviceHistoryLoaded;
-        private bool loaded = false;
+	public partial class DeviceHistory : ILocation, IAtmosphere
+	{
+		public static event Action<DeviceHistory> OnDeviceHistoryLoaded;
+		private bool loaded = false;
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
-        
-        public bool EmptyAtmosphere
-        {
-            get
-            {
-                return !Humidity.HasValue
-                    && !Temperature.HasValue
-                    && !AirPressure.HasValue
-                    && !LightLevel.HasValue;
-            }
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        public bool HasLatLong
-        {
-            get
-            {
-                return Latitude.HasValue
-                    && Longitude.HasValue;
-            }
-        }
+		public bool EmptyAtmosphere
+		{
+			get
+			{
+				return !Humidity.HasValue
+					&& !Temperature.HasValue
+					&& !AirPressure.HasValue
+					&& !LightLevel.HasValue;
+			}
+		}
 
-        public bool EmptyLocation
-        {
-            get
-            {
-                return !Latitude.HasValue
-                    && !Longitude.HasValue
-                    && !Accuracy.HasValue
-                    && !Altitude.HasValue;
-            }
-        }
+		public bool HasLatLong
+		{
+			get
+			{
+				return Latitude.HasValue
+					&& Longitude.HasValue;
+			}
+		}
 
-        public double DistanceTo(ILocation other)
-        {
-            return WiFindUs.Eye.Location.Distance(this, other);
-        }
+		public bool EmptyLocation
+		{
+			get
+			{
+				return !Latitude.HasValue
+					&& !Longitude.HasValue
+					&& !Accuracy.HasValue
+					&& !Altitude.HasValue;
+			}
+		}
 
-        public bool Loaded
-        {
-            get { return loaded; }
-        }
+		public double DistanceTo(ILocation other)
+		{
+			return WiFindUs.Eye.Location.Distance(this, other);
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
+		public bool Loaded
+		{
+			get { return loaded; }
+		}
 
-        partial void OnLoaded()
-        {
-            loaded = true;
-            Debugger.V(this.ToString() + " loaded.");
-            if (OnDeviceHistoryLoaded != null)
-                OnDeviceHistoryLoaded(this);
-        }
-    }
+		/////////////////////////////////////////////////////////////////////
+		// PRIVATE METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		partial void OnLoaded()
+		{
+			loaded = true;
+			Debugger.V(this.ToString() + " loaded.");
+			if (OnDeviceHistoryLoaded != null)
+				OnDeviceHistoryLoaded(this);
+		}
+	}
 }

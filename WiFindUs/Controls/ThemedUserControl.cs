@@ -5,112 +5,112 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Controls
 {
-    public class ThemedUserControl : UserControl, IThemeable
-    {
-        public event Action<ThemedUserControl> MouseHoveringChanged;
-        private Theme theme;
-        private bool mouseHovering = false;
+	public class ThemedUserControl : UserControl, IThemeable
+	{
+		public event Action<ThemedUserControl> MouseHoveringChanged;
+		private Theme theme;
+		private bool mouseHovering = false;
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDesignMode
-        {
-            get
-            {
-                return DesignMode || this.IsDesignMode();
-            }
-        }
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool IsDesignMode
+		{
+			get
+			{
+				return DesignMode || this.IsDesignMode();
+			}
+		}
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public virtual Theme Theme
-        {
-            get
-            {
-                return theme;
-            }
-            set
-            {
-                if (value == null || value == theme)
-                    return;
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public virtual Theme Theme
+		{
+			get
+			{
+				return theme;
+			}
+			set
+			{
+				if (value == null || value == theme)
+					return;
 
-                theme = value;
-                BackColor = theme.ControlLightColour;
-                ForeColor = theme.TextLightColour;
-                Font = theme.WindowFont;
-                OnThemeChanged();
-            }
-        }
+				theme = value;
+				BackColor = theme.ControlLightColour;
+				ForeColor = theme.TextLightColour;
+				Font = theme.WindowFont;
+				OnThemeChanged();
+			}
+		}
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool MouseHovering
-        {
-            get { return mouseHovering; }
-            private set
-            {
-                if (value == mouseHovering)
-                    return;
-                mouseHovering = value;
-                OnMouseHoverChanged();
-            }
-        }
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool MouseHovering
+		{
+			get { return mouseHovering; }
+			private set
+			{
+				if (value == mouseHovering)
+					return;
+				mouseHovering = value;
+				OnMouseHoverChanged();
+			}
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// CONSTRUCTORS
+		/////////////////////////////////////////////////////////////////////
 
-        public ThemedUserControl()
-        {
-            Margin = new Padding(0);
-            Padding = new Padding(0);
+		public ThemedUserControl()
+		{
+			Margin = new Padding(0);
+			Padding = new Padding(0);
 
-            if (IsDesignMode)
-                return;
+			if (IsDesignMode)
+				return;
 
-            ResizeRedraw = false;
-            DoubleBuffered = true;
-            SetStyle(
-                System.Windows.Forms.ControlStyles.UserPaint |
-                System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
-                System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
-                true);
-            UpdateStyles();
-        }
+			ResizeRedraw = false;
+			DoubleBuffered = true;
+			SetStyle(
+				System.Windows.Forms.ControlStyles.UserPaint |
+				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
+				System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
+				true);
+			UpdateStyles();
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        public virtual void OnThemeChanged()
-        {
+		public virtual void OnThemeChanged()
+		{
 
-        }
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        protected virtual void OnMouseHoverChanged()
-        {
-            if (MouseHoveringChanged != null)
-                MouseHoveringChanged(this);
-        }
+		protected virtual void OnMouseHoverChanged()
+		{
+			if (MouseHoveringChanged != null)
+				MouseHoveringChanged(this);
+		}
 
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            MouseHovering = true;
-            base.OnMouseEnter(e);
-        }
+		protected override void OnMouseEnter(EventArgs e)
+		{
+			MouseHovering = true;
+			base.OnMouseEnter(e);
+		}
 
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-            MouseHovering = false;
-        }
-    }
+		protected override void OnMouseLeave(EventArgs e)
+		{
+			base.OnMouseLeave(e);
+			MouseHovering = false;
+		}
+	}
 }

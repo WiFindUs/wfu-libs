@@ -1,8 +1,8 @@
 ﻿
 namespace WiFindUs.Eye.Wave.Adapter
 {
-    public interface IMapForm
-    {
-        void RenderMap();
-    }
+	public interface IMapForm
+	{
+		void RenderMap();
+	}
 }

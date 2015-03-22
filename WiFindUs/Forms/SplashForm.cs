@@ -9,249 +9,249 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Forms
 {
-    public partial class SplashForm : BaseForm
-    {
-        private Image logo = null;
-        private Rectangle activeArea = Rectangle.Empty;
-        private string statusString = "";
-        private List<Func<bool>> tasks;
-        public event Action<PaintEventArgs> PreDraw, PostDraw;
-        private Brush bgBrush = null;
+	public partial class SplashForm : BaseForm
+	{
+		private Image logo = null;
+		private Rectangle activeArea = Rectangle.Empty;
+		private string statusString = "";
+		private List<Func<bool>> tasks;
+		public event Action<PaintEventArgs> PreDraw, PostDraw;
+		private Brush bgBrush = null;
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        public string Status
-        {
-            get
-            {
-                return IsDesignMode ? "Loading operation status" : statusString;
-            }
+		public string Status
+		{
+			get
+			{
+				return IsDesignMode ? "Loading operation status" : statusString;
+			}
 
-            set
-            {
-                string val = (value ?? "").Trim();
-                if (val.CompareTo(statusString) == 0)
-                    return;
-                statusString = val;
-                this.RefreshThreadSafe();
-            }
+			set
+			{
+				string val = (value ?? "").Trim();
+				if (val.CompareTo(statusString) == 0)
+					return;
+				statusString = val;
+				this.RefreshThreadSafe();
+			}
 
-        }
-        
-        /////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        /////////////////////////////////////////////////////////////////////
+		}
 
-        public SplashForm(List<Func<bool>> tasks)
-        {
-            InitializeComponent();
-            RecalculateActiveArea();
+		/////////////////////////////////////////////////////////////////////
+		// CONSTRUCTORS
+		/////////////////////////////////////////////////////////////////////
 
-            if (IsDesignMode)
-                return;
+		public SplashForm(List<Func<bool>> tasks)
+		{
+			InitializeComponent();
+			RecalculateActiveArea();
 
-            //set tasks
-            if (tasks == null)
-                throw new ArgumentNullException("tasks");
-            this.tasks = tasks;
-            
-            //cosmetics
-            logo = WFUApplication.Images.Resource("wfu_logo_small");
+			if (IsDesignMode)
+				return;
 
-            //worker events
-            loadingWorker.DoWork += LoadingThread;
-            loadingWorker.ProgressChanged += LoadingProgress;
-            loadingWorker.RunWorkerCompleted += LoadingCompeted;
-        }
+			//set tasks
+			if (tasks == null)
+				throw new ArgumentNullException("tasks");
+			this.tasks = tasks;
 
-        public SplashForm() : this(null) { }
+			//cosmetics
+			logo = WFUApplication.Images.Resource("wfu_logo_small");
 
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
+			//worker events
+			loadingWorker.DoWork += LoadingThread;
+			loadingWorker.ProgressChanged += LoadingProgress;
+			loadingWorker.RunWorkerCompleted += LoadingCompeted;
+		}
 
-        public override void OnThemeChanged()
-        {
-            base.OnThemeChanged();
-            if (bgBrush != null)
-            {
-                bgBrush.Dispose();
-                bgBrush = null;
-            }
-        }
+		public SplashForm() : this(null) { }
 
-        protected override void OnResize(EventArgs e)
-        {
-            RecalculateActiveArea();
-            base.OnResize(e);            
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        protected override void OnPaintBackground(PaintEventArgs e)
-        {
-            base.OnPaintBackground(e);
-            if (IsDesignMode)
-                return;
+		public override void OnThemeChanged()
+		{
+			base.OnThemeChanged();
+			if (bgBrush != null)
+			{
+				bgBrush.Dispose();
+				bgBrush = null;
+			}
+		}
 
-            ///background gradient
-            Rectangle gradRect = new Rectangle(0, 0, ClientRectangle.Width, ClientRectangle.Height / 2);
-            if (bgBrush == null)
-                bgBrush = new LinearGradientBrush(gradRect,
-                    Theme.ControlDarkColour, Theme.ControlLightColour,
-                    90);
-            e.Graphics.FillRectangle(bgBrush, gradRect);
+		protected override void OnResize(EventArgs e)
+		{
+			RecalculateActiveArea();
+			base.OnResize(e);
+		}
 
-            //lines at top and bottom
-            e.Graphics.FillRectangle(Theme.HighlightLightBrush, 0, 0, ClientRectangle.Width, 8);
-            e.Graphics.FillRectangle(Theme.HighlightMidBrush, 0, ClientRectangle.Height-4, ClientRectangle.Width, 4);
-        }
+		protected override void OnPaintBackground(PaintEventArgs e)
+		{
+			base.OnPaintBackground(e);
+			if (IsDesignMode)
+				return;
 
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            if (IsDesignMode)
-                return;
+			///background gradient
+			Rectangle gradRect = new Rectangle(0, 0, ClientRectangle.Width, ClientRectangle.Height / 2);
+			if (bgBrush == null)
+				bgBrush = new LinearGradientBrush(gradRect,
+					Theme.ControlDarkColour, Theme.ControlLightColour,
+					90);
+			e.Graphics.FillRectangle(bgBrush, gradRect);
 
-            e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
+			//lines at top and bottom
+			e.Graphics.FillRectangle(Theme.HighlightLightBrush, 0, 0, ClientRectangle.Width, 8);
+			e.Graphics.FillRectangle(Theme.HighlightMidBrush, 0, ClientRectangle.Height - 4, ClientRectangle.Width, 4);
+		}
 
-            if (PreDraw != null)
-                PreDraw(e);
+		protected override void OnPaint(PaintEventArgs e)
+		{
+			base.OnPaint(e);
+			if (IsDesignMode)
+				return;
 
-            //logo
-            if (logo != null)
-                e.Graphics.DrawImage(logo, activeArea.Location);
-            
-            //title
-            e.Graphics.DrawString(
-                WFUApplication.Name,
-                Theme.TitleFont,
-                Theme.TextLightBrush,
-                new Point(activeArea.Left * 2 + logo.Width, activeArea.Top),
-                StringFormat.GenericTypographic);
+			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
-            //edition
-            int top = activeArea.Top + 2 * logo.Height;
-            string text = WFUApplication.Edition + " Edition";
-            SizeF sz = e.Graphics.MeasureString(
-                text,
-                Theme.SubtitleFont,
-                activeArea.Width,
-                StringFormat.GenericTypographic);
-            e.Graphics.DrawString(
-                text,
-                Theme.SubtitleFont,
-                Theme.TextLightBrush,
-                new Point(activeArea.Left, top),
-                StringFormat.GenericTypographic);
+			if (PreDraw != null)
+				PreDraw(e);
 
-            //version
-            top += (int)sz.Height;
-            e.Graphics.DrawString(
-                "v" + WFUApplication.AssemblyVersion.ToString(),
-                Theme.SubtitleFont,
-                Theme.TextDarkBrush,
-                new Point(activeArea.Left, top),
-                StringFormat.GenericTypographic);
+			//logo
+			if (logo != null)
+				e.Graphics.DrawImage(logo, activeArea.Location);
 
-            //debug notice
+			//title
+			e.Graphics.DrawString(
+				WFUApplication.Name,
+				Theme.TitleFont,
+				Theme.TextLightBrush,
+				new Point(activeArea.Left * 2 + logo.Width, activeArea.Top),
+				StringFormat.GenericTypographic);
+
+			//edition
+			int top = activeArea.Top + 2 * logo.Height;
+			string text = WFUApplication.Edition + " Edition";
+			SizeF sz = e.Graphics.MeasureString(
+				text,
+				Theme.SubtitleFont,
+				activeArea.Width,
+				StringFormat.GenericTypographic);
+			e.Graphics.DrawString(
+				text,
+				Theme.SubtitleFont,
+				Theme.TextLightBrush,
+				new Point(activeArea.Left, top),
+				StringFormat.GenericTypographic);
+
+			//version
+			top += (int)sz.Height;
+			e.Graphics.DrawString(
+				"v" + WFUApplication.AssemblyVersion.ToString(),
+				Theme.SubtitleFont,
+				Theme.TextDarkBrush,
+				new Point(activeArea.Left, top),
+				StringFormat.GenericTypographic);
+
+			//debug notice
 #if DEBUG
-            top += (int)sz.Height;
+			top += (int)sz.Height;
 
-            e.Graphics.DrawString(
-                "[Debug Compilation]",
-                Theme.SubtitleFont,
-                Theme.WarningBrush,
-                new Point(activeArea.Left, top),
-                StringFormat.GenericTypographic);
+			e.Graphics.DrawString(
+				"[Debug Compilation]",
+				Theme.SubtitleFont,
+				Theme.WarningBrush,
+				new Point(activeArea.Left, top),
+				StringFormat.GenericTypographic);
 #endif
-     
-            //status string
-            if (Status.Length > 0)
-            {
-                sz = e.Graphics.MeasureString(
-                    Status,
-                    Font,
-                    activeArea.Width,
-                    StringFormat.GenericTypographic);
-                e.Graphics.DrawString(
-                    Status,
-                    Font,
-                    Theme.TextDarkBrush,
-                    new PointF(activeArea.Left, progressBar.Top-sz.Height*1.5f),
-                    StringFormat.GenericTypographic);
-            }
 
-            if (PostDraw != null)
-                PostDraw(e);
-        }
+			//status string
+			if (Status.Length > 0)
+			{
+				sz = e.Graphics.MeasureString(
+					Status,
+					Font,
+					activeArea.Width,
+					StringFormat.GenericTypographic);
+				e.Graphics.DrawString(
+					Status,
+					Font,
+					Theme.TextDarkBrush,
+					new PointF(activeArea.Left, progressBar.Top - sz.Height * 1.5f),
+					StringFormat.GenericTypographic);
+			}
 
-        protected override void OnFirstShown(EventArgs e)
-        {
-            base.OnFirstShown(e);
-            if (IsDesignMode || loadingWorker.IsBusy)
-                return;
-            loadingWorker.RunWorkerAsync(tasks);
-        }
+			if (PostDraw != null)
+				PostDraw(e);
+		}
 
-        protected override void OnFormClosing(FormClosingEventArgs e)
-        {
-            if (loadingWorker.IsBusy && e.CloseReason == CloseReason.UserClosing)
-                e.Cancel = true;
-            else
-                base.OnFormClosing(e);
-        }
+		protected override void OnFirstShown(EventArgs e)
+		{
+			base.OnFirstShown(e);
+			if (IsDesignMode || loadingWorker.IsBusy)
+				return;
+			loadingWorker.RunWorkerAsync(tasks);
+		}
 
-        protected override void OnLoad(EventArgs e)
-        {
-            base.OnLoad(e);
-            RecalculateActiveArea();
-        }
+		protected override void OnFormClosing(FormClosingEventArgs e)
+		{
+			if (loadingWorker.IsBusy && e.CloseReason == CloseReason.UserClosing)
+				e.Cancel = true;
+			else
+				base.OnFormClosing(e);
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
+		protected override void OnLoad(EventArgs e)
+		{
+			base.OnLoad(e);
+			RecalculateActiveArea();
+		}
 
-        private void LoadingThread(object sender, DoWorkEventArgs e)
-        {
-            BackgroundWorker worker = (BackgroundWorker)sender;
-            List<Func<bool>> tasks = (List<Func<bool>>)e.Argument;
+		/////////////////////////////////////////////////////////////////////
+		// PRIVATE METHODS
+		/////////////////////////////////////////////////////////////////////
 
-            for (int i = 0; i < tasks.Count; i++)
-            {
-                if (!tasks[i]())
-                {
-                    e.Cancel = true;
-                    break;
-                }
-                worker.ReportProgress(MathHelper.WholePercentage(i + 1, tasks.Count));
-            }
-        }
+		private void LoadingThread(object sender, DoWorkEventArgs e)
+		{
+			BackgroundWorker worker = (BackgroundWorker)sender;
+			List<Func<bool>> tasks = (List<Func<bool>>)e.Argument;
 
-        private void LoadingProgress(object sender, ProgressChangedEventArgs e)
-        {
-            progressBar.Value = e.ProgressPercentage;
-            Refresh();
-        }
+			for (int i = 0; i < tasks.Count; i++)
+			{
+				if (!tasks[i]())
+				{
+					e.Cancel = true;
+					break;
+				}
+				worker.ReportProgress(MathHelper.WholePercentage(i + 1, tasks.Count));
+			}
+		}
 
-        private void LoadingCompeted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            if (e.Error != null || e.Cancelled)
-                WFUApplication.MainForm.Close();
-            else
-            {
-                WFUApplication.SplashLoadingFinished = true;
-                Close();
-            }
-        }
+		private void LoadingProgress(object sender, ProgressChangedEventArgs e)
+		{
+			progressBar.Value = e.ProgressPercentage;
+			Refresh();
+		}
 
-        private void RecalculateActiveArea()
-        {
-            int top = ClientRectangle.Height - progressBar.Bottom;
-            activeArea = new Rectangle(progressBar.Left,
-                top,
-                ClientRectangle.Width - (progressBar.Left * 2),
-                progressBar.Top - top);
-        }
-    }
+		private void LoadingCompeted(object sender, RunWorkerCompletedEventArgs e)
+		{
+			if (e.Error != null || e.Cancelled)
+				WFUApplication.MainForm.Close();
+			else
+			{
+				WFUApplication.SplashLoadingFinished = true;
+				Close();
+			}
+		}
+
+		private void RecalculateActiveArea()
+		{
+			int top = ClientRectangle.Height - progressBar.Bottom;
+			activeArea = new Rectangle(progressBar.Left,
+				top,
+				ClientRectangle.Width - (progressBar.Left * 2),
+				progressBar.Top - top);
+		}
+	}
 }

@@ -13,43 +13,43 @@ namespace WiFindUs
 {
 	public static class WFUApplication
 	{
-        private static Random random = new Random();
-        private static string executablePath = "";
-        private static Version assemblyVersion = null;
-        private static string entryAssemblyName = "";
-        private static AssemblyName entryAssemblyNameObject = null;
-        private static Assembly entryAssembly = null;
-        private static string logPath = "";
-        private static bool usesMutex = false;
-        private static string applicationDescription = "A WiFindUs application.";
-        private static string applicationCompany = "WiFindUs";
-        private static string applicationName = "Program";
-        private static string applicationEdition = "Standard";
-        private static bool running = false;
-        private static bool readOnly = false;
-        private static Type mainFormType = null;
-        private static MainForm mainForm = null;
-        private static string mutexOverride = "";
-        private static string mutexOverrideErrorMessage = "";
-        private static string appDataFolderName = "";
-        private static string executableDirectoryPath = "";
-        private static string configPaths = "";
-        private static Icon hostIcon = null;
-        private static volatile ConfigFile config = null;
-        private static ResourceLoader<Image> imageLoader = new ResourceLoader<Image>(Image.FromFile);
-        private static Mutex mutex = null;
-        private static List<Func<object, bool>> loadingTasks = new List<Func<object, bool>>();
-        private static SplashForm splashForm = null;
-        private static bool splashLoadingFinished = false;
-        private static Theme theme = new Theme();
-        private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
-        private static Action<MainForm> mainLaunchAction = null;
+		private static Random random = new Random();
+		private static string executablePath = "";
+		private static Version assemblyVersion = null;
+		private static string entryAssemblyName = "";
+		private static AssemblyName entryAssemblyNameObject = null;
+		private static Assembly entryAssembly = null;
+		private static string logPath = "";
+		private static bool usesMutex = false;
+		private static string applicationDescription = "A WiFindUs application.";
+		private static string applicationCompany = "WiFindUs";
+		private static string applicationName = "Program";
+		private static string applicationEdition = "Standard";
+		private static bool running = false;
+		private static bool readOnly = false;
+		private static Type mainFormType = null;
+		private static MainForm mainForm = null;
+		private static string mutexOverride = "";
+		private static string mutexOverrideErrorMessage = "";
+		private static string appDataFolderName = "";
+		private static string executableDirectoryPath = "";
+		private static string configPaths = "";
+		private static Icon hostIcon = null;
+		private static volatile ConfigFile config = null;
+		private static ResourceLoader<Image> imageLoader = new ResourceLoader<Image>(Image.FromFile);
+		private static Mutex mutex = null;
+		private static List<Func<object, bool>> loadingTasks = new List<Func<object, bool>>();
+		private static SplashForm splashForm = null;
+		private static bool splashLoadingFinished = false;
+		private static Theme theme = new Theme();
+		private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
+		private static Action<MainForm> mainLaunchAction = null;
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
-        
-        /// <summary>
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
+
+		/// <summary>
 		/// Returns if a WFUApplication is already running.
 		/// </summary>
 		public static bool Running
@@ -68,7 +68,7 @@ namespace WiFindUs
 				if (readOnly)
 					return;
 				readOnly = value;
-                theme.ReadOnly = value;
+				theme.ReadOnly = value;
 			}
 		}
 
@@ -99,14 +99,14 @@ namespace WiFindUs
 			set { if (!readOnly) applicationName = value; }
 		}
 
-        /// <summary>
-        /// The edition of the application.
-        /// </summary>
-        public static string Edition
-        {
-            get { return applicationEdition; }
-            set { if (!readOnly) applicationEdition = value; }
-        }
+		/// <summary>
+		/// The edition of the application.
+		/// </summary>
+		public static string Edition
+		{
+			get { return applicationEdition; }
+			set { if (!readOnly) applicationEdition = value; }
+		}
 
 		/// <summary>
 		/// The company owning the application.
@@ -158,7 +158,7 @@ namespace WiFindUs
 		/// </summary>
 		public static string AppDataFolderName
 		{
-			get { return appDataFolderName; } 
+			get { return appDataFolderName; }
 			set { if (!readOnly) appDataFolderName = value; }
 		}
 
@@ -363,115 +363,115 @@ namespace WiFindUs
 			}
 		}
 
-        /// <summary>
-        /// Returns the ImageLoader instance in use by this application.
-        /// </summary>
-        public static ResourceLoader<Image> Images
-        {
-            get { return imageLoader; }
-        }
+		/// <summary>
+		/// Returns the ImageLoader instance in use by this application.
+		/// </summary>
+		public static ResourceLoader<Image> Images
+		{
+			get { return imageLoader; }
+		}
 
-        /// <summary>
-        /// The base list of tasks passed to the splash screen for application initialization. 
-        /// This is merged with the overridable list from your MainForm(), which is passed via StartSplashLoading().
-        /// </summary>
-        private static List<Func<bool>> LoadingTasks
-        {
-            get
-            {
-                List<Func<bool>> tasks = new List<Func<bool>>();
-                tasks.Add(InitializeDebugger);
-                tasks.Add(CheckAppDataPath);
-                tasks.Add(LoadConfigFiles);
-                return tasks;
-            }
-        }
+		/// <summary>
+		/// The base list of tasks passed to the splash screen for application initialization. 
+		/// This is merged with the overridable list from your MainForm(), which is passed via StartSplashLoading().
+		/// </summary>
+		private static List<Func<bool>> LoadingTasks
+		{
+			get
+			{
+				List<Func<bool>> tasks = new List<Func<bool>>();
+				tasks.Add(InitializeDebugger);
+				tasks.Add(CheckAppDataPath);
+				tasks.Add(LoadConfigFiles);
+				return tasks;
+			}
+		}
 
-        /// <summary>
-        /// Gets or sets the splash screen loading completion status.
-        /// This can only be set to true once (the splash form does this itself);
-        /// doing so restores the main form so regular application use may begin.
-        /// </summary>
-        public static bool SplashLoadingFinished
-        {
-            get { return splashLoadingFinished; }
-            set
-            {
-                if (!value || splashLoadingFinished)
-                    return;
-                splashLoadingFinished = true;
-                mainForm.ShowInTaskbar = true;
-                mainForm.WindowState = FormWindowState.Normal;
-                mainForm.ShowForm();
-                splashForm = null;
-            }
-        }
+		/// <summary>
+		/// Gets or sets the splash screen loading completion status.
+		/// This can only be set to true once (the splash form does this itself);
+		/// doing so restores the main form so regular application use may begin.
+		/// </summary>
+		public static bool SplashLoadingFinished
+		{
+			get { return splashLoadingFinished; }
+			set
+			{
+				if (!value || splashLoadingFinished)
+					return;
+				splashLoadingFinished = true;
+				mainForm.ShowInTaskbar = true;
+				mainForm.WindowState = FormWindowState.Normal;
+				mainForm.ShowForm();
+				splashForm = null;
+			}
+		}
 
-        /// <summary>
-        /// Gets or sets the current status string displayed by the splash form.
-        /// </summary>
-        public static string SplashStatus
-        {
-            get { return splashForm == null ? "" : splashForm.Status; }
-            set
-            {
-                Debugger.V("Splash loading: " + (value ?? ""));
-                if (splashForm != null)
-                    splashForm.Status = value;
-            }
-        }
+		/// <summary>
+		/// Gets or sets the current status string displayed by the splash form.
+		/// </summary>
+		public static string SplashStatus
+		{
+			get { return splashForm == null ? "" : splashForm.Status; }
+			set
+			{
+				Debugger.V("Splash loading: " + (value ?? ""));
+				if (splashForm != null)
+					splashForm.Status = value;
+			}
+		}
 
-        /// <summary>
-        /// Gets or sets the colour and font theme in use by this application.
-        /// </summary>
-        public static Theme Theme
-        {
-            get { return theme; }
-            set
-            {
-                if (readOnly || value == null || value == theme)
-                    return;
-                if (theme != null)
-                    theme.Dispose();
-                theme = value;
-            }
-        }
+		/// <summary>
+		/// Gets or sets the colour and font theme in use by this application.
+		/// </summary>
+		public static Theme Theme
+		{
+			get { return theme; }
+			set
+			{
+				if (readOnly || value == null || value == theme)
+					return;
+				if (theme != null)
+					theme.Dispose();
+				theme = value;
+			}
+		}
 
-        /// <summary>
-        /// Gets or sets the Google API key in use by this application.
-        /// </summary>
-        public static string GoogleAPIKey
-        {
-            get { return googleAPIKey; }
-            set { if (!readOnly) googleAPIKey = value ?? ""; }
-        }
+		/// <summary>
+		/// Gets or sets the Google API key in use by this application.
+		/// </summary>
+		public static string GoogleAPIKey
+		{
+			get { return googleAPIKey; }
+			set { if (!readOnly) googleAPIKey = value ?? ""; }
+		}
 
-        /// <summary>
-        /// The action used to trigger the main application loop.
-        /// </summary>
-        public static Action<MainForm> MainLaunchAction
-        {
-            get { return mainLaunchAction; }
-            set { if (!readOnly) mainLaunchAction = value; }
-        }
+		/// <summary>
+		/// The action used to trigger the main application loop.
+		/// </summary>
+		public static Action<MainForm> MainLaunchAction
+		{
+			get { return mainLaunchAction; }
+			set { if (!readOnly) mainLaunchAction = value; }
+		}
 
-        /// <summary>
-        /// An application-wide static random number generation instance.
-        /// </summary>
-        public static Random Random
-        {
-            get { return random; }
-        }
+		/// <summary>
+		/// An application-wide static random number generation instance.
+		/// </summary>
+		public static Random Random
+		{
+			get { return random; }
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        /// <summary>
-        /// Runs your WFUApplication. Handles parsing of command line arguments, loading of
-        /// config files, and initialization of the main form.
-        /// </summary>
-        /// <param name="args">The command line arguments from Main().</param>
+		/// <summary>
+		/// Runs your WFUApplication. Handles parsing of command line arguments, loading of
+		/// config files, and initialization of the main form.
+		/// </summary>
+		/// <param name="args">The command line arguments from Main().</param>
 		public static void Run(String[] args)
 		{
 			if (Running)
@@ -488,20 +488,20 @@ namespace WiFindUs
 				switch (args[i])
 				{
 					case "conf":
-						if (i == args.Length-1)
+						if (i == args.Length - 1)
 							break;
-						string file = args[i+1];
+						string file = args[i + 1];
 						if (File.Exists(file))
-						    configPaths += "|" + file;
+							configPaths += "|" + file;
 						break;
 				}
 			}
 
-            if (UsesMutex && !CreateMutex())
-            {
-                Free();
-                return;
-            }
+			if (UsesMutex && !CreateMutex())
+			{
+				Free();
+				return;
+			}
 
 			//initialize form type
 			Type formType = MainFormType;
@@ -520,137 +520,137 @@ namespace WiFindUs
 			Debugger.V("Setting application visual styles and text rendering properties...");
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
-            Debugger.V("Invoking MainForm constructor...");
-            mainForm = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { });
+			Debugger.V("Invoking MainForm constructor...");
+			mainForm = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { });
 			Debugger.V("Invoking Main() launch action...");
-            if (mainLaunchAction == null)
-                DefaultMainLaunch(mainForm);
-            else
-                mainLaunchAction(mainForm);
-			
+			if (mainLaunchAction == null)
+				DefaultMainLaunch(mainForm);
+			else
+				mainLaunchAction(mainForm);
+
 			Debugger.V("Application terminating...");
 
-            //release resources and close debugger
-            Free();
+			//release resources and close debugger
+			Free();
 		}
 
-        public static void StartSplashLoading(List<Func<bool>> tasks)
-        {
-            if (splashForm != null || splashLoadingFinished)
-                return;
-            Debugger.V("Invoking splash form...");
-            List<Func<bool>> allTasks = LoadingTasks;
-            allTasks.AddRange(tasks);
-            splashForm = new SplashForm(allTasks);
-            splashForm.Show();
-        }
+		public static void StartSplashLoading(List<Func<bool>> tasks)
+		{
+			if (splashForm != null || splashLoadingFinished)
+				return;
+			Debugger.V("Invoking splash form...");
+			List<Func<bool>> allTasks = LoadingTasks;
+			allTasks.AddRange(tasks);
+			splashForm = new SplashForm(allTasks);
+			splashForm.Show();
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PRIVATE METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        private static void DefaultMainLaunch(MainForm mainForm)
-        {
-            Application.Run(mainForm);
-        }
+		private static void DefaultMainLaunch(MainForm mainForm)
+		{
+			Application.Run(mainForm);
+		}
 
-        private static bool CreateMutex()
-        {
-            if (!UsesMutex)
-                return true;
+		private static bool CreateMutex()
+		{
+			if (!UsesMutex)
+				return true;
 
-            try
-            {
-                mutex = Mutex.OpenExisting(MutexName);
-                MessageBox.Show(MutexErrorMessage, Name + " :: Multiple Copies", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-            catch (WaitHandleCannotBeOpenedException)
-            {
-                mutex = new Mutex(true, MutexName);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("An exception was thrown trying to create the Mutex object;\n\n" + e.Message, "Exception creating Mutex", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-            return true;
-        }
+			try
+			{
+				mutex = Mutex.OpenExisting(MutexName);
+				MessageBox.Show(MutexErrorMessage, Name + " :: Multiple Copies", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return false;
+			}
+			catch (WaitHandleCannotBeOpenedException)
+			{
+				mutex = new Mutex(true, MutexName);
+			}
+			catch (Exception e)
+			{
+				MessageBox.Show("An exception was thrown trying to create the Mutex object;\n\n" + e.Message, "Exception creating Mutex", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return false;
+			}
+			return true;
+		}
 
-        private static bool InitializeDebugger()
-        {
-            splashForm.Status = "Initializing debugger";
-            Debugger.Initialize(LogPath,Debugger.Verbosity.All);
-            return true;
-        }
+		private static bool InitializeDebugger()
+		{
+			splashForm.Status = "Initializing debugger";
+			Debugger.Initialize(LogPath, Debugger.Verbosity.All);
+			return true;
+		}
 
-        private static bool CheckAppDataPath()
-        {
-            splashForm.Status = "Verifying file paths";
-            
-            //check data directory
-            if (!Directory.Exists(DataPath))
-            {
-                try
-                {
-                    Directory.CreateDirectory(DataPath);
-                    Debugger.I("DataPath \"" + DataPath + "\" didn't exist; Created OK.");
-                }
-                catch (Exception exc)
-                {
-                    Debugger.Ex(exc);
-                    MessageBox.Show(exc.GetType().ToString() + ": \n\n\"" + exc.Message + "\"\n\nThe application will now exit.", "Exception thrown", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-            }
-            else
-                Debugger.V("DataPath found OK.");
-            
-            return true;
-        }
+		private static bool CheckAppDataPath()
+		{
+			splashForm.Status = "Verifying file paths";
 
-        private static bool LoadConfigFiles()
-        {
-            splashForm.Status = "Loading configuration files";
-            
-            String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
-            config = new ConfigFile(files);
+			//check data directory
+			if (!Directory.Exists(DataPath))
+			{
+				try
+				{
+					Directory.CreateDirectory(DataPath);
+					Debugger.I("DataPath \"" + DataPath + "\" didn't exist; Created OK.");
+				}
+				catch (Exception exc)
+				{
+					Debugger.Ex(exc);
+					MessageBox.Show(exc.GetType().ToString() + ": \n\n\"" + exc.Message + "\"\n\nThe application will now exit.", "Exception thrown", MessageBoxButtons.OK, MessageBoxIcon.Error);
+					return false;
+				}
+			}
+			else
+				Debugger.V("DataPath found OK.");
+
+			return true;
+		}
+
+		private static bool LoadConfigFiles()
+		{
+			splashForm.Status = "Loading configuration files";
+
+			String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+			config = new ConfigFile(files);
 #if DEBUG
-            config.LogMissingKeys = config.Get("config.log_missing_keys", true);
-            Debugger.V(config.ToString());
+			config.LogMissingKeys = config.Get("config.log_missing_keys", true);
+			Debugger.V(config.ToString());
 #else
             config.LogMissingKeys = config.Get("config.log_missing_keys", false);
 #endif
-            
-            return true;
-        }
 
-        private static void Free()
-        {
-            if (theme != null)
-            {
-                theme.Dispose();
-                theme = null;
-            }
-            
-            
-            if (imageLoader != null)
-            {
-                imageLoader.Dispose();
-                imageLoader = null;
-            }
-            
-            if (mutex != null)
-            {
-                Debugger.V("Releasing thread-locking mutex...");
-                mutex.ReleaseMutex();
-                Debugger.V("Released OK.");
-                mutex = null;
-            }
+			return true;
+		}
 
-            Debugger.Dispose();
+		private static void Free()
+		{
+			if (theme != null)
+			{
+				theme.Dispose();
+				theme = null;
+			}
 
-            running = false;
-        }
+
+			if (imageLoader != null)
+			{
+				imageLoader.Dispose();
+				imageLoader = null;
+			}
+
+			if (mutex != null)
+			{
+				Debugger.V("Releasing thread-locking mutex...");
+				mutex.ReleaseMutex();
+				Debugger.V("Released OK.");
+				mutex = null;
+			}
+
+			Debugger.Dispose();
+
+			running = false;
+		}
 	}
 }

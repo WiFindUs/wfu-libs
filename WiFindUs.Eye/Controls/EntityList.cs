@@ -7,109 +7,109 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Controls
 {
-    public class EntityList : ThemedFlowLayoutPanel
-    {
-        private ISelectableGroup selectionGroup = null;
-        private ISelectableGroup defaultSelectionGroup = new SelectableEntityGroup();
-        private List<ISelectable> entities = new List<ISelectable>();
+	public class EntityList : ThemedFlowLayoutPanel
+	{
+		private ISelectableGroup selectionGroup = null;
+		private ISelectableGroup defaultSelectionGroup = new SelectableEntityGroup();
+		private List<ISelectable> entities = new List<ISelectable>();
 
-        public ISelectableGroup SelectionGroup
-        {
-            get
-            {
-                return selectionGroup ?? defaultSelectionGroup;
-            }
-            set
-            {
-                if (entities.Count > 0)
-                    throw new InvalidOperationException("You can only change the selection group of an entity list when it is empty!");
-                ISelectableGroup newValue = value == defaultSelectionGroup ? null : value;
-                if (selectionGroup == newValue)
-                    return;
-                selectionGroup = newValue;
-                foreach (ISelectable entity in entities)
-                    entity.SelectionGroup = SelectionGroup;
-            }
-        }
-        
-        public EntityList()
-        {
-            FlowDirection = FlowDirection.TopDown;
-            AutoScroll = true;
-            VScroll = true;
-            WrapContents = false;
-        }
+		public ISelectableGroup SelectionGroup
+		{
+			get
+			{
+				return selectionGroup ?? defaultSelectionGroup;
+			}
+			set
+			{
+				if (entities.Count > 0)
+					throw new InvalidOperationException("You can only change the selection group of an entity list when it is empty!");
+				ISelectableGroup newValue = value == defaultSelectionGroup ? null : value;
+				if (selectionGroup == newValue)
+					return;
+				selectionGroup = newValue;
+				foreach (ISelectable entity in entities)
+					entity.SelectionGroup = SelectionGroup;
+			}
+		}
 
-        protected override void OnResize(EventArgs eventargs)
-        {
-            base.OnResize(eventargs);
-            ResizeEntityItems();
-        }
+		public EntityList()
+		{
+			FlowDirection = FlowDirection.TopDown;
+			AutoScroll = true;
+			VScroll = true;
+			WrapContents = false;
+		}
 
-        protected override void OnControlAdded(ControlEventArgs e)
-        {
-            base.OnControlAdded(e);
+		protected override void OnResize(EventArgs eventargs)
+		{
+			base.OnResize(eventargs);
+			ResizeEntityItems();
+		}
 
-            EntityListItem elc = e.Control as EntityListItem;
-            if (elc == null)
-                return;
-            if (entities.Contains(elc.Entity))
-                throw new ArgumentOutOfRangeException("e", "An EntityListItem representing that entity is already present in this EntityList!");
-            elc.Theme = Theme;
-            entities.Add(elc.Entity);
-            elc.Entity.SelectionGroup = SelectionGroup;
+		protected override void OnControlAdded(ControlEventArgs e)
+		{
+			base.OnControlAdded(e);
 
-            ResizeEntityItems();
-        }
+			EntityListItem elc = e.Control as EntityListItem;
+			if (elc == null)
+				return;
+			if (entities.Contains(elc.Entity))
+				throw new ArgumentOutOfRangeException("e", "An EntityListItem representing that entity is already present in this EntityList!");
+			elc.Theme = Theme;
+			entities.Add(elc.Entity);
+			elc.Entity.SelectionGroup = SelectionGroup;
 
-        protected override void OnControlRemoved(ControlEventArgs e)
-        {
-            base.OnControlRemoved(e);
-            
-            EntityListItem elc = e.Control as EntityListItem;
-            if (elc == null)
-                return;
+			ResizeEntityItems();
+		}
 
-            entities.Remove(elc.Entity);
-            if (elc.Entity.SelectionGroup == defaultSelectionGroup)
-                elc.Entity.SelectionGroup = null;
-        }
+		protected override void OnControlRemoved(ControlEventArgs e)
+		{
+			base.OnControlRemoved(e);
 
-        protected override void OnClick(EventArgs e)
-        {
-            base.OnClick(e);
-            Focus();
+			EntityListItem elc = e.Control as EntityListItem;
+			if (elc == null)
+				return;
 
-            //do we have any entities?
-            if (entities == null || entities.Count == 0)
-                return;
+			entities.Remove(elc.Entity);
+			if (elc.Entity.SelectionGroup == defaultSelectionGroup)
+				elc.Entity.SelectionGroup = null;
+		}
 
-            //check for any currently selected entities
-            ISelectable[] selectedEntities = SelectionGroup.SelectedEntities;
-            if (selectedEntities == null || selectedEntities.Length == 0)
-                return;
+		protected override void OnClick(EventArgs e)
+		{
+			base.OnClick(e);
+			Focus();
 
-            //check if any of the currently selected elements are in this list
-            foreach (ISelectable entity in selectedEntities)
-                if (entities.Contains(entity))
-                {
-                    SelectionGroup.ClearSelection();
-                    break;
-                }
-        }
+			//do we have any entities?
+			if (entities == null || entities.Count == 0)
+				return;
 
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            base.OnMouseEnter(e);
-            Focus();
-        }
+			//check for any currently selected entities
+			ISelectable[] selectedEntities = SelectionGroup.SelectedEntities;
+			if (selectedEntities == null || selectedEntities.Length == 0)
+				return;
 
-        private void ResizeEntityItems()
-        {
-            this.SuspendAllLayout();
-            foreach (EntityListItem elitems in Controls.OfType<EntityListItem>())
-                elitems.Width = ClientRectangle.Width - 1;
-            this.ResumeAllLayout(true);
-        }
-    }
+			//check if any of the currently selected elements are in this list
+			foreach (ISelectable entity in selectedEntities)
+				if (entities.Contains(entity))
+				{
+					SelectionGroup.ClearSelection();
+					break;
+				}
+		}
+
+		protected override void OnMouseEnter(EventArgs e)
+		{
+			base.OnMouseEnter(e);
+			Focus();
+		}
+
+		private void ResizeEntityItems()
+		{
+			this.SuspendAllLayout();
+			foreach (EntityListItem elitems in Controls.OfType<EntityListItem>())
+				elitems.Width = ClientRectangle.Width - 1;
+			this.ResumeAllLayout(true);
+		}
+	}
 }

@@ -6,58 +6,58 @@ using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave.Adapter
 {
-    public class MapGame : Game
-    {
-        public event Action<MapScene> SceneStarted;
-        private MapScene scene;
-        private MapApplication hostApplication;
-       
-        public MapScene Scene
-        {
-            get
-            {
-                return scene;
-            }
-        }
+	public class MapGame : Game
+	{
+		public event Action<MapScene> SceneStarted;
+		private MapScene scene;
+		private MapApplication hostApplication;
 
-        public MapApplication HostApplication
-        {
-            get { return hostApplication; }
-        }
+		public MapScene Scene
+		{
+			get
+			{
+				return scene;
+			}
+		}
 
-        public MapControl HostControl
-        {
-            get { return hostApplication.HostControl; }
-        }
+		public MapApplication HostApplication
+		{
+			get { return hostApplication; }
+		}
 
-        public MapGame(MapApplication hostApplication)
-        {
-            if (hostApplication == null)
-                throw new ArgumentNullException("HostApplication", "MapGame cannot be instantiated outside of a host MapApplication.");
-            this.hostApplication = hostApplication;
-        }
-        
-        public override void Initialize(IApplication application)
-        {
-            base.Initialize(application);
-            scene = new MapScene(this);
-            scene.SceneStarted += scene_SceneStarted;
-            scene.Initialize(WaveServices.GraphicsDevice);
+		public MapControl HostControl
+		{
+			get { return hostApplication.HostControl; }
+		}
 
-            ScreenContext sc = new ScreenContext(scene);
-            WaveServices.ScreenContextManager.To(sc);
-        }
+		public MapGame(MapApplication hostApplication)
+		{
+			if (hostApplication == null)
+				throw new ArgumentNullException("HostApplication", "MapGame cannot be instantiated outside of a host MapApplication.");
+			this.hostApplication = hostApplication;
+		}
 
-        public void CancelThreads()
-        {
-            if (scene != null)
-                scene.CancelThreads();
-        }
+		public override void Initialize(IApplication application)
+		{
+			base.Initialize(application);
+			scene = new MapScene(this);
+			scene.SceneStarted += scene_SceneStarted;
+			scene.Initialize(WaveServices.GraphicsDevice);
 
-        private void scene_SceneStarted(MapScene obj)
-        {
-            if (SceneStarted != null)
-                SceneStarted(scene);
-        }
-    }
+			ScreenContext sc = new ScreenContext(scene);
+			WaveServices.ScreenContextManager.To(sc);
+		}
+
+		public void CancelThreads()
+		{
+			if (scene != null)
+				scene.CancelThreads();
+		}
+
+		private void scene_SceneStarted(MapScene obj)
+		{
+			if (SceneStarted != null)
+				SceneStarted(scene);
+		}
+	}
 }

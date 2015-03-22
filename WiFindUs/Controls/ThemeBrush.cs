@@ -3,70 +3,70 @@ using System.Drawing;
 
 namespace WiFindUs.Controls
 {
-    public class ThemeBrush : IDisposable
-    {
-        private Color color;
-        private Brush brush;
-        private bool disposed = false;
+	public class ThemeBrush : IDisposable
+	{
+		private Color color;
+		private Brush brush;
+		private bool disposed = false;
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        public Color Color
-        {
-            get { return color; }
-            set
-            {
-                if (color.Equals(value))
-                    return;
-                color = value;
-                if (brush != null)
-                    brush.Dispose();
-                brush = new SolidBrush(color);
-            }
-        }
+		public Color Color
+		{
+			get { return color; }
+			set
+			{
+				if (color.Equals(value))
+					return;
+				color = value;
+				if (brush != null)
+					brush.Dispose();
+				brush = new SolidBrush(color);
+			}
+		}
 
-        public Brush Brush
-        {
-            get { return brush; }
-        }
+		public Brush Brush
+		{
+			get { return brush; }
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// CONSTRUCTORS
+		/////////////////////////////////////////////////////////////////////
 
-        public ThemeBrush(Color color)
-        {
-            Color = color;
-        }
-        
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
+		public ThemeBrush(Color color)
+		{
+			Color = color;
+		}
 
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
-                return;
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
 
-            if (disposing)
-            {
-                if (brush != null)
-                    brush.Dispose();
-            }
+		protected virtual void Dispose(bool disposing)
+		{
+			if (disposed)
+				return;
 
-            disposed = true;
-        }
-    }
+			if (disposing)
+			{
+				if (brush != null)
+					brush.Dispose();
+			}
+
+			disposed = true;
+		}
+	}
 }

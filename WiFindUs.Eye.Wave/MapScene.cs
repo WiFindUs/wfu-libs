@@ -17,561 +17,561 @@ using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class MapScene : Scene, IThemeable
-    {
-        public event Action<MapScene> SceneStarted;
-        public event Action<MapScene> CameraChanged, CameraFrustumChanged;
-        
-        private const float CAM_MIN_ZOOM = 100.0f;
-        private const float CAM_MAX_ZOOM = 2000.0f;
-        private const float CAM_MIN_ANGLE = (float)(Math.PI/7.0);
-        private const float CAM_MAX_ANGLE = (float)(Math.PI/2.01);
-        private const float ZOOM_RATE = 1.0f;
-        private const float TILT_RATE = 1.0f;
-        public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM+1;
+	public class MapScene : Scene, IThemeable
+	{
+		public event Action<MapScene> SceneStarted;
+		public event Action<MapScene> CameraChanged, CameraFrustumChanged;
 
-        private MapGame hostGame;
-        private EyeMainForm eyeForm;
-        private Theme theme;
-        private FixedCamera camera;
-        private ILocation center;
-        private Entity[][,] tiles;
-        private Entity groundPlane;
-        private BoxCollider groundPlaneCollider;
-        private TerrainTile baseTile;
-        private uint visibleLayer = uint.MaxValue;
-        private float cameraZoom = 1.0f; //percentage
-        private float cameraTilt = 0.0f; //percentage
-        private Camera3D cameraTransform;
-        private bool autoUpdateCamera = true;
-        private bool cameraDirty = false;
-        private Ray cameraRay;
-        private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
-        private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
-        private List<Marker> allMarkers = new List<Marker>();
-        private MapSceneInput inputBehaviour;
-        
-        //camera frustum
-        private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
+		private const float CAM_MIN_ZOOM = 100.0f;
+		private const float CAM_MAX_ZOOM = 2000.0f;
+		private const float CAM_MIN_ANGLE = (float)(Math.PI / 7.0);
+		private const float CAM_MAX_ANGLE = (float)(Math.PI / 2.01);
+		private const float ZOOM_RATE = 1.0f;
+		private const float TILT_RATE = 1.0f;
+		public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM + 1;
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+		private MapGame hostGame;
+		private EyeMainForm eyeForm;
+		private Theme theme;
+		private FixedCamera camera;
+		private ILocation center;
+		private Entity[][,] tiles;
+		private Entity groundPlane;
+		private BoxCollider groundPlaneCollider;
+		private TerrainTile baseTile;
+		private uint visibleLayer = uint.MaxValue;
+		private float cameraZoom = 1.0f; //percentage
+		private float cameraTilt = 0.0f; //percentage
+		private Camera3D cameraTransform;
+		private bool autoUpdateCamera = true;
+		private bool cameraDirty = false;
+		private Ray cameraRay;
+		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
+		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
+		private List<Marker> allMarkers = new List<Marker>();
+		private MapSceneInput inputBehaviour;
 
-        public Theme Theme
-        {
-            get
-            {
-                return theme;
-            }
-            set
-            {
-                if (value == null || value == theme)
-                    return;
+		//camera frustum
+		private ILocation cameraNW, cameraSW, cameraNE, cameraSE, cameraPos, cameraAim;
 
-                theme = value;
-                if (camera != null)
-                    camera.BackgroundColor = new Color(
-                        theme.ControlDarkColour.R, theme.ControlDarkColour.G,
-                        theme.ControlDarkColour.B, theme.ControlDarkColour.A);
-                OnThemeChanged();
-            }
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        public ILocation CenterLocation
-        {
-            get { return center; }
-            set
-            {
-                if (value == null || value.Equals(center))
-                    return;
-                Debugger.I("Setting map center to " + value.ToString());
-                center = value;
-                UpdateTileLocations();
-                UpdateCameraPosition();
-            }
-        }
+		public Theme Theme
+		{
+			get
+			{
+				return theme;
+			}
+			set
+			{
+				if (value == null || value == theme)
+					return;
 
-        public bool CameraAutoUpdate
-        {
-            get { return autoUpdateCamera; }
-            set
-            {
-                autoUpdateCamera = value;
-                if (autoUpdateCamera && cameraDirty)
-                    UpdateCameraPosition();
-            }
-        }
+				theme = value;
+				if (camera != null)
+					camera.BackgroundColor = new Color(
+						theme.ControlDarkColour.R, theme.ControlDarkColour.G,
+						theme.ControlDarkColour.B, theme.ControlDarkColour.A);
+				OnThemeChanged();
+			}
+		}
 
-        public uint VisibleLayer
-        {
-            get
-            {
-                return visibleLayer;
-            }
-            protected set
-            {
-                uint layer = value >= tiles.Length ? (uint)tiles.Length - 1 : value;
-                if (layer == visibleLayer)
-                    return;
+		public ILocation CenterLocation
+		{
+			get { return center; }
+			set
+			{
+				if (value == null || value.Equals(center))
+					return;
+				Debugger.I("Setting map center to " + value.ToString());
+				center = value;
+				UpdateTileLocations();
+				UpdateCameraPosition();
+			}
+		}
 
-                Tiles((tile) =>
-                {
-                    tile.Owner.IsVisible
-                        = tile.Owner.IsActive
-                        = tile.Owner.FindComponent<BoxCollider>().IsActive
-                        = false;
-                }, -1, -1, (int)layer);
+		public bool CameraAutoUpdate
+		{
+			get { return autoUpdateCamera; }
+			set
+			{
+				autoUpdateCamera = value;
+				if (autoUpdateCamera && cameraDirty)
+					UpdateCameraPosition();
+			}
+		}
 
-                visibleLayer = layer;
+		public uint VisibleLayer
+		{
+			get
+			{
+				return visibleLayer;
+			}
+			protected set
+			{
+				uint layer = value >= tiles.Length ? (uint)tiles.Length - 1 : value;
+				if (layer == visibleLayer)
+					return;
 
-                Tiles((tile) =>
-                {
-                    tile.Owner.IsVisible
-                        = tile.Owner.IsActive
-                        = tile.Owner.FindComponent<BoxCollider>().IsActive
-                        = true;
-                },(int)visibleLayer, (int)visibleLayer);
-            }
-        }
+				Tiles((tile) =>
+				{
+					tile.Owner.IsVisible
+						= tile.Owner.IsActive
+						= tile.Owner.FindComponent<BoxCollider>().IsActive
+						= false;
+				}, -1, -1, (int)layer);
 
-        public uint LayerCount
-        {
-            get { return (uint)tiles.Length; }
-        }
+				visibleLayer = layer;
 
-        public float CameraZoom
-        {
-            get { return cameraZoom; }
-            set
-            {
-                float zoom = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
-                if (zoom.Tolerance(cameraZoom,0.001f))
-                    return;
-                cameraZoom = zoom;
-                VisibleLayer = (uint)((1.0f - cameraZoom) * (float)tiles.Length);
-                if (autoUpdateCamera)
-                    UpdateCameraPosition();
-                else
-                    cameraDirty = true;
-            }
-        }
+				Tiles((tile) =>
+				{
+					tile.Owner.IsVisible
+						= tile.Owner.IsActive
+						= tile.Owner.FindComponent<BoxCollider>().IsActive
+						= true;
+				}, (int)visibleLayer, (int)visibleLayer);
+			}
+		}
 
-        public float CameraTilt
-        {
-            get { return cameraTilt; }
-            set
-            {
-                float tilt = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
-                if (tilt.Tolerance(cameraTilt, 0.001f))
-                    return;
-                cameraTilt = tilt;
-                if (autoUpdateCamera)
-                    UpdateCameraPosition();
-                else
-                    cameraDirty = true;
-            }
-        }
+		public uint LayerCount
+		{
+			get { return (uint)tiles.Length; }
+		}
 
-        public Vector3 CameraTarget
-        {
-            get { return cameraTransform == null ? Vector3.Zero : cameraTransform.LookAt; }
-            set
-            {
-                if (cameraTransform == null)
-                    return;
-                cameraTransform.LookAt = new Vector3(
-                    value.X < baseTile.TopLeft.X ? baseTile.TopLeft.X : (value.X > baseTile.BottomRight.X ? baseTile.BottomRight.X : value.X),
-                    value.Y,
-                    value.Z < baseTile.TopLeft.Z ? baseTile.TopLeft.Z : (value.Z > baseTile.BottomRight.Z ? baseTile.BottomRight.Z : value.Z)
-                    );
-                if (autoUpdateCamera)
-                    UpdateCameraPosition();
-                else
-                    cameraDirty = true;
-            }
-        }
+		public float CameraZoom
+		{
+			get { return cameraZoom; }
+			set
+			{
+				float zoom = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
+				if (zoom.Tolerance(cameraZoom, 0.001f))
+					return;
+				cameraZoom = zoom;
+				VisibleLayer = (uint)((1.0f - cameraZoom) * (float)tiles.Length);
+				if (autoUpdateCamera)
+					UpdateCameraPosition();
+				else
+					cameraDirty = true;
+			}
+		}
 
-        public TerrainTile BaseTile
-        {
-            get { return baseTile; }
-        }
+		public float CameraTilt
+		{
+			get { return cameraTilt; }
+			set
+			{
+				float tilt = value < 0.0f ? 0.0f : (value > 1.0f ? 1.0f : value);
+				if (tilt.Tolerance(cameraTilt, 0.001f))
+					return;
+				cameraTilt = tilt;
+				if (autoUpdateCamera)
+					UpdateCameraPosition();
+				else
+					cameraDirty = true;
+			}
+		}
 
-        public ILocation CameraNorthWest
-        {
-            get { return cameraNW; }
-        }
+		public Vector3 CameraTarget
+		{
+			get { return cameraTransform == null ? Vector3.Zero : cameraTransform.LookAt; }
+			set
+			{
+				if (cameraTransform == null)
+					return;
+				cameraTransform.LookAt = new Vector3(
+					value.X < baseTile.TopLeft.X ? baseTile.TopLeft.X : (value.X > baseTile.BottomRight.X ? baseTile.BottomRight.X : value.X),
+					value.Y,
+					value.Z < baseTile.TopLeft.Z ? baseTile.TopLeft.Z : (value.Z > baseTile.BottomRight.Z ? baseTile.BottomRight.Z : value.Z)
+					);
+				if (autoUpdateCamera)
+					UpdateCameraPosition();
+				else
+					cameraDirty = true;
+			}
+		}
 
-        public ILocation CameraNorthEast
-        {
-            get { return cameraNE; }
-        }
+		public TerrainTile BaseTile
+		{
+			get { return baseTile; }
+		}
 
-        public ILocation CameraSouthEast
-        {
-            get { return cameraSE; }
-        }
+		public ILocation CameraNorthWest
+		{
+			get { return cameraNW; }
+		}
 
-        public ILocation CameraSouthWest
-        {
-            get { return cameraSW; }
-        }
+		public ILocation CameraNorthEast
+		{
+			get { return cameraNE; }
+		}
 
-        public ILocation CameraLocation
-        {
-            get { return cameraPos; }
-        }
+		public ILocation CameraSouthEast
+		{
+			get { return cameraSE; }
+		}
 
-        public ILocation CameraAimLocation
-        {
-            get { return cameraAim; }
-        }
+		public ILocation CameraSouthWest
+		{
+			get { return cameraSW; }
+		}
 
-        public MapGame HostGame
-        {
-            get { return hostGame; }
-        }
+		public ILocation CameraLocation
+		{
+			get { return cameraPos; }
+		}
 
-        public MapApplication HostApplication
-        {
-            get { return hostGame.HostApplication; }
-        }
+		public ILocation CameraAimLocation
+		{
+			get { return cameraAim; }
+		}
 
-        public MapControl HostControl
-        {
-            get { return hostGame.HostControl; }
-        }
+		public MapGame HostGame
+		{
+			get { return hostGame; }
+		}
 
-        public List<DeviceMarker> DeviceMarkers
-        {
-            get { return deviceMarkers; }
-        }
+		public MapApplication HostApplication
+		{
+			get { return hostGame.HostApplication; }
+		}
 
-        public List<NodeMarker> NodeMarkers
-        {
-            get { return nodeMarkers; }
-        }
+		public MapControl HostControl
+		{
+			get { return hostGame.HostControl; }
+		}
 
-        public bool DebugMode
-        {
-            get
-            {
-                return RenderManager.DebugLines;
-            }
-            set
-            {
-                if (value == DebugMode)
-                    return;
-                RenderManager.DebugLines = value;
-                WaveServices.ScreenContextManager.SetDiagnosticsActive(value);
-                Debugger.C(value ? "Debug drawing enabled. Press F2 to disable." : "Debug drawing disabled.");
-            }
-        }
+		public List<DeviceMarker> DeviceMarkers
+		{
+			get { return deviceMarkers; }
+		}
 
-        public MapSceneInput InputBehaviour
-        {
-            get { return inputBehaviour; }
-        }
+		public List<NodeMarker> NodeMarkers
+		{
+			get { return nodeMarkers; }
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        /////////////////////////////////////////////////////////////////////
+		public bool DebugMode
+		{
+			get
+			{
+				return RenderManager.DebugLines;
+			}
+			set
+			{
+				if (value == DebugMode)
+					return;
+				RenderManager.DebugLines = value;
+				WaveServices.ScreenContextManager.SetDiagnosticsActive(value);
+				Debugger.C(value ? "Debug drawing enabled. Press F2 to disable." : "Debug drawing disabled.");
+			}
+		}
 
-        public MapScene(MapGame hostGame)
-        {
-            if (hostGame == null)
-                throw new ArgumentNullException("hostGame", "MapScene cannot be instantiated outside of a host MapGame.");
-            this.hostGame = hostGame;
-            HostApplication.ScreenResized += HostApplication_ScreenResized;
-        }
+		public MapSceneInput InputBehaviour
+		{
+			get { return inputBehaviour; }
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// CONSTRUCTORS
+		/////////////////////////////////////////////////////////////////////
 
-        public virtual void OnThemeChanged()
-        {
+		public MapScene(MapGame hostGame)
+		{
+			if (hostGame == null)
+				throw new ArgumentNullException("hostGame", "MapScene cannot be instantiated outside of a host MapGame.");
+			this.hostGame = hostGame;
+			HostApplication.ScreenResized += HostApplication_ScreenResized;
+		}
 
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        public Vector3 LocationToVector(ILocation loc)
-        {
-            if (baseTile == null)
-                return Vector3.Zero;
-            return baseTile.LocationToVector(loc);
-        }
+		public virtual void OnThemeChanged()
+		{
 
-        public ILocation VectorToLocation(Vector3 vec)
-        {
-            if (baseTile == null || baseTile.Region == null)
-                return WiFindUs.Eye.Location.EMPTY;
+		}
 
-            return new Location(
-                baseTile.Region.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LatitudinalSpan,
-                baseTile.Region.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LongitudinalSpan
-                );
-        }
+		public Vector3 LocationToVector(ILocation loc)
+		{
+			if (baseTile == null)
+				return Vector3.Zero;
+			return baseTile.LocationToVector(loc);
+		}
 
-        public ILocation LocationFromScreenRay(int x, int y)
-        {
-            if (groundPlaneCollider == null)
-                return null;
+		public ILocation VectorToLocation(Vector3 vec)
+		{
+			if (baseTile == null || baseTile.Region == null)
+				return WiFindUs.Eye.Location.EMPTY;
 
-            //set up ray
-            ConfigureScreenRay(x,y);
+			return new Location(
+				baseTile.Region.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LatitudinalSpan,
+				baseTile.Region.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LongitudinalSpan
+				);
+		}
 
-            //test for collision with ground plane
-            float? result = groundPlaneCollider.Intersects(ref cameraRay);
-            if (!result.HasValue)
-                return null;
+		public ILocation LocationFromScreenRay(int x, int y)
+		{
+			if (groundPlaneCollider == null)
+				return null;
 
-            //return result
-            return VectorToLocation(cameraRay.Position + cameraRay.Direction * result.Value);
-        }
+			//set up ray
+			ConfigureScreenRay(x, y);
 
-        public Marker[] MarkersFromScreenRay(int x, int y)
-        {
-            if (deviceMarkers.Count == 0 && nodeMarkers.Count == 0)
-                return new Marker[0];
+			//test for collision with ground plane
+			float? result = groundPlaneCollider.Intersects(ref cameraRay);
+			if (!result.HasValue)
+				return null;
 
-            List<Marker> markers = new List<Marker>();
+			//return result
+			return VectorToLocation(cameraRay.Position + cameraRay.Direction * result.Value);
+		}
 
-            //set up ray
-            ConfigureScreenRay(x, y);
+		public Marker[] MarkersFromScreenRay(int x, int y)
+		{
+			if (deviceMarkers.Count == 0 && nodeMarkers.Count == 0)
+				return new Marker[0];
 
-            //check nodes
-            foreach (Marker marker in allMarkers)
-                if (marker.Transform3D != null
-                    && marker.BoxCollider != null
-                    && marker.BoxCollider.Intersects(ref cameraRay).HasValue)
-                    markers.Add(marker);
+			List<Marker> markers = new List<Marker>();
 
-            //sort based on distance
-            return markers.OrderBy(o =>
-            {
-                return Vector3.DistanceSquared(o.Transform3D.Position, cameraRay.Position);
-            }).ToArray();
-        }
+			//set up ray
+			ConfigureScreenRay(x, y);
 
-        public void CancelThreads()
-        {
-            Tiles((tile) => tile.CancelThreads());
-        }
+			//check nodes
+			foreach (Marker marker in allMarkers)
+				if (marker.Transform3D != null
+					&& marker.BoxCollider != null
+					&& marker.BoxCollider.Intersects(ref cameraRay).HasValue)
+					markers.Add(marker);
 
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
-        
-        protected override void CreateScene()
-        {
+			//sort based on distance
+			return markers.OrderBy(o =>
+			{
+				return Vector3.DistanceSquared(o.Transform3D.Position, cameraRay.Position);
+			}).ToArray();
+		}
+
+		public void CancelThreads()
+		{
+			Tiles((tile) => tile.CancelThreads());
+		}
+
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		protected override void CreateScene()
+		{
 #if DEBUG
-            DebugMode = true;
+			DebugMode = true;
 #endif
-            //set up camera
-            Debugger.V("MapScene: initializing camera");
-            cameraRay = new Ray();
-            camera = new FixedCamera("camera", Vector3.Up * 200.0f, Vector3.Zero)
-            {
-                NearPlane = 1f,
-                FarPlane = 100000.0f,
-                ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil,
-                BackgroundColor = theme != null ? new Color(
-                    theme.ControlDarkColour.R, theme.ControlDarkColour.G,
-                    theme.ControlDarkColour.B, theme.ControlDarkColour.A)
-                    : Color.CornflowerBlue
-            };
-            cameraTransform = camera.Entity.FindComponent<Camera3D>();
-            EntityManager.Add(camera);
-            UpdateCameraPosition();
+			//set up camera
+			Debugger.V("MapScene: initializing camera");
+			cameraRay = new Ray();
+			camera = new FixedCamera("camera", Vector3.Up * 200.0f, Vector3.Zero)
+			{
+				NearPlane = 1f,
+				FarPlane = 100000.0f,
+				ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil,
+				BackgroundColor = theme != null ? new Color(
+					theme.ControlDarkColour.R, theme.ControlDarkColour.G,
+					theme.ControlDarkColour.B, theme.ControlDarkColour.A)
+					: Color.CornflowerBlue
+			};
+			cameraTransform = camera.Entity.FindComponent<Camera3D>();
+			EntityManager.Add(camera);
+			UpdateCameraPosition();
 
-            //create global lighting
-            Debugger.V("MapScene: creating lighting");
-            Vector3 sun = new Vector3(0f, 100f, 35f);
-            sun.Normalize();
-            DirectionalLight skylight = new DirectionalLight("SkyLight", sun)
-            {
-                Color = Color.Gray
-            };
-            EntityManager.Add(skylight);
+			//create global lighting
+			Debugger.V("MapScene: creating lighting");
+			Vector3 sun = new Vector3(0f, 100f, 35f);
+			sun.Normalize();
+			DirectionalLight skylight = new DirectionalLight("SkyLight", sun)
+			{
+				Color = Color.Gray
+			};
+			EntityManager.Add(skylight);
 
-            //create terrain layers
-            Debugger.V("MapScene: creating layers");
-            tiles = new Entity[Region.GOOGLE_MAPS_TILE_MAX_ZOOM - MIN_LEVEL + 1][,];
-            for (uint layer = 0; layer < tiles.Length; layer++)
-                CreateTileLayer(layer);
+			//create terrain layers
+			Debugger.V("MapScene: creating layers");
+			tiles = new Entity[Region.GOOGLE_MAPS_TILE_MAX_ZOOM - MIN_LEVEL + 1][,];
+			for (uint layer = 0; layer < tiles.Length; layer++)
+				CreateTileLayer(layer);
 
-            //create ground plane
-            Debugger.V("MapScene: creating ground plane");
-            groundPlane = new Entity()
-                .AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
-                .AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 50f))
-                .AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red });
-            EntityManager.Add(groundPlane);
+			//create ground plane
+			Debugger.V("MapScene: creating ground plane");
+			groundPlane = new Entity()
+				.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
+				.AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 50f))
+				.AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red });
+			EntityManager.Add(groundPlane);
 
-            //add scene behaviours
-            Debugger.V("MapScene: creating behaviours");
-            AddSceneBehavior(inputBehaviour = new MapSceneInput(), SceneBehavior.Order.PostUpdate);
-        }
+			//add scene behaviours
+			Debugger.V("MapScene: creating behaviours");
+			AddSceneBehavior(inputBehaviour = new MapSceneInput(), SceneBehavior.Order.PostUpdate);
+		}
 
-        protected override void Start()
-        {
-            base.Start();
-            Tiles((tile) => tile.CalculatePosition());
-            VisibleLayer = 0;
-            eyeForm = (WFUApplication.MainForm as EyeMainForm);
-            foreach (Device device in eyeForm.Devices)
-            {
-                if (!device.Loaded)
-                    continue;
-                Device_OnDeviceLoaded(device);
-            }
-            Device.OnDeviceLoaded += Device_OnDeviceLoaded;
-            foreach (Node node in eyeForm.Nodes)
-            {
-                if (!node.Loaded)
-                    continue;
-                Node_OnNodeLoaded(node);
-            }
-            Node.OnNodeLoaded += Node_OnNodeLoaded;
-            if (SceneStarted != null)
-                SceneStarted(this);
-        }
+		protected override void Start()
+		{
+			base.Start();
+			Tiles((tile) => tile.CalculatePosition());
+			VisibleLayer = 0;
+			eyeForm = (WFUApplication.MainForm as EyeMainForm);
+			foreach (Device device in eyeForm.Devices)
+			{
+				if (!device.Loaded)
+					continue;
+				Device_OnDeviceLoaded(device);
+			}
+			Device.OnDeviceLoaded += Device_OnDeviceLoaded;
+			foreach (Node node in eyeForm.Nodes)
+			{
+				if (!node.Loaded)
+					continue;
+				Node_OnNodeLoaded(node);
+			}
+			Node.OnNodeLoaded += Node_OnNodeLoaded;
+			if (SceneStarted != null)
+				SceneStarted(this);
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PRIVATE METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        private void UpdateCameraPosition()
-        {
-            if (cameraTransform == null)
-                return;
+		private void UpdateCameraPosition()
+		{
+			if (cameraTransform == null)
+				return;
 
-            //set position
-            float angle = CAM_MIN_ANGLE + ((CAM_MAX_ANGLE - CAM_MIN_ANGLE) * cameraTilt);
-            float distance = CAM_MIN_ZOOM + ((CAM_MAX_ZOOM - CAM_MIN_ZOOM) * cameraZoom);
-            Vector3 direction = new Vector3(0f, (float)Math.Sin(angle), (float)Math.Cos(angle));
-            direction.Normalize();
-            cameraTransform.Position = new Vector3(
-                cameraTransform.LookAt.X,
-                cameraTransform.LookAt.Y + (direction.Y * distance),
-                cameraTransform.LookAt.Z + (direction.Z * distance));
+			//set position
+			float angle = CAM_MIN_ANGLE + ((CAM_MAX_ANGLE - CAM_MIN_ANGLE) * cameraTilt);
+			float distance = CAM_MIN_ZOOM + ((CAM_MAX_ZOOM - CAM_MIN_ZOOM) * cameraZoom);
+			Vector3 direction = new Vector3(0f, (float)Math.Sin(angle), (float)Math.Cos(angle));
+			direction.Normalize();
+			cameraTransform.Position = new Vector3(
+				cameraTransform.LookAt.X,
+				cameraTransform.LookAt.Y + (direction.Y * distance),
+				cameraTransform.LookAt.Z + (direction.Z * distance));
 
-            //update location 'frustum'
-            UpdateCameraFrustum();
+			//update location 'frustum'
+			UpdateCameraFrustum();
 
-            //state
-            cameraDirty = false;
-            if (CameraChanged != null)
-                CameraChanged(this);
-        }
+			//state
+			cameraDirty = false;
+			if (CameraChanged != null)
+				CameraChanged(this);
+		}
 
-        private void UpdateCameraFrustum()
-        {
-            cameraPos = VectorToLocation(cameraTransform.Position);
-            cameraAim = VectorToLocation(cameraTransform.LookAt);
-            cameraNW = LocationFromScreenRay(0, 0);
-            cameraNE = LocationFromScreenRay(HostApplication.Width, 0);
-            cameraSE = LocationFromScreenRay(HostApplication.Width, HostApplication.Height);
-            cameraSW = LocationFromScreenRay(0, HostApplication.Height);
+		private void UpdateCameraFrustum()
+		{
+			cameraPos = VectorToLocation(cameraTransform.Position);
+			cameraAim = VectorToLocation(cameraTransform.LookAt);
+			cameraNW = LocationFromScreenRay(0, 0);
+			cameraNE = LocationFromScreenRay(HostApplication.Width, 0);
+			cameraSE = LocationFromScreenRay(HostApplication.Width, HostApplication.Height);
+			cameraSW = LocationFromScreenRay(0, HostApplication.Height);
 
-            if (CameraFrustumChanged != null)
-                CameraFrustumChanged(this);
-        }
+			if (CameraFrustumChanged != null)
+				CameraFrustumChanged(this);
+		}
 
-        private void Device_OnDeviceLoaded(Device device)
-        {
-            Entity entity = DeviceMarker.Create(device);
-            DeviceMarker marker = entity.FindComponent<DeviceMarker>();
-            deviceMarkers.Add(marker);
-            allMarkers.Add(marker);
-            EntityManager.Add(entity);
-        }
+		private void Device_OnDeviceLoaded(Device device)
+		{
+			Entity entity = DeviceMarker.Create(device);
+			DeviceMarker marker = entity.FindComponent<DeviceMarker>();
+			deviceMarkers.Add(marker);
+			allMarkers.Add(marker);
+			EntityManager.Add(entity);
+		}
 
-        private void Node_OnNodeLoaded(Node node)
-        {
-            Entity entity = NodeMarker.Create(node);
-            NodeMarker marker = entity.FindComponent<NodeMarker>();
-            nodeMarkers.Add(marker);
-            allMarkers.Add(marker);
-            EntityManager.Add(entity);
-        }
+		private void Node_OnNodeLoaded(Node node)
+		{
+			Entity entity = NodeMarker.Create(node);
+			NodeMarker marker = entity.FindComponent<NodeMarker>();
+			nodeMarkers.Add(marker);
+			allMarkers.Add(marker);
+			EntityManager.Add(entity);
+		}
 
-        private void CreateTileLayer(uint layer)
-        {
-            if (tiles == null || layer >= tiles.Length || tiles[layer] != null)
-                return;
-            
-            int depth = 1 << (int)layer;
-            tiles[layer] = new Entity[depth, depth];
-            for (uint row = 0; row < depth; row++)
-            {
-                for (uint column = 0; column < depth; column++)
-                {
-                    Entity tileEntity = tiles[layer][row, column] = TerrainTile.Create(layer, row, column, baseTile);
-                    EntityManager.Add(tileEntity);
-                    if (layer == 0)
-                        baseTile = tileEntity.FindComponent<TerrainTile>();
-                }
-            }
-        }
+		private void CreateTileLayer(uint layer)
+		{
+			if (tiles == null || layer >= tiles.Length || tiles[layer] != null)
+				return;
 
-        private void Tiles(Action<TerrainTile> action, int firstLayer = -1, int lastLayer = -1, int excludeLayer = -1)
-        {
-            if (action == null || tiles == null || firstLayer >= tiles.Length)
-                return;
+			int depth = 1 << (int)layer;
+			tiles[layer] = new Entity[depth, depth];
+			for (uint row = 0; row < depth; row++)
+			{
+				for (uint column = 0; column < depth; column++)
+				{
+					Entity tileEntity = tiles[layer][row, column] = TerrainTile.Create(layer, row, column, baseTile);
+					EntityManager.Add(tileEntity);
+					if (layer == 0)
+						baseTile = tileEntity.FindComponent<TerrainTile>();
+				}
+			}
+		}
 
-            firstLayer = firstLayer < 0 ? 0 : firstLayer;
-            lastLayer = lastLayer < 0 ? tiles.Length - 1 : (lastLayer < firstLayer ? firstLayer
-                : (lastLayer >= tiles.Length ? tiles.Length - 1 : lastLayer));
+		private void Tiles(Action<TerrainTile> action, int firstLayer = -1, int lastLayer = -1, int excludeLayer = -1)
+		{
+			if (action == null || tiles == null || firstLayer >= tiles.Length)
+				return;
 
-            for (int layer = firstLayer; layer <= lastLayer; layer++)
-            {
-                if (layer == excludeLayer)
-                    continue;
-                int depth = 1 << (int)layer;
-                for (uint row = 0; row < depth; row++)
-                    for (uint column = 0; column < depth; column++)
-                        action(tiles[layer][row, column].FindComponent<TerrainTile>());
-            }
-        }
+			firstLayer = firstLayer < 0 ? 0 : firstLayer;
+			lastLayer = lastLayer < 0 ? tiles.Length - 1 : (lastLayer < firstLayer ? firstLayer
+				: (lastLayer >= tiles.Length ? tiles.Length - 1 : lastLayer));
 
-        private void UpdateTileLocations()
-        {
-            if (center == null || tiles == null || baseTile == null)
-                return;
+			for (int layer = firstLayer; layer <= lastLayer; layer++)
+			{
+				if (layer == excludeLayer)
+					continue;
+				int depth = 1 << (int)layer;
+				for (uint row = 0; row < depth; row++)
+					for (uint column = 0; column < depth; column++)
+						action(tiles[layer][row, column].FindComponent<TerrainTile>());
+			}
+		}
 
-            baseTile.CenterLocation = center;
-            Tiles((tile) =>
-            {
-                float ratio = (tile.Size / baseTile.Size);
-                float latSize = (float)baseTile.Region.LatitudinalSpan * ratio;
-                float longSize = (float)baseTile.Region.LongitudinalSpan * ratio;
+		private void UpdateTileLocations()
+		{
+			if (center == null || tiles == null || baseTile == null)
+				return;
 
-                tile.CenterLocation = new Location(
-                    baseTile.Region.NorthWest.Latitude.Value - latSize * ((float)tile.Row + 0.5f), //lat
-                    baseTile.Region.NorthWest.Longitude.Value + longSize * ((float)tile.Column + 0.5f)//long
-                    );
-            }, 1);
-        }
+			baseTile.CenterLocation = center;
+			Tiles((tile) =>
+			{
+				float ratio = (tile.Size / baseTile.Size);
+				float latSize = (float)baseTile.Region.LatitudinalSpan * ratio;
+				float longSize = (float)baseTile.Region.LongitudinalSpan * ratio;
 
-        private void HostApplication_ScreenResized(MapApplication obj)
-        {
-            UpdateCameraPosition();
-        }
+				tile.CenterLocation = new Location(
+					baseTile.Region.NorthWest.Latitude.Value - latSize * ((float)tile.Row + 0.5f), //lat
+					baseTile.Region.NorthWest.Longitude.Value + longSize * ((float)tile.Column + 0.5f)//long
+					);
+			}, 1);
+		}
 
-        private void ConfigureScreenRay(int x, int y)
-        {
-            //convert screen to world
-            Vector3 screenCoords = new Vector3(x, y, 0.0f);
-            Vector3 screenCoordsFar = new Vector3(x, y, 1.0f);
-            screenCoords = cameraTransform.Unproject(ref screenCoords);
-            screenCoordsFar = cameraTransform.Unproject(ref screenCoordsFar);
+		private void HostApplication_ScreenResized(MapApplication obj)
+		{
+			UpdateCameraPosition();
+		}
 
-            //update ray
-            Vector3 rayDirection = screenCoordsFar - screenCoords;
-            rayDirection.Normalize();
-            cameraRay.Direction = rayDirection;
-            cameraRay.Position = screenCoords;
-        }
-    }
+		private void ConfigureScreenRay(int x, int y)
+		{
+			//convert screen to world
+			Vector3 screenCoords = new Vector3(x, y, 0.0f);
+			Vector3 screenCoordsFar = new Vector3(x, y, 1.0f);
+			screenCoords = cameraTransform.Unproject(ref screenCoords);
+			screenCoordsFar = cameraTransform.Unproject(ref screenCoordsFar);
+
+			//update ray
+			Vector3 rayDirection = screenCoordsFar - screenCoords;
+			rayDirection.Normalize();
+			cameraRay.Direction = rayDirection;
+			cameraRay.Position = screenCoords;
+		}
+	}
 }

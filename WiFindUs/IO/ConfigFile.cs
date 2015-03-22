@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace WiFindUs.IO
 {
 	public class ConfigFile
-	{	
+	{
 		protected static readonly Regex KEY
 			= new Regex("[a-zA-Z0-9_\\-.]+", RegexOptions.Compiled);
 		protected static readonly Regex COMMENT
@@ -23,10 +23,10 @@ namespace WiFindUs.IO
 			= new Regex(@"^\s*$", RegexOptions.Compiled);
 		protected static readonly Regex TRUE
 			= new Regex(@"^\s*(?:1|TRUE|YES|ON)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        protected static readonly Regex FALSE
-            = new Regex(@"^\s*(?:0|FALSE|NO|OFF)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        protected static readonly String NUM = "[-+]?[0-9]+(?:[.][0-9]*)?";
-        protected static readonly String NUM_PERCENT = NUM + "[%]";
+		protected static readonly Regex FALSE
+			= new Regex(@"^\s*(?:0|FALSE|NO|OFF)\s*$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		protected static readonly String NUM = "[-+]?[0-9]+(?:[.][0-9]*)?";
+		protected static readonly String NUM_PERCENT = NUM + "[%]";
 		protected static readonly Regex COLOUR_RGBA
 			= new Regex("rgba?\\s*\\(\\s*(" + NUM_PERCENT + "?)\\s*,\\s*(" + NUM_PERCENT + "?)\\s*,\\s*(" + NUM_PERCENT + "?)\\s*(?:,\\s*(" + NUM_PERCENT + "?)\\s*)?\\)",
 				RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -39,50 +39,50 @@ namespace WiFindUs.IO
 		protected static readonly Regex COLOUR_KEYWORD
 			= new Regex("black|silver|gray|white|maroon|red|purple|fuchsia|green|lime|olive|yellow|navy|blue|teal|aqua|transparent",
 				RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        protected static readonly Regex NUMERIC_LIST
-            = new Regex("(" + NUM + ")(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?",
-                RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		protected static readonly Regex NUMERIC_LIST
+			= new Regex("(" + NUM + ")(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?",
+				RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private volatile ConcurrentDictionary<String, List<String>> kvps = new ConcurrentDictionary<String, List<String>>();
-        private volatile List<String> lastKVPS = null;
-        private volatile string lastKey = "";
-        private object threadLock = new Object();
-        private bool logMissing = false;
+		private volatile ConcurrentDictionary<String, List<String>> kvps = new ConcurrentDictionary<String, List<String>>();
+		private volatile List<String> lastKVPS = null;
+		private volatile string lastKey = "";
+		private object threadLock = new Object();
+		private bool logMissing = false;
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        public List<String> this[String key]
-        {
-            get
-            {
-                //check key for validity
-                key = CheckKey(key);
+		public List<String> this[String key]
+		{
+			get
+			{
+				//check key for validity
+				key = CheckKey(key);
 
-                //check if it was the same as the last lookup (during a loop or something)
-                if (lastKey != null && lastKVPS != null
-                        && lastKey.Length > 0 && lastKey.CompareTo(key) == 0)
-                        return lastKVPS;
+				//check if it was the same as the last lookup (during a loop or something)
+				if (lastKey != null && lastKVPS != null
+						&& lastKey.Length > 0 && lastKey.CompareTo(key) == 0)
+					return lastKVPS;
 
-                List<String> values;
-                lock (threadLock)
-                {
-                    //otherwise do a new lookup
-                    if (!kvps.TryGetValue(key, out values))
-                        kvps[key] = values = new List<String>();
-                    lastKey = key;
-                    lastKVPS = values;
-                }
-                return values;
-            }
-        }
+				List<String> values;
+				lock (threadLock)
+				{
+					//otherwise do a new lookup
+					if (!kvps.TryGetValue(key, out values))
+						kvps[key] = values = new List<String>();
+					lastKey = key;
+					lastKVPS = values;
+				}
+				return values;
+			}
+		}
 
-        public bool LogMissingKeys
-        {
-            get { return logMissing; }
-            set { logMissing = value; }
-        }
+		public bool LogMissingKeys
+		{
+			get { return logMissing; }
+			set { logMissing = value; }
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
@@ -106,10 +106,10 @@ namespace WiFindUs.IO
 			{
 				Read(file);
 			}
-            catch (FileNotFoundException)
-            {
-                Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
-            }
+			catch (FileNotFoundException)
+			{
+				Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
+			}
 			catch (Exception e)
 			{
 				Debugger.E("A " + e.GetType().FullName + " was thrown reading file "
@@ -136,7 +136,7 @@ namespace WiFindUs.IO
 				throw new ArgumentNullException("file");
 			if (!File.Exists(file))
 				throw new FileNotFoundException(file + " does not exist.");
-		
+
 			try
 			{
 				readFile(file);
@@ -151,17 +151,17 @@ namespace WiFindUs.IO
 		{
 			if (files == null)
 				throw new ArgumentNullException("files");
-		
+
 			foreach (String file in files)
 			{
 				try
 				{
 					Read(file);
 				}
-                catch (FileNotFoundException)
-                {
-                    Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
-                }
+				catch (FileNotFoundException)
+				{
+					Debugger.W("Config file " + (file == null ? "'null'" : "'" + file + "'") + " was not found.");
+				}
 				catch (Exception e)
 				{
 					Debugger.E("A " + e.GetType().FullName + " was thrown reading file "
@@ -172,30 +172,30 @@ namespace WiFindUs.IO
 
 		public override string ToString()
 		{
-			
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+			System.Text.StringBuilder sb = new System.Text.StringBuilder();
 			sb.Append("ConfigFile[");
-            lock (threadLock)
-            {
-                if (kvps.Count > 0)
-                {
-                    sb.Append("\n");
-                    foreach (KeyValuePair<String, List<String>> kvp in kvps)
-                    {
-                        if (kvp.Key == null || kvp.Value == null || kvp.Value.Count == 0)
-                            continue;
-                        for (int i = 0; i < kvp.Value.Count; i++)
-                        {
-                            String value = kvp.Value[i];
-                            if (value == null || value.Length == 0)
-                                continue;
-                            sb.Append("    " + kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value + "\n");
-                        }
-                    }
-                }
-                else
-                    sb.Append(" ");
-            }
+			lock (threadLock)
+			{
+				if (kvps.Count > 0)
+				{
+					sb.Append("\n");
+					foreach (KeyValuePair<String, List<String>> kvp in kvps)
+					{
+						if (kvp.Key == null || kvp.Value == null || kvp.Value.Count == 0)
+							continue;
+						for (int i = 0; i < kvp.Value.Count; i++)
+						{
+							String value = kvp.Value[i];
+							if (value == null || value.Length == 0)
+								continue;
+							sb.Append("    " + kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value + "\n");
+						}
+					}
+				}
+				else
+					sb.Append(" ");
+			}
 			sb.Append("]");
 			return sb.ToString();
 		}
@@ -246,13 +246,13 @@ namespace WiFindUs.IO
 		public bool Get(String key, int index, bool defaultValue)
 		{
 			String value = GetValue(key, index);
-            if (value == null || value.Length == 0)
-                return defaultValue;
-            if (TRUE.IsMatch(value))
-                return true;
-            if (FALSE.IsMatch(value))
-                return false;
-            return defaultValue;
+			if (value == null || value.Length == 0)
+				return defaultValue;
+			if (TRUE.IsMatch(value))
+				return true;
+			if (FALSE.IsMatch(value))
+				return false;
+			return defaultValue;
 		}
 
 		public bool Get(String key, bool defaultValue)
@@ -419,35 +419,35 @@ namespace WiFindUs.IO
 			return Get(key, 0, defaultValue);
 		}
 
-        public double[] Get(String key, int index, params double[] defaultValues)
-        {
+		public double[] Get(String key, int index, params double[] defaultValues)
+		{
 			String result = GetValue(key, index);
 			if (result.Length == 0)
 				return defaultValues;
-            
-            Match match = NUMERIC_LIST.Match(result);
+
+			Match match = NUMERIC_LIST.Match(result);
 			if (!match.Success)
-                return defaultValues;
+				return defaultValues;
 
-            List<double> doubles = new List<double>();
-            for (int i = 1; i < match.Groups.Count; i++)
-            {
-                if (match.Groups[i] == null || match.Groups[i].Value == null || match.Groups[i].Length == 0)
-                    continue;
-                
-                double parseResult;
-                if (Double.TryParse(match.Groups[i].Value, out parseResult))
-                    doubles.Add(parseResult);
-            }
+			List<double> doubles = new List<double>();
+			for (int i = 1; i < match.Groups.Count; i++)
+			{
+				if (match.Groups[i] == null || match.Groups[i].Value == null || match.Groups[i].Length == 0)
+					continue;
 
-            return doubles.ToArray();
-        }
+				double parseResult;
+				if (Double.TryParse(match.Groups[i].Value, out parseResult))
+					doubles.Add(parseResult);
+			}
 
-        public double[] Get(String key, params double[] defaultValues)
-        {
-            return Get(key, 0, defaultValues);
+			return doubles.ToArray();
+		}
 
-        }
+		public double[] Get(String key, params double[] defaultValues)
+		{
+			return Get(key, 0, defaultValues);
+
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// SETTERS
@@ -520,22 +520,22 @@ namespace WiFindUs.IO
 			return Set(key, 0, value);
 		}
 
-        public ConfigFile Set(String key, int index, params double[] values)
-        {
-            if (values == null || values.Length == 0)
-                SetValue(key, index, "");
+		public ConfigFile Set(String key, int index, params double[] values)
+		{
+			if (values == null || values.Length == 0)
+				SetValue(key, index, "");
 
-            string str = "";
-            for (int i = 0; i < values.Length; i++)
-                str += (i > 0 ? ", " : "") + values[i].ToString();
-            SetValue(key, index, str);
-            return this;
-        }
+			string str = "";
+			for (int i = 0; i < values.Length; i++)
+				str += (i > 0 ? ", " : "") + values[i].ToString();
+			SetValue(key, index, str);
+			return this;
+		}
 
-        public ConfigFile Set(String key, params double[] values)
-        {
-            return Set(key, 0, values);
-        }
+		public ConfigFile Set(String key, params double[] values)
+		{
+			return Set(key, 0, values);
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// DEFAULTERS
@@ -558,7 +558,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, float defaultValue, float min, float max)
 		{
-            return Set(key, index, Math.Min(Math.Max(Get(key, index, defaultValue), min), max));
+			return Set(key, index, Math.Min(Math.Max(Get(key, index, defaultValue), min), max));
 		}
 
 		public ConfigFile Default(String key, int index, float defaultValue)
@@ -573,7 +573,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, double defaultValue, double min, double max)
 		{
-            return Set(key, index, Math.Min(Math.Max(Get(key, index, defaultValue), min), max));
+			return Set(key, index, Math.Min(Math.Max(Get(key, index, defaultValue), min), max));
 		}
 
 		public ConfigFile Default(String key, int index, double defaultValue)
@@ -588,7 +588,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, String defaultValue)
 		{
-            return Set(key, index, Get(key, index, defaultValue));
+			return Set(key, index, Get(key, index, defaultValue));
 		}
 
 		public ConfigFile Default(String key, String defaultValue)
@@ -598,7 +598,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, bool defaultValue)
 		{
-            return Set(key, index, Get(key, index, defaultValue));
+			return Set(key, index, Get(key, index, defaultValue));
 		}
 
 		public ConfigFile Default(String key, bool defaultValue)
@@ -608,7 +608,7 @@ namespace WiFindUs.IO
 
 		public ConfigFile Default(String key, int index, Color defaultValue)
 		{
-            return Set(key, index, Get(key, index, defaultValue));
+			return Set(key, index, Get(key, index, defaultValue));
 		}
 
 		public ConfigFile Default(String key, Color defaultValue)
@@ -616,23 +616,23 @@ namespace WiFindUs.IO
 			return Default(key, 0, defaultValue);
 		}
 
-        public ConfigFile Default(String key, int index, params double[] defaultValues)
-        {
-            return Set(key, index, Get(key, index, defaultValues));
-        }
+		public ConfigFile Default(String key, int index, params double[] defaultValues)
+		{
+			return Set(key, index, Get(key, index, defaultValues));
+		}
 
-        public ConfigFile Default(String key, params double[] defaultValues)
-        {
-            return Default(key, 0, defaultValues);
-        }
+		public ConfigFile Default(String key, params double[] defaultValues)
+		{
+			return Default(key, 0, defaultValues);
+		}
 
-        public int Count(String key)
-        {
-            key = CheckKey(key, true);
-            if (key.Length == 0)
-                return 0;
-            return this[key].Count;
-        }
+		public int Count(String key)
+		{
+			key = CheckKey(key, true);
+			if (key.Length == 0)
+				return 0;
+			return this[key].Count;
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
@@ -692,7 +692,7 @@ namespace WiFindUs.IO
 					((value[0] == '\'' && value[value.Length - 1] == '\'')
 					|| (value[0] == '"' && value[value.Length - 1] == '"')))
 				{
-					value = value.Substring(1,value.Length-2)
+					value = value.Substring(1, value.Length - 2)
 							.Replace("\\n", "\n")
 							.Replace("\\t", "\t");
 				}
@@ -701,27 +701,27 @@ namespace WiFindUs.IO
 				SetValue(match.Groups[1].Value, index, value);
 			}
 
-            Debugger.V("Loaded config file '" + file + "'.");
+			Debugger.V("Loaded config file '" + file + "'.");
 		}
 
 		private static String CheckKey(String key, bool allowEmpty = false)
 		{
 			if (key == null)
-            {
-                if (allowEmpty)
-                    return "";
-                else
-	        		throw new ArgumentNullException("key");
-            }
+			{
+				if (allowEmpty)
+					return "";
+				else
+					throw new ArgumentNullException("key");
+			}
 
 			key = key.Trim().ToLower();
 			if (key.Length == 0)
-            {
+			{
 				if (allowEmpty)
-                    return "";
-                else
-                    throw new ArgumentException("Parameter 'key' cannot be an empty string.");
-            }
+					return "";
+				else
+					throw new ArgumentException("Parameter 'key' cannot be an empty string.");
+			}
 			else if (!KEY.IsMatch(key))
 				throw new ArgumentException("Parameter 'key' contains invalid characters.");
 			return key;
@@ -735,37 +735,37 @@ namespace WiFindUs.IO
 			index = index < 0 ? values.Count : index;
 
 			//add value, resize array if necessary
-            lock (threadLock)
-            {
-                if (index >= values.Count)
-                {
-                    if (values.Capacity <= index)
-                        values.Capacity = (int)(index * 1.5);
-                    int count = values.Count;
-                    for (int i = count; i < index; i++)
-                        values.Add("");
-                    values.Add(value);
-                }
-                else
-                {
-                    values[index] = value;
-                }
-            }
+			lock (threadLock)
+			{
+				if (index >= values.Count)
+				{
+					if (values.Capacity <= index)
+						values.Capacity = (int)(index * 1.5);
+					int count = values.Count;
+					for (int i = count; i < index; i++)
+						values.Add("");
+					values.Add(value);
+				}
+				else
+				{
+					values[index] = value;
+				}
+			}
 		}
 
 		private String GetValue(String key, int index)
 		{
-            if (index < 0)
+			if (index < 0)
 				return "";
 
-            List<String> values = this[key];
-            if (index >= values.Count)
-            {
-                if (logMissing)
-                    Debugger.V("ConfigFile: Attempt to access undefined key \"{0}{1}\" was ignored.", key,
-                        index == 0 ? "" : String.Format("[{0}]",index));
-                return "";
-            }
+			List<String> values = this[key];
+			if (index >= values.Count)
+			{
+				if (logMissing)
+					Debugger.V("ConfigFile: Attempt to access undefined key \"{0}{1}\" was ignored.", key,
+						index == 0 ? "" : String.Format("[{0}]", index));
+				return "";
+			}
 
 			return values[index];
 		}
