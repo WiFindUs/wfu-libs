@@ -17,6 +17,8 @@ using System.Threading;
 using WiFindUs.IO;
 using WiFindUs.Eye.Extensions;
 using WiFindUs.Eye.Controls;
+using WiFindUs.Eye.Wave.Markers;
+using WiFindUs.Eye.Wave.Adapter;
 
 namespace WiFindUs.Eye.Dispatcher
 {

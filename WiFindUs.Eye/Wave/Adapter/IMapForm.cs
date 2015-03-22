@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WaveEngine.Adapter.Win32;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Adapter
 {
     public interface IMapForm
     {

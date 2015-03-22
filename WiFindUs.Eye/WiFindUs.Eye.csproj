@@ -154,15 +154,15 @@
     <Compile Include="Interfaces\ISelectableGroup.cs" />
     <Compile Include="Interfaces\IUpdateable.cs" />
     <Compile Include="Location.cs" />
-    <Compile Include="Wave\DeviceMarker.cs" />
-    <Compile Include="Wave\EntityMarker.cs" />
-    <Compile Include="Wave\IMapForm.cs" />
-    <Compile Include="Wave\MapControl.cs">
+    <Compile Include="Wave\Markers\DeviceMarker.cs" />
+    <Compile Include="Wave\Markers\EntityMarker.cs" />
+    <Compile Include="Wave\Adapter\IMapForm.cs" />
+    <Compile Include="Wave\Adapter\MapControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Node.cs" />
-    <Compile Include="Wave\MapApplication.cs" />
-    <Compile Include="Wave\MapGame.cs" />
+    <Compile Include="Wave\Adapter\MapApplication.cs" />
+    <Compile Include="Wave\Adapter\MapGame.cs" />
     <Compile Include="Wave\MapScene.cs" />
     <Compile Include="Wave\MapSceneInput.cs" />
     <Compile Include="Controls\MiniMapControl.cs">
@@ -171,10 +171,9 @@
     <Compile Include="Region.cs" />
     <Compile Include="DeviceHistory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Wave\Marker.cs" />
-    <Compile Include="Wave\NodeLineBatch.cs" />
-    <Compile Include="Wave\NodeMarker.cs" />
-    <Compile Include="Wave\SubdividedPlane.cs" />
+    <Compile Include="Wave\Markers\Marker.cs" />
+    <Compile Include="Wave\Markers\NodeLineBatch.cs" />
+    <Compile Include="Wave\Markers\NodeMarker.cs" />
     <Compile Include="Wave\TerrainTile.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -207,6 +206,7 @@
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

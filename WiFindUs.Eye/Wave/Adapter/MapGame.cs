@@ -7,7 +7,7 @@ using WaveEngine.Framework;
 using WaveEngine.Framework.Services;
 using WiFindUs.Controls;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Adapter
 {
     public class MapGame : Game
     {

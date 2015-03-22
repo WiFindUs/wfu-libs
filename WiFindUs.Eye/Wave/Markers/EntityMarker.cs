@@ -13,7 +13,7 @@ using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Markers
 {
     public class EntityMarker<T> : Marker, ISelectableProxy where T : class, ILocatable, ISelectable, IUpdateable
     {
@@ -148,6 +148,7 @@ namespace WiFindUs.Eye.Wave
                         SpecularPower = 2
                     };
             }
+  
             return material;
         }
 

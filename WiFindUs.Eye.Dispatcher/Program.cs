@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using WiFindUs.Eye.Wave;
+using WiFindUs.Eye.Wave.Adapter;
 
 namespace WiFindUs.Eye.Dispatcher
 {

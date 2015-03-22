@@ -7,7 +7,7 @@ using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Markers
 {
     public abstract class Marker : Behavior
     {

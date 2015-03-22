@@ -9,7 +9,7 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Services;
 using WiFindUs.Controls;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Adapter
 {
     public class MapApplication : FormApplication
     {

@@ -14,7 +14,7 @@ using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Markers
 {
     public class DeviceMarker : EntityMarker<Device>
     {

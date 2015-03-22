@@ -12,6 +12,7 @@ using System.Collections;
 using System.Windows.Forms;
 using Devart.Data.Linq;
 using System.ComponentModel;
+using WiFindUs.Eye.Wave.Adapter;
 
 namespace WiFindUs.Eye
 {

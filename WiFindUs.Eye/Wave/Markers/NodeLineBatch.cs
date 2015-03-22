@@ -10,7 +10,7 @@ using WaveEngine.Common.Math;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Markers
 {
     public class NodeLineBatch : Drawable3D
     {

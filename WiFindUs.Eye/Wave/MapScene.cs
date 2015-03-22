@@ -12,6 +12,8 @@ using WaveEngine.Framework.Services;
 using WaveEngine.Materials;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Eye.Wave.Markers;
+using WiFindUs.Eye.Wave.Adapter;
 
 namespace WiFindUs.Eye.Wave
 {

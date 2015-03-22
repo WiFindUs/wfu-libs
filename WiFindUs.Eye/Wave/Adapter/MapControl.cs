@@ -11,7 +11,7 @@ using WaveEngine.Framework.Services;
 using WaveEngine.Adapter.Win32;
 using WiFindUs.Controls;
 
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye.Wave.Adapter
 {
     public class MapControl : Control, IThemeable
     {
