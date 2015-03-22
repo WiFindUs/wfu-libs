@@ -17,7 +17,8 @@ namespace WiFindUs.Eye.Wave
 {
 	public class MapScene : Scene, IThemeable
 	{
-		public event Action<MapScene> SceneStarted;
+		public event Action<MapScene> Started;
+		public event Action<MapScene> CenterLocationChanged;
 
 		private const float ZOOM_RATE = 1.0f;
 		private const float TILT_RATE = 1.0f;
@@ -69,11 +70,13 @@ namespace WiFindUs.Eye.Wave
 			get { return center; }
 			set
 			{
-				if (value == null || value.Equals(center))
+				if (value == null || WiFindUs.Eye.Location.Equals(center, value))
 					return;
 				Debugger.I("Setting map center to " + value.ToString());
 				center = value;
 				UpdateTileLocations();
+				if (CenterLocationChanged != null)
+					CenterLocationChanged(this);
 			}
 		}
 
@@ -298,8 +301,8 @@ namespace WiFindUs.Eye.Wave
 				Node_OnNodeLoaded(node);
 			}
 			Node.OnNodeLoaded += Node_OnNodeLoaded;
-			if (SceneStarted != null)
-				SceneStarted(this);
+			if (Started != null)
+				Started(this);
 		}
 
 		/////////////////////////////////////////////////////////////////////

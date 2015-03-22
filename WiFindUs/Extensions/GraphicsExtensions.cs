@@ -68,30 +68,25 @@ namespace WiFindUs.Extensions
 		/// <param name="input">The source image</param>
 		/// <param name="w">The new width</param>
 		/// <param name="h">The new height</param>
-		/// <param name="resizedImage">The new resized image. Will be set to null if no resizing was necessary (if the source and destination dimensions were the same), or if an error occurred.</param>
-		/// <returns>True if the operation was completed successfully.</returns>
-		public static bool Resize(this Image input, int w, int h, out Image output)
+		/// <returns>A resized copy of the original image, or null if an error occurred.</returns>
+		public static Image Resize(this Image input, int w, int h)
 		{
-			output = null;
-
 			//check source
 			if (input == null)
-				return false;
+				return null;
 
 			//check dimensions
 			w = w < 0 ? 0 : w;
 			h = h < 0 ? 0 : h;
-			if (w == input.Width && h == input.Height)
-				return false;
 
 			//create resized image
-			output = new Bitmap(w, h);
+			Image output = new Bitmap(w, h);
 			using (Graphics g = Graphics.FromImage(output))
 			{
 				g.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 				g.DrawImage(input, new System.Drawing.Rectangle(0, 0, output.Width, output.Height));
 			}
-			return true;
+			return output;
 		}
 
 		public static Stream GetStream(this Image input)

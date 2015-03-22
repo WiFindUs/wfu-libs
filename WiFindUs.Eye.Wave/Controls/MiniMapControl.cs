@@ -13,6 +13,7 @@ namespace WiFindUs.Eye.Wave.Controls
 		private WiFindUs.Eye.Wave.MapScene scene;
 		private Rectangle mapArea = Rectangle.Empty;
 		private bool mouseDown = false;
+		private Image image;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -33,8 +34,18 @@ namespace WiFindUs.Eye.Wave.Controls
 			{
 				if (value == scene)
 					return;
+				if (scene != null)
+				{
+					scene.CameraController.Updated -= CameraController_Updated;
+					scene.CenterLocationChanged -= Scene_CenterLocationChanged;
+					DisposeImage();
+				}
 				scene = value;
-				scene.CameraController.Updated += CameraController_Updated;
+				if (scene != null)
+				{
+					scene.CameraController.Updated += CameraController_Updated;
+					scene.CenterLocationChanged += Scene_CenterLocationChanged;
+				}
 				Refresh();
 			}
 		}
@@ -127,16 +138,32 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			base.OnPaint(e);
 
-			if (IsDesignMode || scene == null || scene.BaseTile == null || scene.CameraController == null)
+			if (IsDesignMode)
 				return;
 
 			//initialize render state
 			e.Graphics.Clear(theme.ControlDarkColour);
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
+			if (scene == null || scene.BaseTile == null)
+				return;
+
 			//draw base image
 			if (scene.BaseTile.TextureOK)
-				e.Graphics.DrawImageSafe(scene.BaseTile.TileImage, mapArea, Brushes.White);
+			{
+				if (image == null)
+				{
+					try
+					{
+						image = scene.BaseTile.TileImage.Resize(256, 256);
+					}
+					catch { } //just wait until next time
+				}
+			}
+			e.Graphics.DrawImageSafe(image, mapArea, Brushes.White);
+
+			if (scene.CameraController == null)
+				return;
 
 			//get frustum coords
 			ILocation nw = scene.CameraController.FrustumNorthWest;
@@ -222,6 +249,18 @@ namespace WiFindUs.Eye.Wave.Controls
 		private void CameraController_Updated(MapSceneCamera obj)
 		{
 			Refresh();
+		}
+
+		private void Scene_CenterLocationChanged(MapScene obj)
+		{
+			DisposeImage();
+		}
+
+		private void DisposeImage()
+		{
+			if (image != null)
+				image.Dispose();
+			image = null;
 		}
 	}
 }

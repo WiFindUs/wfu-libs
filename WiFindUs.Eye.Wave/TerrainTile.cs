@@ -460,12 +460,14 @@ namespace WiFindUs.Eye.Wave
 				System.Drawing.Image image = System.Drawing.Image.FromFile(ImagePath);
 				if (initialThreadObject == threadObject) //cancelled?
 				{
-					System.Drawing.Image resizedImage = null;
-					if (image.Resize((int)(image.Width * scale), (int)(image.Height * scale), out resizedImage))
+					//scale is necessary
+					int w = (int)(image.Width * scale);
+					int h = (int)(image.Height * scale);
+					if (w != image.Width || h != image.Height)
 					{
+						System.Drawing.Image resizedImage = image.Resize(w,h);
 						image.Dispose();
 						image = resizedImage;
-						resizedImage = null;
 					}
 
 					if (initialThreadObject == threadObject) //cancelled?

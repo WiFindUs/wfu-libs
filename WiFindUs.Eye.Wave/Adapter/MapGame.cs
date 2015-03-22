@@ -41,7 +41,7 @@ namespace WiFindUs.Eye.Wave.Adapter
 		{
 			base.Initialize(application);
 			scene = new MapScene(this);
-			scene.SceneStarted += scene_SceneStarted;
+			scene.Started += scene_SceneStarted;
 			scene.Initialize(WaveServices.GraphicsDevice);
 
 			ScreenContext sc = new ScreenContext(scene);
