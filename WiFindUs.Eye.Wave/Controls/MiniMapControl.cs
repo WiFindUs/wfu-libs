@@ -219,6 +219,19 @@ namespace WiFindUs.Eye.Wave.Controls
 				mouseDown = false;
 		}
 
+		protected virtual void OnDisposing()
+		{
+			Scene = null;
+			DisposeImage();
+		}
+
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+				OnDisposing();
+			base.Dispose(disposing);
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
