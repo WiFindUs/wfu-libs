@@ -138,8 +138,20 @@ namespace WiFindUs.Eye.Wave.Controls
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
 			//draw base image
-			if (scene.BaseTile.TileImage != null)
-				e.Graphics.DrawImage(scene.BaseTile.TileImage, mapArea);
+			bool imageError = scene.BaseTile.TileImage == null;
+			if (!imageError)
+			{
+				try
+				{
+					e.Graphics.DrawImage(scene.BaseTile.TileImage, mapArea);
+				}
+				catch
+				{
+					imageError = true;
+				}
+			}
+			if (imageError)
+				e.Graphics.DrawRectangle(Pens.White, mapArea);
 
 			//generate frustum poly
 			Point[] points = new Point[4];
