@@ -15,14 +15,12 @@ namespace WiFindUs.Eye.Wave.Markers
 		private EyeMainForm eyeForm;
 		private Transform3D transform3D;
 
-
 		protected override void Initialize()
 		{
 			transform3D = Owner.FindComponent<Transform3D>();
 			nodeMarker = Owner.FindComponent<NodeMarker>();
 			node = nodeMarker.Entity;
 			eyeForm = (WFUApplication.MainForm as EyeMainForm);
-
 		}
 
 		public override void Draw(TimeSpan gameTime)

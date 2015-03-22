@@ -17,7 +17,7 @@ namespace WiFindUs.Eye.Wave
 {
 	public class MapScene : Scene, IThemeable
 	{
-		public event Action<MapScene> Started;
+		public event Action<MapScene> SceneStarted;
 		public event Action<MapScene> CenterLocationChanged;
 
 		private const float ZOOM_RATE = 1.0f;
@@ -301,8 +301,8 @@ namespace WiFindUs.Eye.Wave
 				Node_OnNodeLoaded(node);
 			}
 			Node.OnNodeLoaded += Node_OnNodeLoaded;
-			if (Started != null)
-				Started(this);
+			if (SceneStarted != null)
+				SceneStarted(this);
 		}
 
 		/////////////////////////////////////////////////////////////////////
