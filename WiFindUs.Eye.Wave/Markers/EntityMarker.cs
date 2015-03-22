@@ -11,16 +11,10 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class EntityMarker<T> : Marker, ISelectableProxy where T : class, ILocatable, ISelectable, IUpdateable
+	public abstract class EntityMarker<T> : Marker, ISelectableProxy where T : class, ILocatable, ISelectable, IUpdateable
 	{
 		protected readonly T entity;
-
-		private Entity selectionRing = null, model = null;
-		private static Material placeHolderMaterial, selectedMaterial;
-		private readonly static Dictionary<string, Material> typeColours = new Dictionary<string, Material>();
-		private Transform3D modelTransform, selectionRingTransform;
-		private MaterialsMap modelMaterialsMap;
-		private BoxCollider modelCollider;
+		protected const float MAX_SPIN_RATE = 5.0f;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -34,41 +28,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		public virtual bool VisibleOnTimeout
 		{
 			get { return false; }
-		}
-
-		public static Material PlaceHolderMaterial
-		{
-			get
-			{
-				if (placeHolderMaterial == null)
-					placeHolderMaterial = new BasicMaterial(Color.Gray)
-					{
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.5f,
-						SpecularPower = 2
-					};
-
-				return placeHolderMaterial;
-			}
-		}
-
-		public static Material SelectedMaterial
-		{
-			get
-			{
-				if (selectedMaterial == null)
-					selectedMaterial = new BasicMaterial(Color.Yellow)
-					{
-						LayerType = DefaultLayers.Alpha,
-						Alpha = 0.05f
-					};
-				return selectedMaterial;
-			}
-		}
-
-		public virtual Material CurrentMaterial
-		{
-			get { return PlaceHolderMaterial; }
 		}
 
 		public virtual float RotationSpeed
@@ -86,11 +45,6 @@ namespace WiFindUs.Eye.Wave.Markers
 				else
 					return MAX_SPIN_RATE * (1.0f - (entity.UpdateAge / (float)entity.TimeoutLength));
 			}
-		}
-
-		public override BoxCollider BoxCollider
-		{
-			get { return modelCollider; }
 		}
 
 		public override bool Selected
@@ -116,55 +70,12 @@ namespace WiFindUs.Eye.Wave.Markers
 		}
 
 		/////////////////////////////////////////////////////////////////////
-		// PUBLIC METHODS
-		/////////////////////////////////////////////////////////////////////
-
-		public static Color TypeColor(String type)
-		{
-			if (type == null || (type = type.Trim().ToLower()).Length == 0)
-				return Color.Gray;
-			System.Drawing.Color col
-				= WFUApplication.Config.Get("type_" + type + ".colour", System.Drawing.Color.Gray);
-			return new Color(col.R, col.G, col.B, col.A);
-		}
-
-		public static Material TypeMaterial(String type)
-		{
-			Material material = PlaceHolderMaterial;
-			if (type == null || (type = type.Trim().ToLower()).Length == 0)
-				return material;
-
-			if (!typeColours.TryGetValue(type, out material))
-			{
-				typeColours[type] = material
-					= new BasicMaterial(TypeColor(type))
-					{
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.5f,
-						SpecularPower = 2
-					};
-			}
-
-			return material;
-		}
-
-		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
 		protected override void Initialize()
 		{
 			base.Initialize();
-			model = Owner.FindChild("model");
-			if (model != null)
-			{
-				modelMaterialsMap = model.FindComponent<MaterialsMap>();
-				modelTransform = model.FindComponent<Transform3D>();
-				modelCollider = model.FindComponent<BoxCollider>();
-			}
-			selectionRing = Owner.FindChild("selection");
-			if (selectionRing != null)
-				selectionRingTransform = selectionRing.FindComponent<Transform3D>();
 
 			entity.SelectedChanged += SelectedChanged;
 			entity.LocationChanged += LocationChanged;
@@ -176,9 +87,9 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected override void Update(TimeSpan gameTime)
 		{
-			if (entity == null || !Owner.IsVisible)
-				return;
+			Transform3D.Scale = new Vector3(Scale, Scale, Scale);
 
+			/*
 			if (model != null && modelTransform != null)
 			{
 				float rot = RotationSpeed;
@@ -190,14 +101,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						modelTransform.Rotation.Z);
 				}
 			}
-
-			if (entity.Selected && selectionRing != null && selectionRingTransform != null)
-			{
-				selectionRingTransform.Rotation = new Vector3(
-					selectionRingTransform.Rotation.X,
-					selectionRingTransform.Rotation.Y + 1.0f * (float)gameTime.TotalSeconds,
-					selectionRingTransform.Rotation.Z);
-			}
+			 * */
 		}
 
 		protected virtual void BaseTileCenterLocationChanged(TerrainTile obj)
@@ -235,20 +139,10 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& UpdateVisibilityCheck();
 
 			Owner.IsActive = Owner.IsVisible = active;
-			if (model != null)
-			{
-				model.IsActive = model.IsVisible = active;
-				if (modelCollider != null)
-					modelCollider.IsActive = active;
-			}
-			if (selectionRing != null)
-				selectionRing.IsActive = selectionRing.IsVisible = active && entity.Selected;
 			if (active)
 			{
 				if (Transform3D != null)
 					Transform3D.Position = Scene.LocationToVector(entity.Location);
-				if (modelMaterialsMap != null)
-					modelMaterialsMap.DefaultMaterial = CurrentMaterial;
 			}
 		}
 	}

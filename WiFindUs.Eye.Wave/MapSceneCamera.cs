@@ -12,8 +12,12 @@ namespace WiFindUs.Eye.Wave
 	{
 		private const float MIN_ZOOM = 100.0f;
 		private const float MAX_ZOOM = 2000.0f;
-		private const float MIN_ANGLE = (float)(Math.PI / 7.0);
-		private const float MAX_ANGLE = (float)(Math.PI / 2.01);
+#if DEBUG
+		private const float MIN_ANGLE = (float)(Math.PI / 50.0);
+#else
+		private const float MIN_ANGLE = (float)(Math.PI / 10.0);
+#endif
+		private const float MAX_ANGLE = (float)(Math.PI / 2.0001);
 		private const float MOVE_SPEED = 15f;
 		private const float ROTATE_SPEED = MOVE_SPEED;
 
@@ -132,9 +136,7 @@ namespace WiFindUs.Eye.Wave
 
 			//check nodes
 			foreach (Marker marker in Scene.AllMarkers)
-				if (marker.Transform3D != null
-					&& marker.BoxCollider != null
-					&& marker.BoxCollider.Intersects(ref ray).HasValue)
+				if (marker.Transform3D != null && marker.Intersects(ref ray).HasValue)
 					markers.Add(marker);
 
 			//sort based on distance

@@ -10,19 +10,6 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public class DeviceMarker : EntityMarker<Device>
 	{
-
-		/////////////////////////////////////////////////////////////////////
-		// PROPERTIES
-		/////////////////////////////////////////////////////////////////////
-
-		public override Material CurrentMaterial
-		{
-			get
-			{
-				return entity.User == null ? base.CurrentMaterial : TypeMaterial(entity.User.Type);
-			}
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -35,12 +22,14 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public static Entity Create(Device device)
 		{
+			DeviceMarker marker = new DeviceMarker(device);
 			return new Entity() { IsActive = false, IsVisible = false }
-				//base
 				.AddComponent(new Transform3D())
-				.AddComponent(new DeviceMarker(device))
-				//model
-				.AddChild(new Entity("model") { IsActive = false, IsVisible = false }
+				.AddComponent(marker)
+				//spike
+				.AddChild
+				(
+					new Entity("spike")
 					.AddComponent(new Transform3D()
 					{
 						Position = new Vector3(0.0f, 5.0f, 0.0f),
@@ -49,16 +38,8 @@ namespace WiFindUs.Eye.Wave.Markers
 					.AddComponent(new MaterialsMap(PlaceHolderMaterial))
 					.AddComponent(Model.CreateCone(10f, 6f, 5))
 					.AddComponent(new ModelRenderer())
-					.AddComponent(new BoxCollider() { IsActive = false, DebugLineColor = Color.Gray }))
-				//selection ring
-				.AddChild(new Entity("selection") { IsActive = false, IsVisible = false }
-					.AddComponent(new Transform3D()
-					{
-						Position = new Vector3(0.0f, 5.0f, 0.0f)
-					})
-					.AddComponent(new MaterialsMap(SelectedMaterial))
-					.AddComponent(Model.CreateTorus(13, 1, 12))
-					.AddComponent(new ModelRenderer()));
+					.AddComponent(marker.AddCollider(new BoxCollider()))
+				);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -87,8 +68,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		private void OnDeviceUserChanged(Device device)
 		{
 			UpdateMarkerState();
-			if (BoxCollider != null)
-				BoxCollider.DebugLineColor = entity.User == null ? Color.Gray : TypeColor(entity.User.Type);
 		}
 
 		private void OnDeviceGPSStateChanged(Device device)
