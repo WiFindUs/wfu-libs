@@ -1,25 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using WiFindUs.Eye;
-using WiFindUs.Extensions;
-using WiFindUs.Forms;
 using WiFindUs.Controls;
-using WiFindUs.Eye.Wave;
-using System.Text.RegularExpressions;
-using System.Threading;
-using WiFindUs.IO;
-using WiFindUs.Eye.Extensions;
+using WiFindUs.Extensions;
 using WiFindUs.Eye.Controls;
-using WiFindUs.Eye.Wave.Markers;
-using WiFindUs.Eye.Wave.Adapter;
+using WiFindUs.Eye.Wave;
 using WiFindUs.Eye.Wave.Controls;
+using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Dispatcher
 {

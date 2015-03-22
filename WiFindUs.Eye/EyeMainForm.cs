@@ -1,16 +1,11 @@
-﻿using System;
+﻿using Devart.Data.Linq;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WiFindUs.Controls;
-using WiFindUs.Forms;
-using WiFindUs.Extensions;
-using WiFindUs.Eye.Extensions;
-using System.Collections;
-using System.Windows.Forms;
-using Devart.Data.Linq;
 using System.ComponentModel;
+using System.Linq;
+using System.Windows.Forms;
+using WiFindUs.Extensions;
+using WiFindUs.Forms;
 
 namespace WiFindUs.Eye
 {

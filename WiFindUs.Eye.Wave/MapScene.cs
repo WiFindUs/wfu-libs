@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Cameras;
@@ -9,11 +9,11 @@ using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
 using WaveEngine.Framework.Services;
-using WaveEngine.Materials;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
-using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Eye.Wave.Adapter;
+using WiFindUs.Eye.Wave.Controls;
+using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Wave
 {

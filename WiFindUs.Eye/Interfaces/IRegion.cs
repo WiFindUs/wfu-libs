@@ -1,6 +1,4 @@
-﻿using System;
-using System.Drawing;
-
+﻿
 namespace WiFindUs.Eye
 {
     public interface IRegion

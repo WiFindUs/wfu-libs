@@ -71,7 +71,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Adapter\IMapForm.cs" />
     <Compile Include="Adapter\MapApplication.cs" />
-    <Compile Include="Adapter\MapControl.cs">
+    <Compile Include="Controls\MapControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Adapter\MapGame.cs" />

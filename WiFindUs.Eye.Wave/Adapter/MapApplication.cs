@@ -1,13 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using WaveEngine.Adapter;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Services;
-using WiFindUs.Controls;
+using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave.Adapter
 {

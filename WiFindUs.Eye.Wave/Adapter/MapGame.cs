@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using WaveEngine.Common;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Services;
-using WiFindUs.Controls;
+using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave.Adapter
 {

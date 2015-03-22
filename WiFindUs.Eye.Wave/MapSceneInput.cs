@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WaveEngine.Common.Input;
 using WaveEngine.Common.Math;
 using WaveEngine.Framework;
-using WaveEngine.Framework.Managers;
 using WaveEngine.Framework.Services;
 using WiFindUs.Extensions;
 

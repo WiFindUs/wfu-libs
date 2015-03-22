@@ -1,5 +1,4 @@
-﻿using System;
-
+﻿
 namespace WiFindUs.Eye
 {
     public interface ILocation
