@@ -179,7 +179,9 @@ namespace WiFindUs.Eye
 			}
 			set
 			{
+#pragma warning disable 0618
 				IPAddressRaw = value == null ? null : new Nullable<long>(value.Address);
+#pragma warning restore 0618
 			}
 		}
 

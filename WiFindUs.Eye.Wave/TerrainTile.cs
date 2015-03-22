@@ -31,11 +31,8 @@ namespace WiFindUs.Eye.Wave
 		private static int currentLoads = 0;
 		private static int currentTextureCreations = 0;
 
-		[RequiredComponent]
 		private Transform3D transform3D;
-		[RequiredComponent]
 		private MaterialsMap materialsMap;
-		[RequiredComponent]
 		private BoxCollider boxCollider;
 
 		private bool errorState = false;
@@ -331,6 +328,14 @@ namespace WiFindUs.Eye.Wave
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		protected override void Initialize()
+		{
+			base.Initialize();
+			transform3D = Owner.FindComponent<Transform3D>();
+			materialsMap = Owner.FindComponent<MaterialsMap>();
+			boxCollider = Owner.FindComponent<BoxCollider>();
+		}
 
 		private void CheckTextureState()
 		{
