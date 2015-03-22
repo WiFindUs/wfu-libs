@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using WiFindUs.Forms;
-using WiFindUs.Extensions;
 using System.Drawing;
-using System.IO;
-using WaveEngine.Framework.Services;
+using System.Windows.Forms;
 using WaveEngine.Adapter.Win32;
+using WaveEngine.Framework.Services;
 using WiFindUs.Controls;
+using WiFindUs.Extensions;
+using WiFindUs.Eye.Wave.Adapter;
 
-namespace WiFindUs.Eye.Wave.Adapter
+namespace WiFindUs.Eye.Wave.Controls
 {
     public class MapControl : Control, IThemeable
     {
