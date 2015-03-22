@@ -37,6 +37,9 @@
   <PropertyGroup>
     <StartupObject>WiFindUs.Eye.Dispatcher.Program</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -97,6 +100,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\WiFindUs.Eye.Wave\WiFindUs.Eye.Wave.csproj">
+      <Project>{218e7f4e-c133-441a-83a0-242e40a9bede}</Project>
+      <Name>WiFindUs.Eye.Wave</Name>
+    </ProjectReference>
     <ProjectReference Include="..\WiFindUs.Eye\WiFindUs.Eye.csproj">
       <Project>{87c53e35-435b-42a3-9c15-b9aaec2c8b34}</Project>
       <Name>WiFindUs.Eye</Name>
@@ -107,6 +114,9 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>$(ProjectDir)post-build-copy.bat $(TargetDir) $(UBI_REMOTE_LOCATION)</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
