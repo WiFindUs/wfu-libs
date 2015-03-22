@@ -135,7 +135,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
 			//draw base image
-			e.Graphics.DrawImageSafe(scene.BaseTile.TileImage, mapArea, Brushes.White);
+			if (scene.BaseTile.TextureOK)
+				e.Graphics.DrawImageSafe(scene.BaseTile.TileImage, mapArea, Brushes.White);
 
 			//get frustum coords
 			ILocation nw = scene.CameraController.FrustumNorthWest;
