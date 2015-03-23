@@ -1,5 +1,4 @@
 ﻿using System;
-using WaveEngine.Common.Math;
 
 namespace WiFindUs.Eye
 {
@@ -275,27 +274,7 @@ namespace WiFindUs.Eye
 			return Contains(location.Latitude.Value, location.Longitude.Value);
 		}
 
-		public Vector3 LocationToVector(Vector3 tl, Vector3 br, double latitude, double longitude)
-		{
-			float width = br.X - tl.X;
-			float depth = br.Z - tl.Z;
 
-			double w = (longitude - northWest.Longitude.Value) / longSpan;
-			double d = (northWest.Latitude.Value - latitude) / latSpan;
-
-			return new Vector3(
-					tl.X + (float)(w * width),
-					0,
-					tl.Z + (float)(d * depth)
-				);
-		}
-
-		public Vector3 LocationToVector(Vector3 tl, Vector3 br, ILocation location)
-		{
-			if (!location.HasLatLong)
-				throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
-			return LocationToVector(tl, br, location.Latitude.Value, location.Longitude.Value);
-		}
 
 		public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude)
 		{

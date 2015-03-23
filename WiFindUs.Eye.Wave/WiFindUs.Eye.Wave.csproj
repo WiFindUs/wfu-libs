@@ -66,6 +66,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions\RegionExtensions.cs" />
     <Compile Include="Layers\WireframeObjectsLayer.cs" />
     <Compile Include="MapSceneCamera.cs" />
     <Compile Include="Controls\MiniMapControl.cs">

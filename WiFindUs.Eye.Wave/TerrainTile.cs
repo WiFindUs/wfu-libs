@@ -10,6 +10,7 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
+using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -465,7 +466,7 @@ namespace WiFindUs.Eye.Wave
 					int h = (int)(image.Height * scale);
 					if (w != image.Width || h != image.Height)
 					{
-						System.Drawing.Image resizedImage = image.Resize(w,h);
+						System.Drawing.Image resizedImage = image.Resize(w, h);
 						image.Dispose();
 						image = resizedImage;
 					}
