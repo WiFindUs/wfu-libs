@@ -10,7 +10,6 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public abstract class Marker : MapSceneEntityBehavior
 	{
-		private static Material placeHolderMaterial;
 		private List<BoxCollider> colliders = new List<BoxCollider>();
 
 		/////////////////////////////////////////////////////////////////////
@@ -19,26 +18,23 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public abstract bool Selected { get; set; }
 
+		/*
 		public static Material PlaceHolderMaterial
 		{
 			get
 			{
 				if (placeHolderMaterial == null)
-					placeHolderMaterial = new BasicMaterial(Color.Gray)
+					placeHolderMaterial = new BasicMaterial(Color.LightGray)
 					{
 						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.5f,
+						AmbientLightColor = Color.White * 0.75f,
 						SpecularPower = 2
 					};
 
 				return placeHolderMaterial;
 			}
 		}
-
-		public virtual Material CurrentMaterial
-		{
-			get { return PlaceHolderMaterial; }
-		}
+		 * */
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS

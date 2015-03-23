@@ -36,6 +36,11 @@ namespace WiFindUs.Eye
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
+		public int MeshPeerCount
+		{
+			get { return meshPeers.Count; }
+		}
+
 		public List<Node> MeshPeers
 		{
 			get { return new List<Node>(meshPeers); }

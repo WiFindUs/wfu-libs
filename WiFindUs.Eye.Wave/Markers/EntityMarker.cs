@@ -15,6 +15,7 @@ namespace WiFindUs.Eye.Wave.Markers
 	{
 		protected readonly T entity;
 		protected const float MAX_SPIN_RATE = 5.0f;
+		public event Action<EntityMarker<T>> VisibleChanged;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -77,12 +78,12 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			base.Initialize();
 
+			UpdateMarkerState();
+
 			entity.SelectedChanged += SelectedChanged;
 			entity.LocationChanged += LocationChanged;
 			entity.TimedOutChanged += TimedOutChanged;
 			Scene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
-
-			UpdateMarkerState();
 		}
 
 		protected virtual void BaseTileCenterLocationChanged(TerrainTile obj)
@@ -112,19 +113,25 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected virtual void UpdateMarkerState()
 		{
+			//if (Transform3D == null)
+
+
 			bool active = Scene.BaseTile != null
 				&& Scene.BaseTile.Region != null
 				&& (VisibleOnTimeout || !entity.TimedOut)
 				&& entity.Location.HasLatLong
-				&& Scene.BaseTile.Region.Contains(entity.Location)
 				&& UpdateVisibilityCheck();
 
+			bool oldVisible = Owner.IsVisible;
 			Owner.IsActive = Owner.IsVisible = active;
 			if (active)
-			{
-				if (Transform3D != null)
-					Transform3D.Position = Scene.LocationToVector(entity.Location);
-			}
+				//{
+				//	if (Transform3D != null)
+				Transform3D.Position = Scene.LocationToVector(entity.Location);
+			//}
+
+			if (oldVisible != Owner.IsVisible && VisibleChanged != null)
+				VisibleChanged(this);
 		}
 	}
 }

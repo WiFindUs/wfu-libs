@@ -1,9 +1,11 @@
-﻿using WaveEngine.Common.Graphics;
+﻿using System;
+using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
+using WaveEngine.Materials;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
@@ -35,7 +37,12 @@ namespace WiFindUs.Eye.Wave.Markers
 						Position = new Vector3(0.0f, 5.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap(PlaceHolderMaterial))
+					.AddComponent(new MaterialsMap(new BasicMaterial(Color.LightGray)
+					{
+						LightingEnabled = true,
+						AmbientLightColor = Color.White * 0.75f,
+						SpecularPower = 2
+					}))
 					.AddComponent(Model.CreateCone(10f, 6f, 5))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))

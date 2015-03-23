@@ -13,6 +13,7 @@ using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Extensions;
+using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -39,10 +40,10 @@ namespace WiFindUs.Eye.Wave
 
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
+		private List<NodeLinkMarker> nodeLinkMarkers = new List<NodeLinkMarker>();
 		private List<Marker> allMarkers = new List<Marker>();
 		private MapSceneInput inputBehaviour;
 		private MapSceneCamera cameraController;
-
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -235,11 +236,60 @@ namespace WiFindUs.Eye.Wave
 				);
 		}
 
-
-
 		public void CancelThreads()
 		{
 			Tiles((tile) => tile.CancelThreads());
+		}
+
+		public NodeMarker GetNodeMarker(Node node)
+		{
+			if (node == null)
+				return null;
+
+			NodeMarker marker = null;
+			foreach (NodeMarker mk in nodeMarkers)
+			{
+				if (mk.Entity == node)
+				{
+					marker = mk;
+					break;
+				}
+			}
+			return marker;
+		}
+
+		public DeviceMarker GetDeviceMarker(Device device)
+		{
+			if (device == null)
+				return null;
+
+			DeviceMarker marker = null;
+			foreach (DeviceMarker mk in deviceMarkers)
+			{
+				if (mk.Entity == device)
+				{
+					marker = mk;
+					break;
+				}
+			}
+			return marker;
+		}
+
+		public NodeLinkMarker GetNodeLinkMarker(NodeMarker nodeA, NodeMarker nodeB)
+		{
+			if (nodeA == null || nodeB == null)
+				return null;
+
+			NodeLinkMarker marker = null;
+			foreach (NodeLinkMarker mk in nodeLinkMarkers)
+			{
+				if (mk.LinksNodes(nodeA, nodeB))
+				{
+					marker = mk;
+					break;
+				}
+			}
+			return marker;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -248,6 +298,7 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void CreateScene()
 		{
+			RenderManager.RegisterLayerAfter(new WireframeObjectsLayer(this.RenderManager), DefaultLayers.Opaque);
 #if DEBUG
 			DebugMode = true;
 #endif
@@ -257,7 +308,7 @@ namespace WiFindUs.Eye.Wave
 			{
 				NearPlane = 1f,
 				FarPlane = 100000.0f,
-				ClearFlags = ClearFlags.Target | ClearFlags.DepthAndStencil,
+				ClearFlags = ClearFlags.All,
 				BackgroundColor = theme != null ? new Color(
 					theme.ControlDarkColour.R, theme.ControlDarkColour.G,
 					theme.ControlDarkColour.B, theme.ControlDarkColour.A)
@@ -334,11 +385,52 @@ namespace WiFindUs.Eye.Wave
 
 		private void Node_OnNodeLoaded(Node node)
 		{
+			//node entity
 			Entity entity = NodeMarker.Create(node);
 			NodeMarker marker = entity.FindComponent<NodeMarker>();
 			nodeMarkers.Add(marker);
 			allMarkers.Add(marker);
 			EntityManager.Add(entity);
+
+			//node link
+			node.OnMeshPeersChanged += Node_OnMeshPeersChanged;
+		}
+
+		private void Node_OnMeshPeersChanged(Node node)
+		{
+			//get marker for current node
+			NodeMarker marker = GetNodeMarker(node);
+			if (marker == null)
+				return;
+
+			//abort if we have no peers
+			if (marker.Entity.MeshPeerCount == 0)
+				return;
+
+			//loop through mesh peers and create missing links
+			List<Entity> newLinkMarkers = new List<Entity>();
+			foreach (Node peer in marker.Entity.MeshPeers)
+			{
+				if (peer == marker.Entity)
+					continue;
+
+				NodeMarker peerMarker = GetNodeMarker(peer);
+				if (peerMarker == null)
+					continue;
+
+				NodeLinkMarker linkMarker = GetNodeLinkMarker(marker, peerMarker);
+				if (linkMarker == null)
+					newLinkMarkers.Add(NodeLinkMarker.Create(marker, peerMarker));
+			}
+
+			//add new ones to the entity manager
+			foreach (Entity newLinkMarker in newLinkMarkers)
+			{
+				NodeLinkMarker linkMarker = newLinkMarker.FindComponent<NodeLinkMarker>();
+				nodeLinkMarkers.Add(linkMarker);
+				allMarkers.Add(linkMarker);
+				EntityManager.Add(newLinkMarker);
+			}
 		}
 
 		private void CreateTileLayer(uint layer)
