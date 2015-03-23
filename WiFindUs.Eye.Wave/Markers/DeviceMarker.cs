@@ -43,7 +43,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						AmbientLightColor = Color.White * 0.75f,
 						SpecularPower = 2
 					}))
-					.AddComponent(Model.CreateCone(10f, 6f, 5))
+					.AddComponent(Model.CreateCone(8f, 6f, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
 				);
