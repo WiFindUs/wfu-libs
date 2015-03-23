@@ -411,8 +411,7 @@ namespace WiFindUs.Eye
 					device.UnlockLocationEvents();
 				}
 			}
-
-			eyeContext.SubmitChanges();
+			SubmitPacketChanges();
 		}
 
 		private void NodePacketReceived(EyePacketListener sender, NodePacket nodePacket)
@@ -494,13 +493,30 @@ namespace WiFindUs.Eye
 					foreach (Node p in peer)
 					{
 						if (!p.TimedOut && p != node && !peers.Contains(p))
+						{
 							peers.Add(p);
+							break;
+						}
 					}
 				}
 				node.MeshPeers = peers;
 			}
+			SubmitPacketChanges();
+		}
 
-			eyeContext.SubmitChanges();
+		private void SubmitPacketChanges()
+		{
+			try
+			{
+				eyeContext.SubmitChanges(ConflictMode.ContinueOnConflict);
+			}
+			catch (ChangeConflictException ex)
+			{
+				foreach (ObjectChangeConflict objConflict in eyeContext.ChangeConflicts)
+					foreach (MemberChangeConflict memberConflict in objConflict.MemberConflicts)
+						memberConflict.Resolve(RefreshMode.OverwriteCurrentValues);
+				eyeContext.SubmitChanges(ConflictMode.ContinueOnConflict);
+			}
 		}
 
 		private bool InitializeApplicationMode()
@@ -650,7 +666,11 @@ namespace WiFindUs.Eye
 			try
 			{
 				eyeListener = new EyePacketListener(WFUApplication.Config.Get("server.udp_port", 33339));
+#if DEBUG
+				eyeListener.LogPackets = WFUApplication.Config.Get("server.log_packets", true);
+#else
 				eyeListener.LogPackets = WFUApplication.Config.Get("server.log_packets", false);
+#endif
 			}
 			catch (ArgumentOutOfRangeException ex)
 			{
