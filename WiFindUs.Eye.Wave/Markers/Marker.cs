@@ -5,13 +5,11 @@ using WaveEngine.Common.Math;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
-using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
 	public abstract class Marker : MapSceneEntityBehavior
 	{
-		private float scale = 1.0f;
 		private static Material placeHolderMaterial;
 		private List<BoxCollider> colliders = new List<BoxCollider>();
 
@@ -20,17 +18,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		/////////////////////////////////////////////////////////////////////
 
 		public abstract bool Selected { get; set; }
-
-		public float Scale
-		{
-			get { return scale; }
-			set
-			{
-				if (value.Tolerance(scale, 0.01f))
-					return;
-				scale = value;
-			}
-		}
 
 		public static Material PlaceHolderMaterial
 		{
@@ -91,6 +78,12 @@ namespace WiFindUs.Eye.Wave.Markers
 				return null;
 			colliders.Remove(collider);
 			return collider;
+		}
+
+		protected override void Update(TimeSpan gameTime)
+		{
+			float scale = Scene.MarkerScale;
+			Transform3D.Scale = new Vector3(scale, scale, scale);
 		}
 	}
 }

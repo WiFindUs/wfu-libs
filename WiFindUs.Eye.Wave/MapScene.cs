@@ -12,6 +12,7 @@ using WiFindUs.Controls;
 using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -34,12 +35,14 @@ namespace WiFindUs.Eye.Wave
 		private BoxCollider groundPlaneCollider;
 		private TerrainTile baseTile;
 		private uint visibleLayer = uint.MaxValue;
+		private float markerScale = 1.0f;
 
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
 		private List<Marker> allMarkers = new List<Marker>();
 		private MapSceneInput inputBehaviour;
 		private MapSceneCamera cameraController;
+
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -181,6 +184,17 @@ namespace WiFindUs.Eye.Wave
 		public BoxCollider GroundPlane
 		{
 			get { return groundPlaneCollider; }
+		}
+
+		public float MarkerScale
+		{
+			get { return markerScale; }
+			set
+			{
+				if (value.Tolerance(markerScale, 0.01f))
+					return;
+				markerScale = value;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////

@@ -67,6 +67,8 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected override void Update(TimeSpan gameTime)
 		{
+			base.Update(gameTime);
+
 			if (orbTransform != null)
 			{
 				float rot = RotationSpeed * (float)gameTime.TotalSeconds;

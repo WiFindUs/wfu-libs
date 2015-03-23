@@ -85,25 +85,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			UpdateMarkerState();
 		}
 
-		protected override void Update(TimeSpan gameTime)
-		{
-			Transform3D.Scale = new Vector3(Scale, Scale, Scale);
-
-			/*
-			if (model != null && modelTransform != null)
-			{
-				float rot = RotationSpeed;
-				if (!rot.Tolerance(0.0f, 0.0001f))
-				{
-					modelTransform.Rotation = new Vector3(
-						modelTransform.Rotation.X,
-						modelTransform.Rotation.Y + rot * (float)gameTime.TotalSeconds,
-						modelTransform.Rotation.Z);
-				}
-			}
-			 * */
-		}
-
 		protected virtual void BaseTileCenterLocationChanged(TerrainTile obj)
 		{
 			UpdateMarkerState();
