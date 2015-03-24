@@ -73,7 +73,10 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="MapSceneEntityBehavior.cs" />
-    <Compile Include="Markers\NodeLinkMarker.cs" />
+    <Compile Include="Markers\ILinkableMarker.cs" />
+    <Compile Include="Markers\LinkMarker.cs" />
+    <Compile Include="Markers\DeviceLinkMarker.cs" />
+    <Compile Include="Markers\MeshLinkMarker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Adapter\IMapForm.cs" />
     <Compile Include="Adapter\MapApplication.cs" />
@@ -86,7 +89,6 @@
     <Compile Include="Markers\DeviceMarker.cs" />
     <Compile Include="Markers\EntityMarker.cs" />
     <Compile Include="Markers\Marker.cs" />
-    <Compile Include="Markers\NodeLineBatch.cs" />
     <Compile Include="Markers\NodeMarker.cs" />
     <Compile Include="TerrainTile.cs" />
     <Compile Include="WaveMainForm.cs">
