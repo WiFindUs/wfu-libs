@@ -32,6 +32,7 @@ namespace WiFindUs.Eye
 		private readonly List<Node> meshPeers = new List<Node>();
 		private StackedLock locationEventLock = new StackedLock();
 		private bool fireLocationEvents = false;
+		private IPAddress ipAddress = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -198,7 +199,7 @@ namespace WiFindUs.Eye
 		{
 			get
 			{
-				return IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
+				return ipAddress;
 			}
 			set
 			{
@@ -370,6 +371,7 @@ namespace WiFindUs.Eye
 
 		partial void OnLoaded()
 		{
+			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
 			loaded = true;
 			Debugger.V(this.ToString() + " loaded.");
 			if (OnNodeLoaded != null)
@@ -378,6 +380,7 @@ namespace WiFindUs.Eye
 
 		partial void OnIPAddressRawChanged()
 		{
+			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
 			if (OnNodeIPAddressChanged != null)
 				OnNodeIPAddressChanged(this);
 		}

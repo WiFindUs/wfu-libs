@@ -9,6 +9,8 @@ namespace WiFindUs.Eye
 		: SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, IActionSubscriber
 	{
 		public const ulong TIMEOUT = 60;
+		public const long MIN_MESH_IP_ADDRESS = 2886729985L;
+		public const long MAX_MESH_IP_ADDRESS = 2886795006L;
 		public static event Action<Device> OnDeviceLoaded;
 		public event Action<Device> OnDeviceTypeChanged;
 		public event Action<Device> OnDeviceAtmosphereChanged;
@@ -26,6 +28,7 @@ namespace WiFindUs.Eye
 		private bool? gpsEnabled = null, gpsHasFix = null;
 		private StackedLock locationEventLock = new StackedLock();
 		private bool fireLocationEvents = false;
+		private IPAddress ipAddress = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -184,13 +187,31 @@ namespace WiFindUs.Eye
 		{
 			get
 			{
-				return IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
+				return ipAddress;
 			}
 			set
 			{
 #pragma warning disable 0618
 				IPAddressRaw = value == null ? null : new Nullable<long>(value.Address);
 #pragma warning restore 0618
+			}
+		}
+
+		public uint ConnectedNodeNumber
+		{
+			get
+			{
+				long ipRaw = IPAddressRaw.GetValueOrDefault();
+				if (ipRaw == 0)
+					return 0;
+				long ipRawHost = (ipRaw & 0x000000FFU) << 24
+					| (ipRaw & 0x0000FF00U) << 8
+					| (ipRaw & 0x00FF0000U) >> 8
+					| (ipRaw & 0xFF000000U) >> 24;
+				if (ipRawHost < MIN_MESH_IP_ADDRESS
+					|| ipRawHost > MAX_MESH_IP_ADDRESS)
+					return 0;
+				return ((uint)ipRawHost & 0xFF00) >> 8;
 			}
 		}
 
@@ -358,6 +379,7 @@ namespace WiFindUs.Eye
 
 		partial void OnLoaded()
 		{
+			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
 			loaded = true;
 			Debugger.V(this.ToString() + " loaded.");
 			if (OnDeviceLoaded != null)
@@ -378,6 +400,7 @@ namespace WiFindUs.Eye
 
 		partial void OnIPAddressRawChanged()
 		{
+			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
 			if (OnDeviceIPAddressChanged != null)
 				OnDeviceIPAddressChanged(this);
 		}
