@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
@@ -10,8 +11,29 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class DeviceMarker : EntityMarker<Device>
+	public class DeviceMarker : EntityMarker<Device>, ILinkableMarker
 	{
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
+
+		public Vector3 LinkPointPrimary
+		{
+			get
+			{
+				return new Vector3(
+					this.Transform3D.Position.X,
+					this.Transform3D.Position.Y + 7.0f * Scene.MarkerScale,
+					this.Transform3D.Position.Z
+					);
+			}
+		}
+
+		public Vector3 LinkPointSecondary
+		{
+			get { return LinkPointPrimary; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////

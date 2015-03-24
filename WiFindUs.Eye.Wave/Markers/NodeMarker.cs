@@ -11,7 +11,7 @@ using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class NodeMarker : EntityMarker<Node>
+	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
 		private Transform3D orbTransform;
 
@@ -19,13 +19,25 @@ namespace WiFindUs.Eye.Wave.Markers
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public Vector3 LinkPoint
+		public Vector3 LinkPointPrimary
 		{
 			get
 			{
 				return new Vector3(
 					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 21.0f * Scene.MarkerScale,
+					this.Transform3D.Position.Y + 28.0f * Scene.MarkerScale,
+					this.Transform3D.Position.Z
+					);
+			}
+		}
+
+		public Vector3 LinkPointSecondary
+		{
+			get
+			{
+				return new Vector3(
+					this.Transform3D.Position.X,
+					this.Transform3D.Position.Y + 14.0f * Scene.MarkerScale,
 					this.Transform3D.Position.Z
 					);
 			}
@@ -48,7 +60,6 @@ namespace WiFindUs.Eye.Wave.Markers
 				//base
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
-				.AddComponent(new NodeLineBatch())
 				//spike
 				.AddChild
 				(

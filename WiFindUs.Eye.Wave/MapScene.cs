@@ -40,7 +40,8 @@ namespace WiFindUs.Eye.Wave
 
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
-		private List<NodeLinkMarker> nodeLinkMarkers = new List<NodeLinkMarker>();
+		private List<MeshLinkMarker> meshLinkMarkers = new List<MeshLinkMarker>();
+		private List<DeviceLinkMarker> deviceLinkMarkers = new List<DeviceLinkMarker>();
 		private List<Marker> allMarkers = new List<Marker>();
 		private MapSceneInput inputBehaviour;
 		private MapSceneCamera cameraController;
@@ -258,6 +259,23 @@ namespace WiFindUs.Eye.Wave
 			return marker;
 		}
 
+		public NodeMarker GetNodeMarker(uint nodeNumber)
+		{
+			if (nodeNumber == 0 || nodeNumber > 254)
+				return null;
+
+			NodeMarker marker = null;
+			foreach (NodeMarker mk in nodeMarkers)
+			{
+				if (mk.Entity.Number.GetValueOrDefault() == nodeNumber)
+				{
+					marker = mk;
+					break;
+				}
+			}
+			return marker;
+		}
+
 		public DeviceMarker GetDeviceMarker(Device device)
 		{
 			if (device == null)
@@ -275,15 +293,15 @@ namespace WiFindUs.Eye.Wave
 			return marker;
 		}
 
-		public NodeLinkMarker GetNodeLinkMarker(NodeMarker nodeA, NodeMarker nodeB)
+		public MeshLinkMarker GetNodeLinkMarker(NodeMarker nodeA, NodeMarker nodeB)
 		{
 			if (nodeA == null || nodeB == null)
 				return null;
 
-			NodeLinkMarker marker = null;
-			foreach (NodeLinkMarker mk in nodeLinkMarkers)
+			MeshLinkMarker marker = null;
+			foreach (MeshLinkMarker mk in meshLinkMarkers)
 			{
-				if (mk.LinksNodes(nodeA, nodeB))
+				if (mk.LinksMarkers(nodeA, nodeB))
 				{
 					marker = mk;
 					break;
@@ -376,10 +394,21 @@ namespace WiFindUs.Eye.Wave
 
 		private void Device_OnDeviceLoaded(Device device)
 		{
+			//device entity
 			Entity entity = DeviceMarker.Create(device);
 			DeviceMarker marker = entity.FindComponent<DeviceMarker>();
 			deviceMarkers.Add(marker);
 			allMarkers.Add(marker);
+			EntityManager.Add(entity);
+
+			//device link
+			entity = LinkMarker.Create(marker, null, typeof(DeviceLinkMarker));
+			DeviceLinkMarker linkMarker = entity.FindComponent<DeviceLinkMarker>();
+			linkMarker.Diameter = 0.5f;
+			linkMarker.ToSecondaryPoint = true;
+			linkMarker.Colour = Color.Lime;
+			deviceLinkMarkers.Add(linkMarker);
+			allMarkers.Add(linkMarker);
 			EntityManager.Add(entity);
 		}
 
@@ -418,16 +447,16 @@ namespace WiFindUs.Eye.Wave
 				if (peerMarker == null)
 					continue;
 
-				NodeLinkMarker linkMarker = GetNodeLinkMarker(marker, peerMarker);
+				MeshLinkMarker linkMarker = GetNodeLinkMarker(marker, peerMarker);
 				if (linkMarker == null)
-					newLinkMarkers.Add(NodeLinkMarker.Create(marker, peerMarker));
+					newLinkMarkers.Add(LinkMarker.Create(marker, peerMarker, typeof(MeshLinkMarker)));
 			}
 
 			//add new ones to the entity manager
 			foreach (Entity newLinkMarker in newLinkMarkers)
 			{
-				NodeLinkMarker linkMarker = newLinkMarker.FindComponent<NodeLinkMarker>();
-				nodeLinkMarkers.Add(linkMarker);
+				MeshLinkMarker linkMarker = newLinkMarker.FindComponent<MeshLinkMarker>();
+				meshLinkMarkers.Add(linkMarker);
 				allMarkers.Add(linkMarker);
 				EntityManager.Add(newLinkMarker);
 			}
