@@ -105,7 +105,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				(
 					new Entity("link") { IsActive = false }
 					.AddComponent(marker.linkTransform = new Transform3D())
-					.AddComponent(new MaterialsMap(marker.matte = new BasicMaterial(new Color(0, 191, 255), typeof(WireframeObjectsLayer))
+					.AddComponent(new MaterialsMap(marker.matte = new BasicMaterial(new Color(200, 240, 255), typeof(WireframeObjectsLayer))
 					{
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,

@@ -69,7 +69,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						Position = new Vector3(0.0f, 7.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap(new BasicMaterial(new Color(0, 191, 255))
+					.AddComponent(new MaterialsMap(new BasicMaterial(new Color(0, 175, 255))
 					{
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
@@ -88,7 +88,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						Position = new Vector3(0.0f, 21.0f, 0.0f),
 						Rotation = new Vector3(90.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap(new BasicMaterial(new Color(0, 191, 255), typeof(WireframeObjectsLayer))
+					.AddComponent(new MaterialsMap(new BasicMaterial(new Color(0, 200, 255), typeof(WireframeObjectsLayer))
 					{
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
