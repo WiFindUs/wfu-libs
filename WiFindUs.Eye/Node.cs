@@ -24,9 +24,10 @@ namespace WiFindUs.Eye
 		public event Action<Node> OnGPSDaemonRunningChanged;
 		public event Action<Node> OnVisibleSatellitesChanged;
 		public event Action<Node> OnMeshPeersChanged;
+		public event Action<Node> OnGPSFakeChanged;
 
 		private bool timedOut = false, loaded = false;
-		private bool? meshPoint = null, apDaemon = null, dhcpDaemon = null, gpsDaemon = null;
+		private bool? meshPoint = null, apDaemon = null, dhcpDaemon = null, gpsDaemon = null, gpsFake = null;
 		private uint? satellites = null;
 		private readonly List<Node> meshPeers = new List<Node>();
 		private StackedLock locationEventLock = new StackedLock();
@@ -102,7 +103,24 @@ namespace WiFindUs.Eye
 						OnGPSDaemonRunningChanged(this);
 
 					if (!gpsDaemon.GetValueOrDefault())
+					{
 						Location = null;
+						IsGPSFake = null;
+					}
+				}
+			}
+		}
+
+		public bool? IsGPSFake
+		{
+			get { return gpsFake; }
+			set
+			{
+				if (gpsFake != value)
+				{
+					gpsFake = value;
+					if (OnGPSFakeChanged != null)
+						OnGPSFakeChanged(this);
 				}
 			}
 		}

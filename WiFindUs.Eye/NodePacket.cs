@@ -9,7 +9,7 @@ namespace WiFindUs.Eye
 		private double? latitude, longitude, altitude, accuracy;
 		private uint? satellites;
 		private uint? number;
-		private bool? meshPoint, apDaemon, dhcpDaemon, gpsDaemon;
+		private bool? meshPoint, apDaemon, dhcpDaemon, gpsDaemon, gpsFake;
 		private uint[] meshPeers;
 
 		public double? Latitude
@@ -40,6 +40,11 @@ namespace WiFindUs.Eye
 		public bool? IsGPSDaemonRunning
 		{
 			get { return gpsDaemon; }
+		}
+
+		public bool? IsGPSFake
+		{
+			get { return gpsFake; }
 		}
 
 		public bool? IsDHCPDaemonRunning
@@ -115,7 +120,11 @@ namespace WiFindUs.Eye
 					case "mp": meshPoint = UInt32.Parse(value) == 1; return true;
 					case "ap": apDaemon = UInt32.Parse(value) == 1; return true;
 					case "dhcp": dhcpDaemon = UInt32.Parse(value) == 1; return true;
-					case "gps": gpsDaemon = UInt32.Parse(value) == 1; return true;
+					case "gps":
+						uint gpsVal = UInt32.Parse(value);
+						gpsDaemon = gpsVal == 1 || gpsVal == 2;
+						gpsFake = gpsVal == 2;
+						return true;
 					case "mpl":
 						if (value.CompareTo("0") == 0)
 						{

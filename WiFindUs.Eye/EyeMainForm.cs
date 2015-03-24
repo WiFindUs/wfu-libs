@@ -455,6 +455,8 @@ namespace WiFindUs.Eye
 			if (nodePacket.IsGPSDaemonRunning.GetValueOrDefault())
 			{
 				node.LockLocationEvents();
+				if (nodePacket.IsGPSFake.HasValue)
+					node.IsGPSFake = nodePacket.IsGPSFake;
 				if (nodePacket.Accuracy.HasValue)
 					node.Accuracy = nodePacket.Accuracy;
 				if (node.Accuracy.HasValue && node.Accuracy.Value <= nodeMaxAccuracy)

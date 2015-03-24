@@ -71,6 +71,7 @@ namespace WiFindUs.Eye.Controls
 			node.OnVisibleSatellitesChanged += node_OnVisibleSatellitesChanged;
 			node.TimedOutChanged += node_TimedOutChanged;
 			node.WhenUpdated += node_WhenUpdated;
+			node.OnGPSFakeChanged += node_OnGPSFakeChanged;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -84,11 +85,11 @@ namespace WiFindUs.Eye.Controls
 				return;
 
 			NodeListStatusItem[] statuses = new NodeListStatusItem[] {
-                new NodeListStatusItem("MP", node.IsMeshPoint),
-                new NodeListStatusItem("AP", node.IsAPDaemonRunning),
-                new NodeListStatusItem("DHCP", node.IsDHCPDaemonRunning),
-                new NodeListStatusItem("GPS", node.IsGPSDaemonRunning)
-            };
+				new NodeListStatusItem("MP", node.IsMeshPoint),
+				new NodeListStatusItem("AP", node.IsAPDaemonRunning),
+				new NodeListStatusItem("DHCP", node.IsDHCPDaemonRunning),
+				new NodeListStatusItem("GPS", node.IsGPSDaemonRunning)
+			};
 
 			using (Font f = new Font(Font.FontFamily, Font.Size - 2.0f))
 			{
@@ -105,13 +106,17 @@ namespace WiFindUs.Eye.Controls
 
 		private class NodeListStatusItem
 		{
-			public readonly String Caption;
+			public readonly string Caption;
 			public readonly bool? Status;
+			private readonly string okText, failText, waitingText;
 
-			public NodeListStatusItem(string caption, bool? status)
+			public NodeListStatusItem(string caption, bool? status, string okText = "OK", string failText = "Fail", string waitingText = "Waiting")
 			{
-				Caption = caption;
+				Caption = caption ?? "";
 				Status = status;
+				this.okText = okText ?? "OK";
+				this.failText = failText ?? "Fail";
+				this.waitingText = waitingText ?? "Waiting";
 			}
 
 			public void Paint(Graphics g, Theme t, Font f, int x, int y)
@@ -119,7 +124,7 @@ namespace WiFindUs.Eye.Controls
 				using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic) { Alignment = StringAlignment.Center })
 				{
 					g.DrawString(Caption + ":\n" +
-					(Status.HasValue ? (Status.Value ? "OK" : "Fail") : "Waiting"),
+					(Status.HasValue ? (Status.Value ? okText : failText) : waitingText),
 					f,
 					(Status.HasValue ? (Status.Value ? t.OKBrush : t.ErrorBrush) : t.WarningBrush),
 					x, y, sf);
@@ -168,6 +173,11 @@ namespace WiFindUs.Eye.Controls
 		}
 
 		private void node_LocationChanged(ILocatable obj)
+		{
+			this.RefreshThreadSafe();
+		}
+
+		private void node_OnGPSFakeChanged(Node obj)
 		{
 			this.RefreshThreadSafe();
 		}
