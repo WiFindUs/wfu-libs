@@ -18,6 +18,7 @@ namespace WiFindUs.Eye.Wave.Markers
 	{
 		private DeviceMarker fromDevice;
 		private NodeMarker toNode;
+		private double timer = -1.0;
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
@@ -33,7 +34,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Initialize()
 		{
 			base.Initialize();
-			Node.OnNodeLoaded += NodeLoaded;
 			UpdateMarkerState();
 		}
 
@@ -41,7 +41,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			if (oldFromMarker != null && oldFromMarker == fromDevice)
 			{
-				fromDevice.VisibleChanged -= DeviceMarkerChanged;
+				fromDevice.VisibleChanged -= DeviceVisibleChanged;
 				fromDevice.Entity.OnDeviceIPAddressChanged -= DeviceIPAddressChanged;
 			}
 
@@ -49,7 +49,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 			if (fromDevice != null)
 			{
-				fromDevice.VisibleChanged += DeviceMarkerChanged;
+				fromDevice.VisibleChanged += DeviceVisibleChanged;
 				fromDevice.Entity.OnDeviceIPAddressChanged += DeviceIPAddressChanged;
 			}
 
@@ -60,19 +60,33 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			if (oldToMarker != null && oldToMarker == toNode)
 			{
-				toNode.VisibleChanged -= NodeMarkerChanged;
+				toNode.VisibleChanged -= NodeVisibleChanged;
 				toNode.Entity.OnAPDaemonRunningChanged -= NodeChanged;
+				toNode.Entity.OnNodeNumberChanged -= NodeNumberChanged;
 			}
 
 			toNode = ToMarker as NodeMarker;
 
 			if (toNode != null)
 			{
-				toNode.VisibleChanged += NodeMarkerChanged;
+				toNode.VisibleChanged += NodeVisibleChanged;
 				toNode.Entity.OnAPDaemonRunningChanged += NodeChanged;
+				toNode.Entity.OnNodeNumberChanged += NodeNumberChanged;
 			}
 
 			UpdateMarkerState();
+		}
+
+		protected override void Update(TimeSpan gameTime)
+		{
+			base.Update(gameTime);
+
+			timer -= gameTime.TotalSeconds;
+			if (timer < 0.0)
+			{
+				CheckForConnectionWithNewNode();
+				timer = 5.0;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -87,15 +101,9 @@ namespace WiFindUs.Eye.Wave.Markers
 			ToMarker = this.Scene.GetNodeMarker(fromDevice.Entity.ConnectedNodeNumber);
 		}
 
-		private void NodeLoaded(Node node)
+		private void NodeNumberChanged(Node node)
 		{
-			CheckForConnectionWithNewNode();
-			node.OnNodeNumberChanged += NodeNumberChanged;
-		}
-
-		private void NodeNumberChanged(Node obj)
-		{
-			CheckForConnectionWithNewNode();
+			ToMarker = this.Scene.GetNodeMarker(fromDevice.Entity.ConnectedNodeNumber);
 		}
 
 		private void NodeChanged(Node node)
@@ -108,12 +116,12 @@ namespace WiFindUs.Eye.Wave.Markers
 			ToMarker = this.Scene.GetNodeMarker(fromDevice.Entity.ConnectedNodeNumber);
 		}
 
-		private void DeviceMarkerChanged(EntityMarker<Device> deviceMarker)
+		private void DeviceVisibleChanged(EntityMarker<Device> deviceMarker)
 		{
 			UpdateMarkerState();
 		}
 
-		private void NodeMarkerChanged(EntityMarker<Node> nodeMarker)
+		private void NodeVisibleChanged(EntityMarker<Node> nodeMarker)
 		{
 			UpdateMarkerState();
 		}
@@ -122,7 +130,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			if (Owner == null)
 				return;
-			Owner.IsActive = Owner.IsVisible =
+			Owner.IsVisible =
 			(
 				fromDevice != null
 				&& toNode != null
