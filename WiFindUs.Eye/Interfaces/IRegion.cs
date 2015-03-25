@@ -16,5 +16,6 @@ namespace WiFindUs.Eye
 		ILocation SouthEast { get; }
 		ILocation SouthWest { get; }
 		double Width { get; }
+		ILocation Clamp(ILocation location);
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
@@ -233,21 +234,24 @@ namespace WiFindUs.Eye
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		public static bool Equals(IRegion A, IRegion B)
+		{
+			if (A == null || B == null)
+				return false;
+			if (ReferenceEquals(A, B))
+				return true;
+			return A.NorthWest.Equals(B.NorthWest) && A.SouthEast.Equals(B.SouthEast);
+
+		}
+
 		public bool Equals(IRegion other)
 		{
-			if (ReferenceEquals(null, other))
-				return false;
-			if (ReferenceEquals(this, other))
-				return true;
-
-			return northEast.Equals(other.NorthEast) && southWest.Equals(other.SouthWest);
+			return Equals(this, other);
 		}
 
 		public override bool Equals(object obj)
 		{
-			if (!(obj is IRegion))
-				return false;
-			return Equals((IRegion)obj);
+			return Equals(obj as IRegion);
 		}
 
 		public override int GetHashCode()
@@ -257,12 +261,19 @@ namespace WiFindUs.Eye
 					.Hash(southWest);
 		}
 
+		public static bool Contains(IRegion region, double latitude, double longitude)
+		{
+			if (region == null)
+				return false;
+			return latitude <= region.NorthWest.Latitude
+				&& latitude >= region.SouthEast.Latitude
+				&& longitude >= region.NorthWest.Longitude
+				&& longitude <= region.SouthEast.Longitude;
+		}
+
 		public bool Contains(double latitude, double longitude)
 		{
-			return latitude <= northWest.Latitude
-				&& latitude >= southEast.Latitude
-				&& longitude >= northWest.Longitude
-				&& longitude <= southEast.Longitude;
+			return Contains(this, latitude, longitude);
 		}
 
 		public bool Contains(ILocation location)
@@ -271,10 +282,8 @@ namespace WiFindUs.Eye
 				return false;
 			if (!location.HasLatLong)
 				throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
-			return Contains(location.Latitude.Value, location.Longitude.Value);
+			return Contains(this, location.Latitude.Value, location.Longitude.Value);
 		}
-
-
 
 		public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude)
 		{
@@ -304,6 +313,24 @@ namespace WiFindUs.Eye
 		public override string ToString()
 		{
 			return ToString(this);
+		}
+
+		public static ILocation Clamp(IRegion region, ILocation location)
+		{
+			if (region == null || location == null)
+				return null;
+			if (!location.HasLatLong)
+				throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
+			return new WiFindUs.Eye.Location(
+				location.Latitude.Value.Clamp(region.SouthEast.Latitude.Value, region.NorthWest.Latitude.Value),
+				location.Longitude.Value.Clamp(region.NorthWest.Longitude.Value, region.SouthEast.Longitude.Value),
+				location.Accuracy,
+				location.Altitude);
+		}
+
+		public ILocation Clamp(ILocation location)
+		{
+			return Clamp(this, location);
 		}
 	}
 }
