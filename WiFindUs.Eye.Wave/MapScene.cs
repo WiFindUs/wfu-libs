@@ -356,7 +356,7 @@ namespace WiFindUs.Eye.Wave
 			Debugger.V("MapScene: creating ground plane");
 			groundPlane = new Entity()
 				.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
-				.AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 50f))
+				.AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 100f))
 				.AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red });
 			EntityManager.Add(groundPlane);
 
