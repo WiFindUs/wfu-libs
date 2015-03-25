@@ -65,7 +65,7 @@ namespace WiFindUs.Eye.Wave
 			get { return target; }
 			set
 			{
-				ILocation loc = value ?? Scene.CenterLocation;
+				ILocation loc = Scene.BaseTile.Region.Clamp(value ?? Scene.CenterLocation);
 				if (WiFindUs.Eye.Location.Equals(loc, target))
 					return;
 				target = loc;
