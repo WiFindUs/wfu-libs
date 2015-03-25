@@ -49,6 +49,7 @@ namespace WiFindUs.Eye.Wave
 		private System.Drawing.Image tileImage = null; //only used on base tile
 		private object threadObject = null;
 		private float horizontalScale;
+		private bool stopScalingNextFrame = false; //fixes the boxcollider expansion bug
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -72,6 +73,7 @@ namespace WiFindUs.Eye.Wave
 				errorState = false;
 				textured = false;
 				horizontalScale = UNTEXTURED_SCALE;
+				stopScalingNextFrame = false;
 				transform3D.Scale = new Vector3(horizontalScale, 1.0f, horizontalScale);
 				if (TileImage != null)
 				{
@@ -365,16 +367,18 @@ namespace WiFindUs.Eye.Wave
 			{
 				if (Textured)
 				{
-					bool done = false;
-					horizontalScale += (float)gameTime.TotalSeconds * SCALE_SPEED;
-					if (horizontalScale > 1.0f)
-					{
-						horizontalScale = 1.0f;
-						done = true;
-					}
-					transform3D.Scale = new Vector3(horizontalScale, 1.0f, horizontalScale);
-					if (done)
+					if (stopScalingNextFrame)
 						Owner.IsActive = false;
+					else
+					{
+						horizontalScale += (float)gameTime.TotalSeconds * SCALE_SPEED;
+						if (horizontalScale > 1.0f)
+						{
+							horizontalScale = 1.0f;
+							stopScalingNextFrame = true;
+						}
+						transform3D.Scale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+					}
 				}
 				else if (threadObject == null
 					&& Owner.Parent.IsVisible //tile layer
