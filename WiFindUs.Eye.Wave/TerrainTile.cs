@@ -18,9 +18,8 @@ namespace WiFindUs.Eye.Wave
 	{
 		public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError, CenterLocationChanged;
 
-		private static Material placeHolderMaterial, placeHolderMaterialAlt,
-			loadingMaterial, downloadingMaterial, errorMaterial, creatingTextureMaterial,
-			loadedMaterial;
+		private const float UNTEXTURED_SCALE = 0.4f;
+		private const float SCALE_SPEED = 2.0f;
 		private const int MAX_CONCURRENT_TEXTURE_CREATIONS = 1;
 		private readonly int MAX_CONCURRENT_LOADS = Environment.ProcessorCount;
 		private const int MAX_CONCURRENT_DOWNLOADS = 1;
@@ -36,6 +35,7 @@ namespace WiFindUs.Eye.Wave
 		private MaterialsMap materialsMap;
 		private BoxCollider boxCollider;
 
+		private BasicMaterial placeholderMaterial;
 		private bool errorState = false;
 		private Region region;
 		private uint googleMapsZoomLevel;
@@ -43,11 +43,12 @@ namespace WiFindUs.Eye.Wave
 		private TerrainTile baseTile;
 		private float size;
 		private Vector3 topLeft, bottomRight;
-		private bool textured = true;
+		private bool textured = false;
 		private int lastDownloadPercentage = 0;
 		private bool mapImageFileExists = false;
 		private System.Drawing.Image tileImage = null; //only used on base tile
 		private object threadObject = null;
+		private float horizontalScale;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -65,11 +66,18 @@ namespace WiFindUs.Eye.Wave
 					return;
 
 				CancelThreads();
-				materialsMap.DefaultMaterial = (row + column) % 2 == 0 ? PlaceHolderMaterial : PlaceHolderMaterialAlt;
+				placeholderMaterial.DiffuseColor = (row + column) % 2 == 0 ? Color.Peru : Color.Sienna;
+				materialsMap.DefaultMaterial = placeholderMaterial;
 				region = new Region(value, googleMapsZoomLevel);
 				errorState = false;
 				textured = false;
-				TileImage = null;
+				horizontalScale = UNTEXTURED_SCALE;
+				transform3D.Scale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+				if (TileImage != null)
+				{
+					TileImage.Dispose();
+					TileImage = null;
+				}
 				if (!Directory.Exists(ImageDirectory))
 				{
 					mapImageFileExists = false;
@@ -85,9 +93,9 @@ namespace WiFindUs.Eye.Wave
 				}
 				else
 					mapImageFileExists = File.Exists(ImagePath);
-
 				if (CenterLocationChanged != null)
 					CenterLocationChanged(this);
+				Owner.IsActive = true;
 			}
 		}
 
@@ -124,75 +132,6 @@ namespace WiFindUs.Eye.Wave
 		public Vector3 BottomRight
 		{
 			get { return bottomRight; }
-		}
-
-		public static Material PlaceHolderMaterial
-		{
-			get
-			{
-				if (placeHolderMaterial == null)
-					placeHolderMaterial = new BasicMaterial(Color.Peru);
-				return placeHolderMaterial;
-			}
-		}
-		public static Material PlaceHolderMaterialAlt
-		{
-			get
-			{
-				if (placeHolderMaterialAlt == null)
-					placeHolderMaterialAlt = new BasicMaterial(Color.Sienna);
-				return placeHolderMaterialAlt;
-			}
-		}
-
-		public static Material CreatingTextureMaterial
-		{
-			get
-			{
-				if (creatingTextureMaterial == null)
-					creatingTextureMaterial = new BasicMaterial(Color.Green);
-				return creatingTextureMaterial;
-			}
-		}
-
-		public static Material LoadedMaterial
-		{
-			get
-			{
-				if (loadedMaterial == null)
-					loadedMaterial = new BasicMaterial(Color.GreenYellow);
-				return loadedMaterial;
-			}
-		}
-
-		public static Material LoadingMaterial
-		{
-			get
-			{
-				if (loadingMaterial == null)
-					loadingMaterial = new BasicMaterial(Color.Yellow);
-				return loadingMaterial;
-			}
-		}
-
-		public static Material DownloadingMaterial
-		{
-			get
-			{
-				if (downloadingMaterial == null)
-					downloadingMaterial = new BasicMaterial(Color.Orange);
-				return downloadingMaterial;
-			}
-		}
-
-		public static Material ErrorMaterial
-		{
-			get
-			{
-				if (errorMaterial == null)
-					errorMaterial = new BasicMaterial(Color.Red);
-				return errorMaterial;
-			}
 		}
 
 		private string ImageFilenameLatLong
@@ -251,9 +190,38 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public bool TextureOK
+		public bool Error
 		{
-			get { return !errorState && textured; }
+			get { return errorState; }
+			private set
+			{
+				if (value == errorState)
+					return;
+				errorState = value;
+				if (errorState)
+				{
+					Owner.IsActive = false;
+					placeholderMaterial.DiffuseColor = Color.Red;
+					if (TextureError != null)
+						TextureError(this);
+				}
+			}
+		}
+
+		public bool Textured
+		{
+			get { return textured; }
+			private set
+			{
+				if (value == textured)
+					return;
+				textured = value;
+				if (textured)
+				{
+					if (TextureLoadingFinished != null)
+						TextureLoadingFinished(this);
+				}
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -281,17 +249,21 @@ namespace WiFindUs.Eye.Wave
 				+ (WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM)
 				- layer) / 10.0f;
 
-			Entity tileEntity = new Entity() { IsVisible = false, IsActive = false }
+			BasicMaterial mat = new BasicMaterial((row + column) % 2 == 0 ? Color.Peru : Color.Sienna);
+			Entity tileEntity = new Entity() { IsActive = false }
 			.AddComponent(new Transform3D())
-			.AddComponent(new MaterialsMap((row + column) % 2 == 0 ? PlaceHolderMaterial : PlaceHolderMaterialAlt))
+			.AddComponent(new MaterialsMap(mat))
 			.AddComponent(Model.CreatePlane(Vector3.UnitY, size))
 			.AddComponent(new ModelRenderer())
-			.AddComponent(new BoxCollider() { IsActive = false, DebugLineColor = Color.Brown })
+			.AddComponent(new BoxCollider() { DebugLineColor = Color.Brown })
 			.AddComponent(new TerrainTile(
 				layer == 0 ? null : baseTile,
 				MapScene.MIN_LEVEL + layer,
 				row, column,
-				size));
+				size)
+				{
+					placeholderMaterial = mat
+				});
 
 			return tileEntity;
 		}
@@ -303,11 +275,11 @@ namespace WiFindUs.Eye.Wave
 		public void CalculatePosition()
 		{
 			if (baseTile == null)
-				transform3D.Position = new Vector3(0f, 0f, 0f);
+				transform3D.LocalPosition = new Vector3(0f, 0f, 0f);
 			else
 			{
 				float start = (baseTile.Size / -2.0f) + (size / 2.0f);
-				transform3D.Position = new Vector3(
+				transform3D.LocalPosition = new Vector3(
 					start + (column * size),
 					0.0f,
 					start + (row * size));
@@ -353,7 +325,7 @@ namespace WiFindUs.Eye.Wave
 
 				currentDownloads++;
 				Debugger.V("Downloading map tile texture " + ImageFilename + "...");
-				materialsMap.DefaultMaterial = DownloadingMaterial;
+				placeholderMaterial.DiffuseColor = Color.Orange;
 				WebClient downloadClient = new WebClient();
 				downloadClient.DownloadFileCompleted += DownloadFileCompleted;
 				downloadClient.DownloadProgressChanged += DownloadProgressChanged;
@@ -369,7 +341,7 @@ namespace WiFindUs.Eye.Wave
 					return;
 
 				currentTextureCreations++;
-				materialsMap.DefaultMaterial = CreatingTextureMaterial;
+				placeholderMaterial.DiffuseColor = Color.Green;
 				Thread textureThread = new Thread(new ThreadStart(TextureCreationThread));
 				threadObject = textureThread;
 				textureThread.Start();
@@ -380,7 +352,7 @@ namespace WiFindUs.Eye.Wave
 					return;
 
 				currentLoads++;
-				materialsMap.DefaultMaterial = LoadingMaterial;
+				placeholderMaterial.DiffuseColor = Color.Yellow;
 				Thread loadThread = new Thread(new ThreadStart(LoadThread));
 				threadObject = loadThread;
 				loadThread.Start();
@@ -389,12 +361,26 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void Update(TimeSpan gameTime)
 		{
-			if (!errorState
-				&& !textured
-				&& threadObject == null
-				&& Owner.IsVisible
-				&& Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider))
-				CheckTextureState();
+			if (!Error)
+			{
+				if (Textured)
+				{
+					bool done = false;
+					horizontalScale += (float)gameTime.TotalSeconds * SCALE_SPEED;
+					if (horizontalScale > 1.0f)
+					{
+						horizontalScale = 1.0f;
+						done = true;
+					}
+					transform3D.Scale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+					if (done)
+						Owner.IsActive = false;
+				}
+				else if (threadObject == null
+					&& Owner.Parent.IsVisible //tile layer
+					&& Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider))
+					CheckTextureState();
+			}
 		}
 
 		protected override void DeleteDependencies()
@@ -452,7 +438,6 @@ namespace WiFindUs.Eye.Wave
 
 			try
 			{
-
 				//determine what the image scale is
 				float scale = (WFUApplication.Config == null ? 1.0f : WFUApplication.Config.Get("map.texture_scale", 1.0f))
 					.Clamp(0.1f, 1.0f);
@@ -491,13 +476,13 @@ namespace WiFindUs.Eye.Wave
 				ErrorState("Error loading map tile texture " + ImageFilename + ": " + ex.Message);
 			}
 
-			if (errorState)
+			if (Error)
 				TileImage = null;
 			if (initialThreadObject == threadObject) //cancelled?
 			{
 				threadObject = null;
 				if (TileImage != null)
-					materialsMap.DefaultMaterial = LoadedMaterial;
+					placeholderMaterial.DiffuseColor = Color.GreenYellow;
 
 				if (TextureImageLoadingFinished != null)
 					TextureImageLoadingFinished(this);
@@ -531,9 +516,7 @@ namespace WiFindUs.Eye.Wave
 			if (initialThreadObject == threadObject) //cancelled?
 			{
 				threadObject = null;
-				textured = true;
-				if (TextureLoadingFinished != null)
-					TextureLoadingFinished(this);
+				Textured = true;
 			}
 			currentTextureCreations--;
 		}
@@ -541,10 +524,7 @@ namespace WiFindUs.Eye.Wave
 		private void ErrorState(string message)
 		{
 			Debugger.E(message);
-			errorState = true;
-			materialsMap.DefaultMaterial = ErrorMaterial;
-			if (TextureError != null)
-				TextureError(this);
+			Error = true;
 		}
 	}
 }

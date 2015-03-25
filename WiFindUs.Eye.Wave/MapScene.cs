@@ -31,6 +31,7 @@ namespace WiFindUs.Eye.Wave
 		private Theme theme;
 		private FixedCamera camera;
 		private ILocation center;
+		private Entity[] tileLayers;
 		private Entity[][,] tiles;
 		private Entity groundPlane;
 		private BoxCollider groundPlaneCollider;
@@ -78,8 +79,21 @@ namespace WiFindUs.Eye.Wave
 				if (value == null || WiFindUs.Eye.Location.Equals(center, value))
 					return;
 				Debugger.I("Setting map center to " + value.ToString());
+
 				center = value;
-				UpdateTileLocations();
+				baseTile.CenterLocation = value;
+				Tiles((tile) =>
+				{
+					float ratio = (tile.Size / baseTile.Size);
+					float latSize = (float)baseTile.Region.LatitudinalSpan * ratio;
+					float longSize = (float)baseTile.Region.LongitudinalSpan * ratio;
+
+					tile.CenterLocation = new Location(
+						baseTile.Region.NorthWest.Latitude.Value - latSize * ((float)tile.Row + 0.5f), //lat
+						baseTile.Region.NorthWest.Longitude.Value + longSize * ((float)tile.Column + 0.5f)//long
+						);
+				}, 1);
+
 				if (CenterLocationChanged != null)
 					CenterLocationChanged(this);
 			}
@@ -93,33 +107,19 @@ namespace WiFindUs.Eye.Wave
 			}
 			set
 			{
-				uint layer = value >= tiles.Length ? (uint)tiles.Length - 1 : value;
+				uint layer = value >= tileLayers.Length ? (uint)tileLayers.Length - 1 : value;
 				if (layer == visibleLayer)
 					return;
 
-				Tiles((tile) =>
-				{
-					tile.Owner.IsVisible
-						= tile.Owner.IsActive
-						= tile.Owner.FindComponent<BoxCollider>().IsActive
-						= false;
-				}, -1, -1, (int)layer);
-
 				visibleLayer = layer;
-
-				Tiles((tile) =>
-				{
-					tile.Owner.IsVisible
-						= tile.Owner.IsActive
-						= tile.Owner.FindComponent<BoxCollider>().IsActive
-						= true;
-				}, (int)visibleLayer, (int)visibleLayer);
+				for (int i = 0; i < tileLayers.Length; i++)
+					tileLayers[i].IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
 			}
 		}
 
 		public uint LayerCount
 		{
-			get { return (uint)tiles.Length; }
+			get { return (uint)tileLayers.Length; }
 		}
 
 		public TerrainTile BaseTile
@@ -347,7 +347,8 @@ namespace WiFindUs.Eye.Wave
 
 			//create terrain layers
 			Debugger.V("MapScene: creating layers");
-			tiles = new Entity[Region.GOOGLE_MAPS_TILE_MAX_ZOOM - MIN_LEVEL + 1][,];
+			tileLayers = new Entity[Region.GOOGLE_MAPS_TILE_MAX_ZOOM - MIN_LEVEL + 1];
+			tiles = new Entity[tileLayers.Length][,];
 			for (uint layer = 0; layer < tiles.Length; layer++)
 				CreateTileLayer(layer);
 
@@ -464,19 +465,34 @@ namespace WiFindUs.Eye.Wave
 
 		private void CreateTileLayer(uint layer)
 		{
-			if (tiles == null || layer >= tiles.Length || tiles[layer] != null)
-				return;
+			Entity layerEntity = tileLayers[layer];
+			if (layerEntity == null)
+			{
+				tileLayers[layer] = layerEntity = new Entity()
+				{
+					IsActive = false,
+					IsVisible = false
+				}
+				.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) });
+				EntityManager.Add(layerEntity);
+			}
 
 			int depth = 1 << (int)layer;
-			tiles[layer] = new Entity[depth, depth];
+			Entity[,] layerTiles = tiles[layer];
+			if (layerTiles == null)
+				tiles[layer] = layerTiles = new Entity[depth, depth];
 			for (uint row = 0; row < depth; row++)
 			{
 				for (uint column = 0; column < depth; column++)
 				{
-					Entity tileEntity = tiles[layer][row, column] = TerrainTile.Create(layer, row, column, baseTile);
-					EntityManager.Add(tileEntity);
-					if (layer == 0)
-						baseTile = tileEntity.FindComponent<TerrainTile>();
+					Entity tileEntity = layerTiles[row, column];
+					if (tileEntity == null)
+					{
+						layerTiles[row, column] = tileEntity = TerrainTile.Create(layer, row, column, baseTile);
+						layerEntity.AddChild(tileEntity);
+						if (baseTile == null && layer == 0)
+							baseTile = tileEntity.FindComponent<TerrainTile>();
+					}
 				}
 			}
 		}
@@ -499,25 +515,6 @@ namespace WiFindUs.Eye.Wave
 					for (uint column = 0; column < depth; column++)
 						action(tiles[layer][row, column].FindComponent<TerrainTile>());
 			}
-		}
-
-		private void UpdateTileLocations()
-		{
-			if (center == null || tiles == null || baseTile == null)
-				return;
-
-			baseTile.CenterLocation = center;
-			Tiles((tile) =>
-			{
-				float ratio = (tile.Size / baseTile.Size);
-				float latSize = (float)baseTile.Region.LatitudinalSpan * ratio;
-				float longSize = (float)baseTile.Region.LongitudinalSpan * ratio;
-
-				tile.CenterLocation = new Location(
-					baseTile.Region.NorthWest.Latitude.Value - latSize * ((float)tile.Row + 0.5f), //lat
-					baseTile.Region.NorthWest.Longitude.Value + longSize * ((float)tile.Column + 0.5f)//long
-					);
-			}, 1);
 		}
 	}
 }
