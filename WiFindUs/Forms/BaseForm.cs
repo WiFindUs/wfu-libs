@@ -75,7 +75,8 @@ namespace WiFindUs.Forms
 
 		public BaseForm()
 		{
-			WFUApplication.UIThreadID = Thread.CurrentThread.ManagedThreadId;
+			if (WFUApplication.UIThreadID < 0)
+				WFUApplication.UIThreadID = Thread.CurrentThread.ManagedThreadId;
 			AutoScaleMode = AutoScaleMode.None;
 			ShowIcon = true;
 			Icon = WFUApplication.Icon;
