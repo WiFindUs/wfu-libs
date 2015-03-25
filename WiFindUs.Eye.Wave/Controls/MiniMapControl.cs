@@ -149,7 +149,7 @@ namespace WiFindUs.Eye.Wave.Controls
 				return;
 
 			//draw base image
-			if (scene.BaseTile.TextureOK)
+			if (scene.BaseTile.Textured && !scene.BaseTile.Error)
 			{
 				if (image == null)
 				{
@@ -174,9 +174,9 @@ namespace WiFindUs.Eye.Wave.Controls
 			//generate frustum poly
 			Point[] points = new Point[4];
 			points[0] = nw == null
-				? new Point(mapArea.Left, mapArea.Top) : LocationToScreen(nw);
+				? new Point(mapArea.Left - 5000, mapArea.Top - 5000) : LocationToScreen(nw);
 			points[1] = ne == null
-				? new Point(mapArea.Right, mapArea.Top) : LocationToScreen(ne);
+				? new Point(mapArea.Right + 5000, mapArea.Top - 5000) : LocationToScreen(ne);
 			points[2] = se == null
 				? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(se);
 			points[3] = sw == null
@@ -230,6 +230,16 @@ namespace WiFindUs.Eye.Wave.Controls
 			if (disposing)
 				OnDisposing();
 			base.Dispose(disposing);
+		}
+
+		protected override void OnDoubleClick(EventArgs e)
+		{
+			base.OnDoubleClick(e);
+
+			if (!mouseDown || scene == null || scene.CameraController == null)
+				return;
+			scene.CameraController.Zoom = 0.35f;
+			scene.CameraController.Tilt = 0.5f;
 		}
 
 		/////////////////////////////////////////////////////////////////////
