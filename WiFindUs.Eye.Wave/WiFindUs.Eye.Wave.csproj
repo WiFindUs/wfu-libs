@@ -68,6 +68,9 @@
   <ItemGroup>
     <Compile Include="Extensions\RegionExtensions.cs" />
     <Compile Include="Layers\WireframeObjectsLayer.cs" />
+    <Compile Include="MapForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="MapSceneCamera.cs" />
     <Compile Include="Controls\MiniMapControl.cs">
       <SubType>Component</SubType>

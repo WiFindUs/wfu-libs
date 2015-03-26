@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using WiFindUs.Extensions;
 
 namespace WiFindUs.Controls
 {
@@ -12,15 +13,6 @@ namespace WiFindUs.Controls
 		private const int MAX_LINES = 4096;
 		private Theme theme;
 		private Debugger.Verbosity allowedVerbosities = Debugger.Verbosity.All ^ Debugger.Verbosity.Verbose;
-		public static readonly Dictionary<Debugger.Verbosity, Color> Colours = new Dictionary<Debugger.Verbosity, Color>()
-		{
-			{ Debugger.Verbosity.Verbose, ColorTranslator.FromHtml("#999999")},
-			{ Debugger.Verbosity.Information, ColorTranslator.FromHtml("#FFFFFF")},
-			{ Debugger.Verbosity.Warning, ColorTranslator.FromHtml("#FFA600")},
-			{ Debugger.Verbosity.Error, ColorTranslator.FromHtml("#DF3F26")},
-			{ Debugger.Verbosity.Exception, ColorTranslator.FromHtml("#df3f26")},
-			{ Debugger.Verbosity.Console, ColorTranslator.FromHtml("#1c97ea")}
-		};
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -39,7 +31,7 @@ namespace WiFindUs.Controls
 				if (value == allowedVerbosities)
 					return;
 				allowedVerbosities = value;
-				FillLogFromHistory();
+				RegenerateFromHistory();
 			}
 		}
 
@@ -90,11 +82,7 @@ namespace WiFindUs.Controls
 
 		}
 
-		/////////////////////////////////////////////////////////////////////
-		// PROTECTED METHODS
-		/////////////////////////////////////////////////////////////////////
-
-		protected virtual void FillLogFromHistory()
+		public void RegenerateFromHistory()
 		{
 			Clear();
 			DebuggerLogItem[] items = Debugger.LogHistory;
@@ -104,10 +92,15 @@ namespace WiFindUs.Controls
 			SendMessage(Handle, 277, (IntPtr)7, IntPtr.Zero);
 		}
 
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
+
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
-			FillLogFromHistory();
+			if (this.IsDesignMode())
+				return;
 			Debugger.OnDebugOutput += OnDebugOutput;
 		}
 
@@ -151,7 +144,7 @@ namespace WiFindUs.Controls
 
 			SelectionStart = TextLength;
 			SelectionLength = 0;
-			SelectionColor = Colours[logItem.Verbosity];
+			SelectionColor = Debugger.Colours[logItem.Verbosity];
 			AppendText(logItem.ToString() + "\n");
 		}
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 using WiFindUs.Controls;
@@ -45,6 +46,7 @@ namespace WiFindUs
 		private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
 		private static Action<MainForm> mainLaunchAction = null;
 		private static int uiThreadID = -1;
+		private static bool administrator = false;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -69,6 +71,14 @@ namespace WiFindUs
 		public static bool Running
 		{
 			get { return running; }
+		}
+
+		/// <summary>
+		/// Returns if the WFUApplication was run as an Administrator.
+		/// </summary>
+		public static bool Administrator
+		{
+			get { return administrator; }
 		}
 
 		/// <summary>
@@ -531,6 +541,8 @@ namespace WiFindUs
 			//instantiate form and application
 			ReadOnly = true;
 			running = true;
+			administrator = (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
+				.IsInRole(WindowsBuiltInRole.Administrator);
 			Debugger.V("Setting application visual styles and text rendering properties...");
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);

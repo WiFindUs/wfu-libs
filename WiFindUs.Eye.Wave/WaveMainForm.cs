@@ -1,98 +1,128 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Windows.Forms;
+using WaveEngine.Adapter.Win32;
 using WiFindUs.Eye.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave
 {
-    public class WaveMainForm : EyeMainForm, IMapForm
-    {
-        private MapControl map;
+	public class WaveMainForm : EyeMainForm, IMapForm
+	{
+		private List<MapControl> maps = new List<MapControl>(4);
 
-        /////////////////////////////////////////////////////////////////////
-        // PROPERTIES
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
 
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public MapControl Map
-        {
-            get { return map; }
-            protected set
-            {
-                if (map != null || value == null)
-                    return;
-                map = value;
-                map.Theme = Theme;
-                map.ApplicationStarting += MapApplicationStarting;
-                map.SceneStarted += MapSceneStarted;
-            }
-        }
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool DebugMode
+		{
+			get { return maps.Count == 0 ? false : maps[0].DebugMode; }
+			set
+			{
+				if (maps.Count == 0 || value == maps[0].DebugMode)
+					return;
+				for (int i = 0; i < maps.Count; i++)
+					maps[i].DebugMode = value;
+				OnDebugModeChanged();
+			}
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // CONSTRUCTORS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// CONSTRUCTORS
+		/////////////////////////////////////////////////////////////////////
 
-        public WaveMainForm()
-        {
+		public WaveMainForm()
+		{
 
-        }
+		}
 
-        /////////////////////////////////////////////////////////////////////
-        // PUBLIC METHODS
-        /////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        public void RenderMap()
-        {
-            if (Map != null)
-                Map.Render();
-        }
+		public static void StartRenderLoop(WiFindUs.Forms.MainForm form)
+		{
+			WaveMainForm mapForm = form as WaveMainForm;
+			if (mapForm == null)
+			{
+				String message = "The supplied MainForm type (" + form.GetType().FullName + ") does not inherit from WaveMainForm!";
+				Debugger.E(message);
+				MessageBox.Show(message + "\n\nThe application will now exit.", "WaveMainForm Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+				return;
+			}
 
-        /////////////////////////////////////////////////////////////////////
-        // PROTECTED METHODS
-        /////////////////////////////////////////////////////////////////////
+			RenderLoop.Run(form, () =>
+			{
+				mapForm.RenderMap();
+			});
+		}
 
-        protected override void OnFirstShown(EventArgs e)
-        {
-            base.OnFirstShown(e);
-            if (IsDesignMode)
-                return;
+		public void RenderMap()
+		{
+			for (int i = 0; i < maps.Count; i++)
+				maps[i].Render();
+		}
 
-            //start map scene
-            if (Map != null)
-                Map.StartMapApplication();
-        }
+		public void AddMapControl(MapControl mapControl)
+		{
+			if (mapControl == null || maps.Contains(mapControl))
+				return;
+			maps.Add(mapControl);
+			OnMapControlAdded(mapControl);
+			mapControl.Theme = Theme;
+			mapControl.SceneStarted += OnMapSceneStarted;
+			if (FirstShown)
+				mapControl.StartMapApplication(); //no-op if called already
+		}
 
-        protected override void OnDisposing()
-        {
-            if (Map != null)
-            {
-                Map.CancelThreads();
-                Map.Dispose();
-            }
-            base.OnDisposing();
-        }
+		public void RemoveMapControl(MapControl mapControl)
+		{
+			if (mapControl == null)
+				return;
+			maps.Remove(mapControl);
+			OnMapControlRemoved(mapControl);
+			mapControl.SceneStarted -= OnMapSceneStarted;
+		}
 
-        protected virtual void MapSceneStarted(MapScene obj)
-        {
-            ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
-            if (location == null)
-                Debugger.E("Could not parse map.center from config files!");
-            else
-                obj.CenterLocation = location;
-            Map.Scene.Theme = Theme;
-        }
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
 
-        /////////////////////////////////////////////////////////////////////
-        // PRIVATE METHODS
-        /////////////////////////////////////////////////////////////////////
+		protected virtual void OnMapControlAdded(MapControl mapControl)
+		{
 
-        private void MapApplicationStarting(MapControl map)
-        {
-            if (WFUApplication.Config != null)
-                map.BackBufferScale = WFUApplication.Config.Get("map.resolution_scale", 1.0f);
-        }
+		}
 
-    }
+		protected virtual void OnMapControlRemoved(MapControl mapControl)
+		{
+
+		}
+
+		protected override void OnFirstShown(EventArgs e)
+		{
+			base.OnFirstShown(e);
+			if (IsDesignMode)
+				return;
+
+			//start map scenes
+			for (int i = 0; i < maps.Count; i++)
+				maps[i].StartMapApplication();  //no-op if called already
+		}
+
+		protected virtual void OnMapSceneStarted(MapScene scene)
+		{
+
+		}
+
+		protected virtual void OnDebugModeChanged()
+		{
+
+		}
+
+	}
 }

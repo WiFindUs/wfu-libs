@@ -22,22 +22,27 @@ namespace WiFindUs.Forms
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public override String TitleText
+		{
+			get { return base.TitleText + " - " + Status; }
+		}
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public string Status
 		{
-			get
-			{
-				return IsDesignMode ? "Loading operation status" : statusString;
-			}
-
+			get { return IsDesignMode ? "Loading operation status" : statusString; }
 			set
 			{
 				string val = (value ?? "").Trim();
 				if (val.CompareTo(statusString) == 0)
 					return;
 				statusString = val;
+				UpdateTitleText();
 				this.RefreshThreadSafe();
 			}
-
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -59,6 +64,14 @@ namespace WiFindUs.Forms
 
 			//cosmetics
 			logo = WFUApplication.Images.Resource("wfu_logo_small");
+			Location = new Point(
+				Screen.PrimaryScreen.WorkingArea.X
+					+ Screen.PrimaryScreen.WorkingArea.Width / 2
+					- Width / 2,
+				Screen.PrimaryScreen.WorkingArea.Y
+					+ Screen.PrimaryScreen.WorkingArea.Height / 2
+					- Height / 2
+			);
 
 			//worker events
 			loadingWorker.DoWork += LoadingThread;

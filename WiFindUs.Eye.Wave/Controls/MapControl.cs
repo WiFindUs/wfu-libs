@@ -6,20 +6,20 @@ using WaveEngine.Framework.Services;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
+using WiFindUs.Eye.Extensions;
 
 namespace WiFindUs.Eye.Wave.Controls
 {
 	public class MapControl : Control, IThemeable
 	{
 		public event Action<MapScene> SceneStarted;
-		public event Action<MapControl> ApplicationStarting;
-		public event Action<MapControl> AltEnterPressed;
 
 		private MapApplication mapApp;
 		private Input input;
 		private float scaleFactor = 1.0f;
 		private Form form = null;
 		private Theme theme;
+		private bool started = false;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -27,29 +27,17 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		public Form Form
 		{
-			get
-			{
-				if (form == null)
-					form = FindForm();
-				return form;
-			}
+			get { return form; }
 		}
 
 		public MapScene Scene
 		{
-			get
-			{
-				return mapApp == null ? null : mapApp.Scene;
-			}
+			get { return mapApp == null ? null : mapApp.Scene; }
 		}
-
 
 		public bool IsDesignMode
 		{
-			get
-			{
-				return DesignMode || this.IsDesignMode();
-			}
+			get { return DesignMode || this.IsDesignMode(); }
 		}
 
 		public float BackBufferScale
@@ -99,10 +87,20 @@ namespace WiFindUs.Eye.Wave.Controls
 				BackColor = theme.ControlDarkColour;
 				ForeColor = theme.TextLightColour;
 				Font = theme.WindowFont;
-				OnThemeChanged();
-
 				if (Scene != null)
 					Scene.Theme = value;
+				OnThemeChanged();
+			}
+		}
+
+		public bool DebugMode
+		{
+			get { return Scene == null ? false : Scene.DebugMode; }
+			set
+			{
+				if (Scene == null)
+					return;
+				Scene.DebugMode = value;
 			}
 		}
 
@@ -135,44 +133,19 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		public void StartMapApplication()
 		{
-			if (ApplicationStarting != null)
-				ApplicationStarting(this);
+			if (mapApp != null || started)
+				return;
+			if (WFUApplication.Config != null)
+				BackBufferScale = WFUApplication.Config.Get("map.resolution_scale", 1.0f);
 			mapApp = new MapApplication(this, BackBufferWidth, BackBufferHeight);
 			mapApp.SceneStarted += scene_SceneStarted;
 			mapApp.Configure(this.Handle);
+			started = true;
 		}
-
-		public static void StartRenderLoop(WiFindUs.Forms.MainForm form)
-		{
-			IMapForm mapForm = form as IMapForm;
-			if (mapForm == null)
-			{
-				String message = "The supplied MainForm type (" + form.GetType().FullName + ") does not implement the IMapForm interface!";
-				Debugger.E(message);
-				MessageBox.Show(message + "\n\nThe application will now exit.", "IMapForm Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				return;
-			}
-
-			RenderLoop.Run(form, () =>
-			{
-				mapForm.RenderMap();
-			});
-		}
-
 		public void Render()
 		{
 			if (mapApp != null)
-			{
 				mapApp.Render();
-			}
-		}
-
-		protected override void OnHandleDestroyed(EventArgs e)
-		{
-			mapApp.CancelThreads();
-			mapApp.OnDeactivate();
-			mapApp.Dispose();
-			base.OnHandleDestroyed(e);
 		}
 
 		public void CancelThreads()
@@ -185,21 +158,18 @@ namespace WiFindUs.Eye.Wave.Controls
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		protected override void OnMouseEnter(EventArgs e)
+		protected override void OnParentChanged(EventArgs e)
 		{
-			base.OnMouseEnter(e);
-#if !DEBUG
-			Cursor.Hide();
-#endif
-			Focus();
+			form = FindForm();
+			base.OnParentChanged(e);
 		}
 
-		protected override void OnMouseLeave(EventArgs e)
+		protected override void OnHandleDestroyed(EventArgs e)
 		{
-			base.OnMouseLeave(e);
-#if !DEBUG
-			Cursor.Show();
-#endif
+			mapApp.CancelThreads();
+			mapApp.OnDeactivate();
+			mapApp.Dispose();
+			base.OnHandleDestroyed(e);
 		}
 
 		protected override void OnResize(EventArgs e)
@@ -271,10 +241,8 @@ namespace WiFindUs.Eye.Wave.Controls
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);
-			if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
+			if (!e.Handled && Form != null && Form == System.Windows.Forms.Form.ActiveForm)
 			{
-				if (e.Modifiers == Keys.Alt && (e.KeyCode == Keys.Enter || e.KeyCode == Keys.Return) && AltEnterPressed != null)
-					AltEnterPressed(this);
 				SetKeyboardButtonState(e, true);
 				e.Handled = true;
 			}
@@ -283,7 +251,7 @@ namespace WiFindUs.Eye.Wave.Controls
 		protected override void OnKeyUp(KeyEventArgs e)
 		{
 			base.OnKeyUp(e);
-			if (!e.Handled && Form == System.Windows.Forms.Form.ActiveForm)
+			if (!e.Handled && Form != null && Form == System.Windows.Forms.Form.ActiveForm)
 			{
 				SetKeyboardButtonState(e, false);
 				e.Handled = true;
@@ -553,13 +521,23 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
-		private void scene_SceneStarted(MapScene obj)
+		private void scene_SceneStarted(MapScene scene)
 		{
 			SetStyle(ControlStyles.Opaque, true);
 			UpdateStyles();
 
+			if (WFUApplication.Config != null)
+			{
+				ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
+				if (location == null)
+					Debugger.E("Could not parse map.center from config files!");
+				else
+					scene.CenterLocation = location;
+			}
+			scene.Theme = Theme;
+
 			if (SceneStarted != null)
-				SceneStarted(obj);
+				SceneStarted(scene);
 		}
 	}
 }

@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Windows.Forms;
 
 namespace WiFindUs
 {
@@ -29,6 +32,16 @@ namespace WiFindUs
 		private static PerformanceCounter cpuCounter;
 		private static PerformanceCounter ramCounter;
 		private static LinkedList<DebuggerLogItem> logHistory = new LinkedList<DebuggerLogItem>();
+
+		public static readonly Dictionary<Debugger.Verbosity, Color> Colours = new Dictionary<Debugger.Verbosity, Color>()
+		{
+			{ Debugger.Verbosity.Verbose, ColorTranslator.FromHtml("#999999")},
+			{ Debugger.Verbosity.Information, ColorTranslator.FromHtml("#FFFFFF")},
+			{ Debugger.Verbosity.Warning, ColorTranslator.FromHtml("#FFA600")},
+			{ Debugger.Verbosity.Error, ColorTranslator.FromHtml("#DF3F26")},
+			{ Debugger.Verbosity.Exception, ColorTranslator.FromHtml("#df3f26")},
+			{ Debugger.Verbosity.Console, ColorTranslator.FromHtml("#1c97ea")}
+		};
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -102,6 +115,10 @@ namespace WiFindUs
 			V("Processor Count: " + Environment.ProcessorCount.ToString());
 			V("Processor Usage: " + cpuCounter.NextValue() + "%");
 			V("Available RAM: " + ramCounter.NextValue() + "Mb");
+			StringBuilder sb = new StringBuilder("System monitors:\n");
+			for (int i = 0; i < Screen.AllScreens.Length; i++)
+				sb.AppendLine(String.Format("    [{0}]: {1}{2}", i, Screen.AllScreens[i].Bounds, Screen.AllScreens[i].Primary ? " (primary)" : ""));
+			V(sb.ToString());
 			TimeSpan uptime = SystemUptime;
 			V(String.Format("System uptime: {0} hours, {1} minutes, {2} seconds.", uptime.Hours, uptime.Minutes, uptime.Seconds));
 		}

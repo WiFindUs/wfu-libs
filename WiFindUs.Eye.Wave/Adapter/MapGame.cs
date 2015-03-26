@@ -14,10 +14,7 @@ namespace WiFindUs.Eye.Wave.Adapter
 
 		public MapScene Scene
 		{
-			get
-			{
-				return scene;
-			}
+			get { return scene; }
 		}
 
 		public MapApplication HostApplication
@@ -28,6 +25,17 @@ namespace WiFindUs.Eye.Wave.Adapter
 		public MapControl HostControl
 		{
 			get { return hostApplication.HostControl; }
+		}
+
+		public bool DebugMode
+		{
+			get { return scene == null ? false : scene.DebugMode; }
+			set
+			{
+				if (scene == null)
+					return;
+				scene.DebugMode = value;
+			}
 		}
 
 		public MapGame(MapApplication hostApplication)

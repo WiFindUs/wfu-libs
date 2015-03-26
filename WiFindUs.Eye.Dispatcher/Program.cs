@@ -1,4 +1,5 @@
 ﻿using System;
+using WiFindUs.Eye.Wave;
 using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Dispatcher
@@ -12,7 +13,7 @@ namespace WiFindUs.Eye.Dispatcher
 			WFUApplication.Description = "First-Responder Asset Management System";
 			WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf|ubi.conf";
 			WFUApplication.MainFormType = typeof(DispatcherForm);
-			WFUApplication.MainLaunchAction = MapControl.StartRenderLoop;
+			WFUApplication.MainLaunchAction = WaveMainForm.StartRenderLoop;
 			WFUApplication.Run(args);
 		}
 	}

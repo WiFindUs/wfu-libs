@@ -28,7 +28,7 @@ namespace WiFindUs.Eye.Wave
 		private Camera3D camera;
 		private Ray ray;
 
-		public event Action<MapSceneCamera> Updated;
+		public event Action<MapSceneCamera> Moved;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -184,23 +184,34 @@ namespace WiFindUs.Eye.Wave
 
 		private void UpdateCamera(TimeSpan gameTime)
 		{
+			//move
+			Vector3 newPos;
+			Vector3 newLook;
 			if (interpolate)
 			{
-				camera.Position = Vector3.Lerp(camera.Position, destination,
+				newPos = Vector3.Lerp(camera.Position, destination,
 					(float)gameTime.TotalSeconds * MOVE_SPEED);
-				camera.LookAt = Vector3.Lerp(camera.LookAt, targetVector,
+				newLook = Vector3.Lerp(camera.LookAt, targetVector,
 					(float)gameTime.TotalSeconds * ROTATE_SPEED);
 			}
 			else
 			{
-				camera.Position = destination;
-				camera.LookAt = targetVector;
+				newPos = destination;
+				newLook = targetVector;
+			}
+			if (Vector3.DistanceSquared(newPos, camera.Position) >= 1.0f
+				|| Vector3.DistanceSquared(newLook, camera.LookAt) >= 1.0f)
+			{
+				camera.Position = newPos;
+				camera.LookAt = newLook;
+				if (Moved != null)
+					Moved(this);
 			}
 
+			//layer, scale
 			Scene.VisibleLayer = (uint)((1.0f - zoom) * (float)Scene.LayerCount);
 			Scene.MarkerScale = MIN_MARKER_SCALE + (MAX_MARKER_SCALE - MIN_MARKER_SCALE) * zoom;
-			if (Updated != null)
-				Updated(this);
+
 		}
 
 		private void ConfigureScreenRay(int x, int y)

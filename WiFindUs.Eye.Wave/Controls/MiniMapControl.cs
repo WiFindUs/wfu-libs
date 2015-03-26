@@ -14,6 +14,7 @@ namespace WiFindUs.Eye.Wave.Controls
 		private Rectangle mapArea = Rectangle.Empty;
 		private bool mouseDown = false;
 		private Image image;
+		private long lastCameraUpdate = 0;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -36,14 +37,20 @@ namespace WiFindUs.Eye.Wave.Controls
 					return;
 				if (scene != null)
 				{
-					scene.CameraController.Updated -= CameraController_Updated;
+					if (scene.BaseTile != null)
+						scene.BaseTile.TextureImageLoadingFinished -= BaseTile_TextureImageLoadingFinished;
+					if (scene.CameraController != null)
+						scene.CameraController.Moved -= CameraController_Moved;
 					scene.CenterLocationChanged -= Scene_CenterLocationChanged;
 					DisposeImage();
 				}
 				scene = value;
 				if (scene != null)
 				{
-					scene.CameraController.Updated += CameraController_Updated;
+					if (scene.BaseTile != null)
+						scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
+					if (scene.CameraController != null)
+						scene.CameraController.Moved += CameraController_Moved;
 					scene.CenterLocationChanged += Scene_CenterLocationChanged;
 				}
 				Refresh();
@@ -81,7 +88,7 @@ namespace WiFindUs.Eye.Wave.Controls
 				return;
 
 			ResizeRedraw = false;
-			DoubleBuffered = true;
+			//DoubleBuffered = true;
 			SetStyle(
 				System.Windows.Forms.ControlStyles.UserPaint |
 				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
@@ -143,23 +150,13 @@ namespace WiFindUs.Eye.Wave.Controls
 
 			//initialize render state
 			e.Graphics.Clear(theme.ControlDarkColour);
-			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
+			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
 
 			if (scene == null || scene.BaseTile == null)
 				return;
 
 			//draw base image
-			if (scene.BaseTile.Textured && !scene.BaseTile.Error)
-			{
-				if (image == null)
-				{
-					try
-					{
-						image = scene.BaseTile.TileImage.Resize(256, 256);
-					}
-					catch { } //just wait until next time
-				}
-			}
+			CheckMapImage();
 			e.Graphics.DrawImageSafe(image, mapArea, Brushes.White);
 
 			if (scene.CameraController == null)
@@ -187,7 +184,7 @@ namespace WiFindUs.Eye.Wave.Controls
 			path.AddPolygon(points);
 			System.Drawing.Region region = new System.Drawing.Region(path);
 			region.Xor(ClientRectangle);
-			using (Brush b = new SolidBrush(Color.FromArgb(180, 0, 0, 0)))
+			using (Brush b = new SolidBrush(Color.FromArgb(100, 0, 0, 0)))
 				e.Graphics.FillRegion(b, region);
 
 			//draw frustum
@@ -246,6 +243,32 @@ namespace WiFindUs.Eye.Wave.Controls
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		private void CheckMapImage()
+		{
+			if (!scene.BaseTile.Textured || scene.BaseTile.Error)
+				return;
+
+			int targetSize = ((int)((float)Math.Min(ClientRectangle.Width, ClientRectangle.Height)
+				/ 256.0f) + 1) * 256;
+			if (image != null && image.Width == targetSize)
+				return;
+			if (image != null)
+				image.Dispose();
+
+			//draw base image
+			try
+			{
+				image = scene.BaseTile.TileImage.Resize(targetSize, targetSize);
+			}
+			catch { image = null; } //just wait until next time
+		}
+
+		private void BaseTile_TextureImageLoadingFinished(TerrainTile obj)
+		{
+			if (Visible)
+				this.RefreshThreadSafe();
+		}
+
 		private void MoveByMouse(MouseEventArgs e)
 		{
 			if (scene == null
@@ -269,9 +292,17 @@ namespace WiFindUs.Eye.Wave.Controls
 				size, size);
 		}
 
-		private void CameraController_Updated(MapSceneCamera obj)
+		private void CameraController_Moved(MapSceneCamera obj)
 		{
-			Refresh();
+			if (!Visible)
+				return;
+			long timer = DateTime.Now.Ticks;
+			TimeSpan span = new TimeSpan(timer - lastCameraUpdate);
+			if (span.TotalMilliseconds > 66.0) //15fps
+			{
+				lastCameraUpdate = timer;
+				Refresh();
+			}
 		}
 
 		private void Scene_CenterLocationChanged(MapScene obj)

@@ -10,6 +10,7 @@ using WiFindUs.Eye.Controls;
 using WiFindUs.Eye.Wave;
 using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
+using WiFindUs.Forms;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -19,7 +20,11 @@ namespace WiFindUs.Eye.Dispatcher
 		private FormWindowState oldWindowState;
 		private Rectangle oldBounds;
 		private ISelectableGroup globalSelectionGroup = new SelectableEntityGroup();
-		private ActionPanel actionPanel;
+		//private ActionPanel actionPanel;
+		private MapForm mapForm;
+		private BaseForm consoleForm;
+		private ConsolePanel console;
+		private MapControl primaryMap, secondaryMap;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -29,44 +34,68 @@ namespace WiFindUs.Eye.Dispatcher
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool FullScreen
 		{
-			get { return FormBorderStyle == FormBorderStyle.None; }
+			get
+			{
+				return (ShowMapInWindow ? mapForm.FormBorderStyle : FormBorderStyle)
+					== FormBorderStyle.None;
+			}
 			set
 			{
 				if (value == FullScreen)
 					return;
 
+				//disable/enable mapform user close
+				mapForm.PreventUserClose = value;
+
+				//determine target form
+				Form targetForm = ShowMapInWindow ? (Form)mapForm : (Form)this;
+
 				//suspend layout stuff
-				this.SuspendAllLayout();
+				targetForm.SuspendAllLayout();
 
 				//going fullscreen
 				if (value)
 				{
-					oldWindowState = WindowState;
-					oldBounds = Bounds;
-
-					if (WindowState != FormWindowState.Normal)
-						WindowState = FormWindowState.Normal;
-					FormBorderStyle = FormBorderStyle.None;
-					Bounds = Screen.FromControl(this).Bounds;
-					TopMost = true;
-					workingAreaSplitter.HidePanel(1);
-					windowSplitter.HidePanel(2);
-					windowStatusStrip.Visible = false;
+					oldWindowState = targetForm.WindowState;
+					oldBounds = targetForm.Bounds;
+					if (targetForm.WindowState != FormWindowState.Normal)
+						targetForm.WindowState = FormWindowState.Normal;
+					if (targetForm.FormBorderStyle != FormBorderStyle.None)
+						targetForm.FormBorderStyle = FormBorderStyle.None;
+					targetForm.Bounds = Screen.FromControl(targetForm).Bounds;
+					targetForm.TopMost = true;
+					if (targetForm == this)
+					{
+						splitterLeft.HidePanel(1);
+						splitterRight.HidePanel(2);
+						statusStrip.Visible = false;
+						primaryMap.Parent = splitterRight.Panel1;
+						tabsMiddle.Visible = false;
+					}
 				}
 				else
 				{
-					windowStatusStrip.Visible = true;
-					windowSplitter.ShowPanel(2);
-					workingAreaSplitter.ShowPanel(1);
-					TopMost = false;
-					FormBorderStyle = FormBorderStyle.Sizable;
-					Bounds = oldBounds;
-					if (oldWindowState != FormWindowState.Normal)
-						WindowState = oldWindowState;
+					if (targetForm == this)
+					{
+						tabsMiddle.Visible = true;
+						primaryMap.Parent = tab3DMap;
+						statusStrip.Visible = true;
+						splitterLeft.ShowPanel(1);
+						splitterRight.ShowPanel(2);
+					}
+					targetForm.TopMost = false;
+					if (targetForm.FormBorderStyle != FormBorderStyle.Sizable)
+						targetForm.FormBorderStyle = FormBorderStyle.Sizable;
+					targetForm.Bounds = oldBounds;
+					if (oldWindowState != FormWindowState.Normal && targetForm.WindowState != oldWindowState)
+						targetForm.WindowState = oldWindowState;
 				}
 
 				//resume layout stuff
-				this.ResumeAllLayout();
+				targetForm.ResumeAllLayout();
+
+				//update main window title
+				UpdateTitleText();
 			}
 		}
 
@@ -75,6 +104,56 @@ namespace WiFindUs.Eye.Dispatcher
 		public ISelectableGroup GlobalSelectionGroup
 		{
 			get { return globalSelectionGroup; }
+		}
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool ShowMapInWindow
+		{
+			get { return mapForm == null ? false : mapForm.Visible; }
+			set
+			{
+				if (FullScreen || value == mapForm.Visible)
+					return;
+				this.SuspendAllLayout();
+				if (mapForm.Visible)
+					mapForm.Hide();
+				else
+					mapForm.Show(this);
+				this.ResumeAllLayout();
+			}
+		}
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool ShowConsole
+		{
+			get { return consoleForm == null ? false : consoleForm.Visible; }
+			set
+			{
+				if (value == consoleForm.Visible)
+					return;
+				if (consoleForm.Visible)
+					consoleForm.Hide();
+				else
+				{
+					consoleForm.Show(this);
+					console.RegenerateFromHistory();
+				}
+			}
+		}
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public override String TitleText
+		{
+			get
+			{
+				return base.TitleText
+					+ " - " + (ShowMapInWindow ? "Dual-Window" : "Single-Window")
+					+ (FullScreen ? " - Fullscreen ON" : "")
+					+ (WFUApplication.Administrator ? " [Administrator]" : "");
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -87,14 +166,54 @@ namespace WiFindUs.Eye.Dispatcher
 			if (DesignMode)
 				return;
 
+			//child map form for two-window mode
+			mapForm = new MapForm()
+			{
+				HideOnClose = true,
+				WindowState = FormWindowState.Normal,
+				MinimumSize = new System.Drawing.Size(800, 600),
+				Text = WFUApplication.Name + " - 3D Map",
+				HelpButton = false,
+				KeyPreview = true,
+				StartPosition = FormStartPosition.Manual
+			};
+			mapForm.VisibleChanged += mapForm_VisibleChanged;
+			mapForm.KeyDown += TestKeys;
+
+			//console form
+			consoleForm = new BaseForm()
+			{
+				HideOnClose = true,
+				WindowState = FormWindowState.Normal,
+				MinimumSize = new System.Drawing.Size(400, 300),
+				Text = WFUApplication.Name + " - Console",
+				HelpButton = false,
+				KeyPreview = true,
+				StartPosition = FormStartPosition.Manual
+			};
+			consoleForm.Controls.Add(console = new ConsolePanel()
+			{
+				Dock = DockStyle.Fill
+			});
+			consoleForm.KeyDown += TestKeys;
+
+			//key preview for alt-enter
+			KeyPreview = true;
+
+			//map form
+			AddMapControl(primaryMap = new MapControl()
+			{
+				Dock = DockStyle.Fill,
+				Parent = tab3DMap
+			});
+
 			//controls
-			workingAreaToolStripContainer.ContentPanel.Controls.Add(Map = new MapControl() { Dock = DockStyle.Fill });
-			minimapTab.Controls.Add(minimap = new MiniMapControl() { Dock = DockStyle.Fill });
-			devicesFlowPanel.SelectionGroup = globalSelectionGroup;
-			usersFlowPanel.SelectionGroup = globalSelectionGroup;
-			incidentsFlowPanel.SelectionGroup = globalSelectionGroup;
-			nodesFlowPanel.SelectionGroup = globalSelectionGroup;
-			actionsTab.Controls.Add(actionPanel = new ActionPanel(3, 3) { Dock = DockStyle.Fill });
+			tab2DMap.Controls.Add(minimap = new MiniMapControl() { Dock = DockStyle.Fill });
+			listDevices.SelectionGroup = globalSelectionGroup;
+			listUsers.SelectionGroup = globalSelectionGroup;
+			listIncidents.SelectionGroup = globalSelectionGroup;
+			listNodes.SelectionGroup = globalSelectionGroup;
+			//actionsTab.Controls.Add(actionPanel = new ActionPanel(3, 3) { Dock = DockStyle.Fill });
 
 			//events
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
@@ -120,57 +239,100 @@ namespace WiFindUs.Eye.Dispatcher
 				return;
 			}
 
-			toolStripStatusLabel.Text = text ?? "";
-			windowStatusStrip.BackColor = colour;
+			labelStatus.Text = text ?? "";
+			statusStrip.BackColor = colour;
 		}
 
 		public override void OnThemeChanged()
 		{
 			base.OnThemeChanged();
-			windowStatusStrip.ForeColor = Theme.TextLightColour;
+			statusStrip.ForeColor = Theme.TextLightColour;
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		protected override void OnKeyDown(KeyEventArgs e)
+		{
+			TestKeys(this, e);
+
+			if (!e.Handled)
+				base.OnKeyDown(e);
+		}
+
 		protected override void OnFirstShown(EventArgs e)
 		{
 			SetApplicationStatus("Initializing 3D scene...", Theme.WarningColour);
 			base.OnFirstShown(e);
 			this.ResumeAllLayout();
-#if DEBUG
-			infoTabs.SelectedIndex = 1;
-#endif
-			bool startFullScreen = WFUApplication.Config.Get("display.start_fullscreen", false);
-			Debugger.V("Start fullscreen: " + startFullScreen);
 
+			//set up console form
+			consoleForm.ApplyWindowStateFromConfig("console");
+#if DEBUG
+			ShowConsole = true;
+#endif
+
+			//set up map form
+			mapForm.ApplyWindowStateFromConfig("map");
+
+			//map windowed
+			bool startWindowed = WFUApplication.Config.Get("map.start_windowed", false);
+			Debugger.V("Start map windowed: " + startWindowed);
+			if (startWindowed)
+				ShowMapInWindow = true;
+
+			//fullscreen
+			bool startFullScreen = WFUApplication.Config.Get("map.start_fullscreen", false);
+			Debugger.V("Start fullscreen: " + startFullScreen);
 			if (startFullScreen)
 				FullScreen = true;
+
+			//title
+			UpdateTitleText();
+		}
+
+		protected override void OnDebugModeChanged()
+		{
+			base.OnDebugModeChanged();
+			Debugger.C(DebugMode ? "Debug drawing enabled. Press F2 to disable." : "Debug drawing disabled.");
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		protected override void MapSceneStarted(MapScene obj)
+		private void mapForm_VisibleChanged(object sender, EventArgs e)
 		{
-			base.MapSceneStarted(obj);
+			if (mapForm.Visible)
+			{
+				mapForm.Map = primaryMap;
+				tabsMiddle.Visible = false;
+				tabsBottomRight.Parent = splitterRight.Panel1;
+				splitterRightMiddle.HidePanel(2);
+			}
+			else
+			{
+				splitterRightMiddle.ShowPanel(2);
+				tabsBottomRight.Parent = splitterRightMiddle.Panel2;
+				tabsMiddle.Visible = true;
+				mapForm.Map = null;
+				primaryMap.Parent = tab3DMap;
+			}
+
+			UpdateTitleText();
+		}
+
+		protected override void OnMapSceneStarted(MapScene scene)
+		{
+			base.OnMapSceneStarted(scene);
+			scene.InputBehaviour.MousePressed += InputBehaviour_MousePressed;
+			if (minimap != null && scene == primaryMap.Scene)
+				minimap.Scene = scene;
 			SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
-			Map.AltEnterPressed += mapControl_AltEnterPressed;
-			Map.Scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
-			minimap.Scene = Map.Scene;
-			Map.Scene.InputBehaviour.MousePressed += InputBehaviour_MousePressed;
-		}
-
-		private void BaseTile_TextureImageLoadingFinished(TerrainTile obj)
-		{
-			minimap.RefreshThreadSafe();
-		}
-
-		private void mapControl_AltEnterPressed(MapControl obj)
-		{
-			FullScreen = !FullScreen;
+#if DEBUG
+			DebugMode = true;
+#endif
 		}
 
 		private void OnDeviceLoaded(Device device)
@@ -180,7 +342,7 @@ namespace WiFindUs.Eye.Dispatcher
 				Invoke(new Action<Device>(OnDeviceLoaded), device);
 				return;
 			}
-			devicesFlowPanel.Controls.Add(new DeviceListItem(device));
+			listDevices.Controls.Add(new DeviceListItem(device));
 		}
 
 		private void OnUserLoaded(User user)
@@ -190,7 +352,7 @@ namespace WiFindUs.Eye.Dispatcher
 				Invoke(new Action<User>(OnUserLoaded), user);
 				return;
 			}
-			usersFlowPanel.Controls.Add(new UserListItem(user));
+			listUsers.Controls.Add(new UserListItem(user));
 		}
 
 		private void OnWaypointLoaded(Waypoint waypoint)
@@ -203,7 +365,7 @@ namespace WiFindUs.Eye.Dispatcher
 				Invoke(new Action<Waypoint>(OnWaypointLoaded), waypoint);
 				return;
 			}
-			incidentsFlowPanel.Controls.Add(new WaypointListItem(waypoint));
+			listIncidents.Controls.Add(new WaypointListItem(waypoint));
 		}
 
 		private void OnNodeLoaded(Node node)
@@ -213,14 +375,14 @@ namespace WiFindUs.Eye.Dispatcher
 				Invoke(new Action<Node>(OnNodeLoaded), node);
 				return;
 			}
-			nodesFlowPanel.Controls.Add(new NodeListItem(node));
+			listNodes.Controls.Add(new NodeListItem(node));
 		}
 
 		private void OnSelectionGroupSelectionChanged(ISelectableGroup obj)
 		{
 			if (obj != globalSelectionGroup)
 				return;
-
+			/*
 			ISelectable[] selectedEntities = globalSelectionGroup.SelectedEntities;
 			if (selectedEntities == null || selectedEntities.Length == 0)
 				actionPanel.ActionSubscriber = null;
@@ -253,6 +415,7 @@ namespace WiFindUs.Eye.Dispatcher
 
 				actionPanel.ActionSubscriber = null;
 			}
+			 * */
 		}
 
 		private void InputBehaviour_MousePressed(MapSceneInput.MapSceneMouseEventArgs args)
@@ -287,6 +450,98 @@ namespace WiFindUs.Eye.Dispatcher
 					globalSelectionGroup.SetSelection(selectables[0]);
 				else
 					globalSelectionGroup.SetSelection(selectables[((selectables.IndexOf(intersection[intersection.Length - 1]) + 1) % selectables.Count)]);
+			}
+		}
+
+		private void TestKeys(object sender, KeyEventArgs e)
+		{
+			if (!FirstShown)
+				return;
+
+			//ALT
+			if (e.Modifiers == Keys.Alt)
+			{
+				switch (e.KeyCode)
+				{
+					case Keys.Enter: //Keys.Return is the same, apparently
+						FullScreen = !FullScreen;
+						e.Handled = true;
+						break;
+
+					case Keys.F12:
+						if (minimap != null)
+						{
+							minimap.Parent = null;
+							minimap.Scene = null;
+							minimap.Dispose();
+							minimap = null;
+						}
+						if (secondaryMap == null)
+						{
+							AddMapControl(secondaryMap = new MapControl()
+							{
+								Dock = DockStyle.Fill,
+								Parent = tab2DMap
+							});
+						}
+						e.Handled = true;
+						break;
+				}
+			}
+			//NO MODIFIER
+			else if (e.Modifiers == Keys.None)
+			{
+				switch (e.KeyCode)
+				{
+					case Keys.F2:
+						DebugMode = !DebugMode;
+						e.Handled = true;
+						break;
+
+					case Keys.F3:
+						ShowMapInWindow = !ShowMapInWindow;
+						e.Handled = true;
+						break;
+
+					case Keys.F5:
+						ShowConsole = !ShowConsole;
+						e.Handled = true;
+						break;
+				}
+			}
+		}
+
+		private void PaintSplitter(object sender, PaintEventArgs e)
+		{
+			SplitContainer splitter = sender as SplitContainer;
+			if (splitter == null || splitter.IsSplitterFixed)
+				return;
+			int length = (splitter.Orientation == Orientation.Vertical
+				? splitter.Height : splitter.Width) / 10;
+			int top = splitter.Orientation == Orientation.Vertical
+				? splitter.Height / 2 - length / 2
+				: splitter.SplitterDistance + (splitter.SplitterWidth / 2) - 1;
+			int left = splitter.Orientation == Orientation.Vertical
+				? splitter.SplitterDistance + (splitter.SplitterWidth / 2) - 2
+				: splitter.Width / 2 - length / 2;
+			int bottom = splitter.Orientation == Orientation.Vertical
+				? top + length
+				: top + 2;
+			int right = splitter.Orientation == Orientation.Vertical
+				? left + 2
+				: left + length;
+			using (Pen p = new Pen(Theme.ControlDarkColour))
+			{
+				if (splitter.Orientation == Orientation.Vertical)
+				{
+					e.Graphics.DrawLine(p, left, top, left, bottom);
+					e.Graphics.DrawLine(p, right, top, right, bottom);
+				}
+				else
+				{
+					e.Graphics.DrawLine(p, left, top, right, top);
+					e.Graphics.DrawLine(p, left, bottom, right, bottom);
+				}
 			}
 		}
 	}

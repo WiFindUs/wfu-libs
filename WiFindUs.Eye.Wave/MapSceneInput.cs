@@ -71,10 +71,6 @@ namespace WiFindUs.Eye.Wave
 			float tiltDelta = 0;
 			KeyboardModifiers modifiers = GetModifiers(ref input.KeyboardState);
 
-			//check debug hotkey
-			if (WasKeyPressed(Keys.F2))
-				mapScene.DebugMode = !mapScene.DebugMode;
-
 			//mouse button events
 			//presses
 			if (MousePressed != null)

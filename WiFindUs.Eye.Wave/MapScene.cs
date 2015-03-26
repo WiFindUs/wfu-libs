@@ -169,7 +169,6 @@ namespace WiFindUs.Eye.Wave
 					return;
 				RenderManager.DebugLines = value;
 				WaveServices.ScreenContextManager.SetDiagnosticsActive(value);
-				Debugger.C(value ? "Debug drawing enabled. Press F2 to disable." : "Debug drawing disabled.");
 			}
 		}
 
@@ -316,10 +315,9 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void CreateScene()
 		{
+			//add wireframe layer
 			RenderManager.RegisterLayerAfter(new WireframeObjectsLayer(this.RenderManager), DefaultLayers.Opaque);
-#if DEBUG
-			DebugMode = true;
-#endif
+
 			//set up camera
 			Debugger.V("MapScene: initializing camera");
 			camera = new FixedCamera("camera", Vector3.Up * 200.0f, Vector3.Zero)

@@ -17,15 +17,23 @@ namespace WiFindUs.Eye.Wave.Adapter
 
 		public MapScene Scene
 		{
-			get
-			{
-				return game == null ? null : game.Scene;
-			}
+			get { return game == null ? null : game.Scene; }
 		}
 
 		public MapControl HostControl
 		{
 			get { return hostControl; }
+		}
+
+		public bool DebugMode
+		{
+			get { return Scene == null ? false : Scene.DebugMode; }
+			set
+			{
+				if (Scene == null)
+					return;
+				Scene.DebugMode = value;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////

@@ -32,8 +32,25 @@ namespace WiFindUs.Controls
 				Font = input.Font = value.ConsoleFont;
 				ForeColor = input.ForeColor = value.TextLightColour;
 				for (int i = 0; i < toggles.Length; i++)
+				{
 					toggles[i].Font = value.ConsoleFont;
+					toggles[i].ForeColor = toggles[i].Checked ? Theme.ControlDarkColour : Theme.TextDarkColour;
+				}
 
+			}
+		}
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public Debugger.Verbosity AllowedVerbosities
+		{
+			get
+			{
+				Debugger.Verbosity allowedVerbosities = Debugger.Verbosity.None;
+				for (int i = 0; i < toggles.Length; i++)
+					if (toggles[i].Checked && toggles[i].Tag != null)
+						allowedVerbosities |= (Debugger.Verbosity)toggles[i].Tag;
+				return allowedVerbosities;
 			}
 		}
 
@@ -63,9 +80,18 @@ namespace WiFindUs.Controls
 			input.Height = controls.Height - 2;
 
 #if !DEBUG
-            errorToggle.Visible = false;
-            exceptionToggle.Visible = false;
+			errorToggle.Visible = false;
+			exceptionToggle.Visible = false;
 #endif
+		}
+
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		public void RegenerateFromHistory()
+		{
+			console.RegenerateFromHistory();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -75,17 +101,15 @@ namespace WiFindUs.Controls
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
-
+			if (IsDesignMode)
+				return;
 			for (int i = 0; i < toggles.Length; i++)
 			{
 				toggles[i].Tag = verbosities[i];
-				toggles[i].FlatAppearance.CheckedBackColor = ConsoleTextBox.Colours[verbosities[i]];
+				toggles[i].FlatAppearance.CheckedBackColor = Debugger.Colours[verbosities[i]];
 				toggles[i].Checked = console.AllowedVerbosities.HasFlag(verbosities[i]);
 				toggles[i].CheckedChanged += ToggleCheckedChanged;
-				if (!IsDesignMode)
-					toggles[i].ForeColor = toggles[i].Checked ? Theme.ControlDarkColour : Theme.TextDarkColour;
-				if (!Debugger.AllowedVerbosities.HasFlag(verbosities[i]))
-					toggles[i].Enabled = false;
+				toggles[i].Enabled = Debugger.AllowedVerbosities.HasFlag(verbosities[i]);
 			}
 		}
 
@@ -95,12 +119,6 @@ namespace WiFindUs.Controls
 
 			input.Width = controls.ClientSize.Width - input.Left;
 			console.Height = controls.Top - 1;
-		}
-
-		protected override void OnGotFocus(EventArgs e)
-		{
-			base.OnGotFocus(e);
-			input.Focus();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -113,12 +131,7 @@ namespace WiFindUs.Controls
 			if (toggle == null || toggle.Tag == null)
 				return;
 
-			Debugger.Verbosity allowedVerbosities = Debugger.Verbosity.None;
-			for (int i = 0; i < toggles.Length; i++)
-				if (toggles[i].Checked)
-					allowedVerbosities |= (Debugger.Verbosity)toggles[i].Tag;
-			console.AllowedVerbosities = allowedVerbosities;
-
+			console.AllowedVerbosities = AllowedVerbosities;
 			toggle.ForeColor = toggle.Checked ? Theme.ControlDarkColour : Theme.TextDarkColour;
 		}
 

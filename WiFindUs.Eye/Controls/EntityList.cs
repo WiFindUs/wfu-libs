@@ -109,7 +109,8 @@ namespace WiFindUs.Eye.Controls
 			this.SuspendAllLayout();
 			foreach (EntityListItem elitems in Controls.OfType<EntityListItem>())
 				elitems.Width = ClientRectangle.Width - 1;
-			this.ResumeAllLayout(true);
+			this.ResumeAllLayout();
+
 		}
 	}
 }
