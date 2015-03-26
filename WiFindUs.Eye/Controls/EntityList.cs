@@ -98,12 +98,6 @@ namespace WiFindUs.Eye.Controls
 				}
 		}
 
-		protected override void OnMouseEnter(EventArgs e)
-		{
-			base.OnMouseEnter(e);
-			Focus();
-		}
-
 		private void ResizeEntityItems()
 		{
 			this.SuspendAllLayout();

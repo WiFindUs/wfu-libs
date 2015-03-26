@@ -91,12 +91,6 @@ namespace WiFindUs.Eye.Controls
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		protected override void OnMouseEnter(EventArgs e)
-		{
-			base.OnMouseEnter(e);
-			Focus();
-		}
-
 		protected override void OnFontChanged(EventArgs e)
 		{
 			base.OnFontChanged(e);
