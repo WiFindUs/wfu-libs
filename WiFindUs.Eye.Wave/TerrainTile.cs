@@ -446,8 +446,16 @@ namespace WiFindUs.Eye.Wave
 				float scale = (WFUApplication.Config == null ? 1.0f : WFUApplication.Config.Get("map.texture_scale", 1.0f))
 					.Clamp(0.1f, 1.0f);
 
-				//get source image
-				System.Drawing.Image image = System.Drawing.Image.FromFile(ImagePath);
+				//get source image in 32bppPArgb
+				System.Drawing.Bitmap image = new System.Drawing.Bitmap(ImagePath);
+				System.Drawing.Bitmap clone = new System.Drawing.Bitmap(
+					image.Width, image.Height, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+				using (System.Drawing.Graphics gr = System.Drawing.Graphics.FromImage(clone))
+				{
+					gr.SetQuality(GraphicsExtensions.GraphicsQuality.High);
+					gr.DrawImage((System.Drawing.Image)image, new System.Drawing.Rectangle(0, 0, clone.Width, clone.Height));
+				}
+
 				if (initialThreadObject == threadObject) //cancelled?
 				{
 					//scale is necessary
@@ -455,9 +463,9 @@ namespace WiFindUs.Eye.Wave
 					int h = (int)(image.Height * scale);
 					if (w != image.Width || h != image.Height)
 					{
-						System.Drawing.Image resizedImage = image.Resize(w, h);
+						System.Drawing.Image resizedImage = image.Resize(w, h, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
 						image.Dispose();
-						image = resizedImage;
+						image = (System.Drawing.Bitmap)resizedImage;
 					}
 
 					if (initialThreadObject == threadObject) //cancelled?

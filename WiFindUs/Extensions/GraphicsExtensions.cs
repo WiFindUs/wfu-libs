@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.IO;
 
@@ -14,40 +15,81 @@ namespace WiFindUs.Extensions
 			High
 		}
 
+		public class GraphicsQualitySettings
+		{
+			public TextRenderingHint TextRenderingHint;
+			public CompositingQuality CompositingQuality;
+			public SmoothingMode SmoothingMode;
+			public InterpolationMode InterpolationMode;
+			public PixelOffsetMode PixelOffsetMode;
+		}
+
+		public static GraphicsQualitySettings GetQuality(this Graphics graphics)
+		{
+			return new GraphicsQualitySettings()
+			{
+				TextRenderingHint = graphics.TextRenderingHint,
+				CompositingQuality = graphics.CompositingQuality,
+				SmoothingMode = graphics.SmoothingMode,
+				InterpolationMode = graphics.InterpolationMode,
+				PixelOffsetMode = graphics.PixelOffsetMode
+			};
+		}
+
+		public static void SetQuality(this Graphics graphics, GraphicsQualitySettings qualitySettings)
+		{
+			if (graphics.TextRenderingHint != qualitySettings.TextRenderingHint)
+				graphics.TextRenderingHint = qualitySettings.TextRenderingHint;
+			if (graphics.CompositingQuality != qualitySettings.CompositingQuality)
+				graphics.CompositingQuality = qualitySettings.CompositingQuality;
+			if (graphics.SmoothingMode != qualitySettings.SmoothingMode)
+				graphics.SmoothingMode = qualitySettings.SmoothingMode;
+			if (graphics.InterpolationMode != qualitySettings.InterpolationMode)
+				graphics.InterpolationMode = qualitySettings.InterpolationMode;
+			if (graphics.PixelOffsetMode != qualitySettings.PixelOffsetMode)
+				graphics.PixelOffsetMode = qualitySettings.PixelOffsetMode;
+		}
+
 		public static void SetQuality(this Graphics graphics, GraphicsQuality quality)
 		{
+			GraphicsQualitySettings settings = new GraphicsQualitySettings();
 			if (quality == GraphicsQuality.High)
 			{
-				graphics.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
-				graphics.CompositingQuality = CompositingQuality.HighQuality;
-				graphics.SmoothingMode = SmoothingMode.HighQuality;
-				graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-				graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+				settings.TextRenderingHint = TextRenderingHint.ClearTypeGridFit;
+				settings.CompositingQuality = CompositingQuality.HighQuality;
+				settings.SmoothingMode = SmoothingMode.HighQuality;
+				settings.InterpolationMode = InterpolationMode.HighQualityBicubic;
+				settings.PixelOffsetMode = PixelOffsetMode.HighQuality;
 			}
 			if (quality == GraphicsQuality.Medium)
 			{
-				graphics.TextRenderingHint = TextRenderingHint.SingleBitPerPixelGridFit;
-				graphics.CompositingQuality = CompositingQuality.HighSpeed;
-				graphics.SmoothingMode = SmoothingMode.HighSpeed;
-				graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
-				graphics.PixelOffsetMode = PixelOffsetMode.HighSpeed;
+				settings.TextRenderingHint = TextRenderingHint.SystemDefault;
+				settings.CompositingQuality = CompositingQuality.HighSpeed;
+				settings.SmoothingMode = SmoothingMode.HighSpeed;
+				settings.InterpolationMode = InterpolationMode.HighQualityBilinear;
+				settings.PixelOffsetMode = PixelOffsetMode.HighSpeed;
 			}
 			else
 			{
-				graphics.TextRenderingHint = TextRenderingHint.SystemDefault;
-				graphics.CompositingQuality = CompositingQuality.HighSpeed;
-				graphics.SmoothingMode = SmoothingMode.HighSpeed;
-				graphics.InterpolationMode = InterpolationMode.Default;
-				graphics.PixelOffsetMode = PixelOffsetMode.HighSpeed;
+				settings.TextRenderingHint = TextRenderingHint.SystemDefault;
+				settings.CompositingQuality = CompositingQuality.HighSpeed;
+				settings.SmoothingMode = SmoothingMode.None;
+				settings.InterpolationMode = InterpolationMode.NearestNeighbor;
+				settings.PixelOffsetMode = PixelOffsetMode.Half;
 			}
+			graphics.SetQuality(settings);
 		}
 
-		public static void DrawImageSafe(this Graphics graphics, Image image, Rectangle area, Brush fallback)
+		public static void DrawImageSafe(this Graphics graphics, Image image, Rectangle area, Brush fallback,
+			CompositingMode mode = CompositingMode.SourceOver)
 		{
 			//draw base image
 			bool imageError = image == null;
 			if (!imageError)
 			{
+				CompositingMode originalMode = graphics.CompositingMode;
+				if (originalMode != mode)
+					graphics.CompositingMode = mode;
 				try
 				{
 					graphics.DrawImage(image, area);
@@ -56,6 +98,8 @@ namespace WiFindUs.Extensions
 				{
 					imageError = true;
 				}
+				if (originalMode != mode)
+					graphics.CompositingMode = originalMode;
 			}
 			if (imageError && fallback != null)
 				graphics.FillRectangle(fallback, area);
@@ -69,7 +113,7 @@ namespace WiFindUs.Extensions
 		/// <param name="w">The new width</param>
 		/// <param name="h">The new height</param>
 		/// <returns>A resized copy of the original image, or null if an error occurred.</returns>
-		public static Image Resize(this Image input, int w, int h)
+		public static Image Resize(this Image input, int w, int h, PixelFormat format = PixelFormat.Format32bppArgb)
 		{
 			//check source
 			if (input == null)
@@ -80,7 +124,7 @@ namespace WiFindUs.Extensions
 			h = h < 0 ? 0 : h;
 
 			//create resized image
-			Image output = new Bitmap(w, h);
+			Image output = new Bitmap(w, h, format);
 			using (Graphics g = Graphics.FromImage(output))
 			{
 				g.SetQuality(GraphicsExtensions.GraphicsQuality.High);

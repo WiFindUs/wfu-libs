@@ -116,6 +116,7 @@ namespace WiFindUs.Eye.Controls
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			base.OnPaint(e);
+			GraphicsExtensions.GraphicsQualitySettings settings = e.Graphics.GetQuality();
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
 			if (image != null)
@@ -151,6 +152,9 @@ namespace WiFindUs.Eye.Controls
 				Theme.TextMidBrush,
 				new Point(48, (int)sz.Height),
 				StringFormat.GenericTypographic);
+
+			//reset render state
+			e.Graphics.SetQuality(settings);
 		}
 
 		protected override void OnMouseHoverChanged()

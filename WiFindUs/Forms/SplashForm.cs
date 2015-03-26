@@ -126,6 +126,7 @@ namespace WiFindUs.Forms
 			if (IsDesignMode)
 				return;
 
+			GraphicsExtensions.GraphicsQualitySettings settings = e.Graphics.GetQuality();
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
 
 			if (PreDraw != null)
@@ -197,6 +198,9 @@ namespace WiFindUs.Forms
 
 			if (PostDraw != null)
 				PostDraw(e);
+
+			//reset render state
+			e.Graphics.SetQuality(settings);
 		}
 
 		protected override void OnFirstShown(EventArgs e)

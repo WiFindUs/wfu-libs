@@ -145,51 +145,52 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			base.OnPaint(e);
 
-			if (IsDesignMode)
+			if (IsDesignMode || scene == null || scene.BaseTile == null)
 				return;
 
 			//initialize render state
-			e.Graphics.Clear(theme.ControlDarkColour);
+			GraphicsExtensions.GraphicsQualitySettings settings = e.Graphics.GetQuality();
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
-
-			if (scene == null || scene.BaseTile == null)
-				return;
+			e.Graphics.Clear(theme.ControlDarkColour);
 
 			//draw base image
 			CheckMapImage();
-			e.Graphics.DrawImageSafe(image, mapArea, Brushes.White);
+			e.Graphics.DrawImageSafe(image, mapArea, Brushes.White, CompositingMode.SourceCopy);
 
-			if (scene.CameraController == null)
-				return;
+			if (scene.CameraController != null)
+			{
+				//get frustum coords
+				ILocation nw = scene.CameraController.FrustumNorthWest;
+				ILocation ne = scene.CameraController.FrustumNorthEast;
+				ILocation sw = scene.CameraController.FrustumSouthWest;
+				ILocation se = scene.CameraController.FrustumSouthEast;
 
-			//get frustum coords
-			ILocation nw = scene.CameraController.FrustumNorthWest;
-			ILocation ne = scene.CameraController.FrustumNorthEast;
-			ILocation sw = scene.CameraController.FrustumSouthWest;
-			ILocation se = scene.CameraController.FrustumSouthEast;
+				//generate frustum poly
+				Point[] points = new Point[4];
+				points[0] = nw == null
+					? new Point(mapArea.Left - 5000, mapArea.Top - 5000) : LocationToScreen(nw);
+				points[1] = ne == null
+					? new Point(mapArea.Right + 5000, mapArea.Top - 5000) : LocationToScreen(ne);
+				points[2] = se == null
+					? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(se);
+				points[3] = sw == null
+					? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(sw);
 
-			//generate frustum poly
-			Point[] points = new Point[4];
-			points[0] = nw == null
-				? new Point(mapArea.Left - 5000, mapArea.Top - 5000) : LocationToScreen(nw);
-			points[1] = ne == null
-				? new Point(mapArea.Right + 5000, mapArea.Top - 5000) : LocationToScreen(ne);
-			points[2] = se == null
-				? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(se);
-			points[3] = sw == null
-				? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(sw);
+				//darken non-focal area
+				GraphicsPath path = new GraphicsPath();
+				path.AddPolygon(points);
+				System.Drawing.Region region = new System.Drawing.Region(path);
+				region.Xor(ClientRectangle);
+				using (Brush b = new SolidBrush(Color.FromArgb(100, 0, 0, 0)))
+					e.Graphics.FillRegion(b, region);
 
-			//darken non-focal area
-			GraphicsPath path = new GraphicsPath();
-			path.AddPolygon(points);
-			System.Drawing.Region region = new System.Drawing.Region(path);
-			region.Xor(ClientRectangle);
-			using (Brush b = new SolidBrush(Color.FromArgb(100, 0, 0, 0)))
-				e.Graphics.FillRegion(b, region);
+				//draw frustum
+				using (Pen p = new Pen(Color.FromArgb(140, 255, 255, 255), 1f))
+					e.Graphics.DrawPolygon(p, points);
+			}
 
-			//draw frustum
-			using (Pen p = new Pen(Color.FromArgb(140, 255, 255, 255), 1f))
-				e.Graphics.DrawPolygon(p, points);
+			//reset render state
+			e.Graphics.SetQuality(settings);
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
@@ -250,6 +251,7 @@ namespace WiFindUs.Eye.Wave.Controls
 
 			int targetSize = ((int)((float)Math.Min(ClientRectangle.Width, ClientRectangle.Height)
 				/ 256.0f) + 1) * 256;
+			targetSize /= 2;
 			if (image != null && image.Width == targetSize)
 				return;
 			if (image != null)
@@ -258,7 +260,7 @@ namespace WiFindUs.Eye.Wave.Controls
 			//draw base image
 			try
 			{
-				image = scene.BaseTile.TileImage.Resize(targetSize, targetSize);
+				image = scene.BaseTile.TileImage.Resize(targetSize, targetSize, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
 			}
 			catch { image = null; } //just wait until next time
 		}
