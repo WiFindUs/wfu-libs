@@ -21,7 +21,7 @@ namespace WiFindUs.Eye.Wave
 		private const float UNTEXTURED_SCALE = 0.4f;
 		private const float SCALE_SPEED = 2.0f;
 		private const int MAX_CONCURRENT_TEXTURE_CREATIONS = 1;
-		private readonly int MAX_CONCURRENT_LOADS = Environment.ProcessorCount;
+		private readonly int MAX_CONCURRENT_LOADS = Math.Max(Environment.ProcessorCount - 1, 1);
 		private const int MAX_CONCURRENT_DOWNLOADS = 1;
 		private const int TILE_IMAGE_SIZE = 640;
 		private static readonly string IMAGE_FORMAT = "png";
