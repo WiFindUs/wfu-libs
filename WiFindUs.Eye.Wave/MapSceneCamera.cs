@@ -122,20 +122,29 @@ namespace WiFindUs.Eye.Wave
 			return Scene.VectorToLocation(ray.Position + ray.Direction * result.Value);
 		}
 
-		public Marker[] MarkersFromScreenRay(int x, int y)
+		public T[] MarkersFromScreenRay<T>(int x, int y, bool visibleOnly = true) where T : Marker
 		{
-			if (Scene.DeviceMarkers.Count == 0 && Scene.NodeMarkers.Count == 0)
-				return new Marker[0];
+			if (Scene.AllMarkers.Count == 0)
+				return new T[0];
 
-			List<Marker> markers = new List<Marker>();
+			List<T> markers = new List<T>();
 
 			//set up ray
 			ConfigureScreenRay(x, y);
 
 			//check nodes
 			foreach (Marker marker in Scene.AllMarkers)
+			{
+				if (!marker.Owner.IsVisible && visibleOnly)
+					continue;
+
+				T typedMarker = marker as T;
+				if (typedMarker == null)
+					continue;
+
 				if (marker.Transform3D != null && marker.Intersects(ref ray).HasValue)
-					markers.Add(marker);
+					markers.Add(typedMarker);
+			}
 
 			//sort based on distance
 			return markers.OrderBy(o =>

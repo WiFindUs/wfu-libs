@@ -113,9 +113,6 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected virtual void UpdateMarkerState()
 		{
-			//if (Transform3D == null)
-
-
 			bool active = Scene.BaseTile != null
 				&& Scene.BaseTile.Region != null
 				&& (VisibleOnTimeout || !entity.TimedOut)
@@ -125,10 +122,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			bool oldVisible = Owner.IsVisible;
 			Owner.IsActive = Owner.IsVisible = active;
 			if (active)
-				//{
-				//	if (Transform3D != null)
 				Transform3D.Position = Scene.LocationToVector(entity.Location);
-			//}
 
 			if (oldVisible != Owner.IsVisible && VisibleChanged != null)
 				VisibleChanged(this);

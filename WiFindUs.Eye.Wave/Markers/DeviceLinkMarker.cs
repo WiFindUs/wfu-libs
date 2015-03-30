@@ -18,6 +18,7 @@ namespace WiFindUs.Eye.Wave.Markers
 	{
 		private DeviceMarker fromDevice;
 		private NodeMarker toNode;
+		private double timer = 1.0;
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
@@ -42,6 +43,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				fromDevice.VisibleChanged -= DeviceVisibleChanged;
 				fromDevice.Entity.OnDeviceNodeChanged-= DeviceNodeChanged;
+				fromDevice.Entity.SelectedChanged -= EntitySelectedChanged;
+				
 			}
 
 			fromDevice = FromMarker as DeviceMarker;
@@ -50,6 +53,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				fromDevice.VisibleChanged += DeviceVisibleChanged;
 				fromDevice.Entity.OnDeviceNodeChanged += DeviceNodeChanged;
+				fromDevice.Entity.SelectedChanged += EntitySelectedChanged;
 			}
 
 			UpdateMarkerState();
@@ -62,6 +66,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				toNode.VisibleChanged -= NodeVisibleChanged;
 				toNode.Entity.OnAPDaemonRunningChanged -= NodeChanged;
 				toNode.Entity.OnNodeNumberChanged -= NodeNumberChanged;
+				toNode.Entity.SelectedChanged -= EntitySelectedChanged;
 			}
 
 			toNode = ToMarker as NodeMarker;
@@ -71,19 +76,42 @@ namespace WiFindUs.Eye.Wave.Markers
 				toNode.VisibleChanged += NodeVisibleChanged;
 				toNode.Entity.OnAPDaemonRunningChanged += NodeChanged;
 				toNode.Entity.OnNodeNumberChanged += NodeNumberChanged;
+				toNode.Entity.SelectedChanged += EntitySelectedChanged;
 			}
 
 			UpdateMarkerState();
+		}
+
+		protected override void Update(TimeSpan gameTime)
+		{
+			base.Update(gameTime);
+
+			timer -= gameTime.TotalSeconds;
+			if (timer < 0.0)
+			{
+				UpdateNodeLink();
+				timer = 10.0;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		private void NodeNumberChanged(Node node)
+		private void UpdateNodeLink()
 		{
 			ToMarker = this.Scene.GetNodeMarker(fromDevice.Entity.Node);
 			UpdateMarkerState();
+		}
+
+		private void EntitySelectedChanged(ISelectable entity)
+		{
+			UpdateMarkerState();
+		}
+
+		private void NodeNumberChanged(Node node)
+		{
+			UpdateNodeLink();
 		}
 
 		private void NodeChanged(Node node)
@@ -103,8 +131,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		private void DeviceNodeChanged(Device device)
 		{
-			ToMarker = this.Scene.GetNodeMarker(fromDevice.Entity.Node);
-			UpdateMarkerState();
+			UpdateNodeLink();
 		}
 
 		private void UpdateMarkerState()
@@ -118,6 +145,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& fromDevice.Owner.IsVisible
 				&& toNode.Owner.IsVisible
 				&& toNode.Entity.IsAPDaemonRunning.GetValueOrDefault()
+				&& (toNode.Entity.Selected || fromDevice.Entity.Selected)
 			);
 		}
 	}
