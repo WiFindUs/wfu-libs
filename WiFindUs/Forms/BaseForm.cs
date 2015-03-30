@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using WiFindUs.Controls;
@@ -14,11 +15,19 @@ namespace WiFindUs.Forms
 		private bool firstShown = false;
 		private bool hideOnClose = false;
 		private bool preventUserClose = false;
+		private static readonly Regex TITLE_ADMIN
+			= new Regex(@"\(Administrator\)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+#if DEBUG
+		private static readonly Regex TITLE_DEBUG
+			= new Regex(@"\(Debug build\)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+#endif
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool FirstShown
 		{
 			get { return firstShown; }
@@ -56,8 +65,9 @@ namespace WiFindUs.Forms
 			get
 			{
 				CreateParams cp = base.CreateParams;
-				if (!IsDesignMode)
-					cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
+				if (IsDesignMode)
+					return cp;
+				cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
 				return cp;
 			}
 		}
@@ -89,32 +99,25 @@ namespace WiFindUs.Forms
 			}
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public virtual String TitleText
-		{
-			get { return WFUApplication.Name; }
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
 		public BaseForm()
 		{
-			if (WFUApplication.UIThreadID < 0)
-				WFUApplication.UIThreadID = Thread.CurrentThread.ManagedThreadId;
 			AutoScaleMode = AutoScaleMode.None;
 			ShowIcon = true;
-			Icon = WFUApplication.Icon;
 			ResizeRedraw = true;
-			Text = TitleText;
 
 			if (IsDesignMode)
 			{
 				theme = WFUApplication.Theme;
 				return;
 			}
+
+			Icon = WFUApplication.Icon;
+			if (WFUApplication.UIThreadID < 0)
+				WFUApplication.UIThreadID = Thread.CurrentThread.ManagedThreadId;
 
 			DoubleBuffered = true;
 			SetStyle(
@@ -143,15 +146,6 @@ namespace WiFindUs.Forms
 		{
 
 		}
-
-		public void UpdateTitleText()
-		{
-			this.SetText(TitleText);
-		}
-
-		/////////////////////////////////////////////////////////////////////
-		// PUBLIC METHODS
-		/////////////////////////////////////////////////////////////////////
 
 		public void ApplyWindowStateFromConfig(String prefix)
 		{
@@ -227,22 +221,20 @@ namespace WiFindUs.Forms
 				if (hideOnClose && !preventUserClose)
 					Hide();
 			}
-			base.OnFormClosing(e);
+			if (!e.Cancel)
+				base.OnFormClosing(e);
 		}
 
 		protected override void OnLoad(EventArgs e)
 		{
-			base.OnLoad(e);
 			if (IsDesignMode)
 				return;
-
+			base.OnLoad(e);
 			Theme = WFUApplication.Theme;
-			Refresh();
 		}
 
 		protected override void OnShown(EventArgs e)
 		{
-			base.OnShown(e);
 			if (IsDesignMode)
 				return;
 			if (!firstShown)
@@ -250,6 +242,7 @@ namespace WiFindUs.Forms
 				firstShown = true;
 				OnFirstShown(e);
 			}
+			base.OnShown(e);
 		}
 
 		protected virtual void OnFirstShown(EventArgs e)
@@ -268,5 +261,32 @@ namespace WiFindUs.Forms
 				OnDisposing();
 			base.Dispose(disposing);
 		}
+
+#if DEBUG
+		protected override void OnTextChanged(EventArgs e)
+		{
+			string text = Text;
+
+			//check for app name
+			if (!text.Contains(WFUApplication.Name))
+				text += " - " + WFUApplication.Name;
+
+			//check for admin flag
+			if (!TITLE_ADMIN.IsMatch(text))
+				text += " (Administrator)";
+
+#if DEBUG
+			//check for debug flag
+			if (!TITLE_DEBUG.IsMatch(text))
+				text += " (Debug build)";
+#endif
+			
+			//push change
+			if (text.CompareTo(Text) != 0)
+				Text = text;
+			else
+				base.OnTextChanged(e);
+		}
+#endif
 	}
 }

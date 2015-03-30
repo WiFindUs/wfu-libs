@@ -16,7 +16,6 @@ namespace WiFindUs.Eye.Dispatcher
 {
 	public partial class DispatcherForm : WaveMainForm
 	{
-		private MiniMapControl minimap;
 		private FormWindowState oldWindowState;
 		private Rectangle oldBounds;
 		private ISelectableGroup globalSelectionGroup = new SelectableEntityGroup();
@@ -24,7 +23,6 @@ namespace WiFindUs.Eye.Dispatcher
 		private MapForm mapForm;
 		private BaseForm consoleForm;
 		private ConsolePanel console;
-		private MapControl primaryMap, secondaryMap;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -69,7 +67,7 @@ namespace WiFindUs.Eye.Dispatcher
 						splitterLeft.HidePanel(1);
 						splitterRight.HidePanel(2);
 						statusStrip.Visible = false;
-						primaryMap.Parent = splitterRight.Panel1;
+						map.Parent = splitterRight.Panel1;
 						tabsMiddle.Visible = false;
 					}
 				}
@@ -78,7 +76,7 @@ namespace WiFindUs.Eye.Dispatcher
 					if (targetForm == this)
 					{
 						tabsMiddle.Visible = true;
-						primaryMap.Parent = tab3DMap;
+						map.Parent = tab3DMap;
 						statusStrip.Visible = true;
 						splitterLeft.ShowPanel(1);
 						splitterRight.ShowPanel(2);
@@ -93,9 +91,6 @@ namespace WiFindUs.Eye.Dispatcher
 
 				//resume layout stuff
 				targetForm.ResumeAllLayout();
-
-				//update main window title
-				UpdateTitleText();
 			}
 		}
 
@@ -143,19 +138,6 @@ namespace WiFindUs.Eye.Dispatcher
 			}
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override String TitleText
-		{
-			get
-			{
-				return base.TitleText
-					+ " - " + (ShowMapInWindow ? "Dual-Window" : "Single-Window")
-					+ (FullScreen ? " - Fullscreen ON" : "")
-					+ (WFUApplication.Administrator ? " [Administrator]" : "");
-			}
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -166,13 +148,16 @@ namespace WiFindUs.Eye.Dispatcher
 			if (DesignMode)
 				return;
 
+			//title
+			Text = WFUApplication.Name;
+
 			//child map form for two-window mode
 			mapForm = new MapForm()
 			{
 				HideOnClose = true,
 				WindowState = FormWindowState.Normal,
 				MinimumSize = new System.Drawing.Size(800, 600),
-				Text = WFUApplication.Name + " - 3D Map",
+				Text = "3D Map",
 				HelpButton = false,
 				KeyPreview = true,
 				StartPosition = FormStartPosition.Manual
@@ -186,7 +171,7 @@ namespace WiFindUs.Eye.Dispatcher
 				HideOnClose = true,
 				WindowState = FormWindowState.Normal,
 				MinimumSize = new System.Drawing.Size(400, 300),
-				Text = WFUApplication.Name + " - Console",
+				Text = "Console",
 				HelpButton = false,
 				KeyPreview = true,
 				StartPosition = FormStartPosition.Manual
@@ -201,14 +186,9 @@ namespace WiFindUs.Eye.Dispatcher
 			KeyPreview = true;
 
 			//map form
-			AddMapControl(primaryMap = new MapControl()
-			{
-				Dock = DockStyle.Fill,
-				Parent = tab3DMap
-			});
+			AddMapControl(map);
 
 			//controls
-			tab2DMap.Controls.Add(minimap = new MiniMapControl() { Dock = DockStyle.Fill });
 			listDevices.SelectionGroup = globalSelectionGroup;
 			listUsers.SelectionGroup = globalSelectionGroup;
 			listIncidents.SelectionGroup = globalSelectionGroup;
@@ -287,9 +267,6 @@ namespace WiFindUs.Eye.Dispatcher
 			Debugger.V("Start fullscreen: " + startFullScreen);
 			if (startFullScreen)
 				FullScreen = true;
-
-			//title
-			UpdateTitleText();
 		}
 
 		protected override void OnDebugModeChanged()
@@ -306,7 +283,7 @@ namespace WiFindUs.Eye.Dispatcher
 		{
 			if (mapForm.Visible)
 			{
-				mapForm.Map = primaryMap;
+				mapForm.Map = map;
 				tabsMiddle.Visible = false;
 				tabsBottomRight.Parent = splitterRight.Panel1;
 				splitterRightMiddle.HidePanel(2);
@@ -317,17 +294,15 @@ namespace WiFindUs.Eye.Dispatcher
 				tabsBottomRight.Parent = splitterRightMiddle.Panel2;
 				tabsMiddle.Visible = true;
 				mapForm.Map = null;
-				primaryMap.Parent = tab3DMap;
+				map.Parent = tab3DMap;
 			}
-
-			UpdateTitleText();
 		}
 
 		protected override void OnMapSceneStarted(MapScene scene)
 		{
 			base.OnMapSceneStarted(scene);
 			scene.InputBehaviour.MousePressed += InputBehaviour_MousePressed;
-			if (minimap != null && scene == primaryMap.Scene)
+			if (minimap != null && scene == map.Scene)
 				minimap.Scene = scene;
 			SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
 #if DEBUG
@@ -465,25 +440,6 @@ namespace WiFindUs.Eye.Dispatcher
 				{
 					case Keys.Enter: //Keys.Return is the same, apparently
 						FullScreen = !FullScreen;
-						e.Handled = true;
-						break;
-
-					case Keys.F12:
-						if (minimap != null)
-						{
-							minimap.Parent = null;
-							minimap.Scene = null;
-							minimap.Dispose();
-							minimap = null;
-						}
-						if (secondaryMap == null)
-						{
-							AddMapControl(secondaryMap = new MapControl()
-							{
-								Dock = DockStyle.Fill,
-								Parent = tab2DMap
-							});
-						}
 						e.Handled = true;
 						break;
 				}

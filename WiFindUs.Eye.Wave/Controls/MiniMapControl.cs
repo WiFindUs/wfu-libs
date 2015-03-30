@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -19,7 +20,9 @@ namespace WiFindUs.Eye.Wave.Controls
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
+		
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsDesignMode
 		{
 			get
@@ -28,6 +31,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public WiFindUs.Eye.Wave.MapScene Scene
 		{
 			get { return scene; }
@@ -57,6 +62,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Theme Theme
 		{
 			get
@@ -85,7 +92,10 @@ namespace WiFindUs.Eye.Wave.Controls
 			TabStop = false;
 
 			if (IsDesignMode)
+			{
+				Theme = WFUApplication.Theme;
 				return;
+			}
 
 			ResizeRedraw = false;
 			//DoubleBuffered = true;
@@ -145,52 +155,48 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			base.OnPaint(e);
 
-			if (IsDesignMode || scene == null || scene.BaseTile == null)
-				return;
-
 			//initialize render state
-			GraphicsExtensions.GraphicsQualitySettings settings = e.Graphics.GetQuality();
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
 			e.Graphics.Clear(theme.ControlDarkColour);
+
+			if (IsDesignMode || scene == null || scene.BaseTile == null || scene.CameraController == null)
+			{
+				e.Graphics.FillRectangle(theme.ControlLightBrush, mapArea);
+				return;
+			}
 
 			//draw base image
 			CheckMapImage();
 			e.Graphics.DrawImageSafe(image, mapArea, Brushes.White, CompositingMode.SourceCopy);
 
-			if (scene.CameraController != null)
-			{
-				//get frustum coords
-				ILocation nw = scene.CameraController.FrustumNorthWest;
-				ILocation ne = scene.CameraController.FrustumNorthEast;
-				ILocation sw = scene.CameraController.FrustumSouthWest;
-				ILocation se = scene.CameraController.FrustumSouthEast;
+			//get frustum coords
+			ILocation nw = scene.CameraController.FrustumNorthWest;
+			ILocation ne = scene.CameraController.FrustumNorthEast;
+			ILocation sw = scene.CameraController.FrustumSouthWest;
+			ILocation se = scene.CameraController.FrustumSouthEast;
 
-				//generate frustum poly
-				Point[] points = new Point[4];
-				points[0] = nw == null
-					? new Point(mapArea.Left - 5000, mapArea.Top - 5000) : LocationToScreen(nw);
-				points[1] = ne == null
-					? new Point(mapArea.Right + 5000, mapArea.Top - 5000) : LocationToScreen(ne);
-				points[2] = se == null
-					? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(se);
-				points[3] = sw == null
-					? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(sw);
+			//generate frustum poly
+			Point[] points = new Point[4];
+			points[0] = nw == null
+				? new Point(mapArea.Left - 5000, mapArea.Top - 5000) : LocationToScreen(nw);
+			points[1] = ne == null
+				? new Point(mapArea.Right + 5000, mapArea.Top - 5000) : LocationToScreen(ne);
+			points[2] = se == null
+				? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(se);
+			points[3] = sw == null
+				? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(sw);
 
-				//darken non-focal area
-				GraphicsPath path = new GraphicsPath();
-				path.AddPolygon(points);
-				System.Drawing.Region region = new System.Drawing.Region(path);
-				region.Xor(ClientRectangle);
-				using (Brush b = new SolidBrush(Color.FromArgb(100, 0, 0, 0)))
-					e.Graphics.FillRegion(b, region);
+			//darken non-focal area
+			GraphicsPath path = new GraphicsPath();
+			path.AddPolygon(points);
+			System.Drawing.Region region = new System.Drawing.Region(path);
+			region.Xor(ClientRectangle);
+			using (Brush b = new SolidBrush(Color.FromArgb(100, 0, 0, 0)))
+				e.Graphics.FillRegion(b, region);
 
-				//draw frustum
-				using (Pen p = new Pen(Color.FromArgb(140, 255, 255, 255), 1f))
-					e.Graphics.DrawPolygon(p, points);
-			}
-
-			//reset render state
-			e.Graphics.SetQuality(settings);
+			//draw frustum
+			using (Pen p = new Pen(Color.FromArgb(140, 255, 255, 255), 1f))
+				e.Graphics.DrawPolygon(p, points);
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)

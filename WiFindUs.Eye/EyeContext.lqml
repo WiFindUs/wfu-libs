@@ -3,72 +3,75 @@
   <Connection Mode="ConnectionString" ConnectionString="User Id=root;Password=omgwtflol87;Host=192.168.1.1;Database=wfu_eye_db;Persist Security Info=True" Provider="Devart.Data.MySql" />
   <Table Name="wfu_eye_db.Devices" Member="Devices">
     <Type Name="Device" ed:Guid="e5ac0a63-5fc5-4372-9aac-7c03e3dbc8c8">
-      <Column Name="ID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="d334d627-e075-4445-9a17-2ca95217950e" />
-      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="True" ed:Guid="bebc2647-ee02-4d82-8f57-9aa306ad81c7" />
-      <Column Name="Updated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="True" ed:Guid="37a4af2f-8c1a-4a1f-ac38-d6eab1cbcef4" />
-      <Column Name="Type" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="'PHO'" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="4e18395f-45f8-4a73-9f83-c34b5db0a1cc" />
-      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="c8224e71-0a9c-47b2-9489-ea053b11dbcc" />
-      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="50d10166-b8e5-4e79-b494-13c3ff4ce047" />
-      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="49d7086e-0530-41f4-997d-af4430326b29" />
-      <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="4db43654-e0d0-43ca-adce-4f1af6390e5e" />
-      <Column Name="Humidity" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="a06e928d-8f3c-48ec-a27f-08c9995606fc" />
-      <Column Name="AirPressure" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="025337a0-871a-4001-9813-34574b6dc795" />
-      <Column Name="Temperature" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="a3aaf40b-4d06-425d-83fb-66f2389e124c" />
-      <Column Name="LightLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="8701f9fe-9f69-487f-ad04-9db90c4eafba" />
-      <Column Name="Charging" Type="System.Boolean" DbType="tinyint(1) NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="False" ed:Guid="0a742dc6-0663-4e72-b19f-1ed3a3283bef" />
-      <Column Name="BatteryLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="8bb3b13e-998c-4ef7-b2de-7307ce7eb87c" />
-      <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="False" ed:Guid="0dd7edfd-91df-49df-9ae8-3d9b6b6725f3" />
-      <Column Name="WaypointID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="38f59535-0acb-4290-889a-15f1ab6482e1" />
-      <Column Name="UserID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="69d26a68-506e-4591-bb98-8fbed11828c5" />
+      <Column Name="ID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="d334d627-e075-4445-9a17-2ca95217950e" />
+      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="bebc2647-ee02-4d82-8f57-9aa306ad81c7" />
+      <Column Name="Updated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="37a4af2f-8c1a-4a1f-ac38-d6eab1cbcef4" />
+      <Column Name="Type" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="'PHO'" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="4e18395f-45f8-4a73-9f83-c34b5db0a1cc" />
+      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="c8224e71-0a9c-47b2-9489-ea053b11dbcc" />
+      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="50d10166-b8e5-4e79-b494-13c3ff4ce047" />
+      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="49d7086e-0530-41f4-997d-af4430326b29" />
+      <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="4db43654-e0d0-43ca-adce-4f1af6390e5e" />
+      <Column Name="Humidity" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="a06e928d-8f3c-48ec-a27f-08c9995606fc" />
+      <Column Name="AirPressure" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="025337a0-871a-4001-9813-34574b6dc795" />
+      <Column Name="Temperature" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="a3aaf40b-4d06-425d-83fb-66f2389e124c" />
+      <Column Name="LightLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="8701f9fe-9f69-487f-ad04-9db90c4eafba" />
+      <Column Name="Charging" Type="System.Boolean" DbType="tinyint(1) NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="0a742dc6-0663-4e72-b19f-1ed3a3283bef" />
+      <Column Name="BatteryLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="8bb3b13e-998c-4ef7-b2de-7307ce7eb87c" />
+      <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="0dd7edfd-91df-49df-9ae8-3d9b6b6725f3" />
+      <Column Name="WaypointID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="38f59535-0acb-4290-889a-15f1ab6482e1" />
+      <Column Name="UserID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="69d26a68-506e-4591-bb98-8fbed11828c5" />
+      <Column Name="NodeID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="4b8595e9-b28b-457a-85a1-b61b54c38f8b" />
       <Association Name="Waypoint_Device" ed:AssociationGuid="4663d98c-5a3e-4c62-a3ec-57dbfbfd6502" Member="AssignedWaypoint" ed:Guid="b4163682-9dc5-412a-95a3-0af4d3b7bcfb" ThisKey="WaypointID" OtherKey="ID" Type="Waypoint" DeleteRule="SET NULL" IsForeignKey="true" />
       <Association Name="Device_DeviceHistory" ed:AssociationGuid="4fd796ad-13ff-4570-8ad0-7b4ccc80930a" Member="History" ed:Guid="aaf9c9a4-0059-4960-8674-a5ab85fda678" ThisKey="ID" OtherKey="DeviceID" Type="DeviceHistory" />
       <Association Name="User_Device" ed:AssociationGuid="757b82a5-d585-4fcd-b6d8-03447a4aaf74" Member="User" ed:Guid="4d42c578-1f9d-4728-bdde-facbac34151e" ThisKey="UserID" OtherKey="ID" Type="User" DeleteRule="SET NULL" IsForeignKey="true" Cardinality="One" />
+      <Association Name="Node_Device" ed:AssociationGuid="dbb1b8b3-8aeb-4c7c-a1e6-4524dc2061e3" Member="Node" ed:Guid="036ddf20-e95b-45b4-83ef-4883cf6975d9" ThisKey="NodeID" OtherKey="ID" Type="Node" DeleteRule="SET NULL" IsForeignKey="true" />
     </Type>
   </Table>
   <Table Name="wfu_eye_db.Nodes" Member="Nodes">
     <Type Name="Node" ed:Guid="33ef44af-e972-4aa7-954d-af427bccf80d">
-      <Column Name="ID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="0cf91426-55bc-493a-8620-1b04e560e63c" />
-      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="True" ed:Guid="acda245e-03cd-400e-acf7-7da677020055" />
-      <Column Name="Updated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="True" ed:Guid="4224bc15-973b-4943-ad47-b438798ffc8e" />
-      <Column Name="Number" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="False" ed:Guid="fa56060b-566f-44ff-b49a-02619fce08c4" />
-      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="e2c60de2-e8c3-4025-8b62-a94e7567d431" />
-      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="e6a92d2d-bd09-4051-a3af-6824c348a115" />
-      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="63373c21-60e8-4918-8a58-a7fd73b01d24" />
-      <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="0adb3e28-e9bf-46d4-aa1c-ad757d5d80ce" />
-      <Column Name="Voltage" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="60e4164a-068e-4202-bae4-bb31fe1c9d88" />
-      <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="False" ed:Guid="b52ef8f4-eae8-4855-87a8-ffad37a68925" />
+      <Column Name="ID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="0cf91426-55bc-493a-8620-1b04e560e63c" />
+      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="acda245e-03cd-400e-acf7-7da677020055" />
+      <Column Name="Updated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="4224bc15-973b-4943-ad47-b438798ffc8e" />
+      <Column Name="Number" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="fa56060b-566f-44ff-b49a-02619fce08c4" />
+      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="e2c60de2-e8c3-4025-8b62-a94e7567d431" />
+      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="e6a92d2d-bd09-4051-a3af-6824c348a115" />
+      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="63373c21-60e8-4918-8a58-a7fd73b01d24" />
+      <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="0adb3e28-e9bf-46d4-aa1c-ad757d5d80ce" />
+      <Column Name="Voltage" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="60e4164a-068e-4202-bae4-bb31fe1c9d88" />
+      <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="b52ef8f4-eae8-4855-87a8-ffad37a68925" />
+      <Association Name="Node_Device" ed:AssociationGuid="dbb1b8b3-8aeb-4c7c-a1e6-4524dc2061e3" Member="Devices" ed:Guid="4ecd7595-3117-497d-bb97-e1903c724247" ThisKey="ID" OtherKey="NodeID" Type="Device" />
     </Type>
   </Table>
   <Table Name="wfu_eye_db.Users" Member="Users">
     <Type Name="User" ed:Guid="a28d924d-c045-4a2d-a43d-c69b927661a2">
-      <Column Name="ID" Type="System.UInt32" AutoSync="OnInsert" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="8e0d5deb-c187-4159-b8f3-1d9b94aa4a34">
+      <Column Name="ID" Type="System.UInt32" AutoSync="OnInsert" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="8e0d5deb-c187-4159-b8f3-1d9b94aa4a34">
         <Generator Name="Identity" />
       </Column>
-      <Column Name="NameFirst" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="7237ce5c-6b94-404a-a92d-db366711a739" />
-      <Column Name="NameMiddle" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="bb42a407-fdbd-468f-8133-5608d1d0a9c5" />
-      <Column Name="NameLast" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="15ea3756-1819-4258-afa0-454bfdb11fc6" />
-      <Column Name="Type" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="5a9b3175-2b95-45d6-a7be-6da78071e97d" />
+      <Column Name="NameFirst" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="7237ce5c-6b94-404a-a92d-db366711a739" />
+      <Column Name="NameMiddle" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="bb42a407-fdbd-468f-8133-5608d1d0a9c5" />
+      <Column Name="NameLast" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="15ea3756-1819-4258-afa0-454bfdb11fc6" />
+      <Column Name="Type" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="5a9b3175-2b95-45d6-a7be-6da78071e97d" />
       <Association Name="User_Device" ed:AssociationGuid="757b82a5-d585-4fcd-b6d8-03447a4aaf74" Member="Device" ed:Guid="bd890afc-fbe7-4a49-b8ae-bccf92e572f6" ThisKey="ID" OtherKey="UserID" Type="Device" Cardinality="One" />
     </Type>
   </Table>
   <Table Name="wfu_eye_db.Waypoints" Member="Waypoints">
     <Type Name="Waypoint" ed:Guid="9229d793-7ca9-424b-8e5b-b0b8883f0e7e">
-      <Column Name="ID" Type="System.UInt32" AutoSync="OnInsert" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="1aab5fb5-e7cc-4d30-ac4e-28fb646067a0">
+      <Column Name="ID" Type="System.UInt32" AutoSync="OnInsert" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="1aab5fb5-e7cc-4d30-ac4e-28fb646067a0">
         <Generator Name="Identity" />
       </Column>
-      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="True" ed:Guid="8e3adb58-f960-41c7-a221-218ad9d78432" />
-      <Column Name="Type" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="08085229-2aca-4bf9-bb52-6de4a48bf985" />
-      <Column Name="Severity" Type="System.Int32" DbType="int(9) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" Precision="9" ed:ValidateRequired="True" ed:Guid="e022dee3-e771-49a1-a118-353318e92b14" />
-      <Column Name="Code" Type="System.Int32" DbType="int(9) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" Precision="9" ed:ValidateRequired="True" ed:Guid="59c6aa68-2592-4c5d-8f62-f7a39a98f39f" />
-      <Column Name="Description" Type="System.String" DbType="text NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="2048" Unicode="true" ed:ValidateMaxLength="2048" ed:ValidateRequired="True" ed:Guid="b8f3567f-ff94-4e05-888a-3b5740507f4d" />
-      <Column Name="Category" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="True" ed:Guid="d6e831e4-9d0a-4b9c-b58c-aa18c01f4241" />
-      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="3c737418-7a5b-4ed7-a8ba-54d99ba39fe8" />
-      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="6842dee6-2097-4600-b3ca-409885cd2185" />
-      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="d73fbb73-2c96-41bf-a4c7-65581b180ab5" />
-      <Column Name="NextWaypointID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="d9116307-1f1c-4e03-b12a-e47ac7e2fef0" />
-      <Column Name="ReportedByID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="4b288a6b-48fa-4992-b8fe-ba0984e2505c" />
-      <Column Name="Archived" Type="System.Boolean" DbType="tinyint(1) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="True" ed:Guid="32f43cd1-9cf3-486f-931d-797e1dad4daa" />
-      <Column Name="ArchivedTime" Type="System.UInt64" DbType="bigint UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="336364fa-ec9e-4697-87da-22db20e8c976" />
+      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="8e3adb58-f960-41c7-a221-218ad9d78432" />
+      <Column Name="Type" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="08085229-2aca-4bf9-bb52-6de4a48bf985" />
+      <Column Name="Severity" Type="System.Int32" DbType="int(9) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" Precision="9" ed:ValidateRequired="true" ed:Guid="e022dee3-e771-49a1-a118-353318e92b14" />
+      <Column Name="Code" Type="System.Int32" DbType="int(9) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" Precision="9" ed:ValidateRequired="true" ed:Guid="59c6aa68-2592-4c5d-8f62-f7a39a98f39f" />
+      <Column Name="Description" Type="System.String" DbType="text NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="2048" Unicode="true" ed:ValidateMaxLength="2048" ed:ValidateRequired="true" ed:Guid="b8f3567f-ff94-4e05-888a-3b5740507f4d" />
+      <Column Name="Category" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="d6e831e4-9d0a-4b9c-b58c-aa18c01f4241" />
+      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="3c737418-7a5b-4ed7-a8ba-54d99ba39fe8" />
+      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="6842dee6-2097-4600-b3ca-409885cd2185" />
+      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="d73fbb73-2c96-41bf-a4c7-65581b180ab5" />
+      <Column Name="NextWaypointID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="d9116307-1f1c-4e03-b12a-e47ac7e2fef0" />
+      <Column Name="ReportedByID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="4b288a6b-48fa-4992-b8fe-ba0984e2505c" />
+      <Column Name="Archived" Type="System.Boolean" DbType="tinyint(1) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="true" ed:Guid="32f43cd1-9cf3-486f-931d-797e1dad4daa" />
+      <Column Name="ArchivedTime" Type="System.UInt64" DbType="bigint UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="336364fa-ec9e-4697-87da-22db20e8c976" />
       <Association Name="Waypoint_Device" ed:AssociationGuid="4663d98c-5a3e-4c62-a3ec-57dbfbfd6502" Member="AssignedDevices" ed:Guid="3621f6bb-c015-476a-adb1-a63126bc5528" ThisKey="ID" OtherKey="WaypointID" Type="Device" />
       <Association Name="User_Waypoint" ed:AssociationGuid="e005d4fe-7cb8-4352-8194-d8e22a49e79d" Member="ReportingUser" ed:Guid="95ad0e90-59c3-49f3-894c-ead028673d46" ThisKey="ReportedByID" OtherKey="ID" Type="User" DeleteRule="SET NULL" IsForeignKey="true" />
       <Association Name="Waypoint_User" ed:AssociationGuid="f2babfc0-7dee-4540-b9d0-d1c9b430f1e2" Member="ArchivedResponders" ed:Guid="fa94074f-6c14-4a29-a58d-ec6e6595608d" ThisKey="ID" OtherKey="ID" Type="User" LinkTableName="wfu_eye_db.ArchivedWaypointResponders" LinkThisKey="WaypointID" LinkOtherKey="UserID" Cardinality="Many" />
@@ -77,18 +80,18 @@
   </Table>
   <Table Name="wfu_eye_db.DeviceHistories" Member="DeviceHistories">
     <Type Name="DeviceHistory" ed:Guid="b7c1cb92-b5ad-49c7-b8e5-618ea7c97789">
-      <Column Name="DeviceID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="c781f730-69c3-4acf-9eac-267ca0dc5c00" />
-      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="True" ed:Guid="e25494f2-6a37-4a25-95fd-8cf4400dd16c" />
-      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="6ab09502-a017-4543-a275-2b987d18140d" />
-      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="41ed7c4b-28bc-4d5b-a385-f28ea99c053c" />
-      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="453896af-1980-463f-bced-efa3e7632752" />
-      <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="5cb41fe5-5983-4c23-aaf6-315ff26c8391" />
-      <Column Name="Humidity" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="fd31febd-5b8f-4c37-aef4-f596ebf3174e" />
-      <Column Name="AirPressure" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="c8afce92-e31e-4e29-8519-d9a69df47caa" />
-      <Column Name="Temperature" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="1abfdcbf-dbc2-405f-b3b7-e458f85d68a6" />
-      <Column Name="LightLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="77496138-6e81-451e-a4bd-4b947cfa47d0" />
-      <Column Name="UserID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="False" ed:Guid="6022f73b-a3dd-49d9-8820-c077d23b0d5a" />
-      <Association Name="Device_DeviceHistory" ed:AssociationGuid="4fd796ad-13ff-4570-8ad0-7b4ccc80930a" Member="Device" ed:Guid="467d74c6-935f-4ca6-bb79-3eeec86b0d47" ThisKey="DeviceID" OtherKey="ID" Type="Device" DeleteRule="CASCADE" IsForeignKey="true" />
+      <Column Name="DeviceID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="c781f730-69c3-4acf-9eac-267ca0dc5c00" />
+      <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="e25494f2-6a37-4a25-95fd-8cf4400dd16c" />
+      <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="6ab09502-a017-4543-a275-2b987d18140d" />
+      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="41ed7c4b-28bc-4d5b-a385-f28ea99c053c" />
+      <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="453896af-1980-463f-bced-efa3e7632752" />
+      <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="5cb41fe5-5983-4c23-aaf6-315ff26c8391" />
+      <Column Name="Humidity" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="fd31febd-5b8f-4c37-aef4-f596ebf3174e" />
+      <Column Name="AirPressure" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="c8afce92-e31e-4e29-8519-d9a69df47caa" />
+      <Column Name="Temperature" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="1abfdcbf-dbc2-405f-b3b7-e458f85d68a6" />
+      <Column Name="LightLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="77496138-6e81-451e-a4bd-4b947cfa47d0" />
+      <Column Name="UserID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="6022f73b-a3dd-49d9-8820-c077d23b0d5a" />
+      <Association Name="Device_DeviceHistory" ed:AssociationGuid="4fd796ad-13ff-4570-8ad0-7b4ccc80930a" Member="Device" ed:Guid="467d74c6-935f-4ca6-bb79-3eeec86b0d47" ThisKey="DeviceID" OtherKey="ID" Type="Device" DeleteRule="CASCADE" DeleteOnNull="true" IsForeignKey="true" />
       <Association Name="User_DeviceHistory" ed:AssociationGuid="f0f63d30-fcf8-43c0-ba9c-233b64dea80a" Member="User" ed:Guid="bb10c54f-3be1-4212-abf6-d127e6af3479" ThisKey="UserID" OtherKey="ID" Type="User" DeleteRule="CASCADE" IsForeignKey="true" Cardinality="One" />
     </Type>
   </Table>

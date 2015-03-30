@@ -323,15 +323,17 @@ namespace WiFindUs.Eye.Wave
 			camera = new FixedCamera("camera", Vector3.Up * 200.0f, Vector3.Zero)
 			{
 				NearPlane = 1f,
-				FarPlane = 100000.0f,
+				FarPlane = 10000.0f,
 				ClearFlags = ClearFlags.All,
 				BackgroundColor = theme != null ? new Color(
 					theme.ControlDarkColour.R, theme.ControlDarkColour.G,
 					theme.ControlDarkColour.B, theme.ControlDarkColour.A)
 					: Color.CornflowerBlue
 			};
-			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapSceneCamera());
+			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapSceneCamera())
+				.AddComponent(new CameraFrustum());
 			EntityManager.Add(camera);
+			RenderManager.SetFrustumCullingCamera(camera.Entity);
 
 			//create global lighting
 			Debugger.V("MapScene: creating lighting");

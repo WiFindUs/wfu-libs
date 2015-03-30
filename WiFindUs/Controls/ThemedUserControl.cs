@@ -70,7 +70,10 @@ namespace WiFindUs.Controls
 			Padding = new Padding(0);
 
 			if (IsDesignMode)
+			{
+				theme = WFUApplication.Theme;
 				return;
+			}
 
 			ResizeRedraw = false;
 			DoubleBuffered = true;

@@ -10,6 +10,7 @@ namespace WiFindUs.Eye
 		private bool? gpsEnabled, gpsHasFix;
 		private string deviceType = null;
 		private uint? userID;
+		private uint? nodeNumber;
 
 		public double? Latitude
 		{
@@ -49,6 +50,11 @@ namespace WiFindUs.Eye
 		public uint? UserID
 		{
 			get { return userID; }
+		}
+
+		public uint? NodeNumber
+		{
+			get { return nodeNumber; }
 		}
 
 		public bool HasLatLong
@@ -118,6 +124,7 @@ namespace WiFindUs.Eye
 					case "chg": charging = UInt32.Parse(value) == 1; return true;
 					case "batt": batteryLevel = Double.Parse(value); return true;
 					case "user": userID = UInt32.Parse(value, System.Globalization.NumberStyles.HexNumber); return true;
+					case "node": nodeNumber = UInt32.Parse(value); return true;
 				}
 			}
 			catch (FormatException) { }

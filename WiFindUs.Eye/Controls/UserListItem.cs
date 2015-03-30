@@ -51,7 +51,8 @@ namespace WiFindUs.Eye.Controls
 			: base(user)
 		{
 			this.user = user;
-
+			if (IsDesignMode)
+				return;
 			user.OnUserFirstNameChanged += user_OnUserFirstNameChanged;
 			user.OnUserMiddleNameChanged += user_OnUserMiddleNameChanged;
 			user.OnUserLastNameChanged += user_OnUserLastNameChanged;

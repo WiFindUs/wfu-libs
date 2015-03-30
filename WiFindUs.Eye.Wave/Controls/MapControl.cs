@@ -7,6 +7,7 @@ using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Eye.Extensions;
+using System.ComponentModel;
 
 namespace WiFindUs.Eye.Wave.Controls
 {
@@ -25,21 +26,29 @@ namespace WiFindUs.Eye.Wave.Controls
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Form Form
 		{
 			get { return form; }
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public MapScene Scene
 		{
 			get { return mapApp == null ? null : mapApp.Scene; }
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsDesignMode
 		{
 			get { return DesignMode || this.IsDesignMode(); }
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public float BackBufferScale
 		{
 			get { return scaleFactor; }
@@ -54,6 +63,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public int BackBufferWidth
 		{
 			get
@@ -63,6 +74,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public int BackBufferHeight
 		{
 			get
@@ -72,6 +85,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Theme Theme
 		{
 			get
@@ -93,6 +108,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool DebugMode
 		{
 			get { return Scene == null ? false : Scene.DebugMode; }
@@ -114,7 +131,10 @@ namespace WiFindUs.Eye.Wave.Controls
 			TabStop = false;
 
 			if (IsDesignMode)
+			{
+				Theme = WFUApplication.Theme;
 				return;
+			}
 
 			SetStyle(ControlStyles.AllPaintingInWmPaint
 				| ControlStyles.OptimizedDoubleBuffer
@@ -166,9 +186,13 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		protected override void OnHandleDestroyed(EventArgs e)
 		{
-			mapApp.CancelThreads();
-			mapApp.OnDeactivate();
-			mapApp.Dispose();
+			if (mapApp != null)
+			{
+				mapApp.CancelThreads();
+				mapApp.OnDeactivate();
+				mapApp.Dispose();
+				mapApp = null;
+			}
 			base.OnHandleDestroyed(e);
 		}
 
@@ -270,6 +294,9 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		private bool CheckInputManager()
 		{
+			if (IsDesignMode)
+				return false;
+			
 			if (input == null)
 			{
 				input = WaveServices.Input;

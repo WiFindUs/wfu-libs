@@ -18,6 +18,7 @@ namespace WiFindUs.Eye
 		public event Action<Device> OnDeviceIPAddressChanged;
 		public event Action<Device> OnDeviceUserChanged;
 		public event Action<Device> OnDeviceAssignedWaypointChanged;
+		public event Action<Device> OnDeviceNodeChanged;
 		public event Action<IUpdateable> WhenUpdated;
 		public event Action<IUpdateable> TimedOutChanged;
 		public event Action<ILocatable> LocationChanged;
@@ -197,24 +198,6 @@ namespace WiFindUs.Eye
 			}
 		}
 
-		public uint ConnectedNodeNumber
-		{
-			get
-			{
-				long ipRaw = IPAddressRaw.GetValueOrDefault();
-				if (ipRaw == 0)
-					return 0;
-				long ipRawHost = (ipRaw & 0x000000FFU) << 24
-					| (ipRaw & 0x0000FF00U) << 8
-					| (ipRaw & 0x00FF0000U) >> 8
-					| (ipRaw & 0xFF000000U) >> 24;
-				if (ipRawHost < MIN_MESH_IP_ADDRESS
-					|| ipRawHost > MAX_MESH_IP_ADDRESS)
-					return 0;
-				return ((uint)ipRawHost & 0xFF00) >> 8;
-			}
-		}
-
 		public ulong UpdateAge
 		{
 			get
@@ -267,6 +250,29 @@ namespace WiFindUs.Eye
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		public static uint NodeNumberFromIPAddress(long ipRaw)
+		{
+			if (ipRaw == 0)
+				return 0;
+			long ipRawHost = (ipRaw & 0x000000FFU) << 24
+				| (ipRaw & 0x0000FF00U) << 8
+				| (ipRaw & 0x00FF0000U) >> 8
+				| (ipRaw & 0xFF000000U) >> 24;
+			if (ipRawHost < MIN_MESH_IP_ADDRESS
+				|| ipRawHost > MAX_MESH_IP_ADDRESS)
+				return 0;
+			return ((uint)ipRawHost & 0xFF00) >> 8;
+		}
+
+		public static uint NodeNumberFromIPAddress(IPAddress ipv4)
+		{
+			if (ipv4 == null)
+				return 0;
+#pragma warning disable 0618
+			return NodeNumberFromIPAddress(ipv4.Address);
+#pragma warning restore 0618
+		}
 
 		public override string ToString()
 		{
@@ -428,6 +434,12 @@ namespace WiFindUs.Eye
 			if (WhenUpdated != null)
 				WhenUpdated(this);
 			CheckTimeout();
+		}
+
+		partial void OnNodeIDChanged()
+		{
+			if (OnDeviceNodeChanged != null)
+				OnDeviceNodeChanged(this);
 		}
 	}
 }

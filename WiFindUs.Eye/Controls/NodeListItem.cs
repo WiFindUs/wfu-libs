@@ -58,7 +58,8 @@ namespace WiFindUs.Eye.Controls
 			: base(node)
 		{
 			this.node = node;
-
+			if (IsDesignMode)
+				return;
 			node.LocationChanged += node_LocationChanged;
 			node.OnAPDaemonRunningChanged += node_RunningDaemonsChanged;
 			node.OnDHCPDaemonRunningChanged += node_RunningDaemonsChanged;

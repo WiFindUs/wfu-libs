@@ -99,7 +99,7 @@ namespace WiFindUs.Controls
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
-			if (this.IsDesignMode())
+			if (DesignMode || this.IsDesignMode())
 				return;
 			Debugger.OnDebugOutput += OnDebugOutput;
 		}
@@ -126,6 +126,8 @@ namespace WiFindUs.Controls
 		protected override void WndProc(ref Message m)
 		{
 			base.WndProc(ref m);
+			if (DesignMode || this.IsDesignMode())
+				return;
 			HideCaret(this.Handle);
 		}
 

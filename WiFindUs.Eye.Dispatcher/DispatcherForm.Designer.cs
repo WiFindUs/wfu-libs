@@ -29,10 +29,10 @@
         private void InitializeComponent()
         {
 			System.Windows.Forms.TabPage tabDevices;
-			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup5 = new WiFindUs.Eye.SelectableEntityGroup();
-			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup6 = new WiFindUs.Eye.SelectableEntityGroup();
-			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup7 = new WiFindUs.Eye.SelectableEntityGroup();
-			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup8 = new WiFindUs.Eye.SelectableEntityGroup();
+			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup1 = new WiFindUs.Eye.SelectableEntityGroup();
+			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup2 = new WiFindUs.Eye.SelectableEntityGroup();
+			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup3 = new WiFindUs.Eye.SelectableEntityGroup();
+			WiFindUs.Eye.SelectableEntityGroup selectableEntityGroup4 = new WiFindUs.Eye.SelectableEntityGroup();
 			this.listDevices = new WiFindUs.Eye.Controls.EntityList();
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
 			this.labelStatus = new System.Windows.Forms.ToolStripStatusLabel();
@@ -45,12 +45,14 @@
 			this.splitterRight = new System.Windows.Forms.SplitContainer();
 			this.tabsMiddle = new WiFindUs.Controls.ThemedTabControl();
 			this.tab3DMap = new System.Windows.Forms.TabPage();
+			this.map = new WiFindUs.Eye.Wave.Controls.MapControl();
 			this.splitterRightMiddle = new System.Windows.Forms.SplitContainer();
 			this.tabsTopRight = new WiFindUs.Controls.ThemedTabControl();
 			this.tabIncidents = new System.Windows.Forms.TabPage();
 			this.listIncidents = new WiFindUs.Eye.Controls.EntityList();
 			this.tabsBottomRight = new WiFindUs.Controls.ThemedTabControl();
 			this.tab2DMap = new System.Windows.Forms.TabPage();
+			this.minimap = new WiFindUs.Eye.Wave.Controls.MiniMapControl();
 			tabDevices = new System.Windows.Forms.TabPage();
 			tabDevices.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -66,6 +68,7 @@
 			this.splitterRight.Panel2.SuspendLayout();
 			this.splitterRight.SuspendLayout();
 			this.tabsMiddle.SuspendLayout();
+			this.tab3DMap.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitterRightMiddle)).BeginInit();
 			this.splitterRightMiddle.Panel1.SuspendLayout();
 			this.splitterRightMiddle.Panel2.SuspendLayout();
@@ -73,6 +76,7 @@
 			this.tabsTopRight.SuspendLayout();
 			this.tabIncidents.SuspendLayout();
 			this.tabsBottomRight.SuspendLayout();
+			this.tab2DMap.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// tabDevices
@@ -95,8 +99,8 @@
 			this.listDevices.Location = new System.Drawing.Point(0, 0);
 			this.listDevices.Margin = new System.Windows.Forms.Padding(0);
 			this.listDevices.Name = "listDevices";
-			selectableEntityGroup5.CaptureNotifies = false;
-			this.listDevices.SelectionGroup = selectableEntityGroup5;
+			selectableEntityGroup1.CaptureNotifies = false;
+			this.listDevices.SelectionGroup = selectableEntityGroup1;
 			this.listDevices.Size = new System.Drawing.Size(266, 502);
 			this.listDevices.TabIndex = 0;
 			this.listDevices.WrapContents = false;
@@ -114,7 +118,7 @@
 			// labelStatus
 			// 
 			this.labelStatus.Name = "labelStatus";
-			this.labelStatus.Size = new System.Drawing.Size(738, 17);
+			this.labelStatus.Size = new System.Drawing.Size(769, 17);
 			this.labelStatus.Spring = true;
 			// 
 			// splitterLeft
@@ -175,8 +179,8 @@
 			this.listUsers.Location = new System.Drawing.Point(0, 0);
 			this.listUsers.Margin = new System.Windows.Forms.Padding(0);
 			this.listUsers.Name = "listUsers";
-			selectableEntityGroup6.CaptureNotifies = false;
-			this.listUsers.SelectionGroup = selectableEntityGroup6;
+			selectableEntityGroup2.CaptureNotifies = false;
+			this.listUsers.SelectionGroup = selectableEntityGroup2;
 			this.listUsers.Size = new System.Drawing.Size(266, 502);
 			this.listUsers.TabIndex = 1;
 			this.listUsers.WrapContents = false;
@@ -199,8 +203,8 @@
 			this.listNodes.Location = new System.Drawing.Point(0, 0);
 			this.listNodes.Margin = new System.Windows.Forms.Padding(0);
 			this.listNodes.Name = "listNodes";
-			selectableEntityGroup7.CaptureNotifies = false;
-			this.listNodes.SelectionGroup = selectableEntityGroup7;
+			selectableEntityGroup3.CaptureNotifies = false;
+			this.listNodes.SelectionGroup = selectableEntityGroup3;
 			this.listNodes.Size = new System.Drawing.Size(266, 502);
 			this.listNodes.TabIndex = 0;
 			this.listNodes.WrapContents = false;
@@ -245,6 +249,7 @@
 			// tab3DMap
 			// 
 			this.tab3DMap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+			this.tab3DMap.Controls.Add(this.map);
 			this.tab3DMap.Font = new System.Drawing.Font("Segoe UI", 9F);
 			this.tab3DMap.Location = new System.Drawing.Point(4, 34);
 			this.tab3DMap.Margin = new System.Windows.Forms.Padding(0);
@@ -252,6 +257,22 @@
 			this.tab3DMap.Size = new System.Drawing.Size(224, 502);
 			this.tab3DMap.TabIndex = 0;
 			this.tab3DMap.Text = "3D Map";
+			// 
+			// map
+			// 
+			this.map.BackBufferScale = 1F;
+			this.map.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+			this.map.DebugMode = false;
+			this.map.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.map.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.map.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+			this.map.Location = new System.Drawing.Point(0, 0);
+			this.map.Margin = new System.Windows.Forms.Padding(0);
+			this.map.Name = "map";
+			this.map.Size = new System.Drawing.Size(224, 502);
+			this.map.TabIndex = 0;
+			this.map.TabStop = false;
+			this.map.Text = "map";
 			// 
 			// splitterRightMiddle
 			// 
@@ -311,8 +332,8 @@
 			this.listIncidents.Location = new System.Drawing.Point(0, 0);
 			this.listIncidents.Margin = new System.Windows.Forms.Padding(0);
 			this.listIncidents.Name = "listIncidents";
-			selectableEntityGroup8.CaptureNotifies = false;
-			this.listIncidents.SelectionGroup = selectableEntityGroup8;
+			selectableEntityGroup4.CaptureNotifies = false;
+			this.listIncidents.SelectionGroup = selectableEntityGroup4;
 			this.listIncidents.Size = new System.Drawing.Size(262, 265);
 			this.listIncidents.TabIndex = 2;
 			this.listIncidents.WrapContents = false;
@@ -336,6 +357,7 @@
 			// tab2DMap
 			// 
 			this.tab2DMap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
+			this.tab2DMap.Controls.Add(this.minimap);
 			this.tab2DMap.Font = new System.Drawing.Font("Segoe UI", 9F);
 			this.tab2DMap.Location = new System.Drawing.Point(4, 34);
 			this.tab2DMap.Margin = new System.Windows.Forms.Padding(0);
@@ -343,6 +365,20 @@
 			this.tab2DMap.Size = new System.Drawing.Size(262, 195);
 			this.tab2DMap.TabIndex = 0;
 			this.tab2DMap.Text = "2D Map";
+			// 
+			// minimap
+			// 
+			this.minimap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(45)))), ((int)(((byte)(45)))), ((int)(((byte)(48)))));
+			this.minimap.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.minimap.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.minimap.Location = new System.Drawing.Point(0, 0);
+			this.minimap.Margin = new System.Windows.Forms.Padding(0);
+			this.minimap.Name = "minimap";
+			this.minimap.Scene = null;
+			this.minimap.Size = new System.Drawing.Size(262, 195);
+			this.minimap.TabIndex = 0;
+			this.minimap.TabStop = false;
+			this.minimap.Text = "minimap";
 			// 
 			// DispatcherForm
 			// 
@@ -367,6 +403,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.splitterRight)).EndInit();
 			this.splitterRight.ResumeLayout(false);
 			this.tabsMiddle.ResumeLayout(false);
+			this.tab3DMap.ResumeLayout(false);
 			this.splitterRightMiddle.Panel1.ResumeLayout(false);
 			this.splitterRightMiddle.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.splitterRightMiddle)).EndInit();
@@ -374,6 +411,7 @@
 			this.tabsTopRight.ResumeLayout(false);
 			this.tabIncidents.ResumeLayout(false);
 			this.tabsBottomRight.ResumeLayout(false);
+			this.tab2DMap.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 
@@ -399,6 +437,8 @@
         private WiFindUs.Controls.ThemedTabControl tabsMiddle;
         private System.Windows.Forms.TabPage tab3DMap;
 		private System.Windows.Forms.TabPage tabUsers;
+		private Wave.Controls.MiniMapControl minimap;
+		private Wave.Controls.MapControl map;
 
 
     }

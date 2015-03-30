@@ -56,7 +56,10 @@ namespace WiFindUs.Controls
 			IntegralHeight = false;
 
 			if (IsDesignMode)
+			{
+				theme = WFUApplication.Theme;
 				return;
+			}
 
 			this.SetStyle(
 				ControlStyles.OptimizedDoubleBuffer |
@@ -95,7 +98,7 @@ namespace WiFindUs.Controls
 		protected override void OnMeasureItem(MeasureItemEventArgs e)
 		{
 			base.OnMeasureItem(e);
-			if (DesignMode || e.Index < 0)
+			if (IsDesignMode || e.Index < 0)
 				return;
 
 			ThemedListBoxItem displayItem = Items[e.Index] as ThemedListBoxItem;

@@ -70,7 +70,8 @@ namespace WiFindUs.Eye.Controls
 			: base(device)
 		{
 			this.device = device;
-
+			if (IsDesignMode)
+				return;
 			device.OnDeviceTypeChanged += device_OnDeviceTypeChanged;
 			device.OnDeviceUserChanged += device_OnDeviceUserChanged;
 			device.LocationChanged += device_OnDeviceLocationChanged;

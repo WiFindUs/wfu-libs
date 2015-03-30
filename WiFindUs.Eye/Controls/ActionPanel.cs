@@ -106,14 +106,8 @@ namespace WiFindUs.Eye.Controls
 		public ActionPanel(uint rows, uint cols)
 			: base()
 		{
-			if (IsDesignMode)
-				return;
-			if (rows == 0)
-				throw new ArgumentOutOfRangeException("rows", "Rows must be greater than zero.");
-			if (cols == 0)
-				throw new ArgumentOutOfRangeException("cols", "Columns must be greater than zero.");
-			this.cols = cols;
-			this.rows = rows;
+			this.cols = Math.Max(cols,1);
+			this.rows = Math.Max(rows, 1);
 			buttons = new Button[rows, cols];
 
 			SuspendLayout();
@@ -137,6 +131,8 @@ namespace WiFindUs.Eye.Controls
 			ResumeLayout(false);
 		}
 
+		public ActionPanel() : this(3, 3) { }
+
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -152,8 +148,6 @@ namespace WiFindUs.Eye.Controls
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			base.OnPaint(e);
-			if (IsDesignMode)
-				return;
 
 			if (actionSubscriber != null && activeButtons > 0)
 			{
@@ -173,7 +167,6 @@ namespace WiFindUs.Eye.Controls
 					(ClientRectangle.Height - sizeText.Height) / 2,
 					StringFormat.GenericTypographic);
 			}
-
 		}
 
 		protected override void OnFontChanged(EventArgs e)

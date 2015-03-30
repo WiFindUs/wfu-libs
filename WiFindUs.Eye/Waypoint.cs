@@ -229,7 +229,6 @@ namespace WiFindUs.Eye
 		{
 			if (OnWaypointArchivedChanged != null)
 				OnWaypointArchivedChanged(this);
-
 		}
 	}
 }

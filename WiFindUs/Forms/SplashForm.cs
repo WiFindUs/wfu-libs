@@ -24,13 +24,6 @@ namespace WiFindUs.Forms
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override String TitleText
-		{
-			get { return base.TitleText + " - " + Status; }
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public string Status
 		{
 			get { return IsDesignMode ? "Loading operation status" : statusString; }
@@ -40,7 +33,7 @@ namespace WiFindUs.Forms
 				if (val.CompareTo(statusString) == 0)
 					return;
 				statusString = val;
-				UpdateTitleText();
+				this.SetText(statusString);
 				this.RefreshThreadSafe();
 			}
 		}
@@ -104,8 +97,6 @@ namespace WiFindUs.Forms
 		protected override void OnPaintBackground(PaintEventArgs e)
 		{
 			base.OnPaintBackground(e);
-			if (IsDesignMode)
-				return;
 
 			///background gradient
 			Rectangle gradRect = new Rectangle(0, 0, ClientRectangle.Width, ClientRectangle.Height / 2);
@@ -123,8 +114,6 @@ namespace WiFindUs.Forms
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			base.OnPaint(e);
-			if (IsDesignMode)
-				return;
 
 			GraphicsExtensions.GraphicsQualitySettings settings = e.Graphics.GetQuality();
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.High);
@@ -133,7 +122,7 @@ namespace WiFindUs.Forms
 				PreDraw(e);
 
 			//logo
-			if (logo != null)
+			if (!IsDesignMode && logo != null)
 				e.Graphics.DrawImage(logo, activeArea.Location);
 
 			//title

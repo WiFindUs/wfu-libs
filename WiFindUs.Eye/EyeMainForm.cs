@@ -271,6 +271,27 @@ namespace WiFindUs.Eye
 			return user;
 		}
 
+		/// <summary>
+		/// Gets the most recently active node assigned to a particular station number.
+		/// </summary>
+		public Node NodeByNumber(uint number)
+		{
+			if (number == 0 || number >= 255)
+				throw new ArgumentOutOfRangeException("number", "number must be between 1 and 254 (inclusive)");
+
+			Node node = null;
+			foreach (Node n in Nodes)
+			{
+				if (n.Number.GetValueOrDefault() != number)
+					continue;
+
+				if (node == null || n.Updated > node.Updated)
+					node = n;
+			}
+
+			return node;
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -381,6 +402,13 @@ namespace WiFindUs.Eye
 			if (devicePacket.BatteryLevel.HasValue)
 				device.BatteryLevel = devicePacket.BatteryLevel;
 
+			//connected node
+			if (devicePacket.NodeNumber.HasValue)
+			{
+				Node node = NodeByNumber(devicePacket.NodeNumber.Value);
+				device.NodeID = node == null ? (uint?)null : node.ID;
+			}
+
 			//location
 			if (devicePacket.IsGPSEnabled.HasValue)
 				device.IsGPSEnabled = devicePacket.IsGPSEnabled;
@@ -487,19 +515,13 @@ namespace WiFindUs.Eye
 			if (nodePacket.MeshPeers != null)
 			{
 				List<Node> peers = new List<Node>();
-				foreach (int nodeNumber in nodePacket.MeshPeers)
+				foreach (uint nodeNumber in nodePacket.MeshPeers)
 				{
-					if (nodeNumber <= 0 || nodeNumber >= 255)
+					if (nodeNumber == 0 || nodeNumber >= 255)
 						continue;
-					var peer = from p in eyeContext.Nodes where p.Number == nodeNumber select p;
-					foreach (Node p in peer)
-					{
-						if (!p.TimedOut && p != node && !peers.Contains(p))
-						{
-							peers.Add(p);
-							break;
-						}
-					}
+					Node peer = NodeByNumber(nodeNumber);
+					if (peer != null && !peer.TimedOut && !peers.Contains(peer))
+						peers.Add(peer);
 				}
 				node.MeshPeers = peers;
 			}
@@ -536,6 +558,7 @@ namespace WiFindUs.Eye
 					options.LoadWith<Device>(d => d.User);
 					options.LoadWith<Device>(d => d.History);
 					options.LoadWith<Device>(d => d.AssignedWaypoint);
+					options.LoadWith<Device>(d => d.Node);
 					eyeContext.LoadOptions = options;
 
 					Debugger.V("MySQL connection created OK.");
