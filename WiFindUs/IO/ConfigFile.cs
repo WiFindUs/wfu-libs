@@ -172,31 +172,29 @@ namespace WiFindUs.IO
 
 		public override string ToString()
 		{
-
+			if (kvps.Count == 0)
+				return "";
+			
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-			sb.Append("ConfigFile[");
 			lock (threadLock)
 			{
-				if (kvps.Count > 0)
+				List<String> output = new List<string>();
+				foreach (KeyValuePair<String, List<String>> kvp in kvps)
 				{
-					sb.Append("\n");
-					foreach (KeyValuePair<String, List<String>> kvp in kvps)
+					if (kvp.Key == null || kvp.Value == null || kvp.Value.Count == 0)
+						continue;
+					for (int i = 0; i < kvp.Value.Count; i++)
 					{
-						if (kvp.Key == null || kvp.Value == null || kvp.Value.Count == 0)
+						String value = kvp.Value[i];
+						if (value == null || value.Length == 0)
 							continue;
-						for (int i = 0; i < kvp.Value.Count; i++)
-						{
-							String value = kvp.Value[i];
-							if (value == null || value.Length == 0)
-								continue;
-							sb.Append("    " + kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value + "\n");
-						}
+						output.Add(kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value);
 					}
 				}
-				else
-					sb.Append(" ");
+				output.Sort();
+				for (int i = 0; i < output.Count; i++)
+					sb.Append((i > 0 ? "\n" : "") + output[i]);
 			}
-			sb.Append("]");
 			return sb.ToString();
 		}
 
