@@ -116,8 +116,7 @@ namespace WiFindUs.Forms
 			}
 
 			Icon = WFUApplication.Icon;
-			if (WFUApplication.UIThreadID < 0)
-				WFUApplication.UIThreadID = Thread.CurrentThread.ManagedThreadId;
+			WFUApplication.SetThreadAlias("UI");
 
 			DoubleBuffered = true;
 			SetStyle(

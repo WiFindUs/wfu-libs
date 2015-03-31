@@ -108,6 +108,18 @@ namespace WiFindUs
 
 			//initial logging
 			V(WFUApplication.Company + " " + WFUApplication.Name + " logging session opened.");
+			System.Reflection.Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+			StringBuilder sb = new StringBuilder("Loaded assemblies:");
+			List<String> assemblyOutput = new List<string>();
+			foreach (System.Reflection.Assembly asm in assemblies)
+			{
+				System.Reflection.AssemblyName asmn = asm.GetName();
+				assemblyOutput.Add(String.Format("{0} ({1})", asmn.Name, asmn.Version));
+			}
+			assemblyOutput.Sort();
+			foreach (string s in assemblyOutput)
+				sb.Append("\n    " + s);
+			V(sb.ToString());
 			V("Windows version: " + Environment.OSVersion.ToString());
 			V("Dot NET version: " + Environment.Version.ToString());
 			V("Machine name: " + Environment.MachineName);
@@ -115,9 +127,9 @@ namespace WiFindUs
 			V("Processor Count: " + Environment.ProcessorCount.ToString());
 			V("Processor Usage: " + cpuCounter.NextValue() + "%");
 			V("Available RAM: " + ramCounter.NextValue() + "Mb");
-			StringBuilder sb = new StringBuilder("System monitors:\n");
+			sb = new StringBuilder("System monitors:");
 			for (int i = 0; i < Screen.AllScreens.Length; i++)
-				sb.AppendLine(String.Format("    [{0}]: {1}{2}", i, Screen.AllScreens[i].Bounds, Screen.AllScreens[i].Primary ? " (primary)" : ""));
+				sb.Append(String.Format("\n    [{0}]: {1}{2}", i, Screen.AllScreens[i].Bounds, Screen.AllScreens[i].Primary ? " (primary)" : ""));
 			V(sb.ToString());
 			TimeSpan uptime = SystemUptime;
 			V(String.Format("System uptime: {0} hours, {1} minutes, {2} seconds.", uptime.Hours, uptime.Minutes, uptime.Seconds));

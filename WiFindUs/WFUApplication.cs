@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Security.Principal;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using WiFindUs.Controls;
@@ -45,25 +46,12 @@ namespace WiFindUs
 		private static Theme theme = new Theme();
 		private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
 		private static Action<MainForm> mainLaunchAction = null;
-		private static int uiThreadID = -1;
+		private static volatile Dictionary<int, string> threadAliases = new Dictionary<int, string>();
 		private static bool administrator = false;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
-		/// <summary>
-		/// Gets the ManagedThreadID of the current WinForms UI thread.
-		/// </summary>
-		public static int UIThreadID
-		{
-			get { return uiThreadID; }
-			set
-			{
-				if (uiThreadID < 0)
-					uiThreadID = value < 0 ? -1 : value;
-			}
-		}
 
 		/// <summary>
 		/// Returns if a WFUApplication is already running.
@@ -297,17 +285,17 @@ namespace WiFindUs
 
 		/// <summary>
 		/// Gets the data storage path of the current application based on the other properties provided at initialization.
-		/// e.g. "C:\Users\marzer\AppData\Roaming\Marzersoft\Flactric"
+		/// e.g. "C:\Users\marzer\AppData\Roaming\WiFindUs\Ubi"
 		/// </summary>
 		public static string DataPath
 		{
 			get
 			{
 				return Path.Combine(
-					//app data; e.g. "C:\Users\marzer\AppData\Roaming\Marzersoft"
+					//app data; e.g. "C:\Users\marzer\AppData\Roaming\WiFindUs"
 						AppDataCompanyPath,
 
-						//subfolder; e.g. "Flactric"
+						//subfolder; e.g. "Ubi"
 						AppDataFolderName.Length == 0 ? Name : AppDataFolderName
 					);
 			}
@@ -315,7 +303,7 @@ namespace WiFindUs
 
 		/// <summary>
 		/// Gets the full path to the application's executable.
-		/// e.g. "C:\Program Files (x86)\Marzersoft\Flactric\Flactric.exe"
+		/// e.g. "C:\Program Files (x86)\WiFindUs\Ubi\Ubi.exe"
 		/// </summary>
 		public static string ExecutablePath
 		{
@@ -329,7 +317,7 @@ namespace WiFindUs
 
 		/// <summary>
 		/// Gets the directory containing the application's executable.
-		/// e.g. "C:\Program Files (x86)\Marzersoft\Flactric"
+		/// e.g. "C:\Program Files (x86)\WiFindUs\Ubi"
 		/// </summary>
 		public static string ExecutableDirectoryPath
 		{
@@ -500,6 +488,7 @@ namespace WiFindUs
 		{
 			if (Running)
 				throw new InvalidOperationException("A WFUApplication is already running.");
+			SetThreadAlias("EN");
 
 			//check command line for debug flags
 			if (args == null)
@@ -569,6 +558,24 @@ namespace WiFindUs
 			allTasks.AddRange(tasks);
 			splashForm = new SplashForm(allTasks);
 			splashForm.Show();
+		}
+
+		public static void SetThreadAlias(string alias, bool replaceOnlyIfNotPresent = true)
+		{
+			int id = Thread.CurrentThread.ManagedThreadId;
+			if (alias == null || (alias = alias.Trim()).Length == 0)
+				threadAliases.Remove(id);
+			else if (!replaceOnlyIfNotPresent || !threadAliases.ContainsKey(id))
+				threadAliases[id] = alias;
+		}
+
+		public static string GetThreadAlias()
+		{
+			int id = Thread.CurrentThread.ManagedThreadId;
+			string alias;
+			if (threadAliases.TryGetValue(id, out alias))
+				return alias;
+			return id.ToString("D2");
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -643,7 +650,12 @@ namespace WiFindUs
 			config = new ConfigFile(files);
 #if DEBUG
 			config.LogMissingKeys = config.Get("config.log_missing_keys", true);
-			Debugger.V(config.ToString());
+
+			String[] configs = config.ToString().Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+			StringBuilder sb = new StringBuilder("Loaded configuration:");
+			foreach (String s in configs)
+				sb.Append("\n    " + s);
+			Debugger.V(sb.ToString());
 #else
 			config.LogMissingKeys = config.Get("config.log_missing_keys", false);
 #endif

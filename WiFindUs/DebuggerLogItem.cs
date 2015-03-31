@@ -6,7 +6,7 @@ namespace WiFindUs
 	public class DebuggerLogItem
 	{
 		private Debugger.Verbosity verbosity;
-		private int threadID;
+		private string threadAlias;
 		private DateTime timestamp;
 		private string message = "";
 
@@ -15,9 +15,9 @@ namespace WiFindUs
 			get { return verbosity; }
 		}
 
-		public int ThreadID
+		public string ThreadAlias
 		{
-			get { return threadID; }
+			get { return threadAlias; }
 		}
 
 		public DateTime Timestamp
@@ -44,7 +44,7 @@ namespace WiFindUs
 
 			this.verbosity = verbosity;
 			this.message = message ?? "";
-			threadID = Thread.CurrentThread.ManagedThreadId;
+			threadAlias = WFUApplication.GetThreadAlias();
 			timestamp = DateTime.Now;
 		}
 
@@ -52,7 +52,7 @@ namespace WiFindUs
 		{
 			return String.Format("[{0}, {1}, {2}] {3}",
 				timestamp.ToString("H:mm:ss"),
-				WFUApplication.UIThreadID >= 0 && WFUApplication.UIThreadID == threadID ? "UI" : threadID.ToString("D2"),
+				threadAlias,
 				Enum.GetName(typeof(Debugger.Verbosity), verbosity).Substring(0, 1),
 				message);
 		}
