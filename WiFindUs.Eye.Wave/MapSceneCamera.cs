@@ -213,14 +213,12 @@ namespace WiFindUs.Eye.Wave
 			{
 				camera.Position = newPos;
 				camera.LookAt = newLook;
+				//layer, scale
+				Scene.VisibleLayer = (uint)((1.0f - zoom) * (float)Scene.LayerCount);
+				Scene.MarkerScale = MIN_MARKER_SCALE + (MAX_MARKER_SCALE - MIN_MARKER_SCALE) * zoom;
 				if (Moved != null)
 					Moved(this);
 			}
-
-			//layer, scale
-			Scene.VisibleLayer = (uint)((1.0f - zoom) * (float)Scene.LayerCount);
-			Scene.MarkerScale = MIN_MARKER_SCALE + (MAX_MARKER_SCALE - MIN_MARKER_SCALE) * zoom;
-
 		}
 
 		private void ConfigureScreenRay(int x, int y)
