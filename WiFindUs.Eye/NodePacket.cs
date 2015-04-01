@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace WiFindUs.Eye
 {
 	public class NodePacket : EyePacket, ILocation
 	{
+		private static readonly Regex REGEX_MESH_POINT //num, signal strength, link speed
+			= new Regex(@"([0-9]+)\(([+-]?[0-9]+(?:[.][0-9]+)?)\)\(([+-]?[0-9]+(?:[.][0-9]+)?)\)",RegexOptions.Compiled);
 		private double? latitude, longitude, altitude, accuracy;
 		private uint? satellites;
 		private uint? number;
@@ -143,9 +146,12 @@ namespace WiFindUs.Eye
 							String p = peer.Trim();
 							if (p.Length == 0)
 								continue;
+							Match match = REGEX_MESH_POINT.Match(p);
+							if (!match.Success)
+								continue;
 							try
 							{
-								uint n = UInt32.Parse(p);
+								uint n = UInt32.Parse(match.Groups[1].Value);
 								if (n == 0 || n >= 255 || peerList.Contains(n))
 									continue;
 								peerList.Add(n);
