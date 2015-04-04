@@ -107,6 +107,22 @@ namespace WiFindUs.Eye
 			CheckAssignedValues();
 		}
 
+		/// <summary>
+		/// Creates a new Location object by coping another Location object.
+		/// </summary>
+		public Location(ILocation location)
+		{
+			if (location == null)
+				throw new ArgumentNullException("location");
+
+			this.latitude = location.Latitude;
+			this.longitude = location.Longitude;
+			this.altitude = location.Altitude;
+			this.accuracy = location.Accuracy;
+
+			CheckAssignedValues();
+		}
+
 		private Location()
 			: this(null, null, null, null)
 		{
@@ -219,6 +235,9 @@ namespace WiFindUs.Eye
 
 		public static string ToString(ILocation location)
 		{
+			if (location == null)
+				return "{ null }";
+			
 			return "{" + location.Latitude.GetValueOrDefault()
 				+ ", " + location.Longitude.GetValueOrDefault() + "}";
 		}

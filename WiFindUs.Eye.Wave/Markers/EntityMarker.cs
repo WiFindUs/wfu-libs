@@ -13,9 +13,13 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public abstract class EntityMarker<T> : Marker, ISelectableProxy where T : class, ILocatable, ISelectable, IUpdateable
 	{
-		protected readonly T entity;
-		protected const float MAX_SPIN_RATE = 5.0f;
 		public event Action<EntityMarker<T>> VisibleChanged;
+		
+		protected readonly T entity;
+		protected const float MOVE_SPEED = 10f;
+		
+		private ILocation lastLocation = null;
+		private Vector3 destination;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -76,6 +80,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			base.Initialize();
 
+			LocationChanged(entity);
 			UpdateMarkerState();
 
 			entity.SelectedChanged += SelectedChanged;
@@ -85,14 +90,30 @@ namespace WiFindUs.Eye.Wave.Markers
 			Scene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
 		}
 
+		protected override void Update(TimeSpan gameTime)
+		{
+			base.Update(gameTime);
+			if (!Owner.IsVisible)
+				return;
+			
+			Transform3D.Position = Vector3.Lerp(Transform3D.Position, destination,
+				(float)gameTime.TotalSeconds * MOVE_SPEED);
+		}
+
 		protected virtual void BaseTileCenterLocationChanged(TerrainTile obj)
 		{
-			UpdateMarkerState();
+			LocationChanged(entity);
 		}
 
 		protected virtual void LocationChanged(ILocatable obj)
 		{
-			UpdateMarkerState();
+			if (!entity.Location.HasLatLong)
+				return;
+
+			destination = Scene.LocationToVector(entity.Location);
+			if (lastLocation == null || Location.Distance(entity.Location, lastLocation) > 50.0)
+				Transform3D.Position = destination;
+			lastLocation = new Location(entity.Location);
 		}
 
 		protected virtual void SelectedChanged(ISelectable obj)
@@ -120,8 +141,6 @@ namespace WiFindUs.Eye.Wave.Markers
 
 			bool oldVisible = Owner.IsVisible;
 			Owner.IsActive = Owner.IsVisible = active;
-			if (active)
-				Transform3D.Position = Scene.LocationToVector(entity.Location);
 
 			if (oldVisible != Owner.IsVisible && VisibleChanged != null)
 				VisibleChanged(this);
