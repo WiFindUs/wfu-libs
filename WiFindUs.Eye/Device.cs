@@ -385,11 +385,14 @@ namespace WiFindUs.Eye
 
 		partial void OnLoaded()
 		{
-			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
-			loaded = true;
-			Debugger.V(this.ToString() + " loaded.");
-			if (OnDeviceLoaded != null)
-				OnDeviceLoaded(this);
+			if (!loaded)
+			{ 
+				ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
+				loaded = true;
+				Debugger.V(this.ToString() + " loaded.");
+				if (OnDeviceLoaded != null)
+					OnDeviceLoaded(this);
+			}
 		}
 
 		partial void OnTypeChanged()

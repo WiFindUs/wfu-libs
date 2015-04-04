@@ -58,10 +58,13 @@ namespace WiFindUs.Eye
 
 		partial void OnLoaded()
 		{
-			loaded = true;
-			Debugger.V(this.ToString() + " loaded.");
-			if (OnDeviceHistoryLoaded != null)
-				OnDeviceHistoryLoaded(this);
+			if (!loaded)
+			{
+				loaded = true;
+				Debugger.V(this.ToString() + " loaded.");
+				if (OnDeviceHistoryLoaded != null)
+					OnDeviceHistoryLoaded(this);
+			}
 		}
 	}
 }

@@ -144,6 +144,21 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& fromNode.Entity.IsMeshPoint.GetValueOrDefault()
 				&& toNode.Entity.IsMeshPoint.GetValueOrDefault()
 			);
+
+			if (Owner.IsVisible)
+			{
+				if (!link.SignalStrength.HasValue || link.SignalStrength > -30)
+					Colour = Color.White;
+				if (link.SignalStrength <= -30 && link.SignalStrength > -67)
+					Colour = Color.LawnGreen;
+				else if (link.SignalStrength > -70)
+					Colour = Color.Yellow;
+				else if (link.SignalStrength > -80)
+					Colour = Color.Orange;
+				else // if (link.SignalStrength > -90)
+					Colour = Color.Red;
+
+			}
 		}
 
 

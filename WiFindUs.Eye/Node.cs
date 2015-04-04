@@ -329,11 +329,14 @@ namespace WiFindUs.Eye
 
 		partial void OnLoaded()
 		{
-			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
-			loaded = true;
-			Debugger.V(this.ToString() + " loaded.");
-			if (OnNodeLoaded != null)
-				OnNodeLoaded(this);
+			if (!loaded)
+			{
+				ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
+				loaded = true;
+				Debugger.V(this.ToString() + " loaded.");
+				if (OnNodeLoaded != null)
+					OnNodeLoaded(this);
+			}
 		}
 
 		partial void OnIPAddressRawChanged()

@@ -162,10 +162,13 @@ namespace WiFindUs.Eye
 
 		partial void OnLoaded()
 		{
-			loaded = true;
-			Debugger.V(this.ToString() + " loaded.");
-			if (OnWaypointLoaded != null)
-				OnWaypointLoaded(this);
+			if (!loaded)
+			{
+				loaded = true;
+				Debugger.V(this.ToString() + " loaded.");
+				if (OnWaypointLoaded != null)
+					OnWaypointLoaded(this);
+			}
 		}
 
 		partial void OnNextWaypointIDChanged()

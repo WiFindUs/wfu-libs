@@ -25,15 +25,27 @@ namespace WiFindUs.Eye
 		}
 
 		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		public override string ToString()
+		{
+			return String.Format("NodeLink[{0:X}, {1:X}]", StartNodeID, EndNodeID);
+		}
+
+		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
 		partial void OnLoaded()
 		{
-			loaded = true;
-			Debugger.V(this.ToString() + " loaded.");
-			if (OnNodeLinkLoaded != null)
-				OnNodeLinkLoaded(this);
+			if (!loaded)
+			{
+				loaded = true;
+				Debugger.V(this.ToString() + " loaded.");
+				if (OnNodeLinkLoaded != null)
+					OnNodeLinkLoaded(this);
+			}
 		}
 
 		partial void OnActiveChanged()

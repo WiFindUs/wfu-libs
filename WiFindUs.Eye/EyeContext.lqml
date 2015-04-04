@@ -40,6 +40,8 @@
       <Column Name="Voltage" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="60e4164a-068e-4202-bae4-bb31fe1c9d88" />
       <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="b52ef8f4-eae8-4855-87a8-ffad37a68925" />
       <Association Name="Node_Device" ed:AssociationGuid="dbb1b8b3-8aeb-4c7c-a1e6-4524dc2061e3" Member="Devices" ed:Guid="4ecd7595-3117-497d-bb97-e1903c724247" ThisKey="ID" OtherKey="NodeID" Type="Device" />
+      <Association Name="Node_StartLink" ed:AssociationGuid="5836529b-d37c-412a-84b3-0f5124b8a1fb" Member="StartLinks" ed:Guid="06c3e882-006d-4ec7-bf13-885f9c6f0c9a" ThisKey="ID" OtherKey="StartNodeID" Type="NodeLink" />
+      <Association Name="Node_EndLink" ed:AssociationGuid="63624d57-f802-40a0-a204-a83ee6b74cab" Member="EndLinks" ed:Guid="06a8ab64-c0f2-4e9c-9331-d79d0ae5e621" ThisKey="ID" OtherKey="EndNodeID" Type="NodeLink" />
     </Type>
   </Table>
   <Table Name="wfu_eye_db.Users" Member="Users">

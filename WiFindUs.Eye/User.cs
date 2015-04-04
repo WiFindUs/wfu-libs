@@ -39,10 +39,13 @@ namespace WiFindUs.Eye
 
 		partial void OnLoaded()
 		{
-			loaded = true;
-			Debugger.V(this.ToString() + " loaded.");
-			if (OnUserLoaded != null)
-				OnUserLoaded(this);
+			if (!loaded)
+			{
+				loaded = true;
+				Debugger.V(this.ToString() + " loaded.");
+				if (OnUserLoaded != null)
+					OnUserLoaded(this);
+			}
 		}
 
 		partial void OnNameFirstChanged()

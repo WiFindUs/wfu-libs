@@ -736,9 +736,8 @@
                       <Width>152 px</Width>
                       <Height>18 px</Height>
                     </Size>
-                    <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>acc35a0f-f71a-4311-aaad-2393e39cc4bd</Path>
+                      <Path>06c3e882-006d-4ec7-bf13-885f9c6f0c9a</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -750,15 +749,14 @@
                     <Children />
                     <Location>
                       <X>0 px</X>
-                      <Y>18 px</Y>
+                      <Y>36 px</Y>
                     </Location>
                     <Size>
                       <Width>152 px</Width>
                       <Height>18 px</Height>
                     </Size>
-                    <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>e9468767-39f3-4ab5-a987-1fde21187a66</Path>
+                      <Path>06a8ab64-c0f2-4e9c-9331-d79d0ae5e621</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -769,11 +767,11 @@
                 </Location>
                 <Size>
                   <Width>156 px</Width>
-                  <Height>37 px</Height>
+                  <Height>73 px</Height>
                 </Size>
                 <MaxSize>
                   <Width>0 px</Width>
-                  <Height>37 px</Height>
+                  <Height>73 px</Height>
                 </MaxSize>
                 <Hidden>false</Hidden>
               </Model>
@@ -784,15 +782,15 @@
             </Location>
             <Size>
               <Width>160 px</Width>
-              <Height>266 px</Height>
+              <Height>302 px</Height>
             </Size>
             <MinSize>
               <Width>100 px</Width>
-              <Height>266 px</Height>
+              <Height>302 px</Height>
             </MinSize>
             <MaxSize>
               <Width>800 px</Width>
-              <Height>266 px</Height>
+              <Height>302 px</Height>
             </MaxSize>
             <Ports />
             <Oid xsi:type="SchemaModelOID">
@@ -951,7 +949,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>bd4085f0-469a-4438-9eef-2cab257fe9b8</Path>
+                      <Path>69ae48b9-4935-4be9-8613-805027e4b159</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -967,7 +965,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>55bff9a8-ec8e-4103-a166-facfc811af71</Path>
+                      <Path>3e610dae-1fd3-4a3b-a01c-af890fc800ea</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -983,7 +981,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>e4597c3d-0c22-47cf-ac99-f5d746915019</Path>
+                      <Path>5c45fa0e-0ab0-4a2d-ab0a-9c6a262e51dd</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -1404,7 +1402,7 @@
                     </Size>
                     <Enabled>false</Enabled>
                     <Oid xsi:type="SchemaModelOID">
-                      <Path>1a7ef45a-2683-4cef-8e73-eb781132bf18</Path>
+                      <Path>16d22a34-5b1a-4f98-bfd8-0dded36e4c88</Path>
                       <TypeName>EntityDeveloper.Linq.LinqConnectRelationProperty</TypeName>
                     </Oid>
                   </Model>
@@ -2091,7 +2089,7 @@
               <Port>
                 <Location>
                   <X>0 px</X>
-                  <Y>133 px</Y>
+                  <Y>151 px</Y>
                 </Location>
                 <Anchors>Top Bottom</Anchors>
                 <Align>Right</Align>
@@ -2101,6 +2099,16 @@
                 </CustomProperties>
               </Port>
             </PortAnchors>
+            <BendPoints>
+              <PointD>
+                <X>-212 px</X>
+                <Y>271 px</Y>
+              </PointD>
+              <PointD>
+                <X>-212 px</X>
+                <Y>253 px</Y>
+              </PointD>
+            </BendPoints>
             <IsManuallyRouted>false</IsManuallyRouted>
             <Oid xsi:type="SchemaModelOID">
               <Path>dbb1b8b3-8aeb-4c7c-a1e6-4524dc2061e3</Path>
@@ -2328,7 +2336,7 @@
               <Port>
                 <Location>
                   <X>0 px</X>
-                  <Y>128 px</Y>
+                  <Y>145.323308270677 px</Y>
                 </Location>
                 <Anchors>Top Bottom</Anchors>
                 <Align>Left</Align>
@@ -2341,7 +2349,7 @@
             <BendPoints>
               <PointD>
                 <X>-412 px</X>
-                <Y>248 px</Y>
+                <Y>265.323308270677 px</Y>
               </PointD>
               <PointD>
                 <X>-412 px</X>
@@ -2379,7 +2387,7 @@
               <Port>
                 <Location>
                   <X>0 px</X>
-                  <Y>185.5 px</Y>
+                  <Y>210.605263157895 px</Y>
                 </Location>
                 <Anchors>Top Bottom</Anchors>
                 <Align>Left</Align>
@@ -2389,6 +2397,16 @@
                 </CustomProperties>
               </Port>
             </PortAnchors>
+            <BendPoints>
+              <PointD>
+                <X>-412 px</X>
+                <Y>330.605263157895 px</Y>
+              </PointD>
+              <PointD>
+                <X>-412 px</X>
+                <Y>305.5 px</Y>
+              </PointD>
+            </BendPoints>
             <IsManuallyRouted>false</IsManuallyRouted>
             <Oid xsi:type="SchemaModelOID">
               <Path>63624d57-f802-40a0-a204-a83ee6b74cab</Path>

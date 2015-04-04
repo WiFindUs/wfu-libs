@@ -294,7 +294,7 @@ namespace WiFindUs.Eye
 			try
 			{
 				return (from n in Nodes
-						where n.Number.HasValue && n.Number.Value == number
+						where n.Loaded && n.Number.HasValue && n.Number.Value == number
 						select n).OrderByDescending(n => n.Updated).First();
 			}
 			catch
@@ -304,7 +304,7 @@ namespace WiFindUs.Eye
 		}
 
 		/// <summary>
-		/// Gets the node link connecting the two nodes (regardless of order), or creates one if one did not exist.
+		/// Gets the node link connecting the two nodes (regardless of order)
 		/// </summary>
 		public NodeLink NodeLink(Node A, Node B)
 		{
@@ -324,17 +324,8 @@ namespace WiFindUs.Eye
 			}
 			catch
 			{
-				NodeLink link = new NodeLink()
-				{
-					Start = A,
-					End = B,
-					Active = false
-				};
-				if (ServerMode)
-					eyeContext.NodeLinks.InsertOnSubmit(link);
-				else
-					nodeLinks.Add(link);
-				return link;
+				Debugger.V("creating new link!");
+				return null;
 			}
 		}
 
@@ -425,8 +416,8 @@ namespace WiFindUs.Eye
 				Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
 				return;
 			}
-			if (!device.Loaded)
-				return;
+			//if (!device.Loaded)
+			//	return;
 
 			//get user
 			User user = null;
@@ -518,8 +509,8 @@ namespace WiFindUs.Eye
 				Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
 				return;
 			}
-			if (!node.Loaded)
-				return;
+			//if (!node.Loaded)
+			//	return;
 			node.Updated = DateTime.UtcNow.ToUnixTimestamp();
 			node.IPAddress = nodePacket.Address;
 			if (nodePacket.Number.HasValue)
@@ -563,7 +554,7 @@ namespace WiFindUs.Eye
 				//get all existing links for node
 				List<NodeLink> inactiveLinks = new List<NodeLink>();
 				inactiveLinks.AddRange(from link in NodeLinks
-							   where (link.StartNodeID == node.ID || link.EndNodeID == node.ID) && link.Loaded
+							   where (link.StartNodeID == node.ID || link.EndNodeID == node.ID)
 							   select link);
 
 				//update identified links
@@ -571,8 +562,26 @@ namespace WiFindUs.Eye
 				{
 					try
 					{ 
-						NodeLink activeLink = NodeLink(node, NodeByNumber(linkData.NodeNumber));
-						inactiveLinks.Remove(activeLink);
+						Node end = NodeByNumber(linkData.NodeNumber);
+						if (end == null || !end.Loaded)
+							continue;
+
+						NodeLink activeLink = NodeLink(node, end);
+						if (activeLink != null)
+							inactiveLinks.Remove(activeLink);
+						else
+						{
+							activeLink = new NodeLink()
+							{
+								Start = node,
+								End = end,
+								Active = false
+							};
+							if (ServerMode)
+								eyeContext.NodeLinks.InsertOnSubmit(activeLink);
+							else
+								nodeLinks.Add(activeLink);
+						}
 						bool alreadyActive = activeLink.Active;
 						activeLink.Active = true;
 						if (alreadyActive) //don't clobber (future-proofing)
@@ -633,6 +642,8 @@ namespace WiFindUs.Eye
 					options.LoadWith<Device>(d => d.AssignedWaypoint);
 					options.LoadWith<Device>(d => d.Node);
 					options.LoadWith<Node>(n => n.Devices);
+					options.LoadWith<Node>(n => n.StartLinks);
+					options.LoadWith<Node>(n => n.EndLinks);
 					options.LoadWith<NodeLink>(nl => nl.Start);
 					options.LoadWith<NodeLink>(nl => nl.End);
 					options.LoadWith<User>(u => u.Device);
