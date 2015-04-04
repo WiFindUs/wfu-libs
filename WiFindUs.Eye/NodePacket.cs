@@ -13,7 +13,14 @@ namespace WiFindUs.Eye
 		private uint? satellites;
 		private uint? number;
 		private bool? meshPoint, apDaemon, dhcpDaemon, gpsDaemon, gpsFake;
-		private uint[] meshPeers;
+		private LinkData[] links;
+
+		public class LinkData
+		{
+			public uint NodeNumber;
+			public double? SignalStrength;
+			public double? LinkSpeed;
+		}
 
 		public double? Latitude
 		{
@@ -90,9 +97,9 @@ namespace WiFindUs.Eye
 			get { return number; }
 		}
 
-		public uint[] MeshPeers
+		public LinkData[] NodeLinks
 		{
-			get { return meshPeers; }
+			get { return links; }
 		}
 
 		public double DistanceTo(ILocation other)
@@ -131,16 +138,17 @@ namespace WiFindUs.Eye
 					case "mpl":
 						if (value.CompareTo("0") == 0)
 						{
-							meshPeers = new uint[0];
+							links = new LinkData[0];
 							return true;
 						}
 						string[] peers = value.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 						if (peers.Length == 0)
 						{
-							meshPeers = new uint[0];
+							links = new LinkData[0];
 							return true;
 						}
-						List<uint> peerList = new List<uint>();
+						List<LinkData> peerList = new List<LinkData>();
+						List<uint> knownPeers = new List<uint>();
 						foreach (String peer in peers)
 						{
 							String p = peer.Trim();
@@ -152,17 +160,23 @@ namespace WiFindUs.Eye
 							try
 							{
 								uint n = UInt32.Parse(match.Groups[1].Value);
-								if (n == 0 || n >= 255 || peerList.Contains(n))
+								if (n == 0 || n >= 255 || knownPeers.Contains(n))
 									continue;
-								peerList.Add(n);
+								LinkData link = new LinkData() { NodeNumber = n };
+								double val = 0.0;
+								if (Double.TryParse(match.Groups[2].Value, out val))
+									link.SignalStrength = val;
+								if (Double.TryParse(match.Groups[3].Value, out val))
+									link.LinkSpeed = val;
+								knownPeers.Add(n);
+								peerList.Add(link);
 							}
 							catch
 							{
 								continue;
 							}
 						}
-						peerList.Sort();
-						meshPeers = peerList.ToArray();
+						links = peerList.ToArray();
 						return true;
 				}
 			}

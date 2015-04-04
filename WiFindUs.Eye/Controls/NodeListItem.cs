@@ -65,7 +65,6 @@ namespace WiFindUs.Eye.Controls
 			node.OnDHCPDaemonRunningChanged += node_RunningDaemonsChanged;
 			node.OnGPSDaemonRunningChanged += node_RunningDaemonsChanged;
 			node.OnMeshPointChanged += node_RunningDaemonsChanged;
-			node.OnMeshPeersChanged += node_OnMeshPeersChanged;
 			node.OnNodeIPAddressChanged += node_OnNodeIPAddressChanged;
 			node.OnNodeNumberChanged += node_OnNodeNumberChanged;
 			node.OnNodeVoltageChanged += node_OnNodeVoltageChanged;
@@ -159,11 +158,6 @@ namespace WiFindUs.Eye.Controls
 		}
 
 		private void node_OnNodeIPAddressChanged(Node obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void node_OnMeshPeersChanged(Node obj)
 		{
 			this.RefreshThreadSafe();
 		}

@@ -41,7 +41,7 @@ namespace WiFindUs.Eye.Wave
 
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
-		private List<MeshLinkMarker> meshLinkMarkers = new List<MeshLinkMarker>();
+		private List<NodeLinkMarker> nodeLinkMarkers = new List<NodeLinkMarker>();
 		private List<DeviceLinkMarker> deviceLinkMarkers = new List<DeviceLinkMarker>();
 		private List<Marker> allMarkers = new List<Marker>();
 		private MapSceneInput inputBehaviour;
@@ -292,13 +292,13 @@ namespace WiFindUs.Eye.Wave
 			return marker;
 		}
 
-		public MeshLinkMarker GetNodeLinkMarker(NodeMarker nodeA, NodeMarker nodeB)
+		public NodeLinkMarker GetNodeLinkMarker(NodeMarker nodeA, NodeMarker nodeB)
 		{
 			if (nodeA == null || nodeB == null)
 				return null;
 
-			MeshLinkMarker marker = null;
-			foreach (MeshLinkMarker mk in meshLinkMarkers)
+			NodeLinkMarker marker = null;
+			foreach (NodeLinkMarker mk in nodeLinkMarkers)
 			{
 				if (mk.LinksMarkers(nodeA, nodeB))
 				{
@@ -371,6 +371,8 @@ namespace WiFindUs.Eye.Wave
 			Tiles((tile) => tile.CalculatePosition());
 			VisibleLayer = 0;
 			eyeForm = (WFUApplication.MainForm as EyeMainForm);
+
+			//load existing devices
 			foreach (Device device in eyeForm.Devices)
 			{
 				if (!device.Loaded)
@@ -378,6 +380,8 @@ namespace WiFindUs.Eye.Wave
 				Device_OnDeviceLoaded(device);
 			}
 			Device.OnDeviceLoaded += Device_OnDeviceLoaded;
+
+			//load existing nodes
 			foreach (Node node in eyeForm.Nodes)
 			{
 				if (!node.Loaded)
@@ -385,6 +389,17 @@ namespace WiFindUs.Eye.Wave
 				Node_OnNodeLoaded(node);
 			}
 			Node.OnNodeLoaded += Node_OnNodeLoaded;
+
+			//load existing node links
+			foreach (NodeLink nodeLink in eyeForm.NodeLinks)
+			{
+				if (!nodeLink.Loaded)
+					continue;
+				NodeLink_OnNodeLinkLoaded(nodeLink);
+			}
+			NodeLink.OnNodeLinkLoaded += NodeLink_OnNodeLinkLoaded;
+
+			//start scene
 			if (SceneStarted != null)
 				SceneStarted(this);
 		}
@@ -421,46 +436,30 @@ namespace WiFindUs.Eye.Wave
 			nodeMarkers.Add(marker);
 			allMarkers.Add(marker);
 			EntityManager.Add(entity);
-
-			//node link
-			node.OnMeshPeersChanged += Node_OnMeshPeersChanged;
 		}
 
-		private void Node_OnMeshPeersChanged(Node node)
+		private void NodeLink_OnNodeLinkLoaded(NodeLink nodeLink)
 		{
-			//get marker for current node
-			NodeMarker marker = GetNodeMarker(node);
-			if (marker == null)
+			if (nodeLink == null
+				|| nodeLink.Start == null
+				|| nodeLink.End == null)
 				return;
 
-			//abort if we have no peers
-			if (marker.Entity.MeshPeerCount == 0)
+			NodeMarker A = GetNodeMarker(nodeLink.Start);
+			NodeMarker B = GetNodeMarker(nodeLink.End);
+			if (A == null || B == null)
 				return;
 
-			//loop through mesh peers and create missing links
-			List<Entity> newLinkMarkers = new List<Entity>();
-			foreach (Node peer in marker.Entity.MeshPeers)
-			{
-				if (peer == marker.Entity)
-					continue;
+			NodeLinkMarker link = GetNodeLinkMarker(A, B);
+			if (link != null)
+				return;
 
-				NodeMarker peerMarker = GetNodeMarker(peer);
-				if (peerMarker == null)
-					continue;
-
-				MeshLinkMarker linkMarker = GetNodeLinkMarker(marker, peerMarker);
-				if (linkMarker == null)
-					newLinkMarkers.Add(LinkMarker.Create(marker, peerMarker, typeof(MeshLinkMarker)));
-			}
-
-			//add new ones to the entity manager
-			foreach (Entity newLinkMarker in newLinkMarkers)
-			{
-				MeshLinkMarker linkMarker = newLinkMarker.FindComponent<MeshLinkMarker>();
-				meshLinkMarkers.Add(linkMarker);
-				allMarkers.Add(linkMarker);
-				EntityManager.Add(newLinkMarker);
-			}
+			Entity entity = LinkMarker.Create(A, B, typeof(NodeLinkMarker));
+			link = entity.FindComponent<NodeLinkMarker>();
+			nodeLinkMarkers.Add(link);
+			allMarkers.Add(link);
+			link.NodeLink = nodeLink;
+			EntityManager.Add(entity);
 		}
 
 		private void CreateTileLayer(uint layer)

@@ -9,6 +9,7 @@
         <File Name="EyeContext.User.cs" />
         <File Name="EyeContext.Waypoint.cs" />
         <File Name="EyeContext.DeviceHistory.cs" />
+        <File Name="EyeContext.NodeLink.cs" />
       </GeneratedFiles>
     </Generation>
     <DatabaseFirstNamingRules>

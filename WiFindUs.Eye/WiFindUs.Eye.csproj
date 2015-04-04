@@ -93,6 +93,10 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Device.cs" />
+    <Compile Include="EyeContext.NodeLink.cs">
+      <DependentUpon>EyeContext.lqml</DependentUpon>
+    </Compile>
+    <Compile Include="NodeLink.cs" />
     <Compile Include="NodePacket.cs" />
     <Compile Include="DevicePacket.cs" />
     <Compile Include="Interfaces\IActionSubscriber.cs" />

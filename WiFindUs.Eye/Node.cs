@@ -23,13 +23,11 @@ namespace WiFindUs.Eye
 		public event Action<Node> OnDHCPDaemonRunningChanged;
 		public event Action<Node> OnGPSDaemonRunningChanged;
 		public event Action<Node> OnVisibleSatellitesChanged;
-		public event Action<Node> OnMeshPeersChanged;
 		public event Action<Node> OnGPSFakeChanged;
 
 		private bool timedOut = false, loaded = false;
 		private bool? meshPoint = null, apDaemon = null, dhcpDaemon = null, gpsDaemon = null, gpsFake = null;
 		private uint? satellites = null;
-		private readonly List<Node> meshPeers = new List<Node>();
 		private StackedLock locationEventLock = new StackedLock();
 		private bool fireLocationEvents = false;
 		private IPAddress ipAddress = null;
@@ -37,46 +35,6 @@ namespace WiFindUs.Eye
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
-		public int MeshPeerCount
-		{
-			get { return meshPeers.Count; }
-		}
-
-		public List<Node> MeshPeers
-		{
-			get { return new List<Node>(meshPeers); }
-			set
-			{
-				if (value == null || value.Count == 0)
-				{
-					if (meshPeers.Count > 0)
-					{
-						meshPeers.Clear();
-						if (OnMeshPeersChanged != null)
-							OnMeshPeersChanged(this);
-					}
-					return;
-				}
-
-				if (meshPeers.Count == 0)
-				{
-					meshPeers.AddRange(value);
-					if (OnMeshPeersChanged != null)
-						OnMeshPeersChanged(this);
-					return;
-				}
-
-				bool areEquivalent = (value.Count == meshPeers.Count) && !value.Except(meshPeers).Any();
-				if (!areEquivalent)
-				{
-					meshPeers.Clear();
-					meshPeers.AddRange(value);
-					if (OnMeshPeersChanged != null)
-						OnMeshPeersChanged(this);
-				}
-			}
-		}
 
 		public uint? VisibleSatellites
 		{
@@ -251,7 +209,6 @@ namespace WiFindUs.Eye
 				timedOut = value;
 				if (timedOut)
 				{
-					MeshPeers = null;
 					VisibleSatellites = null;
 					IsGPSDaemonRunning = null;
 					IsDHCPDaemonRunning = null;
@@ -271,6 +228,11 @@ namespace WiFindUs.Eye
 			get { return TIMEOUT; }
 		}
 
+		public bool Loaded
+		{
+			get { return loaded; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -288,11 +250,6 @@ namespace WiFindUs.Eye
 		public void CheckTimeout()
 		{
 			TimedOut = UpdateAge > TIMEOUT;
-		}
-
-		public bool Loaded
-		{
-			get { return loaded; }
 		}
 
 		public bool ActionEnabled(uint index)

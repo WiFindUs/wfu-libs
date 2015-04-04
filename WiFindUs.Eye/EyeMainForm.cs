@@ -28,6 +28,7 @@ namespace WiFindUs.Eye
 		private Dictionary<ulong, List<DeviceHistory>> deviceHistories; //device id, history list
 		private Dictionary<ulong, User> users;
 		private Dictionary<ulong, Waypoint> waypoints;
+		private List<NodeLink> nodeLinks;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -68,6 +69,15 @@ namespace WiFindUs.Eye
 			get { return serverMode ? (IEnumerable<Waypoint>)eyeContext.Waypoints : waypoints.Values; }
 		}
 
+			[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public virtual IEnumerable<NodeLink> NodeLinks
+		{
+			get { return serverMode ? (IEnumerable<NodeLink>)eyeContext.NodeLinks : nodeLinks; }
+		}
+
+		
+
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override List<Func<bool>> LoadingTasks
@@ -80,6 +90,7 @@ namespace WiFindUs.Eye
 				tasks.Add(PreCacheDevices);
 				tasks.Add(PreCacheDeviceHistories);
 				tasks.Add(PreCacheNodes);
+				tasks.Add(PreCacheNodeLinks);
 				tasks.Add(PreCacheWaypoints);
 				tasks.Add(StartServerThread);
 				return tasks;
@@ -109,6 +120,7 @@ namespace WiFindUs.Eye
 		{
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
+			WiFindUs.Eye.NodeLink.OnNodeLinkLoaded += OnNodeLinkLoaded;
 			WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 			WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
 		}
@@ -279,17 +291,51 @@ namespace WiFindUs.Eye
 			if (number == 0 || number >= 255)
 				throw new ArgumentOutOfRangeException("number", "number must be between 1 and 254 (inclusive)");
 
-			Node node = null;
-			foreach (Node n in Nodes)
+			try
 			{
-				if (n.Number.GetValueOrDefault() != number)
-					continue;
-
-				if (node == null || n.Updated > node.Updated)
-					node = n;
+				return (from n in Nodes
+						where n.Number.HasValue && n.Number.Value == number
+						select n).OrderByDescending(n => n.Updated).First();
 			}
+			catch
+			{
+				return null;
+			}
+		}
 
-			return node;
+		/// <summary>
+		/// Gets the node link connecting the two nodes (regardless of order), or creates one if one did not exist.
+		/// </summary>
+		public NodeLink NodeLink(Node A, Node B)
+		{
+			if (A == null || B == null)
+				throw new ArgumentOutOfRangeException("nodes", "node parameters cannot be null");
+			if (!A.Loaded || !B.Loaded)
+				throw new ArgumentOutOfRangeException("nodes", "node parameters must be loaded");
+			if (A == B || A.ID == B.ID)
+				throw new ArgumentOutOfRangeException("nodes", "node parameters cannot be the same node");
+
+			try
+			{
+				return (from link in NodeLinks
+						where (link.StartNodeID == A.ID && link.EndNodeID == B.ID)
+						|| (link.StartNodeID == B.ID && link.EndNodeID == A.ID)
+						select link).First();
+			}
+			catch
+			{
+				NodeLink link = new NodeLink()
+				{
+					Start = A,
+					End = B,
+					Active = false
+				};
+				if (ServerMode)
+					eyeContext.NodeLinks.InsertOnSubmit(link);
+				else
+					nodeLinks.Add(link);
+				return link;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -379,8 +425,8 @@ namespace WiFindUs.Eye
 				Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
 				return;
 			}
-			//if (!device.Loaded)
-			//  return;
+			if (!device.Loaded)
+				return;
 
 			//get user
 			User user = null;
@@ -472,8 +518,8 @@ namespace WiFindUs.Eye
 				Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
 				return;
 			}
-			//if (!node.Loaded)
-			//  return;
+			if (!node.Loaded)
+				return;
 			node.Updated = DateTime.UtcNow.ToUnixTimestamp();
 			node.IPAddress = nodePacket.Address;
 			if (nodePacket.Number.HasValue)
@@ -512,18 +558,45 @@ namespace WiFindUs.Eye
 				node.IsMeshPoint = nodePacket.IsMeshPoint;
 			if (nodePacket.VisibleSatellites.HasValue)
 				node.VisibleSatellites = nodePacket.VisibleSatellites;
-			if (nodePacket.MeshPeers != null)
+			if (nodePacket.NodeLinks != null)
 			{
-				List<Node> peers = new List<Node>();
-				foreach (uint nodeNumber in nodePacket.MeshPeers)
+				//get all existing links for node
+				List<NodeLink> inactiveLinks = new List<NodeLink>();
+				inactiveLinks.AddRange(from link in NodeLinks
+							   where (link.StartNodeID == node.ID || link.EndNodeID == node.ID) && link.Loaded
+							   select link);
+
+				//update identified links
+				foreach (NodePacket.LinkData linkData in nodePacket.NodeLinks)
 				{
-					if (nodeNumber == 0 || nodeNumber >= 255)
+					try
+					{ 
+						NodeLink activeLink = NodeLink(node, NodeByNumber(linkData.NodeNumber));
+						inactiveLinks.Remove(activeLink);
+						bool alreadyActive = activeLink.Active;
+						activeLink.Active = true;
+						if (alreadyActive) //don't clobber (future-proofing)
+						{
+							if (linkData.SignalStrength.HasValue)
+								activeLink.SignalStrength = linkData.SignalStrength;
+							if (linkData.LinkSpeed.HasValue)
+								activeLink.LinkSpeed = linkData.LinkSpeed;
+						}
+						else
+						{
+							activeLink.SignalStrength = linkData.SignalStrength;
+							activeLink.LinkSpeed = linkData.LinkSpeed;
+						}
+					}
+					catch
+					{
 						continue;
-					Node peer = NodeByNumber(nodeNumber);
-					if (peer != null && !peer.TimedOut && !peers.Contains(peer))
-						peers.Add(peer);
+					}
 				}
-				node.MeshPeers = peers;
+
+				//set old ones to inactive
+				foreach (NodeLink link in inactiveLinks)
+					link.Active = false;
 			}
 			SubmitPacketChanges();
 		}
@@ -559,6 +632,10 @@ namespace WiFindUs.Eye
 					options.LoadWith<Device>(d => d.History);
 					options.LoadWith<Device>(d => d.AssignedWaypoint);
 					options.LoadWith<Device>(d => d.Node);
+					options.LoadWith<Node>(n => n.Devices);
+					options.LoadWith<NodeLink>(nl => nl.Start);
+					options.LoadWith<NodeLink>(nl => nl.End);
+					options.LoadWith<User>(u => u.Device);
 					eyeContext.LoadOptions = options;
 
 					Debugger.V("MySQL connection created OK.");
@@ -584,6 +661,7 @@ namespace WiFindUs.Eye
 				deviceHistories = new Dictionary<ulong, List<DeviceHistory>>();
 				users = new Dictionary<ulong, User>();
 				waypoints = new Dictionary<ulong, Waypoint>();
+				nodeLinks = new List<NodeLink>();
 
 				Debugger.I("Application running in CLIENT mode.");
 			}
@@ -665,6 +743,23 @@ namespace WiFindUs.Eye
 			return true;
 		}
 
+		private bool PreCacheNodeLinks()
+		{
+			if (!ServerMode)
+				return true;
+			WFUApplication.SplashStatus = "Pre-caching node links";
+			try
+			{
+				foreach (NodeLink nodeLink in eyeContext.NodeLinks)
+					;
+			}
+			catch (Exception e)
+			{
+				Debugger.Ex(e);
+			}
+			return true;
+		}
+
 		private bool PreCacheWaypoints()
 		{
 			if (!ServerMode)
@@ -717,6 +812,11 @@ namespace WiFindUs.Eye
 		{
 			node.CheckTimeout();
 			updateables.Add(node);
+		}
+
+		private void OnNodeLinkLoaded(NodeLink nodeLink)
+		{
+
 		}
 
 		private void OnUserLoaded(User user)

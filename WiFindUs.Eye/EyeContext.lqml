@@ -95,4 +95,15 @@
       <Association Name="User_DeviceHistory" ed:AssociationGuid="f0f63d30-fcf8-43c0-ba9c-233b64dea80a" Member="User" ed:Guid="bb10c54f-3be1-4212-abf6-d127e6af3479" ThisKey="UserID" OtherKey="ID" Type="User" DeleteRule="CASCADE" IsForeignKey="true" Cardinality="One" />
     </Type>
   </Table>
+  <Table Name="wfu_eye_db.NodeLinks" Member="NodeLinks">
+    <Type Name="NodeLink" ed:Guid="d0aa4987-6029-4183-acba-e30e75aeaeb3">
+      <Column Name="StartNodeID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="79bbceae-0564-4a70-a39f-39a19552f695" />
+      <Column Name="EndNodeID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="93145e41-16e5-4f62-8006-98637ebcb6e1" />
+      <Column Name="Active" Type="System.Boolean" DbType="bit NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="true" ed:Guid="15a991f8-4d4d-4bd7-b302-64d165918fb3" />
+      <Column Name="SignalStrength" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="93cfdb64-d8f8-4b73-919f-389a0a720bd1" />
+      <Column Name="LinkSpeed" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="02f1245c-1838-46b3-bd60-c76a3abe13ee" />
+      <Association Name="Node_StartLink" ed:AssociationGuid="5836529b-d37c-412a-84b3-0f5124b8a1fb" Member="Start" ed:Guid="3343d696-1961-4f2d-a44c-b8e8fbacff94" ThisKey="StartNodeID" OtherKey="ID" Type="Node" DeleteRule="CASCADE" DeleteOnNull="true" IsForeignKey="true" />
+      <Association Name="Node_EndLink" ed:AssociationGuid="63624d57-f802-40a0-a204-a83ee6b74cab" Member="End" ed:Guid="b25cf4dd-157d-484a-b248-8848b7e254f3" ThisKey="EndNodeID" OtherKey="ID" Type="Node" DeleteRule="CASCADE" DeleteOnNull="true" IsForeignKey="true" />
+    </Type>
+  </Table>
 </Database>

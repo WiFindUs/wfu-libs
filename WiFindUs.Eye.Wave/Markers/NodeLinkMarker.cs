@@ -14,15 +14,45 @@ using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class MeshLinkMarker : LinkMarker
+	public class NodeLinkMarker : LinkMarker
 	{
 		private NodeMarker fromNode, toNode;
+		private NodeLink link;
+
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
+
+		public NodeLink NodeLink
+		{
+			get { return link; }
+			set
+			{
+				if (value == link)
+					return;
+				if (link != null)
+				{
+					link.OnNodeLinkActiveChanged -= NodeLinkChanged;
+					link.OnNodeLinkSignalStrengthChanged -= NodeLinkChanged;
+					link.OnNodeLinkSpeedChanged -= NodeLinkChanged;
+				}
+
+				link = value;
+
+				if (link != null)
+				{ 
+					link.OnNodeLinkActiveChanged += NodeLinkChanged;
+					link.OnNodeLinkSignalStrengthChanged += NodeLinkChanged;
+					link.OnNodeLinkSpeedChanged += NodeLinkChanged;
+				}
+			}
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public MeshLinkMarker(ILinkableMarker fromNode, ILinkableMarker toNode)
+		public NodeLinkMarker(ILinkableMarker fromNode, ILinkableMarker toNode)
 			: base(fromNode, toNode) { }
 
 		/////////////////////////////////////////////////////////////////////
@@ -42,7 +72,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				fromNode.VisibleChanged -= NodeMarkerChanged;
 				fromNode.Entity.OnMeshPointChanged -= NodeChanged;
-				fromNode.Entity.OnMeshPeersChanged -= NodeChanged;
 			}
 
 			fromNode = FromMarker as NodeMarker;
@@ -51,7 +80,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				fromNode.VisibleChanged += NodeMarkerChanged;
 				fromNode.Entity.OnMeshPointChanged += NodeChanged;
-				fromNode.Entity.OnMeshPeersChanged += NodeChanged;
 			}
 
 			UpdateMarkerState();
@@ -63,7 +91,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				toNode.VisibleChanged -= NodeMarkerChanged;
 				toNode.Entity.OnMeshPointChanged -= NodeChanged;
-				toNode.Entity.OnMeshPeersChanged -= NodeChanged;
 			}
 
 			toNode = ToMarker as NodeMarker;
@@ -72,7 +99,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				toNode.VisibleChanged += NodeMarkerChanged;
 				toNode.Entity.OnMeshPointChanged += NodeChanged;
-				toNode.Entity.OnMeshPeersChanged += NodeChanged;
 			}
 
 			UpdateMarkerState();
@@ -83,6 +109,11 @@ namespace WiFindUs.Eye.Wave.Markers
 		/////////////////////////////////////////////////////////////////////
 
 		private void NodeChanged(Node node)
+		{
+			UpdateMarkerState();
+		}
+
+		private void NodeLinkChanged(NodeLink nodeLink)
 		{
 			UpdateMarkerState();
 		}
@@ -101,15 +132,20 @@ namespace WiFindUs.Eye.Wave.Markers
 				fromNode != null
 				&& toNode != null
 				&& toNode != fromNode
+				&& fromNode.Entity != null
+				&& toNode.Entity != null
+				&& link != null
+				&& link.Start != link.End
+				&& (link.Start == fromNode.Entity || link.Start == toNode.Entity)
+				&& (link.End == fromNode.Entity || link.End == toNode.Entity)
+				&& link.Active
 				&& fromNode.Owner.IsVisible
 				&& toNode.Owner.IsVisible
 				&& fromNode.Entity.IsMeshPoint.GetValueOrDefault()
 				&& toNode.Entity.IsMeshPoint.GetValueOrDefault()
-				&& fromNode.Entity.MeshPeerCount > 0
-				&& toNode.Entity.MeshPeerCount > 0
-				&& fromNode.Entity.MeshPeers.Contains(toNode.Entity)
-				&& toNode.Entity.MeshPeers.Contains(fromNode.Entity)
 			);
 		}
+
+
 	}
 }
