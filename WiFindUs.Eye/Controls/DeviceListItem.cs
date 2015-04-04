@@ -55,9 +55,9 @@ namespace WiFindUs.Eye.Controls
 					return "";
 				return String.Format("{0}\n{1}",
 					device.User != null ? "in use by " + device.User.FullName : "No assigned user.",
-					device.TimedOut ? "Timed out." :
-						(!device.IsGPSEnabled.GetValueOrDefault() ? "GPS disabled." :
-							(!device.IsGPSFixed.GetValueOrDefault() ? "Waiting for GPS fix..." :
+					!device.Active ? "Inactive." :
+						(!device.GPSEnabled.GetValueOrDefault() ? "GPS disabled." :
+							(!device.GPSHasFix.GetValueOrDefault() ? "Waiting for GPS fix..." :
 								(!device.HasLatLong ? "Waiting for accurate location..." : WiFindUs.Eye.Location.ToString(device)))));
 			}
 		}
@@ -72,15 +72,15 @@ namespace WiFindUs.Eye.Controls
 			this.device = device;
 			if (IsDesignMode)
 				return;
-			device.OnDeviceTypeChanged += device_OnDeviceTypeChanged;
-			device.OnDeviceUserChanged += device_OnDeviceUserChanged;
-			device.LocationChanged += device_OnDeviceLocationChanged;
-			device.WhenUpdated += device_OnDeviceUpdated;
-			device.TimedOutChanged += device_OnDeviceTimedOutChanged;
-			device.OnDeviceBatteryChanged += device_OnDeviceBatteryChanged;
-			device.OnDeviceAssignedWaypointChanged += device_OnDeviceAssignedWaypointChanged;
-			device.OnGPSEnabledChanged += device_OnGPSEnabledChanged;
-			device.OnGPSFixedChanged += device_OnGPSFixedChanged;
+			device.OnDeviceTypeChanged += device_Updated;
+			device.OnDeviceUserChanged += device_Updated;
+			device.LocationChanged += device_LocationChanged;
+			device.Updated += device_Updated;
+			device.ActiveChanged += device_Updated;
+			device.OnDeviceBatteryChanged += device_Updated;
+			device.OnDeviceAssignedWaypointChanged += device_Updated;
+			device.OnDeviceGPSEnabledChanged += device_Updated;
+			device.OnDeviceGPSHasFixChanged += device_Updated;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ namespace WiFindUs.Eye.Controls
 		{
 			base.OnPaint(e);
 
-			if (device == null || device.TimedOut)
+			if (device == null || !device.Active)
 				return;
 
 			int w = 6;
@@ -140,48 +140,17 @@ namespace WiFindUs.Eye.Controls
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
-
-		private void device_OnGPSFixedChanged(Device obj)
+		private void device_Updated(IUpdateable obj)
 		{
 			this.RefreshThreadSafe();
 		}
 
-		private void device_OnGPSEnabledChanged(Device obj)
+		private void device_Changed(Device obj)
 		{
 			this.RefreshThreadSafe();
 		}
 
-		private void device_OnDeviceAssignedWaypointChanged(Device obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void device_OnDeviceBatteryChanged(Device obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void device_OnDeviceTimedOutChanged(IUpdateable obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void device_OnDeviceUpdated(IUpdateable obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void device_OnDeviceLocationChanged(ILocatable obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void device_OnDeviceUserChanged(Device obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void device_OnDeviceTypeChanged(Device obj)
+		private void device_LocationChanged(ILocatable obj)
 		{
 			this.RefreshThreadSafe();
 		}

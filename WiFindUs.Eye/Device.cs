@@ -8,28 +8,23 @@ namespace WiFindUs.Eye
 	public partial class Device
 		: SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, IActionSubscriber
 	{
-		public const ulong TIMEOUT = 60;
-		public const long MIN_MESH_IP_ADDRESS = 2886729985L;
-		public const long MAX_MESH_IP_ADDRESS = 2886795006L;
+		private const ulong TIMEOUT = 60;
 		public static event Action<Device> OnDeviceLoaded;
 		public event Action<Device> OnDeviceTypeChanged;
 		public event Action<Device> OnDeviceAtmosphereChanged;
 		public event Action<Device> OnDeviceBatteryChanged;
-		public event Action<Device> OnDeviceIPAddressChanged;
 		public event Action<Device> OnDeviceUserChanged;
 		public event Action<Device> OnDeviceAssignedWaypointChanged;
 		public event Action<Device> OnDeviceNodeChanged;
-		public event Action<IUpdateable> WhenUpdated;
-		public event Action<IUpdateable> TimedOutChanged;
+		public event Action<IUpdateable> ActiveChanged;
+		public event Action<IUpdateable> Updated;
 		public event Action<ILocatable> LocationChanged;
-		public event Action<Device> OnGPSEnabledChanged;
-		public event Action<Device> OnGPSFixedChanged;
+		public event Action<Device> OnDeviceGPSEnabledChanged;
+		public event Action<Device> OnDeviceGPSHasFixChanged;
 
-		private bool timedOut = false, loaded = false;
-		private bool? gpsEnabled = null, gpsHasFix = null;
+		private bool loaded = false;
 		private StackedLock locationEventLock = new StackedLock();
 		private bool fireLocationEvents = false;
-		private IPAddress ipAddress = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -87,40 +82,6 @@ namespace WiFindUs.Eye
 
 				if (OnDeviceAtmosphereChanged != null)
 					OnDeviceAtmosphereChanged(this);
-			}
-		}
-
-		public bool? IsGPSEnabled
-		{
-			get { return gpsEnabled; }
-			set
-			{
-				if (gpsEnabled != value)
-				{
-					gpsEnabled = value;
-					if (OnGPSEnabledChanged != null)
-						OnGPSEnabledChanged(this);
-
-					if (!gpsEnabled.GetValueOrDefault())
-						IsGPSFixed = false;
-				}
-			}
-		}
-
-		public bool? IsGPSFixed
-		{
-			get { return gpsHasFix; }
-			set
-			{
-				if (gpsHasFix != value)
-				{
-					gpsHasFix = value;
-					if (OnGPSFixedChanged != null)
-						OnGPSFixedChanged(this);
-
-					if (!gpsHasFix.GetValueOrDefault())
-						Location = null;
-				}
 			}
 		}
 
@@ -184,59 +145,6 @@ namespace WiFindUs.Eye
 			}
 		}
 
-		public IPAddress IPAddress
-		{
-			get
-			{
-				return ipAddress;
-			}
-			set
-			{
-#pragma warning disable 0618
-				IPAddressRaw = value == null ? null : new Nullable<long>(value.Address);
-#pragma warning restore 0618
-			}
-		}
-
-		public ulong UpdateAge
-		{
-			get
-			{
-				return (DateTime.UtcNow.ToUnixTimestamp() - Updated);
-			}
-		}
-
-		public bool TimedOut
-		{
-			get
-			{
-				return timedOut;
-			}
-			private set
-			{
-				if (value == timedOut)
-					return;
-
-				timedOut = value;
-				if (timedOut)
-				{
-					BatteryStats = null;
-					Atmosphere = null;
-					Location = null;
-					IPAddress = null;
-					IsGPSEnabled = null;
-					IsGPSFixed = null;
-				}
-				if (TimedOutChanged != null)
-					TimedOutChanged(this);
-			}
-		}
-
-		public ulong TimeoutLength
-		{
-			get { return TIMEOUT; }
-		}
-
 		public String ActionDescription
 		{
 			get { return this.ToString(); }
@@ -251,29 +159,6 @@ namespace WiFindUs.Eye
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public static uint NodeNumberFromIPAddress(long ipRaw)
-		{
-			if (ipRaw == 0)
-				return 0;
-			long ipRawHost = (ipRaw & 0x000000FFU) << 24
-				| (ipRaw & 0x0000FF00U) << 8
-				| (ipRaw & 0x00FF0000U) >> 8
-				| (ipRaw & 0xFF000000U) >> 24;
-			if (ipRawHost < MIN_MESH_IP_ADDRESS
-				|| ipRawHost > MAX_MESH_IP_ADDRESS)
-				return 0;
-			return ((uint)ipRawHost & 0xFF00) >> 8;
-		}
-
-		public static uint NodeNumberFromIPAddress(IPAddress ipv4)
-		{
-			if (ipv4 == null)
-				return 0;
-#pragma warning disable 0618
-			return NodeNumberFromIPAddress(ipv4.Address);
-#pragma warning restore 0618
-		}
-
 		public override string ToString()
 		{
 			return String.Format("Device[{0:X}]", ID);
@@ -284,9 +169,9 @@ namespace WiFindUs.Eye
 			return WiFindUs.Eye.Location.Distance(this, other);
 		}
 
-		public void CheckTimeout()
+		public void CheckActive()
 		{
-			TimedOut = UpdateAge > TIMEOUT;
+			Active = (DateTime.UtcNow.ToUnixTimestamp() - LastUpdated) <= TIMEOUT;
 		}
 
 		public bool ActionEnabled(uint index)
@@ -387,11 +272,11 @@ namespace WiFindUs.Eye
 		{
 			if (!loaded)
 			{ 
-				ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
 				loaded = true;
 				Debugger.V(this.ToString() + " loaded.");
 				if (OnDeviceLoaded != null)
 					OnDeviceLoaded(this);
+				CheckActive();
 			}
 		}
 
@@ -405,13 +290,6 @@ namespace WiFindUs.Eye
 		{
 			if (OnDeviceAssignedWaypointChanged != null)
 				OnDeviceAssignedWaypointChanged(this);
-		}
-
-		partial void OnIPAddressRawChanged()
-		{
-			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
-			if (OnDeviceIPAddressChanged != null)
-				OnDeviceIPAddressChanged(this);
 		}
 
 		partial void OnBatteryLevelChanged()
@@ -432,17 +310,35 @@ namespace WiFindUs.Eye
 				OnDeviceUserChanged(this);
 		}
 
-		partial void OnUpdatedChanged()
+		partial void OnLastUpdatedChanged()
 		{
-			if (WhenUpdated != null)
-				WhenUpdated(this);
-			CheckTimeout();
+			if (Updated != null)
+				Updated(this);
+			CheckActive();
+		}
+
+		partial void OnActiveChanged()
+		{
+			if (ActiveChanged != null)
+				ActiveChanged(this);
 		}
 
 		partial void OnNodeIDChanged()
 		{
 			if (OnDeviceNodeChanged != null)
 				OnDeviceNodeChanged(this);
+		}
+
+		partial void OnGPSEnabledChanged()
+		{
+			if (OnDeviceGPSEnabledChanged != null)
+				OnDeviceGPSEnabledChanged(this);
+		}
+
+		partial void OnGPSHasFixChanged()
+		{
+			if (OnDeviceGPSHasFixChanged != null)
+				OnDeviceGPSHasFixChanged(this);
 		}
 	}
 }

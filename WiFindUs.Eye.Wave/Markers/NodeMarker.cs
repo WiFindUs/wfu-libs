@@ -8,12 +8,15 @@ using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
+using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
 	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
 		private Transform3D orbTransform;
+		private Entity spike, orb;
+		private BasicMaterial spikeMat, orbMat;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -25,7 +28,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				return new Vector3(
 					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 28.0f * Scene.MarkerScale,
+					this.Transform3D.Position.Y + 28.0f * this.Transform3D.Scale.Y,
 					this.Transform3D.Position.Z
 					);
 			}
@@ -37,10 +40,15 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				return new Vector3(
 					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 14.0f * Scene.MarkerScale,
+					this.Transform3D.Position.Y + 14.0f * this.Transform3D.Scale.Y,
 					this.Transform3D.Position.Z
 					);
 			}
+		}
+
+		protected override float RotationSpeed
+		{
+			get { return base.RotationSpeed * (Entity.Selected ? 10.0f : 5.0f); }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -63,37 +71,27 @@ namespace WiFindUs.Eye.Wave.Markers
 				//spike
 				.AddChild
 				(
-					new Entity("spike") { IsActive = false }
+					marker.spike = new Entity("spike") { IsActive = false }
 					.AddComponent(new Transform3D()
 					{
 						Position = new Vector3(0.0f, 7.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap(new BasicMaterial(new Color(0, 175, 255))
-					{
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.75f,
-						SpecularPower = 2
-					}))
-					.AddComponent(Model.CreateCone(14f, 6f, 8))
+					.AddComponent(new MaterialsMap())
+					.AddComponent(Model.CreateCone(14f, 8f, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
 				)
 				//orb
 				.AddChild
 				(
-					new Entity("orb") { IsActive = false }
+					marker.orb = new Entity("orb") { IsActive = false }
 					.AddComponent(marker.orbTransform = new Transform3D()
 					{
 						Position = new Vector3(0.0f, 21.0f, 0.0f),
 						Rotation = new Vector3(90.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap(new BasicMaterial(new Color(0, 200, 255), typeof(WireframeObjectsLayer))
-					{
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.75f,
-						SpecularPower = 2
-					}))
+					.AddComponent(new MaterialsMap())
 					.AddComponent(Model.CreateTorus(14f, 3, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
@@ -104,20 +102,45 @@ namespace WiFindUs.Eye.Wave.Markers
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		protected override void Initialize()
+		{
+			base.Initialize();
+			spike.FindComponent<MaterialsMap>().DefaultMaterial =
+				spikeMat = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(NonPremultipliedAlpha))
+				{
+					LightingEnabled = true,
+					AmbientLightColor = Color.White * 0.75f,
+					DiffuseColor = new Color(0, 175, 255),
+					Alpha = 0.75f
+				};
+			orb.FindComponent<MaterialsMap>().DefaultMaterial =
+				orbMat = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(Overlays))
+				{
+					LightingEnabled = true,
+					AmbientLightColor = Color.White,
+					DiffuseColor = new Color(0, 200, 255),
+					Alpha = 0.25f
+				};
+		}
+
 		protected override void Update(TimeSpan gameTime)
 		{
 			base.Update(gameTime);
+			if (!Owner.IsVisible)
+				return;
 
-			if (orbTransform != null)
+			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
+			orbMat.Alpha = orbMat.Alpha.Lerp(Entity.Selected ? 0.7f : 0.25f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
+
+			float rot = RotationSpeed * (float)gameTime.TotalSeconds;
+			if (!rot.Tolerance(0.0f, 0.0001f))
 			{
-				float rot = RotationSpeed * (float)gameTime.TotalSeconds * 0.5f;
-				if (!rot.Tolerance(0.0f, 0.0001f))
-				{
-					orbTransform.Rotation = new Vector3(
-						orbTransform.Rotation.X,
-						orbTransform.Rotation.Y + rot,
-						orbTransform.Rotation.Z);
-				}
+				orbTransform.Rotation = new Vector3(
+					orbTransform.Rotation.X,
+					orbTransform.Rotation.Y + rot,
+					orbTransform.Rotation.Z);
 			}
 		}
 	}

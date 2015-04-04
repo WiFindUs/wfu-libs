@@ -67,7 +67,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions\RegionExtensions.cs" />
-    <Compile Include="Layers\WireframeObjectsLayer.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Layers\Overlays.cs" />
+    <Compile Include="Layers\NonPremultipliedAlpha.cs" />
+    <Compile Include="Layers\WireframeObjects.cs" />
     <Compile Include="MapForm.cs">
       <SubType>Form</SubType>
     </Compile>

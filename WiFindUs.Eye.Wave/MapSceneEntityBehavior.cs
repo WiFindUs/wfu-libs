@@ -1,4 +1,5 @@
-﻿using WaveEngine.Framework;
+﻿using WaveEngine.Components.Graphics3D;
+using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 
 namespace WiFindUs.Eye.Wave

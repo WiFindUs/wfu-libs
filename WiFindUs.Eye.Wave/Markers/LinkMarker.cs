@@ -10,6 +10,8 @@ using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Materials;
 using WiFindUs.Eye.Wave.Layers;
+using WiFindUs.Extensions;
+using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
@@ -20,6 +22,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		private float diameter = 1.5f;
 		private BasicMaterial matte;
 		private bool toSecondary = false, fromSecondary = false;
+		private Entity child;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -65,8 +68,14 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public Color Colour
 		{
-			get { return matte.DiffuseColor; }
-			set { matte.DiffuseColor = value; }
+			get { return matte == null ? Color.Black : matte.DiffuseColor; }
+			set { if (matte != null) matte.DiffuseColor = value; }
+		}
+
+		public float Alpha
+		{
+			get { return matte == null ? 1.0f : matte.Alpha; }
+			set { if (matte != null) matte.Alpha = value.Clamp(0.0f,1.0f); }
 		}
 
 		public bool FromSecondaryPoint
@@ -103,15 +112,10 @@ namespace WiFindUs.Eye.Wave.Markers
 				//link
 				.AddChild
 				(
-					new Entity("link") { IsActive = false }
+					marker.child = new Entity("link") { IsActive = false }
 					.AddComponent(marker.linkTransform = new Transform3D())
-					.AddComponent(new MaterialsMap(marker.matte = new BasicMaterial(new Color(200, 240, 255), typeof(WireframeObjectsLayer))
-					{
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.75f,
-						SpecularPower = 2
-					}))
-					.AddComponent(Model.CreateCylinder(1f, 1f, 8))
+					.AddComponent(new MaterialsMap())
+					.AddComponent(Model.CreateCylinder(1f, 1f, 6))
 					.AddComponent(new ModelRenderer())
 				);
 		}
@@ -144,6 +148,19 @@ namespace WiFindUs.Eye.Wave.Markers
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		protected override void Initialize()
+		{
+			base.Initialize();
+			child.FindComponent<MaterialsMap>().DefaultMaterial =
+				matte = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(Overlays))
+				{
+					LightingEnabled = true,
+					AmbientLightColor = Color.White,
+					DiffuseColor = new Color(200, 240, 255),
+					Alpha = 1.0f
+				};
+		}
 
 		protected override void Update(TimeSpan gameTime)
 		{

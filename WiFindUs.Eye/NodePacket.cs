@@ -7,8 +7,14 @@ namespace WiFindUs.Eye
 {
 	public class NodePacket : EyePacket, ILocation
 	{
+		private const ulong FLAG_MESH_POINT		= 1;
+		private const ulong FLAG_ACCESS_POINT	= 2;
+		private const ulong FLAG_DHCPD			= 4;
+		private const ulong FLAG_GPSD			= 8;
+		private const ulong FLAG_GPSD_FAKE		= 16;
 		private static readonly Regex REGEX_MESH_POINT //num, signal strength, link speed
-			= new Regex(@"([0-9]+)\(([+-]?[0-9]+(?:[.][0-9]+)?)\)\(([+-]?[0-9]+(?:[.][0-9]+)?)\)",RegexOptions.Compiled);
+			= new Regex(@"([0-9]+);([+-]?[0-9]+(?:[.][0-9]+)?);([+-]?[0-9]+(?:[.][0-9]+)?)",RegexOptions.Compiled);
+
 		private double? latitude, longitude, altitude, accuracy;
 		private uint? satellites;
 		private uint? number;
@@ -42,32 +48,32 @@ namespace WiFindUs.Eye
 			get { return altitude; }
 		}
 
-		public uint? VisibleSatellites
+		public uint? SatelliteCount
 		{
 			get { return satellites; }
 		}
 
-		public bool? IsGPSDaemonRunning
+		public bool? GPSD
 		{
 			get { return gpsDaemon; }
 		}
 
-		public bool? IsGPSFake
+		public bool? MockLocation
 		{
 			get { return gpsFake; }
 		}
 
-		public bool? IsDHCPDaemonRunning
+		public bool? DHCPD
 		{
 			get { return dhcpDaemon; }
 		}
 
-		public bool? IsMeshPoint
+		public bool? MeshPoint
 		{
 			get { return meshPoint; }
 		}
 
-		public bool? IsAPDaemonRunning
+		public bool? AccessPoint
 		{
 			get { return apDaemon; }
 		}
@@ -127,14 +133,15 @@ namespace WiFindUs.Eye
 					case "alt": altitude = LocationComponent(value); return true;
 					case "num": number = UInt32.Parse(value); return true;
 					case "sats": satellites = UInt32.Parse(value); return true;
-					case "mp": meshPoint = UInt32.Parse(value) == 1; return true;
-					case "ap": apDaemon = UInt32.Parse(value) == 1; return true;
-					case "dhcp": dhcpDaemon = UInt32.Parse(value) == 1; return true;
-					case "gps":
-						uint gpsVal = UInt32.Parse(value);
-						gpsDaemon = gpsVal == 1 || gpsVal == 2;
-						gpsFake = gpsVal == 2;
+					case "flg":
+						ulong flags = UInt64.Parse(value);
+						meshPoint = ((flags & FLAG_MESH_POINT) == FLAG_MESH_POINT);
+						apDaemon = ((flags & FLAG_ACCESS_POINT) == FLAG_ACCESS_POINT);
+						dhcpDaemon = ((flags & FLAG_DHCPD) == FLAG_DHCPD);
+						gpsFake = ((flags & FLAG_GPSD_FAKE) == FLAG_GPSD_FAKE);
+						gpsDaemon = gpsFake.GetValueOrDefault() || ((flags & FLAG_GPSD) == FLAG_GPSD);
 						return true;
+
 					case "mpl":
 						if (value.CompareTo("0") == 0)
 						{

@@ -14,6 +14,8 @@ using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
+using System.IO;
+using WaveEngine.Materials;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -38,6 +40,7 @@ namespace WiFindUs.Eye.Wave
 		private TerrainTile baseTile;
 		private uint visibleLayer = uint.MaxValue;
 		private float markerScale = 1.0f;
+		private Texture2D whiteTex = null;
 
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
@@ -198,6 +201,18 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
+		public Texture2D WhiteTexture
+		{
+			get
+			{
+				if (whiteTex == null)
+					using (System.Drawing.Bitmap bmp = new System.Drawing.Bitmap("textures/white.png"))
+						using (Stream stream = bmp.GetStream())
+							whiteTex = Texture2D.FromFile(RenderManager.GraphicsDevice, stream);
+				return whiteTex;
+			}
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -315,8 +330,10 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void CreateScene()
 		{
-			//add wireframe layer
-			RenderManager.RegisterLayerAfter(new WireframeObjectsLayer(this.RenderManager), DefaultLayers.Opaque);
+			//add custom layers
+			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), DefaultLayers.Opaque);
+			RenderManager.RegisterLayerAfter(new WireframeObjects(this.RenderManager), typeof(NonPremultipliedAlpha));
+			RenderManager.RegisterLayerAfter(new Overlays(this.RenderManager), typeof(WireframeObjects));
 
 			//set up camera
 			Debugger.V("MapScene: initializing camera");

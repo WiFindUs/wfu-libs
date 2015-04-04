@@ -44,8 +44,8 @@ namespace WiFindUs.Eye.Controls
 					return "";
 				return String.Format("{0}\n{1}\n\n",
 					node.Number.HasValue ? "Assigned to station #" + node.Number.Value : "Not assigned to station.",
-					node.TimedOut ? "Timed out." :
-						(node.IsGPSDaemonRunning.GetValueOrDefault() ? (node.HasLatLong ? WiFindUs.Eye.Location.ToString(node) : "Waiting for accurate location...")
+					!node.Active ? "Inactive." :
+						(node.GPSD.GetValueOrDefault() ? (node.HasLatLong ? WiFindUs.Eye.Location.ToString(node) : "Waiting for accurate location...")
 							: "GPS not running."));
 			}
 		}
@@ -61,17 +61,16 @@ namespace WiFindUs.Eye.Controls
 			if (IsDesignMode)
 				return;
 			node.LocationChanged += node_LocationChanged;
-			node.OnAPDaemonRunningChanged += node_RunningDaemonsChanged;
-			node.OnDHCPDaemonRunningChanged += node_RunningDaemonsChanged;
-			node.OnGPSDaemonRunningChanged += node_RunningDaemonsChanged;
-			node.OnMeshPointChanged += node_RunningDaemonsChanged;
-			node.OnNodeIPAddressChanged += node_OnNodeIPAddressChanged;
-			node.OnNodeNumberChanged += node_OnNodeNumberChanged;
-			node.OnNodeVoltageChanged += node_OnNodeVoltageChanged;
-			node.OnVisibleSatellitesChanged += node_OnVisibleSatellitesChanged;
-			node.TimedOutChanged += node_TimedOutChanged;
-			node.WhenUpdated += node_WhenUpdated;
-			node.OnGPSFakeChanged += node_OnGPSFakeChanged;
+			node.OnNodeAccessPointChanged += node_Changed;
+			node.OnNodeDHCPDChanged += node_Changed;
+			node.OnNodeGPSDChanged += node_Changed;
+			node.OnNodeMeshPointChanged += node_Changed;
+			node.OnNodeNumberChanged += node_Changed;
+			node.OnNodeVoltageChanged += node_Changed;
+			node.OnNodeSatelliteCountChanged += node_Changed;
+			node.Updated += node_Updated;
+			node.ActiveChanged += node_Updated;
+			node.OnNodeMockLocationChanged += node_Changed;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -81,14 +80,14 @@ namespace WiFindUs.Eye.Controls
 		{
 			base.OnPaint(e);
 
-			if (node == null || node.TimedOut)
+			if (node == null || !node.Active)
 				return;
 
 			NodeListStatusItem[] statuses = new NodeListStatusItem[] {
-				new NodeListStatusItem("MP", node.IsMeshPoint),
-				new NodeListStatusItem("AP", node.IsAPDaemonRunning),
-				new NodeListStatusItem("DHCP", node.IsDHCPDaemonRunning),
-				new NodeListStatusItem("GPS", node.IsGPSDaemonRunning)
+				new NodeListStatusItem("MP", node.MeshPoint),
+				new NodeListStatusItem("AP", node.AccessPoint),
+				new NodeListStatusItem("DHCP", node.DHCPD),
+				new NodeListStatusItem("GPS", node.GPSD)
 			};
 
 			using (Font f = new Font(Font.FontFamily, Font.Size - 2.0f))
@@ -132,47 +131,17 @@ namespace WiFindUs.Eye.Controls
 			}
 		}
 
-		private void node_WhenUpdated(IUpdateable obj)
+		private void node_Updated(IUpdateable obj)
 		{
 			this.RefreshThreadSafe();
 		}
 
-		private void node_TimedOutChanged(IUpdateable obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void node_OnVisibleSatellitesChanged(Node obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void node_OnNodeVoltageChanged(Node obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void node_OnNodeNumberChanged(Node obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void node_OnNodeIPAddressChanged(Node obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void node_RunningDaemonsChanged(Node obj)
+		private void node_Changed(Node obj)
 		{
 			this.RefreshThreadSafe();
 		}
 
 		private void node_LocationChanged(ILocatable obj)
-		{
-			this.RefreshThreadSafe();
-		}
-
-		private void node_OnGPSFakeChanged(Node obj)
 		{
 			this.RefreshThreadSafe();
 		}

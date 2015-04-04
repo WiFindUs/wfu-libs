@@ -9,122 +9,28 @@ namespace WiFindUs.Eye
 {
 	public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable, IActionSubscriber
 	{
-		public const ulong TIMEOUT = 60;
+		private const ulong TIMEOUT = 60;
 		public static event Action<Node> OnNodeLoaded;
-		public event Action<IUpdateable> WhenUpdated;
-		public event Action<IUpdateable> TimedOutChanged;
+		public event Action<IUpdateable> ActiveChanged;
+		public event Action<IUpdateable> Updated;
 		public event Action<Node> OnNodeNumberChanged;
-		public event Action<Node> OnNodeIPAddressChanged;
 		public event Action<ILocatable> LocationChanged;
 		public event Action<Node> OnNodeVoltageChanged;
 
-		public event Action<Node> OnMeshPointChanged;
-		public event Action<Node> OnAPDaemonRunningChanged;
-		public event Action<Node> OnDHCPDaemonRunningChanged;
-		public event Action<Node> OnGPSDaemonRunningChanged;
-		public event Action<Node> OnVisibleSatellitesChanged;
-		public event Action<Node> OnGPSFakeChanged;
+		public event Action<Node> OnNodeMeshPointChanged;
+		public event Action<Node> OnNodeAccessPointChanged;
+		public event Action<Node> OnNodeDHCPDChanged;
+		public event Action<Node> OnNodeGPSDChanged;
+		public event Action<Node> OnNodeSatelliteCountChanged;
+		public event Action<Node> OnNodeMockLocationChanged;
 
-		private bool timedOut = false, loaded = false;
-		private bool? meshPoint = null, apDaemon = null, dhcpDaemon = null, gpsDaemon = null, gpsFake = null;
-		private uint? satellites = null;
+		private bool loaded = false;
 		private StackedLock locationEventLock = new StackedLock();
 		private bool fireLocationEvents = false;
-		private IPAddress ipAddress = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
-		public uint? VisibleSatellites
-		{
-			get { return satellites; }
-			set
-			{
-				if (satellites != value)
-				{
-					satellites = value;
-					if (OnVisibleSatellitesChanged != null)
-						OnVisibleSatellitesChanged(this);
-				}
-			}
-		}
-
-		public bool? IsGPSDaemonRunning
-		{
-			get { return gpsDaemon; }
-			set
-			{
-				if (gpsDaemon != value)
-				{
-					gpsDaemon = value;
-					if (OnGPSDaemonRunningChanged != null)
-						OnGPSDaemonRunningChanged(this);
-
-					if (!gpsDaemon.GetValueOrDefault())
-					{
-						Location = null;
-						IsGPSFake = null;
-					}
-				}
-			}
-		}
-
-		public bool? IsGPSFake
-		{
-			get { return gpsFake; }
-			set
-			{
-				if (gpsFake != value)
-				{
-					gpsFake = value;
-					if (OnGPSFakeChanged != null)
-						OnGPSFakeChanged(this);
-				}
-			}
-		}
-
-		public bool? IsDHCPDaemonRunning
-		{
-			get { return dhcpDaemon; }
-			set
-			{
-				if (dhcpDaemon != value)
-				{
-					dhcpDaemon = value;
-					if (OnDHCPDaemonRunningChanged != null)
-						OnDHCPDaemonRunningChanged(this);
-				}
-			}
-		}
-
-		public bool? IsMeshPoint
-		{
-			get { return meshPoint; }
-			set
-			{
-				if (meshPoint != value)
-				{
-					meshPoint = value;
-					if (OnMeshPointChanged != null)
-						OnMeshPointChanged(this);
-				}
-			}
-		}
-
-		public bool? IsAPDaemonRunning
-		{
-			get { return apDaemon; }
-			set
-			{
-				if (apDaemon != value)
-				{
-					apDaemon = value;
-					if (OnAPDaemonRunningChanged != null)
-						OnAPDaemonRunningChanged(this);
-				}
-			}
-		}
 
 		public ILocation Location
 		{
@@ -153,20 +59,6 @@ namespace WiFindUs.Eye
 			}
 		}
 
-		public IPAddress IPAddress
-		{
-			get
-			{
-				return ipAddress;
-			}
-			set
-			{
-#pragma warning disable 0618
-				IPAddressRaw = value == null ? null : new Nullable<long>(value.Address);
-#pragma warning restore 0618
-			}
-		}
-
 		public bool HasLatLong
 		{
 			get
@@ -185,47 +77,6 @@ namespace WiFindUs.Eye
 					&& !Accuracy.HasValue
 					&& !Altitude.HasValue;
 			}
-		}
-
-		public ulong UpdateAge
-		{
-			get
-			{
-				return (DateTime.UtcNow.ToUnixTimestamp() - Updated);
-			}
-		}
-
-		public bool TimedOut
-		{
-			get
-			{
-				return timedOut;
-			}
-			private set
-			{
-				if (value == timedOut)
-					return;
-
-				timedOut = value;
-				if (timedOut)
-				{
-					VisibleSatellites = null;
-					IsGPSDaemonRunning = null;
-					IsDHCPDaemonRunning = null;
-					IsMeshPoint = null;
-					IsAPDaemonRunning = null;
-					IPAddress = null;
-					Voltage = null;
-					Location = null;
-				}
-				if (TimedOutChanged != null)
-					TimedOutChanged(this);
-			}
-		}
-
-		public ulong TimeoutLength
-		{
-			get { return TIMEOUT; }
 		}
 
 		public bool Loaded
@@ -247,9 +98,9 @@ namespace WiFindUs.Eye
 			return WiFindUs.Eye.Location.Distance(this, other);
 		}
 
-		public void CheckTimeout()
+		public void CheckActive()
 		{
-			TimedOut = UpdateAge > TIMEOUT;
+			Active = (DateTime.UtcNow.ToUnixTimestamp() - LastUpdated) <= TIMEOUT;
 		}
 
 		public bool ActionEnabled(uint index)
@@ -331,19 +182,12 @@ namespace WiFindUs.Eye
 		{
 			if (!loaded)
 			{
-				ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
 				loaded = true;
 				Debugger.V(this.ToString() + " loaded.");
 				if (OnNodeLoaded != null)
 					OnNodeLoaded(this);
+				CheckActive();
 			}
-		}
-
-		partial void OnIPAddressRawChanged()
-		{
-			ipAddress = IPAddressRaw.HasValue ? new IPAddress(IPAddressRaw.Value) : null;
-			if (OnNodeIPAddressChanged != null)
-				OnNodeIPAddressChanged(this);
 		}
 
 		partial void OnAccuracyChanged()
@@ -372,11 +216,17 @@ namespace WiFindUs.Eye
 				OnNodeNumberChanged(this);
 		}
 
-		partial void OnUpdatedChanged()
+		partial void OnLastUpdatedChanged()
 		{
-			if (WhenUpdated != null)
-				WhenUpdated(this);
-			CheckTimeout();
+			if (Updated != null)
+				Updated(this);
+			CheckActive();
+		}
+
+		partial void OnActiveChanged()
+		{
+			if (ActiveChanged != null)
+				ActiveChanged(this);
 		}
 
 		partial void OnVoltageChanged()
@@ -385,6 +235,41 @@ namespace WiFindUs.Eye
 				OnNodeVoltageChanged(this);
 		}
 
+		partial void OnAccessPointChanged()
+		{
+			if (OnNodeAccessPointChanged != null)
+				OnNodeAccessPointChanged(this);
+		}
+
+		partial void OnDHCPDChanged()
+		{
+			if (OnNodeDHCPDChanged != null)
+				OnNodeDHCPDChanged(this);
+		}
+
+		partial void OnGPSDChanged()
+		{
+			if (OnNodeGPSDChanged != null)
+				OnNodeGPSDChanged(this);
+		}
+
+		partial void OnMeshPointChanged()
+		{
+			if (OnNodeMeshPointChanged != null)
+				OnNodeMeshPointChanged(this);
+		}
+
+		partial void OnSatelliteCountChanged()
+		{
+			if (OnNodeSatelliteCountChanged != null)
+				OnNodeSatelliteCountChanged(this);
+		}
+
+		partial void OnMockLocationChanged()
+		{
+			if (OnNodeMockLocationChanged != null)
+				OnNodeMockLocationChanged(this);
+		}
 
 	}
 }

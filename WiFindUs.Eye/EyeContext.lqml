@@ -5,8 +5,11 @@
     <Type Name="Device" ed:Guid="e5ac0a63-5fc5-4372-9aac-7c03e3dbc8c8">
       <Column Name="ID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="d334d627-e075-4445-9a17-2ca95217950e" />
       <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="bebc2647-ee02-4d82-8f57-9aa306ad81c7" />
-      <Column Name="Updated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="37a4af2f-8c1a-4a1f-ac38-d6eab1cbcef4" />
+      <Column Name="LastUpdated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="37a4af2f-8c1a-4a1f-ac38-d6eab1cbcef4" />
+      <Column Name="Active" Type="System.Boolean" DbType="bit NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="true" ed:Guid="925b2b2a-f60f-493e-b1bc-325c102c9ef1" />
       <Column Name="Type" Type="System.String" DbType="varchar(32) NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="'PHO'" MaxLength="32" Unicode="true" ed:ValidateMaxLength="32" ed:ValidateRequired="true" ed:Guid="4e18395f-45f8-4a73-9f83-c34b5db0a1cc" />
+      <Column Name="GPSEnabled" Type="System.Boolean" DbType="bit NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="b73ff3a2-c8f5-4129-a2d1-d86eb5f7e539" />
+      <Column Name="GPSHasFix" Type="System.Boolean" DbType="bit NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="9f745be6-2e76-46cd-9e50-928217639323" />
       <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="c8224e71-0a9c-47b2-9489-ea053b11dbcc" />
       <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="50d10166-b8e5-4e79-b494-13c3ff4ce047" />
       <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="49d7086e-0530-41f4-997d-af4430326b29" />
@@ -17,7 +20,6 @@
       <Column Name="LightLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="8701f9fe-9f69-487f-ad04-9db90c4eafba" />
       <Column Name="Charging" Type="System.Boolean" DbType="tinyint(1) NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="0a742dc6-0663-4e72-b19f-1ed3a3283bef" />
       <Column Name="BatteryLevel" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="8bb3b13e-998c-4ef7-b2de-7307ce7eb87c" />
-      <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="0dd7edfd-91df-49df-9ae8-3d9b6b6725f3" />
       <Column Name="WaypointID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="38f59535-0acb-4290-889a-15f1ab6482e1" />
       <Column Name="UserID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="69d26a68-506e-4591-bb98-8fbed11828c5" />
       <Column Name="NodeID" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="4b8595e9-b28b-457a-85a1-b61b54c38f8b" />
@@ -31,14 +33,20 @@
     <Type Name="Node" ed:Guid="33ef44af-e972-4aa7-954d-af427bccf80d">
       <Column Name="ID" Type="System.UInt32" DbType="INTEGER UNSIGNED NOT NULL" IsPrimaryKey="true" CanBeNull="false" UpdateCheck="Always" ed:ValidateRequired="true" ed:Guid="0cf91426-55bc-493a-8620-1b04e560e63c" />
       <Column Name="Created" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="acda245e-03cd-400e-acf7-7da677020055" />
-      <Column Name="Updated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="4224bc15-973b-4943-ad47-b438798ffc8e" />
+      <Column Name="LastUpdated" Type="System.UInt64" DbType="bigint UNSIGNED NOT NULL" CanBeNull="false" UpdateCheck="Never" ed:ValidateRequired="true" ed:Guid="4224bc15-973b-4943-ad47-b438798ffc8e" />
+      <Column Name="Active" Type="System.Boolean" DbType="bit NOT NULL" CanBeNull="false" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="true" ed:Guid="699efcaf-24f1-4eec-b96a-fae536114cec" />
+      <Column Name="MeshPoint" Type="System.Boolean" DbType="bit NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="6b5d75d9-cf55-4bb5-8bae-902e4d72245e" />
+      <Column Name="AccessPoint" Type="System.Boolean" DbType="bit NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="1fa38872-3127-481f-aa8e-74583aea6ebb" />
+      <Column Name="GPSD" Type="System.Boolean" DbType="bit NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="6080f91d-4357-4c22-8842-d404e6513cef" />
+      <Column Name="SatelliteCount" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="336e1253-6b05-4395-9c86-301f17d6ba76" />
+      <Column Name="MockLocation" Type="System.Boolean" DbType="bit NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="faf5c1f4-5694-49d5-8bf4-2f912e14f5db" />
+      <Column Name="FakeGPS" Member="DHCPD" Type="System.Boolean" DbType="bit NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="40b1e09b-3988-4d88-9e1e-95d20115f260" />
       <Column Name="Number" Type="System.UInt32" DbType="INTEGER UNSIGNED NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="fa56060b-566f-44ff-b49a-02619fce08c4" />
       <Column Name="Latitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="e2c60de2-e8c3-4025-8b62-a94e7567d431" />
-      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="e6a92d2d-bd09-4051-a3af-6824c348a115" />
       <Column Name="Altitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="63373c21-60e8-4918-8a58-a7fd73b01d24" />
+      <Column Name="Longitude" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="e6a92d2d-bd09-4051-a3af-6824c348a115" />
       <Column Name="Accuracy" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="0adb3e28-e9bf-46d4-aa1c-ad757d5d80ce" />
       <Column Name="Voltage" Type="System.Double" DbType="double NULL" CanBeNull="true" UpdateCheck="Never" ed:ValidateRequired="false" ed:Guid="60e4164a-068e-4202-bae4-bb31fe1c9d88" />
-      <Column Name="IPAddress" Member="IPAddressRaw" Type="System.Int64" DbType="bigint NULL" CanBeNull="true" UpdateCheck="Never" DefaultValue="0" ed:ValidateRequired="false" ed:Guid="b52ef8f4-eae8-4855-87a8-ffad37a68925" />
       <Association Name="Node_Device" ed:AssociationGuid="dbb1b8b3-8aeb-4c7c-a1e6-4524dc2061e3" Member="Devices" ed:Guid="4ecd7595-3117-497d-bb97-e1903c724247" ThisKey="ID" OtherKey="NodeID" Type="Device" />
       <Association Name="Node_StartLink" ed:AssociationGuid="5836529b-d37c-412a-84b3-0f5124b8a1fb" Member="StartLinks" ed:Guid="06c3e882-006d-4ec7-bf13-885f9c6f0c9a" ThisKey="ID" OtherKey="StartNodeID" Type="NodeLink" />
       <Association Name="Node_EndLink" ed:AssociationGuid="63624d57-f802-40a0-a204-a83ee6b74cab" Member="EndLinks" ed:Guid="06a8ab64-c0f2-4e9c-9331-d79d0ae5e621" ThisKey="ID" OtherKey="EndNodeID" Type="NodeLink" />

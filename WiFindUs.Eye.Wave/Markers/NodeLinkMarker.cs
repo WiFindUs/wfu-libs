@@ -66,12 +66,23 @@ namespace WiFindUs.Eye.Wave.Markers
 			UpdateMarkerState();
 		}
 
+		protected override void Update(TimeSpan gameTime)
+		{
+			base.Update(gameTime);
+
+			if (!Owner.IsVisible)
+				return;
+			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.7f : 0.0f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
+		}
+
 		protected override void FromMarkerChanged(ILinkableMarker oldFromMarker)
 		{
 			if (oldFromMarker != null && oldFromMarker == fromNode)
 			{
 				fromNode.VisibleChanged -= NodeMarkerChanged;
-				fromNode.Entity.OnMeshPointChanged -= NodeChanged;
+				fromNode.Entity.OnNodeMeshPointChanged -= NodeChanged;
+				fromNode.Entity.SelectedChanged -= EntitySelectedChanged;
 			}
 
 			fromNode = FromMarker as NodeMarker;
@@ -79,7 +90,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (fromNode != null)
 			{
 				fromNode.VisibleChanged += NodeMarkerChanged;
-				fromNode.Entity.OnMeshPointChanged += NodeChanged;
+				fromNode.Entity.OnNodeMeshPointChanged += NodeChanged;
+				fromNode.Entity.SelectedChanged += EntitySelectedChanged;
 			}
 
 			UpdateMarkerState();
@@ -90,7 +102,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (oldToMarker != null && oldToMarker == toNode)
 			{
 				toNode.VisibleChanged -= NodeMarkerChanged;
-				toNode.Entity.OnMeshPointChanged -= NodeChanged;
+				toNode.Entity.OnNodeMeshPointChanged -= NodeChanged;
+				toNode.Entity.SelectedChanged -= EntitySelectedChanged;
 			}
 
 			toNode = ToMarker as NodeMarker;
@@ -98,7 +111,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (toNode != null)
 			{
 				toNode.VisibleChanged += NodeMarkerChanged;
-				toNode.Entity.OnMeshPointChanged += NodeChanged;
+				toNode.Entity.OnNodeMeshPointChanged += NodeChanged;
+				toNode.Entity.SelectedChanged += EntitySelectedChanged;
 			}
 
 			UpdateMarkerState();
@@ -123,11 +137,16 @@ namespace WiFindUs.Eye.Wave.Markers
 			UpdateMarkerState();
 		}
 
+		private void EntitySelectedChanged(ISelectable entity)
+		{
+			UpdateMarkerState();
+		}
+
 		private void UpdateMarkerState()
 		{
 			if (Owner == null)
 				return;
-			Owner.IsActive = Owner.IsVisible =
+			bool newVisible = 
 			(
 				fromNode != null
 				&& toNode != null
@@ -141,23 +160,31 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& link.Active
 				&& fromNode.Owner.IsVisible
 				&& toNode.Owner.IsVisible
-				&& fromNode.Entity.IsMeshPoint.GetValueOrDefault()
-				&& toNode.Entity.IsMeshPoint.GetValueOrDefault()
+				&& fromNode.Entity.MeshPoint.GetValueOrDefault()
+				&& toNode.Entity.MeshPoint.GetValueOrDefault()
+				&& (toNode.Selected || fromNode.Selected)
 			);
+			if (newVisible != Owner.IsVisible)
+			{
+				if (newVisible)
+					Alpha = 0.0f;
+				Owner.IsVisible = Owner.IsActive = newVisible;
+			}
 
 			if (Owner.IsVisible)
 			{
 				if (!link.SignalStrength.HasValue || link.SignalStrength > -30)
 					Colour = Color.White;
-				if (link.SignalStrength <= -30 && link.SignalStrength > -67)
+				if (link.SignalStrength <= -30 && link.SignalStrength > -50)
+					Colour = Color.Lime;
+				else if (link.SignalStrength > -65)
 					Colour = Color.LawnGreen;
 				else if (link.SignalStrength > -70)
 					Colour = Color.Yellow;
 				else if (link.SignalStrength > -80)
 					Colour = Color.Orange;
-				else // if (link.SignalStrength > -90)
+				else
 					Colour = Color.Red;
-
 			}
 		}
 

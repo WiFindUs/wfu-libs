@@ -8,11 +8,16 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
+using WiFindUs.Eye.Wave.Layers;
+using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
 	public class DeviceMarker : EntityMarker<Device>, ILinkableMarker
 	{
+		private Entity spike;
+		private BasicMaterial spikeMat;
+		
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
@@ -23,7 +28,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				return new Vector3(
 					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 7.0f * Scene.MarkerScale,
+					this.Transform3D.Position.Y + 7.0f * Transform3D.Scale.Y,
 					this.Transform3D.Position.Z
 					);
 			}
@@ -32,6 +37,16 @@ namespace WiFindUs.Eye.Wave.Markers
 		public Vector3 LinkPointSecondary
 		{
 			get { return LinkPointPrimary; }
+		}
+
+		protected override bool VisibilityOverride
+		{
+			get
+			{
+				return entity.GPSEnabled.GetValueOrDefault()
+					&& entity.GPSHasFix.GetValueOrDefault()
+					&& base.VisibilityOverride;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -53,18 +68,13 @@ namespace WiFindUs.Eye.Wave.Markers
 				//spike
 				.AddChild
 				(
-					new Entity("spike")
+					marker.spike = new Entity("spike")
 					.AddComponent(new Transform3D()
 					{
 						Position = new Vector3(0.0f, 5.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap(new BasicMaterial(Color.LightGray)
-					{
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.75f,
-						SpecularPower = 2
-					}))
+					.AddComponent(new MaterialsMap())
 					.AddComponent(Model.CreateCone(8f, 6f, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
@@ -78,16 +88,28 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Initialize()
 		{
 			base.Initialize();
+			spike.FindComponent<MaterialsMap>().DefaultMaterial =
+				spikeMat = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(NonPremultipliedAlpha))
+				{
+					LightingEnabled = true,
+					AmbientLightColor = Color.White * 0.75f,
+					DiffuseColor = Color.White,
+					Alpha = 0.75f
+				};
 			entity.OnDeviceUserChanged += OnDeviceUserChanged;
-			entity.OnGPSEnabledChanged += OnDeviceGPSStateChanged;
-			entity.OnGPSFixedChanged += OnDeviceGPSStateChanged;
+			entity.OnDeviceGPSEnabledChanged += OnDeviceGPSStateChanged;
+			entity.OnDeviceGPSHasFixChanged += OnDeviceGPSStateChanged;
 			UpdateMarkerState();
 		}
 
-		protected override bool UpdateVisibilityCheck()
+		protected override void Update(TimeSpan gameTime)
 		{
-			return entity.IsGPSEnabled.GetValueOrDefault()
-				&& entity.IsGPSFixed.GetValueOrDefault() && base.UpdateVisibilityCheck();
+			base.Update(gameTime);
+			if (!Owner.IsVisible)
+				return;
+
+			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
 		}
 
 		/////////////////////////////////////////////////////////////////////

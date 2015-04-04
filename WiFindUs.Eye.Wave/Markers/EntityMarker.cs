@@ -26,26 +26,14 @@ namespace WiFindUs.Eye.Wave.Markers
 			get { return entity; }
 		}
 
-		public virtual bool VisibleOnTimeout
+		public virtual bool VisibleWhileInactive
 		{
 			get { return false; }
 		}
 
-		public virtual float RotationSpeed
+		protected virtual float RotationSpeed
 		{
-			get
-			{
-				if (entity.TimedOut)
-					return 0.0f;
-
-				ulong age = entity.UpdateAge;
-				if (age == 0)
-					return MAX_SPIN_RATE;
-				else if (age >= entity.TimeoutLength)
-					return 0.0f;
-				else
-					return MAX_SPIN_RATE * (1.0f - (entity.UpdateAge / (float)entity.TimeoutLength));
-			}
+			get { return entity.Active ? 1.0f : 0.0f; }
 		}
 
 		public override bool Selected
@@ -57,6 +45,16 @@ namespace WiFindUs.Eye.Wave.Markers
 		public ISelectable Selectable
 		{
 			get { return entity; }
+		}
+
+		protected virtual bool VisibilityOverride
+		{
+			get { return true; }
+		}
+
+		protected override float ScaleMultiplier
+		{
+			get { return entity.Selected ? 1.25f : 1.0f; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -82,7 +80,8 @@ namespace WiFindUs.Eye.Wave.Markers
 
 			entity.SelectedChanged += SelectedChanged;
 			entity.LocationChanged += LocationChanged;
-			entity.TimedOutChanged += TimedOutChanged;
+			entity.ActiveChanged += ActiveChanged;
+			entity.Updated += Updated;
 			Scene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
 		}
 
@@ -101,23 +100,23 @@ namespace WiFindUs.Eye.Wave.Markers
 			UpdateMarkerState();
 		}
 
-		protected virtual void TimedOutChanged(IUpdateable obj)
+		protected virtual void ActiveChanged(IUpdateable obj)
 		{
 			UpdateMarkerState();
 		}
 
-		protected virtual bool UpdateVisibilityCheck()
+		protected virtual void Updated(IUpdateable obj)
 		{
-			return true;
+			UpdateMarkerState();
 		}
 
 		protected virtual void UpdateMarkerState()
 		{
 			bool active = Scene.BaseTile != null
 				&& Scene.BaseTile.Region != null
-				&& (VisibleOnTimeout || !entity.TimedOut)
+				&& (VisibleWhileInactive || entity.Active)
 				&& entity.Location.HasLatLong
-				&& UpdateVisibilityCheck();
+				&& VisibilityOverride;
 
 			bool oldVisible = Owner.IsVisible;
 			Owner.IsActive = Owner.IsVisible = active;

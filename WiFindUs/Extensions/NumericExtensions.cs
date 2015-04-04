@@ -8,8 +8,28 @@ namespace WiFindUs.Extensions
 		public const double RAD_TO_DEG = 180.0 / Math.PI;
 
 		/////////////////////////////////////////////////////////////////////
+		// INTS
+		/////////////////////////////////////////////////////////////////////
+
+		public static int WholePercentage(this int current, int max)
+		{
+			return (int)(((double)current / (double)max) * 100.0);
+		}
+
+		/////////////////////////////////////////////////////////////////////
 		// FLOATS
 		/////////////////////////////////////////////////////////////////////
+
+		public static float Lerp(this float start, float finish, float amount)
+		{
+			return (1.0f - amount) * start + amount * finish;
+		}
+
+		public static float Coserp(this float start, float finish, float amount)
+		{
+			float prc = (1.0f - (float)Math.Cos(amount * Math.PI)) * 0.5f;
+			return start * (1.0f - prc) + finish * prc;
+		}
 
 		public static bool Tolerance(this float val, float other, float tolerance)
 		{
@@ -42,6 +62,18 @@ namespace WiFindUs.Extensions
 		/////////////////////////////////////////////////////////////////////
 		// DOUBLES
 		/////////////////////////////////////////////////////////////////////
+
+		public static double Lerp(this double start, double finish, double amount)
+		{
+			return (1.0 - amount) * start + amount * finish;
+		}
+
+		public static double Coserp(this double start, double finish, double amount)
+		{
+			double prc = (1.0 - Math.Cos(amount * Math.PI)) * 0.5;
+			return start * (1.0 - prc) + finish * prc;
+		}
+
 
 		public static bool Tolerance(this double val, double other, double tolerance)
 		{

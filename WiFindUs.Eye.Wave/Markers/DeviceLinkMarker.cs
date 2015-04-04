@@ -64,8 +64,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (oldToMarker != null && oldToMarker == toNode)
 			{
 				toNode.VisibleChanged -= NodeVisibleChanged;
-				toNode.Entity.OnAPDaemonRunningChanged -= NodeChanged;
-				toNode.Entity.OnNodeNumberChanged -= NodeNumberChanged;
+				toNode.Entity.OnNodeAccessPointChanged -= NodeChanged;
+				toNode.Entity.OnNodeNumberChanged -= NodeChanged;
 				toNode.Entity.SelectedChanged -= EntitySelectedChanged;
 			}
 
@@ -74,8 +74,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (toNode != null)
 			{
 				toNode.VisibleChanged += NodeVisibleChanged;
-				toNode.Entity.OnAPDaemonRunningChanged += NodeChanged;
-				toNode.Entity.OnNodeNumberChanged += NodeNumberChanged;
+				toNode.Entity.OnNodeAccessPointChanged += NodeChanged;
+				toNode.Entity.OnNodeNumberChanged += NodeChanged;
 				toNode.Entity.SelectedChanged += EntitySelectedChanged;
 			}
 
@@ -109,11 +109,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			UpdateMarkerState();
 		}
 
-		private void NodeNumberChanged(Node node)
-		{
-			UpdateNodeLink();
-		}
-
 		private void NodeChanged(Node node)
 		{
 			UpdateMarkerState();
@@ -144,7 +139,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& toNode != null
 				&& fromDevice.Owner.IsVisible
 				&& toNode.Owner.IsVisible
-				&& toNode.Entity.IsAPDaemonRunning.GetValueOrDefault()
+				&& toNode.Entity.AccessPoint.GetValueOrDefault()
 				&& (toNode.Entity.Selected || fromDevice.Entity.Selected)
 			);
 		}

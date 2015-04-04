@@ -129,160 +129,6 @@ namespace WiFindUs.Eye
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public Node Node(uint id, out bool isNew)
-		{
-			isNew = false;
-			if (id < 0)
-				return null;
-
-			//fetch
-			Node node = null;
-			if (ServerMode)
-			{
-				try
-				{
-					var nod = from n in eyeContext.Nodes where n.ID == id select n;
-					foreach (Node n in nod) //force load
-					{
-						if (node == null)
-						{
-							node = n;
-							break;
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Debugger.Ex(e);
-					return null;
-				}
-			}
-			else
-				nodes.TryGetValue(id, out node);
-
-			//create
-			if (node == null)
-			{
-				ulong ts = DateTime.UtcNow.ToUnixTimestamp();
-				node = new Node()
-				{
-					ID = id,
-					Created = ts,
-					Updated = ts
-				};
-				if (ServerMode)
-					eyeContext.Nodes.InsertOnSubmit(node);
-				else
-					nodes[id] = node;
-				isNew = true;
-			}
-
-			return node;
-		}
-
-		public Device Device(uint id, out bool isNew)
-		{
-			isNew = false;
-			if (id < 0)
-				return null;
-
-			//fetch
-			Device device = null;
-			if (ServerMode)
-			{
-				try
-				{
-					var dev = from d in eyeContext.Devices where d.ID == id select d;
-					foreach (Device d in dev) //force load
-					{
-						if (device == null)
-						{
-							device = d;
-							break;
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Debugger.Ex(e);
-					return null;
-				}
-			}
-			else
-				devices.TryGetValue(id, out device);
-
-			//create
-			if (device == null)
-			{
-				ulong ts = DateTime.UtcNow.ToUnixTimestamp();
-				device = new Device()
-				{
-					ID = id,
-					Created = ts,
-					Updated = ts
-				};
-				if (ServerMode)
-					eyeContext.Devices.InsertOnSubmit(device);
-				else
-					devices[id] = device;
-				isNew = true;
-			}
-
-			return device;
-		}
-
-		public User User(uint id, out bool isNew)
-		{
-			isNew = false;
-			if (id < 0)
-				return null;
-
-			//fetch
-			User user = null;
-			if (ServerMode)
-			{
-				try
-				{
-					var usr = from u in eyeContext.Users where u.ID == id select u;
-					foreach (User u in usr) //force load
-					{
-						if (user == null)
-						{
-							user = u;
-							break;
-						}
-					}
-				}
-				catch (Exception e)
-				{
-					Debugger.Ex(e);
-					return null;
-				}
-			}
-			else
-				users.TryGetValue(id, out user);
-
-			//create
-			if (user == null)
-			{
-				user = new User()
-				{
-					ID = id,
-					NameFirst = "",
-					NameLast = "",
-					NameMiddle = "",
-					Type = ""
-				};
-				if (ServerMode)
-					eyeContext.Users.InsertOnSubmit(user);
-				else
-					users[id] = user;
-				isNew = true;
-			}
-
-			return user;
-		}
-
 		/// <summary>
 		/// Gets the most recently active node assigned to a particular station number.
 		/// </summary>
@@ -294,8 +140,8 @@ namespace WiFindUs.Eye
 			try
 			{
 				return (from n in Nodes
-						where n.Loaded && n.Number.HasValue && n.Number.Value == number
-						select n).OrderByDescending(n => n.Updated).First();
+						where n.Number.HasValue && n.Number.Value == number
+						select n).OrderByDescending(n => n.LastUpdated).First();
 			}
 			catch
 			{
@@ -324,7 +170,6 @@ namespace WiFindUs.Eye
 			}
 			catch
 			{
-				Debugger.V("creating new link!");
 				return null;
 			}
 		}
@@ -388,7 +233,7 @@ namespace WiFindUs.Eye
 
 		private void DevicePacketReceived(EyePacketListener sender, DevicePacket devicePacket)
 		{
-			if (!ServerMode || devicePacket == null)
+			if (!ServerMode || devicePacket == null || devicePacket.ID <= 0)
 				return;
 
 			if (InvokeRequired)
@@ -408,30 +253,62 @@ namespace WiFindUs.Eye
 				return;
 			}
 
+
 			//get device
-			bool newDevice = false;
-			Device device = Device(devicePacket.ID, out newDevice);
-			if (device == null) //error
+			Device device = null;
+			try
 			{
-				Debugger.E("There was an error retrieving or creating a Device entry for ID {0}", devicePacket.ID);
-				return;
+				device = (from d in Devices where d.ID == devicePacket.ID select d).First();
+				if (device != null && !device.Loaded)
+					return;
 			}
-			//if (!device.Loaded)
-			//	return;
+			catch //new device
+			{
+				ulong ts = DateTime.UtcNow.ToUnixTimestamp();
+				device = new Device()
+				{
+					ID = devicePacket.ID,
+					Created = ts,
+					LastUpdated = ts
+				};
+				if (ServerMode)
+					eyeContext.Devices.InsertOnSubmit(device);
+				else
+					devices[devicePacket.ID] = device;
+			}
 
 			//get user
 			User user = null;
-			if (devicePacket.UserID.HasValue)
+			if (devicePacket.UserID.HasValue && devicePacket.UserID.Value > 0)
 			{
-				bool newUser = false;
-				user = devicePacket.UserID.Value <= 0 ? null : User(devicePacket.UserID.Value, out newUser);
+				try
+				{
+					user = (from u in Users where u.ID == devicePacket.UserID.Value select u).First();
+					if (user != null && !user.Loaded)
+						user = null;
+				}
+				catch //new user
+				{
+					user = new User()
+					{
+						ID = devicePacket.UserID.Value,
+						NameFirst = "",
+						NameLast = "",
+						NameMiddle = "",
+						Type = ""
+					};
+					if (ServerMode)
+						eyeContext.Users.InsertOnSubmit(user);
+					else
+						users[devicePacket.UserID.Value] = user;
+				}
 			}
 
 			//device stats
-			device.Updated = DateTime.UtcNow.ToUnixTimestamp();
-			device.IPAddress = devicePacket.Address;
+			device.Active = true;
+			device.LastUpdated = DateTime.UtcNow.ToUnixTimestamp();
 			if (devicePacket.UserID.HasValue)
-				device.User = user;
+				device.UserID = user == null || !user.Loaded ? (uint?)null : user.ID;
 			if (devicePacket.DeviceType != null)
 				device.Type = devicePacket.DeviceType;
 			if (devicePacket.Charging.HasValue)
@@ -442,46 +319,31 @@ namespace WiFindUs.Eye
 			//connected node
 			if (devicePacket.NodeNumber.HasValue)
 			{
-				Node node = NodeByNumber(devicePacket.NodeNumber.Value);
-				device.NodeID = node == null ? (uint?)null : node.ID;
+				Node node = devicePacket.NodeNumber.Value == 0 ? null : NodeByNumber(devicePacket.NodeNumber.Value);
+				device.NodeID = node == null || !node.Loaded? (uint?)null : node.ID;
 			}
 
 			//location
-			if (devicePacket.IsGPSEnabled.HasValue)
-				device.IsGPSEnabled = devicePacket.IsGPSEnabled;
-			if (device.IsGPSEnabled.GetValueOrDefault())
-			{
-				if (devicePacket.IsGPSFixed.HasValue)
-					device.IsGPSFixed = devicePacket.IsGPSFixed;
-				if (device.IsGPSFixed.GetValueOrDefault())
-				{
-					device.LockLocationEvents();
-					if (devicePacket.Accuracy.HasValue)
-						device.Accuracy = devicePacket.Accuracy;
-					if (device.Accuracy.HasValue && device.Accuracy.Value <= deviceMaxAccuracy)
-					{
-						if (devicePacket.Latitude.HasValue)
-							device.Latitude = devicePacket.Latitude;
-						if (devicePacket.Longitude.HasValue)
-							device.Longitude = devicePacket.Longitude;
-						if (devicePacket.Altitude.HasValue)
-							device.Altitude = devicePacket.Altitude;
-					}
-					else
-					{
-						device.Latitude = null;
-						device.Longitude = null;
-						device.Altitude = null;
-					}
-					device.UnlockLocationEvents();
-				}
-			}
+			if (devicePacket.GPSEnabled.HasValue)
+				device.GPSEnabled = devicePacket.GPSEnabled;
+			if (devicePacket.GPSHasFix.HasValue)
+				device.GPSHasFix = devicePacket.GPSHasFix;
+			device.LockLocationEvents();
+			if (devicePacket.Accuracy.HasValue)
+				device.Accuracy = devicePacket.Accuracy;
+			if (devicePacket.Latitude.HasValue)
+				device.Latitude = devicePacket.Latitude;
+			if (devicePacket.Longitude.HasValue)
+				device.Longitude = devicePacket.Longitude;
+			if (devicePacket.Altitude.HasValue)
+				device.Altitude = devicePacket.Altitude;
+			device.UnlockLocationEvents();
 			SubmitPacketChanges();
 		}
 
 		private void NodePacketReceived(EyePacketListener sender, NodePacket nodePacket)
 		{
-			if (!ServerMode || nodePacket == null)
+			if (!ServerMode || nodePacket == null || nodePacket.ID <= 0)
 				return;
 
 			if (InvokeRequired)
@@ -502,53 +364,54 @@ namespace WiFindUs.Eye
 			}
 
 			//get node
-			bool newNode = false;
-			Node node = Node(nodePacket.ID, out newNode);
-			if (node == null) //error
+			Node node = null;
+			try
 			{
-				Debugger.E("There was an error retrieving or creating a Node entry for ID {0}", nodePacket.ID);
-				return;
+				node = (from n in Nodes where n.ID == nodePacket.ID select n).First();
+				if (node != null && !node.Loaded)
+					return;
 			}
-			//if (!node.Loaded)
-			//	return;
-			node.Updated = DateTime.UtcNow.ToUnixTimestamp();
-			node.IPAddress = nodePacket.Address;
+			catch //new node
+			{
+				ulong ts = DateTime.UtcNow.ToUnixTimestamp();
+				node = new Node()
+				{
+					ID = nodePacket.ID,
+					Created = ts,
+					LastUpdated = ts
+				};
+				if (ServerMode)
+					eyeContext.Nodes.InsertOnSubmit(node);
+				else
+					nodes[nodePacket.ID] = node;
+			}
+
+			node.Active = true;
+			node.LastUpdated = DateTime.UtcNow.ToUnixTimestamp();
 			if (nodePacket.Number.HasValue)
 				node.Number = nodePacket.Number;
-			if (nodePacket.IsGPSDaemonRunning.HasValue)
-				node.IsGPSDaemonRunning = nodePacket.IsGPSDaemonRunning;
-			if (nodePacket.IsGPSDaemonRunning.GetValueOrDefault())
-			{
-				node.LockLocationEvents();
-				if (nodePacket.IsGPSFake.HasValue)
-					node.IsGPSFake = nodePacket.IsGPSFake;
-				if (nodePacket.Accuracy.HasValue)
-					node.Accuracy = nodePacket.Accuracy;
-				if (node.Accuracy.HasValue && node.Accuracy.Value <= nodeMaxAccuracy)
-				{
-					if (nodePacket.Latitude.HasValue)
-						node.Latitude = nodePacket.Latitude;
-					if (nodePacket.Longitude.HasValue)
-						node.Longitude = nodePacket.Longitude;
-					if (nodePacket.Altitude.HasValue)
-						node.Altitude = nodePacket.Altitude;
-				}
-				else
-				{
-					node.Latitude = null;
-					node.Longitude = null;
-					node.Altitude = null;
-				}
-				node.UnlockLocationEvents();
-			}
-			if (nodePacket.IsAPDaemonRunning.HasValue)
-				node.IsAPDaemonRunning = nodePacket.IsAPDaemonRunning;
-			if (nodePacket.IsDHCPDaemonRunning.HasValue)
-				node.IsDHCPDaemonRunning = nodePacket.IsDHCPDaemonRunning;
-			if (nodePacket.IsMeshPoint.HasValue)
-				node.IsMeshPoint = nodePacket.IsMeshPoint;
-			if (nodePacket.VisibleSatellites.HasValue)
-				node.VisibleSatellites = nodePacket.VisibleSatellites;
+			if (nodePacket.GPSD.HasValue)
+				node.GPSD = nodePacket.GPSD;
+			if (nodePacket.MockLocation.HasValue)
+				node.MockLocation = nodePacket.MockLocation;
+			node.LockLocationEvents();
+			if (nodePacket.Accuracy.HasValue)
+				node.Accuracy = nodePacket.Accuracy;
+			if (nodePacket.Latitude.HasValue)
+				node.Latitude = nodePacket.Latitude;
+			if (nodePacket.Longitude.HasValue)
+				node.Longitude = nodePacket.Longitude;
+			if (nodePacket.Altitude.HasValue)
+				node.Altitude = nodePacket.Altitude;
+			node.UnlockLocationEvents();
+			if (nodePacket.AccessPoint.HasValue)
+				node.AccessPoint = nodePacket.AccessPoint;
+			if (nodePacket.DHCPD.HasValue)
+				node.DHCPD = nodePacket.DHCPD;
+			if (nodePacket.MeshPoint.HasValue)
+				node.MeshPoint = nodePacket.MeshPoint;
+			if (nodePacket.SatelliteCount.HasValue)
+				node.SatelliteCount = nodePacket.SatelliteCount;
 			if (nodePacket.NodeLinks != null)
 			{
 				//get all existing links for node
@@ -568,7 +431,11 @@ namespace WiFindUs.Eye
 
 						NodeLink activeLink = NodeLink(node, end);
 						if (activeLink != null)
+						{
+							if (!activeLink.Loaded)
+								continue;
 							inactiveLinks.Remove(activeLink);
+						}
 						else
 						{
 							activeLink = new NodeLink()
@@ -616,7 +483,7 @@ namespace WiFindUs.Eye
 			{
 				eyeContext.SubmitChanges(ConflictMode.ContinueOnConflict);
 			}
-			catch (ChangeConflictException ex)
+			catch (ChangeConflictException)
 			{
 				foreach (ObjectChangeConflict objConflict in eyeContext.ChangeConflicts)
 					foreach (MemberChangeConflict memberConflict in objConflict.MemberConflicts)
@@ -815,13 +682,11 @@ namespace WiFindUs.Eye
 
 		private void OnDeviceLoaded(Device device)
 		{
-			device.CheckTimeout();
 			updateables.Add(device);
 		}
 
 		private void OnNodeLoaded(Node node)
 		{
-			node.CheckTimeout();
 			updateables.Add(node);
 		}
 
@@ -850,7 +715,7 @@ namespace WiFindUs.Eye
 			{
 				timeoutCheckTimer = 0;
 				foreach (IUpdateable updateable in updateables)
-					updateable.CheckTimeout();
+					updateable.CheckActive();
 			}
 		}
 

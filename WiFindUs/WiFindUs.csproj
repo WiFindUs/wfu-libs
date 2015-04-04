@@ -81,7 +81,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\ISplashLoader.cs" />
-    <Compile Include="MathHelper.cs" />
     <Compile Include="Extensions\NumericExtensions.cs" />
     <Compile Include="Forms\SplashForm.cs">
       <SubType>Form</SubType>

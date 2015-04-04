@@ -9,9 +9,9 @@ using WaveEngine.Framework.Managers;
 
 namespace WiFindUs.Eye.Wave.Layers
 {
-	public class WireframeObjectsLayer : Layer
+	public class WireframeObjects : Layer
 	{
-		public WireframeObjectsLayer(RenderManager renderManager)
+		public WireframeObjects(RenderManager renderManager)
 			: base(renderManager)
 		{
 		}

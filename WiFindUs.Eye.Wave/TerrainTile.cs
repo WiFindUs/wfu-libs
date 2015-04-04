@@ -11,6 +11,7 @@ using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Extensions;
+using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -18,7 +19,8 @@ namespace WiFindUs.Eye.Wave
 	{
 		public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError, CenterLocationChanged;
 
-		private const float UNTEXTURED_SCALE = 0.4f;
+		private const float UNTEXTURED_SCALE = 0.25f;
+		private const float UNTEXTURED_OFFSET = 40.0f;
 		private const float SCALE_SPEED = 2.0f;
 		private const int MAX_CONCURRENT_TEXTURE_CREATIONS = 1;
 		private readonly int MAX_CONCURRENT_LOADS = Math.Max(Environment.ProcessorCount - 1, 1);
@@ -35,7 +37,7 @@ namespace WiFindUs.Eye.Wave
 		private MaterialsMap materialsMap;
 		private BoxCollider boxCollider;
 
-		private BasicMaterial placeholderMaterial;
+		private BasicMaterial placeholder, texture;
 		private bool errorState = false;
 		private Region region;
 		private uint googleMapsZoomLevel;
@@ -46,9 +48,9 @@ namespace WiFindUs.Eye.Wave
 		private bool textured = false;
 		private int lastDownloadPercentage = 0;
 		private bool mapImageFileExists = false;
-		private System.Drawing.Image tileImage = null; //only used on base tile
+		private System.Drawing.Image tileImage = null;
 		private object threadObject = null;
-		private float horizontalScale;
+		private float horizontalScale = UNTEXTURED_SCALE;
 		private bool stopScalingNextFrame = false; //fixes the boxcollider expansion bug
 
 		/////////////////////////////////////////////////////////////////////
@@ -67,14 +69,14 @@ namespace WiFindUs.Eye.Wave
 					return;
 
 				CancelThreads();
-				placeholderMaterial.DiffuseColor = (row + column) % 2 == 0 ? Color.Peru : Color.Sienna;
-				materialsMap.DefaultMaterial = placeholderMaterial;
+				placeholder.DiffuseColor = (row + column) % 2 == 0 ? Color.Peru : Color.Sienna;
+				materialsMap.DefaultMaterial = placeholder;
 				region = new Region(value, googleMapsZoomLevel);
 				errorState = false;
 				textured = false;
 				horizontalScale = UNTEXTURED_SCALE;
 				stopScalingNextFrame = false;
-				transform3D.Scale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+				transform3D.LocalScale = new Vector3(horizontalScale, 1.0f, horizontalScale);
 				if (TileImage != null)
 				{
 					TileImage.Dispose();
@@ -203,7 +205,7 @@ namespace WiFindUs.Eye.Wave
 				if (errorState)
 				{
 					Owner.IsActive = false;
-					placeholderMaterial.DiffuseColor = Color.Red;
+					placeholder.DiffuseColor = Color.Red;
 					if (TextureError != null)
 						TextureError(this);
 				}
@@ -251,7 +253,10 @@ namespace WiFindUs.Eye.Wave
 				+ (WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM)
 				- layer) / 10.0f;
 
-			BasicMaterial mat = new BasicMaterial((row + column) % 2 == 0 ? Color.Peru : Color.Sienna);
+			BasicMaterial mat = new BasicMaterial((row + column) % 2 == 0 ? Color.Peru : Color.Sienna, typeof(NonPremultipliedAlpha))
+			{
+				Alpha = UNTEXTURED_SCALE
+			};
 			Entity tileEntity = new Entity() { IsActive = false }
 			.AddComponent(new Transform3D())
 			.AddComponent(new MaterialsMap(mat))
@@ -264,7 +269,7 @@ namespace WiFindUs.Eye.Wave
 				row, column,
 				size)
 				{
-					placeholderMaterial = mat
+					placeholder = mat
 				});
 
 			return tileEntity;
@@ -277,13 +282,15 @@ namespace WiFindUs.Eye.Wave
 		public void CalculatePosition()
 		{
 			if (baseTile == null)
-				transform3D.LocalPosition = new Vector3(0f, 0f, 0f);
+				transform3D.LocalPosition = new Vector3(0.0f,
+					-UNTEXTURED_OFFSET + horizontalScale * UNTEXTURED_OFFSET,
+					0.0f);
 			else
 			{
 				float start = (baseTile.Size / -2.0f) + (size / 2.0f);
 				transform3D.LocalPosition = new Vector3(
 					start + (column * size),
-					0.0f,
+					-UNTEXTURED_OFFSET + horizontalScale * UNTEXTURED_OFFSET,
 					start + (row * size));
 			}
 
@@ -327,7 +334,7 @@ namespace WiFindUs.Eye.Wave
 
 				currentDownloads++;
 				Debugger.V("Downloading map tile texture " + ImageFilename + "...");
-				placeholderMaterial.DiffuseColor = Color.Orange;
+				placeholder.DiffuseColor = Color.Orange;
 				WebClient downloadClient = new WebClient();
 				downloadClient.DownloadFileCompleted += DownloadFileCompleted;
 				downloadClient.DownloadProgressChanged += DownloadProgressChanged;
@@ -343,7 +350,7 @@ namespace WiFindUs.Eye.Wave
 					return;
 
 				currentTextureCreations++;
-				placeholderMaterial.DiffuseColor = Color.Green;
+				placeholder.DiffuseColor = Color.Green;
 				Thread textureThread = new Thread(new ThreadStart(TextureCreationThread));
 				threadObject = textureThread;
 				textureThread.Start();
@@ -354,7 +361,7 @@ namespace WiFindUs.Eye.Wave
 					return;
 
 				currentLoads++;
-				placeholderMaterial.DiffuseColor = Color.Yellow;
+				placeholder.DiffuseColor = Color.Yellow;
 				Thread loadThread = new Thread(new ThreadStart(LoadThread));
 				threadObject = loadThread;
 				loadThread.Start();
@@ -377,7 +384,11 @@ namespace WiFindUs.Eye.Wave
 							horizontalScale = 1.0f;
 							stopScalingNextFrame = true;
 						}
-						transform3D.Scale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+						texture.Alpha = horizontalScale;
+						transform3D.LocalScale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+						transform3D.LocalPosition = new Vector3(transform3D.LocalPosition.X,
+							-UNTEXTURED_OFFSET + horizontalScale * UNTEXTURED_OFFSET,
+							transform3D.LocalPosition.Z);
 					}
 				}
 				else if (threadObject == null
@@ -494,7 +505,7 @@ namespace WiFindUs.Eye.Wave
 			{
 				threadObject = null;
 				if (TileImage != null)
-					placeholderMaterial.DiffuseColor = Color.GreenYellow;
+					placeholder.DiffuseColor = Color.GreenYellow;
 
 				if (TextureImageLoadingFinished != null)
 					TextureImageLoadingFinished(this);
@@ -512,7 +523,11 @@ namespace WiFindUs.Eye.Wave
 				{
 					try
 					{
-						materialsMap.DefaultMaterial = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream));
+						texture = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream), typeof(NonPremultipliedAlpha))
+						{
+							Alpha = UNTEXTURED_SCALE
+						};
+						materialsMap.DefaultMaterial = texture;
 					}
 					catch
 					{

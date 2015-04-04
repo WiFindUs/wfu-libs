@@ -37,12 +37,12 @@ namespace WiFindUs.Eye
 			get { return deviceType; }
 		}
 
-		public bool? IsGPSEnabled
+		public bool? GPSEnabled
 		{
 			get { return gpsEnabled; }
 		}
 
-		public bool? IsGPSFixed
+		public bool? GPSHasFix
 		{
 			get { return gpsHasFix; }
 		}

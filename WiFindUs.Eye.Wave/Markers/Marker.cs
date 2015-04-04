@@ -10,6 +10,8 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public abstract class Marker : MapSceneEntityBehavior
 	{
+		protected const float FADE_SPEED = 15f;
+		protected const float SCALE_SPEED = 15f;
 		private List<BoxCollider> colliders = new List<BoxCollider>();
 
 		/////////////////////////////////////////////////////////////////////
@@ -18,23 +20,10 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public abstract bool Selected { get; set; }
 
-		/*
-		public static Material PlaceHolderMaterial
+		protected virtual float ScaleMultiplier
 		{
-			get
-			{
-				if (placeHolderMaterial == null)
-					placeHolderMaterial = new BasicMaterial(Color.LightGray)
-					{
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.75f,
-						SpecularPower = 2
-					};
-
-				return placeHolderMaterial;
-			}
+			get { return 1.0f; }
 		}
-		 * */
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
@@ -78,8 +67,9 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected override void Update(TimeSpan gameTime)
 		{
-			float scale = Scene.MarkerScale;
-			Transform3D.Scale = new Vector3(scale, scale, scale);
+			float scale = Scene.MarkerScale * ScaleMultiplier;
+			Transform3D.Scale = Vector3.Lerp(Transform3D.Scale, new Vector3(scale, scale, scale),
+				(float)gameTime.TotalSeconds * SCALE_SPEED);
 		}
 	}
 }
