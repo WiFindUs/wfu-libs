@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
@@ -41,7 +42,12 @@ namespace WiFindUs.Eye.Controls
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		protected virtual Color ImagePlaceholderColour
 		{
-			get { return MouseHovering || entity.Selected ? Theme.ControlLightColour : Theme.ControlDarkColour; }
+			get
+			{
+				return MouseHovering || entity.Selected
+					? Theme.Current.Background.Light.Colour 
+					: Theme.Current.Background.Dark.Colour;
+			}
 		}
 
 		[Browsable(false)]
@@ -76,11 +82,9 @@ namespace WiFindUs.Eye.Controls
 			CalculateHeight();
 		}
 
-		//
-
-		public override void OnThemeChanged()
+		public override void ApplyTheme(ITheme theme)
 		{
-			base.OnThemeChanged();
+			base.ApplyTheme(theme);
 
 			SuspendLayout();
 			CalculateHeight();
@@ -103,14 +107,14 @@ namespace WiFindUs.Eye.Controls
 		protected override void OnPaintBackground(PaintEventArgs e)
 		{
 			if (MouseHovering)
-				e.Graphics.Clear(Theme.HighlightLightColour);
+				e.Graphics.Clear(Theme.Current.Highlight.Light.Colour);
 			else if (entity.Selected)
-				e.Graphics.Clear(Theme.HighlightMidColour);
+				e.Graphics.Clear(Theme.Current.Highlight.Mid.Colour);
 			else
 				base.OnPaintBackground(e);
 
-			using (Pen p = new Pen(Theme.ControlDarkColour))
-				e.Graphics.DrawLine(p, 0, ClientRectangle.Height - 1, ClientRectangle.Width, ClientRectangle.Height - 1);
+				e.Graphics.DrawLine(Theme.Current.Background.Dark.Pen,
+					0, ClientRectangle.Height - 1, ClientRectangle.Width, ClientRectangle.Height - 1);
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -137,7 +141,7 @@ namespace WiFindUs.Eye.Controls
 			e.Graphics.DrawString(
 				text,
 				Font,
-				Theme.TextLightBrush,
+				Theme.Current.Foreground.Light.Brush,
 				new Point(48, 0),
 				StringFormat.GenericTypographic);
 
@@ -148,7 +152,7 @@ namespace WiFindUs.Eye.Controls
 			e.Graphics.DrawString(
 				text,
 				Font,
-				Theme.TextMidBrush,
+				Theme.Current.Foreground.Mid.Brush,
 				new Point(48, (int)sz.Height),
 				StringFormat.GenericTypographic);
 		}
@@ -186,8 +190,10 @@ namespace WiFindUs.Eye.Controls
 
 		private void CalculateHeight()
 		{
-			Height = Math.Max(48,
-				System.Windows.Forms.TextRenderer.MeasureText(EntityTitleString + "\n" + EntityDetailString, Font).Height + (Height - ClientRectangle.Height)
+			Height = Math.Max(
+				48,
+				System.Windows.Forms.TextRenderer.MeasureText(EntityTitleString + "\n" + EntityDetailString, Font).Height
+					+ (Height - ClientRectangle.Height)
 				);
 		}
 	}

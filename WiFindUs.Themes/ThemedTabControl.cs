@@ -4,12 +4,12 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
-namespace WiFindUs.Controls
+namespace WiFindUs.Themes
 {
 	public class ThemedTabControl : TabControl, IThemeable
 	{
-		private Theme theme;
 		private int hoverIndex = -1;
 
 		/////////////////////////////////////////////////////////////////////
@@ -42,31 +42,6 @@ namespace WiFindUs.Controls
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlLightColour;
-				Font = theme.WindowFont;
-				foreach (TabPage tab in TabPages)
-				{
-					tab.BackColor = theme.ControlMidColour;
-					tab.Font = theme.WindowFont;
-				}
-				OnThemeChanged();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		protected Rectangle TabBounds
 		{
 			get
@@ -88,34 +63,47 @@ namespace WiFindUs.Controls
 			DrawMode = TabDrawMode.OwnerDrawFixed;
 			SizeMode = TabSizeMode.Fixed;
 			ItemSize = new Size(80, 30);
-			ResizeRedraw = true;
 
 			if (IsDesignMode)
-			{
-				theme = WFUApplication.Theme;
 				return;
-			}
 
-			DoubleBuffered = true;
 			SetStyle(
 				System.Windows.Forms.ControlStyles.UserPaint |
 				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
 				System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
 				true);
+			UpdateStyles();
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public virtual void OnThemeChanged()
+		public virtual void ApplyTheme(ITheme theme)
 		{
-
+			if (theme == null)
+				return;
+			BackColor = theme.Background.Light.Colour;
+			Font = theme.Controls.Normal.Regular;
+			foreach (TabPage tab in TabPages)
+			{
+				tab.BackColor = theme.Background.Mid.Colour;
+				tab.Font = Font;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+			if (IsDesignMode)
+				return;
+			ApplyTheme(Theme.Current);
+			Theme.ThemeChanged += ApplyTheme;
+		}
 
 		protected override void OnPaint(PaintEventArgs e)
 		{
@@ -125,18 +113,23 @@ namespace WiFindUs.Controls
 
 			//highlight line
 			Rectangle tabBounds = TabBounds;
+			int offset = Alignment == TabAlignment.Top || Alignment == TabAlignment.Bottom
+				? tabBounds.Left - ClientRectangle.Left : 0;
 			Rectangle highlightRect = new Rectangle(
 				//left
-				Alignment == TabAlignment.Top || Alignment == TabAlignment.Bottom ? ClientRectangle.Left
-					: (Alignment == TabAlignment.Left ? tabBounds.Right : tabBounds.Left),
+				Alignment == TabAlignment.Top || Alignment == TabAlignment.Bottom
+					? ClientRectangle.Left + offset: (Alignment == TabAlignment.Left ? tabBounds.Right : tabBounds.Left),
 				//top
-				Alignment == TabAlignment.Left || Alignment == TabAlignment.Right ? ClientRectangle.Top
-					: (Alignment == TabAlignment.Top ? tabBounds.Bottom : tabBounds.Top),
+				Alignment == TabAlignment.Left || Alignment == TabAlignment.Right
+					? ClientRectangle.Top : (Alignment == TabAlignment.Top ? tabBounds.Bottom : tabBounds.Top),
 				//width
-				Alignment == TabAlignment.Top || Alignment == TabAlignment.Bottom ? ClientRectangle.Width : 2,
+				Alignment == TabAlignment.Top || Alignment == TabAlignment.Bottom
+					? ClientRectangle.Width - offset * 2 : 2,
 				//height
-				Alignment == TabAlignment.Left || Alignment == TabAlignment.Right ? ClientRectangle.Height : 2);
-			e.Graphics.FillRectangle(Theme.HighlightMidBrush, highlightRect);
+				Alignment == TabAlignment.Left || Alignment == TabAlignment.Right
+					? ClientRectangle.Height : 2
+				);
+			e.Graphics.FillRectangle(Theme.Current.Highlight.Mid.Brush, highlightRect);
 
 			//tabs
 			if (!IsDesignMode)
@@ -195,9 +188,9 @@ namespace WiFindUs.Controls
 
 			//draw background (if selected or hovering
 			if (IsDesignMode)
-				g.FillRectangle(Theme.ControlDarkBrush, tabTextArea);
+				g.FillRectangle(Theme.Current.Background.Dark.Brush, tabTextArea);
 			else if (hoverIndex == tabIndex || SelectedIndex == tabIndex)
-				g.FillRectangle(hoverIndex == tabIndex ? Theme.HighlightLightBrush : Theme.HighlightMidBrush, tabTextArea);
+				g.FillRectangle(hoverIndex == tabIndex ? Theme.Current.Highlight.Light.Brush : Theme.Current.Highlight.Mid.Brush, tabTextArea);
 
 			//draw text
 			string text = TabPages[tabIndex].Text;
@@ -209,7 +202,7 @@ namespace WiFindUs.Controls
 			g.DrawString(
 				text,
 				Font,
-				Theme.TextLightBrush,
+				Theme.Current.Foreground.Lighter.Brush,
 				new PointF(tabTextArea.Left + 4.0f, tabTextArea.Top + tabTextArea.Height / 2.0f - sz.Height / 2.0f),
 				StringFormat.GenericTypographic);
 		}

@@ -8,10 +8,11 @@ using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Eye.Extensions;
 using System.ComponentModel;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Wave.Controls
 {
-	public class MapControl : Control, IThemeable
+	public class MapControl : ThemedControl
 	{
 		public event Action<MapScene> SceneStarted;
 
@@ -19,7 +20,6 @@ namespace WiFindUs.Eye.Wave.Controls
 		private Input input;
 		private float scaleFactor = 1.0f;
 		private Form form = null;
-		private Theme theme;
 		private bool started = false;
 
 		/////////////////////////////////////////////////////////////////////
@@ -38,13 +38,6 @@ namespace WiFindUs.Eye.Wave.Controls
 		public MapScene Scene
 		{
 			get { return mapApp == null ? null : mapApp.Scene; }
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool IsDesignMode
-		{
-			get { return DesignMode || this.IsDesignMode(); }
 		}
 
 		[Browsable(false)]
@@ -87,29 +80,6 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlDarkColour;
-				ForeColor = theme.TextLightColour;
-				Font = theme.WindowFont;
-				if (Scene != null)
-					Scene.Theme = value;
-				OnThemeChanged();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool DebugMode
 		{
 			get { return Scene == null ? false : Scene.DebugMode; }
@@ -127,28 +97,20 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		public MapControl()
 		{
-			Margin = new Padding(0);
 			TabStop = false;
-
-			if (IsDesignMode)
-			{
-				Theme = WFUApplication.Theme;
-				return;
-			}
-
-			SetStyle(ControlStyles.AllPaintingInWmPaint
-				| ControlStyles.OptimizedDoubleBuffer
-				| ControlStyles.UserPaint, true);
-			UpdateStyles();
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public virtual void OnThemeChanged()
+		public override void ApplyTheme(ITheme theme)
 		{
-
+			if (theme == null)
+				return;
+			BackColor = theme.Background.Dark.Colour;
+			ForeColor = theme.Foreground.Light.Colour;
+			Font = theme.Controls.Normal.Regular;
 		}
 
 		public void StartMapApplication()
@@ -214,11 +176,15 @@ namespace WiFindUs.Eye.Wave.Controls
 			bool design = IsDesignMode;
 			if (design || Scene == null)
 			{
-				e.Graphics.Clear(design ? Color.WhiteSmoke : theme.ControlDarkColour);
-				string text = design ? "Wave Engine Map Renderer Control" : "Waiting for map scene to initialize...";
+				e.Graphics.Clear(design ? SystemColors.InactiveCaption : Theme.Current.Background.Dark.Colour);
+				string text = design ? "Wave Engine 3D Map Control" : "Waiting for map scene to initialize...";
 				var sizeText = e.Graphics.MeasureString(text, Font);
-				using (Font f = new Font(Font.FontFamily, Font.Size + 6.0f, Font.Style | FontStyle.Bold))
-					e.Graphics.DrawString(text, f, design ? Brushes.Black : theme.TextMidBrush, (Width - sizeText.Width) / 2, (Height - sizeText.Height) / 2, StringFormat.GenericTypographic);
+				e.Graphics.DrawString(text,
+					design ? SystemFonts.DefaultFont : Theme.Current.Controls.Large.Bold,
+					design ? SystemBrushes.InactiveCaptionText : Theme.Current.Foreground.Mid.Brush,
+					(Width - sizeText.Width) / 2,
+					(Height - sizeText.Height) / 2,
+					StringFormat.GenericTypographic);
 			}
 		}
 
@@ -239,7 +205,7 @@ namespace WiFindUs.Eye.Wave.Controls
 
 			UpdateMousePosition(e);
 			SetMouseButtonState(e, true);
-			this.Focus();
+			Focus();
 		}
 
 		protected override void OnMouseUp(MouseEventArgs e)
@@ -561,7 +527,6 @@ namespace WiFindUs.Eye.Wave.Controls
 				else
 					scene.CenterLocation = location;
 			}
-			scene.Theme = Theme;
 
 			if (SceneStarted != null)
 				SceneStarted(scene);

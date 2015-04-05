@@ -1,14 +1,13 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Controls
+namespace WiFindUs.Themes
 {
 	public class ThemedListBox : ListBox, IThemeable
 	{
-		private Theme theme;
-
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
@@ -20,27 +19,6 @@ namespace WiFindUs.Controls
 			get
 			{
 				return DesignMode || this.IsDesignMode();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlLightColour;
-				ForeColor = theme.TextLightColour;
-				Font = theme.WindowFont;
-				OnThemeChanged();
 			}
 		}
 
@@ -56,30 +34,41 @@ namespace WiFindUs.Controls
 			IntegralHeight = false;
 
 			if (IsDesignMode)
-			{
-				theme = WFUApplication.Theme;
 				return;
-			}
 
-			this.SetStyle(
-				ControlStyles.OptimizedDoubleBuffer |
-				ControlStyles.ResizeRedraw |
-				ControlStyles.UserPaint,
+			SetStyle(
+				System.Windows.Forms.ControlStyles.UserPaint |
+				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
+				System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
 				true);
+			UpdateStyles();
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public virtual void OnThemeChanged()
+		public virtual void ApplyTheme(ITheme theme)
 		{
-
+			if (theme == null)
+				return;
+			BackColor = theme.Background.Light.Colour;
+			ForeColor = theme.Foreground.Light.Colour;
+			Font = theme.Controls.Normal.Regular;
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+			if (IsDesignMode)
+				return;
+			ApplyTheme(Theme.Current);
+			Theme.ThemeChanged += ApplyTheme;
+		}
 
 		protected override void OnDrawItem(DrawItemEventArgs e)
 		{

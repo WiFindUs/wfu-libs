@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows.Forms;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Controls
 {
@@ -12,33 +13,6 @@ namespace WiFindUs.Controls
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override Theme Theme
-		{
-			get
-			{
-				return base.Theme;
-			}
-			set
-			{
-				if (value == null || value == base.Theme)
-					return;
-
-				base.Theme = value;
-
-				BackColor = input.BackColor = value.ControlDarkColour;
-				Font = input.Font = value.ConsoleFont;
-				ForeColor = input.ForeColor = value.TextLightColour;
-				for (int i = 0; i < toggles.Length; i++)
-				{
-					toggles[i].Font = value.ConsoleFont;
-					toggles[i].ForeColor = toggles[i].Checked ? Theme.ControlDarkColour : Theme.TextDarkColour;
-				}
-
-			}
-		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -89,6 +63,21 @@ namespace WiFindUs.Controls
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		public override void ApplyTheme(ITheme theme)
+		{
+			if (theme == null)
+				return;
+
+			BackColor = input.BackColor = theme.Background.Dark.Colour;
+			Font = input.Font = theme.Monospaced.Normal.Regular;
+			ForeColor = input.ForeColor = theme.Foreground.Light.Colour;
+			for (int i = 0; i < toggles.Length; i++)
+			{
+				toggles[i].Font = Font;
+				toggles[i].ForeColor = toggles[i].Checked ? theme.Background.Dark.Colour : theme.Foreground.Dark.Colour;
+			}
+		}
+
 		public void RegenerateFromHistory()
 		{
 			console.RegenerateFromHistory();
@@ -132,7 +121,7 @@ namespace WiFindUs.Controls
 				return;
 
 			console.AllowedVerbosities = AllowedVerbosities;
-			toggle.ForeColor = toggle.Checked ? Theme.ControlDarkColour : Theme.TextDarkColour;
+			toggle.ForeColor = toggle.Checked ? Theme.Current.Background.Dark.Colour : Theme.Current.Foreground.Dark.Colour;
 		}
 
 		private void InputKeyPress(object sender, KeyPressEventArgs e)

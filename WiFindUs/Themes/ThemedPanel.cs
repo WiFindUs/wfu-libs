@@ -3,12 +3,11 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Controls
+namespace WiFindUs.Themes
 {
 	public class ThemedPanel : Panel, IThemeable
 	{
 		public event Action<ThemedPanel> MouseHoveringChanged;
-		private Theme theme;
 		private bool mouseHovering = false;
 
 		/////////////////////////////////////////////////////////////////////
@@ -22,27 +21,6 @@ namespace WiFindUs.Controls
 			get
 			{
 				return DesignMode || this.IsDesignMode();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public virtual Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlLightColour;
-				ForeColor = theme.TextLightColour;
-				Font = theme.WindowFont;
-				OnThemeChanged();
 			}
 		}
 
@@ -68,13 +46,8 @@ namespace WiFindUs.Controls
 			Padding = new Padding(0);
 
 			if (IsDesignMode)
-			{
-				theme = WFUApplication.Theme;
 				return;
-			}
 
-			ResizeRedraw = false;
-			DoubleBuffered = true;
 			SetStyle(
 				System.Windows.Forms.ControlStyles.UserPaint |
 				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
@@ -87,14 +60,27 @@ namespace WiFindUs.Controls
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public virtual void OnThemeChanged()
+		public virtual void ApplyTheme(ITheme theme)
 		{
-
+			if (theme == null)
+				return;
+			BackColor = theme.Background.Light.Colour;
+			ForeColor = theme.Foreground.Light.Colour;
+			Font = theme.Controls.Normal.Regular;
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+			if (IsDesignMode)
+				return;
+			ApplyTheme(Theme.Current);
+			Theme.ThemeChanged += ApplyTheme;
+		}
 
 		protected virtual void OnMouseHoverChanged()
 		{

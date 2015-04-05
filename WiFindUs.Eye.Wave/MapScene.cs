@@ -16,6 +16,8 @@ using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
 using System.IO;
 using WaveEngine.Materials;
+using WiFindUs.Themes;
+using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -30,7 +32,6 @@ namespace WiFindUs.Eye.Wave
 
 		private MapGame hostGame;
 		private EyeMainForm eyeForm;
-		private Theme theme;
 		private FixedCamera camera;
 		private ILocation center;
 		private Entity[] tileLayers;
@@ -53,26 +54,6 @@ namespace WiFindUs.Eye.Wave
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
-		public Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				if (camera != null)
-					camera.BackgroundColor = new Color(
-						theme.ControlDarkColour.R, theme.ControlDarkColour.G,
-						theme.ControlDarkColour.B, theme.ControlDarkColour.A);
-				OnThemeChanged();
-			}
-		}
 
 		public ILocation CenterLocation
 		{
@@ -228,9 +209,12 @@ namespace WiFindUs.Eye.Wave
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public virtual void OnThemeChanged()
+		public virtual void ApplyTheme(ITheme theme)
 		{
+			if (theme == null || camera == null)
+				return;
 
+			camera.BackgroundColor = theme.Background.Dark.Colour.Wave();
 		}
 
 		public Vector3 LocationToVector(ILocation loc)
@@ -342,13 +326,8 @@ namespace WiFindUs.Eye.Wave
 				NearPlane = 1f,
 				FarPlane = 10000.0f,
 				ClearFlags = ClearFlags.All,
-				BackgroundColor = theme != null ? new Color(
-					theme.ControlDarkColour.R, theme.ControlDarkColour.G,
-					theme.ControlDarkColour.B, theme.ControlDarkColour.A)
-					: Color.CornflowerBlue
 			};
-			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapSceneCamera())
-				.AddComponent(new CameraFrustum());
+			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapSceneCamera());
 			EntityManager.Add(camera);
 			RenderManager.SetFrustumCullingCamera(camera.Entity);
 
@@ -380,6 +359,10 @@ namespace WiFindUs.Eye.Wave
 			//add scene behaviours
 			Debugger.V("MapScene: creating behaviours");
 			AddSceneBehavior(inputBehaviour = new MapSceneInput(), SceneBehavior.Order.PostUpdate);
+
+			//apply theme
+			ApplyTheme(Theme.Current);
+			Theme.ThemeChanged += ApplyTheme;
 		}
 
 		protected override void Start()

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
@@ -55,7 +56,6 @@ namespace WiFindUs.Eye.Controls
 				return;
 			if (entities.Contains(elc.Entity))
 				throw new ArgumentOutOfRangeException("e", "An EntityListItem representing that entity is already present in this EntityList!");
-			elc.Theme = Theme;
 			entities.Add(elc.Entity);
 			elc.Entity.SelectionGroup = SelectionGroup;
 

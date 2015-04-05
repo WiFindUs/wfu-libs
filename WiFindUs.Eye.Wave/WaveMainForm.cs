@@ -9,9 +9,9 @@ using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class WaveMainForm : EyeMainForm, IMapForm
+	public class WaveMainForm : EyeMainForm
 	{
-		private List<MapControl> maps = new List<MapControl>(4);
+		private MapControl map = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -21,14 +21,29 @@ namespace WiFindUs.Eye.Wave
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool DebugMode
 		{
-			get { return maps.Count == 0 ? false : maps[0].DebugMode; }
+			get { return map == null ? false : map.DebugMode; }
 			set
 			{
-				if (maps.Count == 0 || value == maps[0].DebugMode)
+				if (map == null || value == map.DebugMode)
 					return;
-				for (int i = 0; i < maps.Count; i++)
-					maps[i].DebugMode = value;
+				map.DebugMode = value;
 				OnDebugModeChanged();
+			}
+		}
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public MapControl Map
+		{
+			get { return map; }
+			protected set
+			{
+				if (map != null || value == null)
+					return;
+				map = value;
+				map.SceneStarted += OnMapSceneStarted;
+				if (FirstShown)
+					map.StartMapApplication(); //no-op if called already
 			}
 		}
 
@@ -58,60 +73,28 @@ namespace WiFindUs.Eye.Wave
 
 			RenderLoop.Run(form, () =>
 			{
-				mapForm.RenderMap();
+				if (mapForm.map != null)
+					mapForm.map.Render();
 			});
-		}
-
-		public void RenderMap()
-		{
-			for (int i = 0; i < maps.Count; i++)
-				maps[i].Render();
 		}
 
 		public void AddMapControl(MapControl mapControl)
 		{
-			if (mapControl == null || maps.Contains(mapControl))
-				return;
-			maps.Add(mapControl);
-			OnMapControlAdded(mapControl);
-			mapControl.Theme = Theme;
-			mapControl.SceneStarted += OnMapSceneStarted;
-			if (FirstShown)
-				mapControl.StartMapApplication(); //no-op if called already
+
 		}
 
-		public void RemoveMapControl(MapControl mapControl)
-		{
-			if (mapControl == null)
-				return;
-			maps.Remove(mapControl);
-			OnMapControlRemoved(mapControl);
-			mapControl.SceneStarted -= OnMapSceneStarted;
-		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		protected virtual void OnMapControlAdded(MapControl mapControl)
-		{
-
-		}
-
-		protected virtual void OnMapControlRemoved(MapControl mapControl)
-		{
-
-		}
 
 		protected override void OnFirstShown(EventArgs e)
 		{
 			base.OnFirstShown(e);
 			if (IsDesignMode)
 				return;
-
-			//start map scenes
-			for (int i = 0; i < maps.Count; i++)
-				maps[i].StartMapApplication();  //no-op if called already
+			if (map != null)
+				map.StartMapApplication(); //no-op if called already
 		}
 
 		protected virtual void OnMapSceneStarted(MapScene scene)

@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using WiFindUs.Controls;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
@@ -71,34 +72,6 @@ namespace WiFindUs.Eye.Controls
 			get { return rows * cols; }
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override Theme Theme
-		{
-			get
-			{
-				return base.Theme;
-			}
-			set
-			{
-				if (value == null || value == base.Theme)
-					return;
-
-				base.Theme = value;
-
-				if (buttons == null)
-					return;
-
-				for (int r = 0; r < rows; r++)
-					for (int c = 0; c < cols; c++)
-					{
-						Button b = buttons[r, c];
-						b.BackColor = base.Theme.ControlMidColour;
-					}
-
-			}
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -134,6 +107,21 @@ namespace WiFindUs.Eye.Controls
 		public ActionPanel() : this(3, 3) { }
 
 		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		public override void ApplyTheme(ITheme theme)
+		{
+			base.ApplyTheme(theme);
+			if (theme == null || buttons == null)
+				return;
+
+			for (int r = 0; r < rows; r++)
+				for (int c = 0; c < cols; c++)
+					buttons[r, c].BackColor = theme.Background.Mid.Colour;
+		}
+
+		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
@@ -153,7 +141,7 @@ namespace WiFindUs.Eye.Controls
 			{
 				string text = actionSubscriber.ActionDescription;
 				var sizeText = e.Graphics.MeasureString(text, Font, descriptionRectangle.Width, StringFormat.GenericTypographic);
-				e.Graphics.DrawString(text, Font, Theme.TextMidBrush,
+				e.Graphics.DrawString(text, Font, Theme.Current.Foreground.Mid.Brush,
 					(descriptionRectangle.Width - sizeText.Width) / 2,
 					(descriptionRectangle.Height - sizeText.Height) / 2,
 					StringFormat.GenericTypographic);
@@ -162,7 +150,7 @@ namespace WiFindUs.Eye.Controls
 			{
 				string text = "No actions available. Try selecting something.";
 				var sizeText = e.Graphics.MeasureString(text, Font, ClientRectangle.Width, StringFormat.GenericTypographic);
-				e.Graphics.DrawString(text, Font, Theme.TextMidBrush,
+				e.Graphics.DrawString(text, Font, Theme.Current.Foreground.Mid.Brush,
 					(ClientRectangle.Width - sizeText.Width) / 2,
 					(ClientRectangle.Height - sizeText.Height) / 2,
 					StringFormat.GenericTypographic);

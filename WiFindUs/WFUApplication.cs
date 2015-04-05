@@ -7,9 +7,9 @@ using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using WiFindUs.Controls;
 using WiFindUs.Forms;
 using WiFindUs.IO;
+using WiFindUs.Themes;
 
 namespace WiFindUs
 {
@@ -43,7 +43,6 @@ namespace WiFindUs
 		private static List<Func<object, bool>> loadingTasks = new List<Func<object, bool>>();
 		private static SplashForm splashForm = null;
 		private static bool splashLoadingFinished = false;
-		private static Theme theme = new Theme();
 		private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
 		private static Action<MainForm> mainLaunchAction = null;
 		private static volatile Dictionary<int, string> threadAliases = new Dictionary<int, string>();
@@ -80,7 +79,6 @@ namespace WiFindUs
 				if (readOnly)
 					return;
 				readOnly = value;
-				theme.ReadOnly = value;
 			}
 		}
 
@@ -434,22 +432,6 @@ namespace WiFindUs
 		}
 
 		/// <summary>
-		/// Gets or sets the colour and font theme in use by this application.
-		/// </summary>
-		public static Theme Theme
-		{
-			get { return theme; }
-			set
-			{
-				if (readOnly || value == null || value == theme)
-					return;
-				if (theme != null)
-					theme.Dispose();
-				theme = value;
-			}
-		}
-
-		/// <summary>
 		/// Gets or sets the Google API key in use by this application.
 		/// </summary>
 		public static string GoogleAPIKey
@@ -535,8 +517,14 @@ namespace WiFindUs
 			Debugger.V("Setting application visual styles and text rendering properties...");
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
+			if (Theme.Current == null)
+			{
+				Debugger.V("No theme set; creating default theme...");
+				Theme.Current = new Theme(true);
+			}
 			Debugger.V("Invoking MainForm constructor...");
 			mainForm = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { });
+			StartSplashLoading(mainForm.LoadingTasks);
 			Debugger.V("Invoking Main() launch action...");
 			if (mainLaunchAction == null)
 				DefaultMainLaunch(mainForm);
@@ -665,11 +653,7 @@ namespace WiFindUs
 
 		private static void Free()
 		{
-			if (theme != null)
-			{
-				theme.Dispose();
-				theme = null;
-			}
+			Theme.Current = null; //disposes if assigned
 
 			if (imageLoader != null)
 			{

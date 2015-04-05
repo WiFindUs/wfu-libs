@@ -6,6 +6,7 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Forms
 {
@@ -78,9 +79,9 @@ namespace WiFindUs.Forms
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public override void OnThemeChanged()
+		public override void ApplyTheme(ITheme theme)
 		{
-			base.OnThemeChanged();
+			base.ApplyTheme(theme);
 			if (bgBrush != null)
 			{
 				bgBrush.Dispose();
@@ -102,13 +103,13 @@ namespace WiFindUs.Forms
 			Rectangle gradRect = new Rectangle(0, 0, ClientRectangle.Width, ClientRectangle.Height / 2);
 			if (bgBrush == null)
 				bgBrush = new LinearGradientBrush(gradRect,
-					Theme.ControlDarkColour, Theme.ControlLightColour,
+					Theme.Current.Background.Dark.Colour, Theme.Current.Background.Mid.Colour,
 					90);
 			e.Graphics.FillRectangle(bgBrush, gradRect);
 
 			//lines at top and bottom
-			e.Graphics.FillRectangle(Theme.HighlightLightBrush, 0, 0, ClientRectangle.Width, 8);
-			e.Graphics.FillRectangle(Theme.HighlightMidBrush, 0, ClientRectangle.Height - 4, ClientRectangle.Width, 4);
+			e.Graphics.FillRectangle(Theme.Current.Highlight.Light.Brush, 0, 0, ClientRectangle.Width, 8);
+			e.Graphics.FillRectangle(Theme.Current.Highlight.Mid.Brush, 0, ClientRectangle.Height - 4, ClientRectangle.Width, 4);
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -128,8 +129,8 @@ namespace WiFindUs.Forms
 			//title
 			e.Graphics.DrawString(
 				WFUApplication.Name,
-				Theme.TitleFont,
-				Theme.TextLightBrush,
+				Theme.Current.Titles.Huge.Regular,
+				Theme.Current.Foreground.Light.Brush,
 				new Point(activeArea.Left * 2 + logo.Width, activeArea.Top),
 				StringFormat.GenericTypographic);
 
@@ -138,13 +139,13 @@ namespace WiFindUs.Forms
 			string text = WFUApplication.Edition + " Edition";
 			SizeF sz = e.Graphics.MeasureString(
 				text,
-				Theme.SubtitleFont,
+				Theme.Current.Titles.Small.Regular,
 				activeArea.Width,
 				StringFormat.GenericTypographic);
 			e.Graphics.DrawString(
 				text,
-				Theme.SubtitleFont,
-				Theme.TextLightBrush,
+				Theme.Current.Titles.Small.Regular,
+				Theme.Current.Foreground.Light.Brush,
 				new Point(activeArea.Left, top),
 				StringFormat.GenericTypographic);
 
@@ -152,8 +153,8 @@ namespace WiFindUs.Forms
 			top += (int)sz.Height;
 			e.Graphics.DrawString(
 				"v" + WFUApplication.AssemblyVersion.ToString(),
-				Theme.SubtitleFont,
-				Theme.TextDarkBrush,
+				Theme.Current.Titles.Small.Regular,
+				Theme.Current.Foreground.Dark.Brush,
 				new Point(activeArea.Left, top),
 				StringFormat.GenericTypographic);
 
@@ -163,8 +164,8 @@ namespace WiFindUs.Forms
 
 			e.Graphics.DrawString(
 				"[Debug Compilation]",
-				Theme.SubtitleFont,
-				Theme.WarningBrush,
+				Theme.Current.Titles.Small.Regular,
+				Theme.Current.Warning.Mid.Brush,
 				new Point(activeArea.Left, top),
 				StringFormat.GenericTypographic);
 #endif
@@ -180,7 +181,7 @@ namespace WiFindUs.Forms
 				e.Graphics.DrawString(
 					Status,
 					Font,
-					Theme.TextDarkBrush,
+					Theme.Current.Foreground.Dark.Brush,
 					new PointF(activeArea.Left, progressBar.Top - sz.Height * 1.5f),
 					StringFormat.GenericTypographic);
 			}

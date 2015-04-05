@@ -37,14 +37,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\ConsolePanel.cs">
@@ -56,27 +51,11 @@
     <Compile Include="Controls\ConsoleTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Controls\IThemeable.cs" />
-    <Compile Include="Controls\Theme.cs" />
-    <Compile Include="Controls\ThemeBrush.cs" />
-    <Compile Include="Controls\ThemedListBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\ThemedFlowLayoutPanel.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\ThemedUserControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Controls\ThemedPanel.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Controls\ThemedTabControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="DebuggerLogItem.cs" />
+    <Compile Include="Extensions\ColorExtensions.cs" />
     <Compile Include="Extensions\ControlExtensions.cs" />
     <Compile Include="Extensions\GraphicsExtensions.cs" />
+    <Compile Include="Extensions\ImageExtensions.cs" />
     <Compile Include="Forms\BaseForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -102,6 +81,37 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="StackedLock.cs" />
+    <Compile Include="Themes\ITheme.cs" />
+    <Compile Include="Themes\IThemeable.cs" />
+    <Compile Include="Themes\Theme.cs" />
+    <Compile Include="Themes\ThemeColour.cs" />
+    <Compile Include="Themes\ThemeColourSet.cs" />
+    <Compile Include="Themes\ThemedControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemedFlowLayoutPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemedForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemedListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemedPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemedSplitContainer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemedTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemedUserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Themes\ThemeFont.cs" />
+    <Compile Include="Themes\ThemeFontSet.cs" />
     <Compile Include="WFUApplication.cs" />
   </ItemGroup>
   <ItemGroup>

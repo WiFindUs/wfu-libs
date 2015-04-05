@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
@@ -97,7 +98,7 @@ namespace WiFindUs.Eye.Controls
 			int w = 6;
 			int p = 2;
 			Rectangle rect = new Rectangle(ClientRectangle.Width - w - p, p, w, ClientRectangle.Height - p * 2 - 1);
-			e.Graphics.FillRectangle(Theme.ControlMidBrush, rect);
+			e.Graphics.FillRectangle(Theme.Current.Background.Mid.Brush, rect);
 			if (device.BatteryLevel.HasValue)
 			{
 				double pc = device.BatteryLevel.Value;
@@ -107,9 +108,7 @@ namespace WiFindUs.Eye.Controls
 					rect.X, rect.Bottom - height, rect.Width, height
 					);
 			}
-
-			using (Pen pen = new Pen(Theme.ControlDarkColour))
-				e.Graphics.DrawRectangle(pen, rect);
+			e.Graphics.DrawRectangle(Theme.Current.Background.Dark.Pen, rect);
 
 			string text = (device.BatteryLevel.HasValue ? String.Format("{0:P0}", device.BatteryLevel.Value) : " ") + "\n"
 				+ (device.Charging.HasValue && device.Charging.Value ? "Charging" : " ");
@@ -128,7 +127,7 @@ namespace WiFindUs.Eye.Controls
 						e.Graphics.DrawString(
 							text,
 							f,
-							Theme.TextMidBrush,
+							Theme.Current.Foreground.Mid.Brush,
 							new Point(rect.Left - p, rect.Top),
 							sf);
 					}

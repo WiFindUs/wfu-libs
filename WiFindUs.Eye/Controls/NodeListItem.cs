@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
@@ -95,7 +96,7 @@ namespace WiFindUs.Eye.Controls
 				int hstep = ClientRectangle.Width / 5;
 				int vstep = f.Height * 2;
 				for (int i = 0; i < statuses.Length; i++)
-					statuses[i].Paint(e.Graphics, Theme, f, ((i % 4) + 1) * hstep, 48 + (i / 4) * vstep);
+					statuses[i].Paint(e.Graphics, f, ((i % 4) + 1) * hstep, 48 + (i / 4) * vstep);
 			}
 		}
 
@@ -118,14 +119,14 @@ namespace WiFindUs.Eye.Controls
 				this.waitingText = waitingText ?? "Waiting";
 			}
 
-			public void Paint(Graphics g, Theme t, Font f, int x, int y)
+			public void Paint(Graphics g, Font f, int x, int y)
 			{
 				using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic) { Alignment = StringAlignment.Center })
 				{
 					g.DrawString(Caption + ":\n" +
 					(Status.HasValue ? (Status.Value ? okText : failText) : waitingText),
 					f,
-					(Status.HasValue ? (Status.Value ? t.OKBrush : t.ErrorBrush) : t.WarningBrush),
+					(Status.HasValue ? (Status.Value ? Theme.Current.OK.Mid.Brush : Theme.Current.Error.Mid.Brush) : Theme.Current.Warning.Mid.Brush),
 					x, y, sf);
 				}
 			}

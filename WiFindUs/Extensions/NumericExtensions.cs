@@ -16,6 +16,11 @@ namespace WiFindUs.Extensions
 			return (int)(((double)current / (double)max) * 100.0);
 		}
 
+		public static int Clamp(this int value, int min, int max)
+		{
+			return value < min ? min : (value > max ? max : value);
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// FLOATS
 		/////////////////////////////////////////////////////////////////////

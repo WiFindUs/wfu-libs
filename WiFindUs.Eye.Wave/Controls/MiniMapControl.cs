@@ -5,12 +5,12 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Wave.Controls
 {
-	public class MiniMapControl : Control, IThemeable
+	public class MiniMapControl : ThemedControl
 	{
-		private Theme theme;
 		private WiFindUs.Eye.Wave.MapScene scene;
 		private Rectangle mapArea = Rectangle.Empty;
 		private bool mouseDown = false;
@@ -21,16 +21,6 @@ namespace WiFindUs.Eye.Wave.Controls
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 		
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool IsDesignMode
-		{
-			get
-			{
-				return DesignMode || this.IsDesignMode();
-			}
-		}
-
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public WiFindUs.Eye.Wave.MapScene Scene
@@ -62,59 +52,18 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlLightColour;
-				Font = theme.WindowFont;
-				OnThemeChanged();
-			}
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
 		public MiniMapControl()
 		{
-			Margin = new Padding(0);
 			TabStop = false;
-
-			if (IsDesignMode)
-			{
-				Theme = WFUApplication.Theme;
-				return;
-			}
-
-			ResizeRedraw = false;
-			//DoubleBuffered = true;
-			SetStyle(
-				System.Windows.Forms.ControlStyles.UserPaint |
-				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
-				System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
-				true);
-			UpdateStyles();
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		public virtual void OnThemeChanged()
-		{
-
-		}
 
 		public Point LocationToScreen(ILocation loc)
 		{
@@ -155,13 +104,27 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			base.OnPaint(e);
 
+			//design mode 
+			if (IsDesignMode)
+			{
+				e.Graphics.Clear(SystemColors.InactiveCaption);
+				string text = "Wave Engine 2D Map Control";
+				var sizeText = e.Graphics.MeasureString(text, Font);
+				e.Graphics.DrawString(text,
+					SystemFonts.DefaultFont,
+					SystemBrushes.InactiveCaptionText,
+					(Width - sizeText.Width) / 2,
+					(Height - sizeText.Height) / 2,
+					StringFormat.GenericTypographic);
+				return;
+			}
+
 			//initialize render state
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
-			e.Graphics.Clear(theme.ControlDarkColour);
-
-			if (IsDesignMode || scene == null || scene.BaseTile == null || scene.CameraController == null)
+			e.Graphics.Clear(Theme.Current.Background.Dark.Colour);
+			if (scene == null || scene.BaseTile == null || scene.CameraController == null)
 			{
-				e.Graphics.FillRectangle(theme.ControlLightBrush, mapArea);
+				e.Graphics.FillRectangle(Theme.Current.Background.Light.Brush, mapArea);
 				return;
 			}
 

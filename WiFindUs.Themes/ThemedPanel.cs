@@ -3,12 +3,11 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Controls
+namespace WiFindUs.Themes
 {
-	public class ThemedUserControl : UserControl, IThemeable
+	public class ThemedPanel : Panel, IThemeable
 	{
-		public event Action<ThemedUserControl> MouseHoveringChanged;
-		private Theme theme;
+		public event Action<ThemedPanel> MouseHoveringChanged;
 		private bool mouseHovering = false;
 
 		/////////////////////////////////////////////////////////////////////
@@ -25,29 +24,6 @@ namespace WiFindUs.Controls
 			}
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public virtual Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlLightColour;
-				ForeColor = theme.TextLightColour;
-				Font = theme.WindowFont;
-				OnThemeChanged();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool MouseHovering
 		{
 			get { return mouseHovering; }
@@ -64,19 +40,14 @@ namespace WiFindUs.Controls
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public ThemedUserControl()
+		public ThemedPanel()
 		{
 			Margin = new Padding(0);
 			Padding = new Padding(0);
 
 			if (IsDesignMode)
-			{
-				theme = WFUApplication.Theme;
 				return;
-			}
 
-			ResizeRedraw = false;
-			DoubleBuffered = true;
 			SetStyle(
 				System.Windows.Forms.ControlStyles.UserPaint |
 				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
@@ -89,14 +60,27 @@ namespace WiFindUs.Controls
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public virtual void OnThemeChanged()
+		public virtual void ApplyTheme(ITheme theme)
 		{
-
+			if (theme == null)
+				return;
+			BackColor = theme.Background.Light.Colour;
+			ForeColor = theme.Foreground.Light.Colour;
+			Font = theme.Controls.Normal.Regular;
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+			if (IsDesignMode)
+				return;
+			ApplyTheme(Theme.Current);
+			Theme.ThemeChanged += ApplyTheme;
+		}
 
 		protected virtual void OnMouseHoverChanged()
 		{

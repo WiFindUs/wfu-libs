@@ -6,12 +6,12 @@ using System.Threading;
 using System.Windows.Forms;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Forms
 {
-	public class BaseForm : Form, IThemeable
+	public class BaseForm : ThemedForm
 	{
-		private Theme theme;
 		private bool firstShown = false;
 		private bool hideOnClose = false;
 		private bool preventUserClose = false;
@@ -45,58 +45,9 @@ namespace WiFindUs.Forms
 			set { preventUserClose = value; }
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool IsDesignMode
-		{
-			get
-			{
-				return DesignMode || this.IsDesignMode();
-			}
-		}
-
 		protected override bool ShowWithoutActivation
 		{
 			get { return true; }
-		}
-
-		protected override CreateParams CreateParams
-		{
-			get
-			{
-				CreateParams cp = base.CreateParams;
-				if (IsDesignMode)
-					return cp;
-				cp.ExStyle |= 0x02000000;  // Turn on WS_EX_COMPOSITED
-				return cp;
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlLightColour;
-				Font = theme.WindowFont;
-				OnThemeChanged();
-				this.RecurseControls(control =>
-				{
-					IThemeable themable = control as IThemeable;
-					if (themable != null)
-						themable.Theme = value;
-				});
-				Refresh();
-			}
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -107,24 +58,12 @@ namespace WiFindUs.Forms
 		{
 			AutoScaleMode = AutoScaleMode.None;
 			ShowIcon = true;
-			ResizeRedraw = true;
 
 			if (IsDesignMode)
-			{
-				theme = WFUApplication.Theme;
 				return;
-			}
 
 			Icon = WFUApplication.Icon;
 			WFUApplication.SetThreadAlias("UI");
-
-			DoubleBuffered = true;
-			SetStyle(
-				System.Windows.Forms.ControlStyles.UserPaint |
-				System.Windows.Forms.ControlStyles.AllPaintingInWmPaint |
-				System.Windows.Forms.ControlStyles.OptimizedDoubleBuffer,
-				true);
-			UpdateStyles();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -139,11 +78,6 @@ namespace WiFindUs.Forms
 			Focus();
 			if (forcerefresh)
 				Refresh();
-		}
-
-		public virtual void OnThemeChanged()
-		{
-
 		}
 
 		public void ApplyWindowStateFromConfig(String prefix)
@@ -222,14 +156,6 @@ namespace WiFindUs.Forms
 			}
 			if (!e.Cancel)
 				base.OnFormClosing(e);
-		}
-
-		protected override void OnLoad(EventArgs e)
-		{
-			if (IsDesignMode)
-				return;
-			base.OnLoad(e);
-			Theme = WFUApplication.Theme;
 		}
 
 		protected override void OnShown(EventArgs e)

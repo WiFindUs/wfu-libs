@@ -5,14 +5,24 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Controls
 {
 	public class ConsoleTextBox : RichTextBox, IThemeable
 	{
 		private const int MAX_LINES = 4096;
-		private Theme theme;
 		private Debugger.Verbosity allowedVerbosities = Debugger.Verbosity.All ^ Debugger.Verbosity.Verbose;
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public bool IsDesignMode
+		{
+			get
+			{
+				return DesignMode || this.IsDesignMode();
+			}
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -32,28 +42,6 @@ namespace WiFindUs.Controls
 					return;
 				allowedVerbosities = value;
 				RegenerateFromHistory();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Theme Theme
-		{
-			get
-			{
-				return theme;
-			}
-			set
-			{
-				if (value == null || value == theme)
-					return;
-
-				theme = value;
-				BackColor = theme.ControlDarkColour;
-				Font = theme.ConsoleFont;
-				ForeColor = theme.TextLightColour;
-
-				OnThemeChanged();
 			}
 		}
 
@@ -77,9 +65,13 @@ namespace WiFindUs.Controls
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public virtual void OnThemeChanged()
+		public virtual void ApplyTheme(ITheme theme)
 		{
-
+			if (theme == null)
+				return;
+			BackColor = theme.Background.Dark.Colour;
+			ForeColor = theme.Foreground.Light.Colour;
+			Font = theme.Monospaced.Normal.Regular;
 		}
 
 		public void RegenerateFromHistory()
@@ -99,9 +91,11 @@ namespace WiFindUs.Controls
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
-			if (DesignMode || this.IsDesignMode())
+			if (IsDesignMode)
 				return;
 			Debugger.OnDebugOutput += OnDebugOutput;
+			ApplyTheme(Theme.Current);
+			Theme.ThemeChanged += ApplyTheme;
 		}
 
 		protected virtual void OnDebugOutput(DebuggerLogItem logItem)

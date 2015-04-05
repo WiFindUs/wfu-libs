@@ -11,6 +11,7 @@ using WiFindUs.Eye.Wave;
 using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Forms;
+using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Dispatcher
 {
@@ -148,6 +149,9 @@ namespace WiFindUs.Eye.Dispatcher
 			if (DesignMode)
 				return;
 
+			//map
+			Map = map;
+
 			//title
 			Text = WFUApplication.Name;
 
@@ -185,9 +189,6 @@ namespace WiFindUs.Eye.Dispatcher
 			//key preview for alt-enter
 			KeyPreview = true;
 
-			//map form
-			AddMapControl(map);
-
 			//controls
 			listDevices.SelectionGroup = globalSelectionGroup;
 			listUsers.SelectionGroup = globalSelectionGroup;
@@ -201,10 +202,6 @@ namespace WiFindUs.Eye.Dispatcher
 			WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			globalSelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
-
-			//load
-			this.SuspendAllLayout();
-			WFUApplication.StartSplashLoading(LoadingTasks);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -223,10 +220,12 @@ namespace WiFindUs.Eye.Dispatcher
 			statusStrip.BackColor = colour;
 		}
 
-		public override void OnThemeChanged()
+		public override void ApplyTheme(ITheme theme)
 		{
-			base.OnThemeChanged();
-			statusStrip.ForeColor = Theme.TextLightColour;
+			base.ApplyTheme(theme);
+			if (theme == null)
+				return;
+			statusStrip.ForeColor = theme.Foreground.Lighter.Colour;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -243,9 +242,8 @@ namespace WiFindUs.Eye.Dispatcher
 
 		protected override void OnFirstShown(EventArgs e)
 		{
-			SetApplicationStatus("Initializing 3D scene...", Theme.WarningColour);
+			SetApplicationStatus("Initializing 3D scene...", Theme.Current.Warning.Mid.Colour);
 			base.OnFirstShown(e);
-			this.ResumeAllLayout();
 
 			//set up console form
 			consoleForm.ApplyWindowStateFromConfig("console");
@@ -304,7 +302,7 @@ namespace WiFindUs.Eye.Dispatcher
 			scene.InputBehaviour.MousePressed += InputBehaviour_MousePressed;
 			if (minimap != null && scene == map.Scene)
 				minimap.Scene = scene;
-			SetApplicationStatus("Map scene ready.", Theme.HighlightMidColour);
+			SetApplicationStatus("Map scene ready.", Theme.Current.Highlight.Mid.Colour);
 #if DEBUG
 			DebugMode = true;
 #endif
@@ -463,40 +461,6 @@ namespace WiFindUs.Eye.Dispatcher
 						ShowConsole = !ShowConsole;
 						e.Handled = true;
 						break;
-				}
-			}
-		}
-
-		private void PaintSplitter(object sender, PaintEventArgs e)
-		{
-			SplitContainer splitter = sender as SplitContainer;
-			if (splitter == null || splitter.IsSplitterFixed)
-				return;
-			int length = (splitter.Orientation == Orientation.Vertical
-				? splitter.Height : splitter.Width) / 10;
-			int top = splitter.Orientation == Orientation.Vertical
-				? splitter.Height / 2 - length / 2
-				: splitter.SplitterDistance + (splitter.SplitterWidth / 2) - 1;
-			int left = splitter.Orientation == Orientation.Vertical
-				? splitter.SplitterDistance + (splitter.SplitterWidth / 2) - 2
-				: splitter.Width / 2 - length / 2;
-			int bottom = splitter.Orientation == Orientation.Vertical
-				? top + length
-				: top + 2;
-			int right = splitter.Orientation == Orientation.Vertical
-				? left + 2
-				: left + length;
-			using (Pen p = new Pen(Theme.ControlDarkColour))
-			{
-				if (splitter.Orientation == Orientation.Vertical)
-				{
-					e.Graphics.DrawLine(p, left, top, left, bottom);
-					e.Graphics.DrawLine(p, right, top, right, bottom);
-				}
-				else
-				{
-					e.Graphics.DrawLine(p, left, top, right, top);
-					e.Graphics.DrawLine(p, left, bottom, right, bottom);
 				}
 			}
 		}
