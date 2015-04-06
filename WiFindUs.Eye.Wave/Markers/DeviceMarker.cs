@@ -14,8 +14,8 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public class DeviceMarker : EntityMarker<Device>, ILinkableMarker
 	{
-		private Entity spike;
-		private BasicMaterial spikeMat;
+		private Transform3D coreTransform;
+		private BasicMaterial spikeMat, coreMat;
 		
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -23,14 +23,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public Vector3 LinkPoint
 		{
-			get
-			{
-				return new Vector3(
-					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 7.0f * Transform3D.Scale.Y,
-					this.Transform3D.Position.Z
-					);
-			}
+			get { return coreTransform.Position; }
 		}
 
 		protected override bool VisibilityOverride
@@ -62,19 +55,45 @@ namespace WiFindUs.Eye.Wave.Markers
 				//spike
 				.AddChild
 				(
-					marker.spike = new Entity("spike")
+					new Entity("spike")
 					.AddComponent(new Transform3D()
 					{
 						Position = new Vector3(0.0f, 5.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap())
+					.AddComponent(new MaterialsMap(marker.spikeMat = new BasicMaterial(MapScene.WhiteTexture)
+					{
+						LayerType = typeof(NonPremultipliedAlpha),
+						LightingEnabled = true,
+						AmbientLightColor = Color.White * 0.75f,
+						DiffuseColor = Color.White,
+						Alpha = 0.75f
+					}))
 					.AddComponent(Model.CreateCone(8f, 6f, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
 				)
+				//core
+				.AddChild
+				(
+					new Entity("core")
+					.AddComponent(marker.coreTransform = new Transform3D()
+					{
+						LocalPosition = new Vector3(0.0f, 11.0f, 0.0f)
+					})
+					.AddComponent(new MaterialsMap(marker.coreMat = new BasicMaterial(MapScene.WhiteTexture)
+					{
+						LayerType = typeof(Overlays),
+						LightingEnabled = true,
+						AmbientLightColor = Color.White * 0.75f,
+						DiffuseColor = new Color(220, 220, 220),
+						Alpha = 0.5f
+					}))
+					.AddComponent(Model.CreateSphere(3f, 4))
+					.AddComponent(new ModelRenderer())
+				)
 				//selection
-				.AddChild(SelectionRing.Create(device, 5.0f, 6, 8f));
+				.AddChild(SelectionRing.Create(device, 6.0f, 6, 8f, 2f));
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -84,14 +103,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Initialize()
 		{
 			base.Initialize();
-			spike.FindComponent<MaterialsMap>().DefaultMaterial =
-				spikeMat = new BasicMaterial(MapScene.WhiteTexture, typeof(NonPremultipliedAlpha))
-				{
-					LightingEnabled = true,
-					AmbientLightColor = Color.White * 0.75f,
-					DiffuseColor = Color.White,
-					Alpha = 0.75f
-				};
 			entity.OnDeviceUserChanged += OnDeviceUserChanged;
 			entity.OnDeviceGPSEnabledChanged += OnDeviceGPSStateChanged;
 			entity.OnDeviceGPSHasFixChanged += OnDeviceGPSStateChanged;
@@ -105,6 +116,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
+			coreMat.Alpha = coreMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.5f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);
 		}
 

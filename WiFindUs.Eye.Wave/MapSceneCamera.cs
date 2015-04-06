@@ -208,8 +208,8 @@ namespace WiFindUs.Eye.Wave
 				newPos = destination;
 				newLook = targetVector;
 			}
-			if (Vector3.DistanceSquared(newPos, camera.Position) >= 1.0f
-				|| Vector3.DistanceSquared(newLook, camera.LookAt) >= 1.0f)
+			if (Vector3.Distance(newPos, camera.Position) >= 1.0f
+				|| Vector3.Distance(newLook, camera.LookAt) >= 1.0f)
 			{
 				camera.Position = newPos;
 				camera.LookAt = newLook;

@@ -49,8 +49,8 @@ namespace WiFindUs.Eye.Wave
 			{
 				LayerType = typeof(Overlays),
 				LightingEnabled = true,
-				AmbientLightColor = Color.White,
-				DiffuseColor = Color.White,
+				AmbientLightColor = Color.White * 0.75f,
+				//DiffuseColor = Color.White,
 				Alpha = 0.0f
 			};
 
@@ -89,7 +89,7 @@ namespace WiFindUs.Eye.Wave
 				Transform3D.LocalRotation.Y + ROTATE_SPEED * (float)gameTime.TotalSeconds,
 				Transform3D.LocalRotation.Z);
 
-			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 1.0f : 0.0f,
+			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 0.8f : 0.0f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);
 		}
 	}

@@ -13,7 +13,7 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
-		private Transform3D orbTransform;
+		private Transform3D orbTransform, coreTransform;
 		private BasicMaterial spikeMat, orbMat, coreMat;
 
 		/////////////////////////////////////////////////////////////////////
@@ -22,14 +22,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public Vector3 LinkPoint
 		{
-			get
-			{
-				return new Vector3(
-					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 21.0f * this.Transform3D.Scale.Y,
-					this.Transform3D.Position.Z
-					);
-			}
+			get { return coreTransform.Position; }
 		}
 
 		protected override float RotationSpeed
@@ -79,7 +72,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				.AddChild
 				(
 					new Entity("core")
-					.AddComponent(new Transform3D()
+					.AddComponent(marker.coreTransform = new Transform3D()
 					{
 						LocalPosition = new Vector3(0.0f, 21.0f, 0.0f)
 					})
@@ -88,7 +81,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(Overlays),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						DiffuseColor = new Color(180, 180, 180),
+						DiffuseColor = new Color(220, 220, 220),
 						Alpha = 0.5f
 					}))
 					.AddComponent(Model.CreateSphere(4f, 4))
