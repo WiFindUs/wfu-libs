@@ -108,7 +108,7 @@ namespace WiFindUs.Eye.Wave
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public ILocation LocationFromScreenRay(int x, int y)
+		public Vector3? VectorFromScreenRay(int x, int y)
 		{
 			//set up ray
 			ConfigureScreenRay(x, y);
@@ -119,7 +119,13 @@ namespace WiFindUs.Eye.Wave
 				return null;
 
 			//return result
-			return Scene.VectorToLocation(ray.Position + ray.Direction * result.Value);
+			return ray.Position + ray.Direction * result.Value;
+		}
+
+		public ILocation LocationFromScreenRay(int x, int y)
+		{
+			Vector3? vec = VectorFromScreenRay(x, y);
+			return vec == null ? null : Scene.VectorToLocation(vec.Value);
 		}
 
 		public T[] MarkersFromScreenRay<T>(int x, int y, bool visibleOnly = true) where T : Marker
@@ -135,14 +141,15 @@ namespace WiFindUs.Eye.Wave
 			//check nodes
 			foreach (Marker marker in Scene.AllMarkers)
 			{
-				if (!marker.Owner.IsVisible && visibleOnly)
+				if (marker.Transform3D == null || (!marker.Owner.IsVisible && visibleOnly))
 					continue;
 
 				T typedMarker = marker as T;
-				if (typedMarker == null)
+				if (typedMarker == null || markers.Contains(typedMarker))
 					continue;
 
-				if (marker.Transform3D != null && marker.Intersects(ref ray).HasValue)
+				float? val;
+				if ((val = marker.Intersects(ref ray)).HasValue && val.Value >= 0.0f)
 					markers.Add(typedMarker);
 			}
 

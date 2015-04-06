@@ -188,6 +188,24 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		protected override void OnMouseEnter(EventArgs e)
+		{
+			base.OnMouseEnter(e);
+			Cursor.Hide();
+			if (!CheckInputManager())
+				return;
+			UpdateMousePosition(PointToClient(System.Windows.Forms.Cursor.Position));
+		}
+
+		protected override void OnMouseLeave(EventArgs e)
+		{
+			base.OnMouseLeave(e);
+			Cursor.Show();
+			if (!CheckInputManager())
+				return;
+			UpdateMousePosition(PointToClient(System.Windows.Forms.Cursor.Position));
+		}
+
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
@@ -252,10 +270,20 @@ namespace WiFindUs.Eye.Wave.Controls
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		private void UpdateMousePosition(int x, int y)
+		{
+			input.MouseState.X = x;
+			input.MouseState.Y = y;
+		}
+
+		private void UpdateMousePosition(Point point)
+		{
+			UpdateMousePosition(point.X, point.Y);
+		}
+
 		private void UpdateMousePosition(MouseEventArgs args)
 		{
-			input.MouseState.X = args.X;
-			input.MouseState.Y = args.Y;
+			UpdateMousePosition(args.X, args.Y);
 		}
 
 		private bool CheckInputManager()

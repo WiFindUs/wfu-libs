@@ -45,12 +45,43 @@ namespace WiFindUs.Eye.Wave
 				Modifiers = modifiers;
 			}
 		};
-		public event Action<MapSceneMouseEventArgs> MousePressed, MouseHeld, MouseReleased;
+		public event Action<MapSceneMouseEventArgs> MousePressed, MouseHeld,
+			MouseReleased, MouseEnter, MouseLeave, MouseMoved;
 
 		private KeyboardState oldKeyboardState;
 		private MouseState oldMouseState;
 		private MapScene mapScene;
 		private Input input;
+		private bool mouseEntered = false;
+
+		/////////////////////////////////////////////////////////////////////
+		// PROPERTIES
+		/////////////////////////////////////////////////////////////////////
+
+		public bool MouseEntered
+		{
+			get { return mouseEntered; }
+		}
+
+		public int MouseX
+		{
+			get { return input.MouseState.X; }
+		}
+
+		public int MouseY
+		{
+			get { return input.MouseState.Y; }
+		}
+
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
+
+
+
+		/////////////////////////////////////////////////////////////////////
+		// PROTECTED METHODS
+		/////////////////////////////////////////////////////////////////////
 
 		protected override void ResolveDependencies()
 		{
@@ -58,6 +89,9 @@ namespace WiFindUs.Eye.Wave
 			input = WaveServices.Input;
 			oldKeyboardState = input.KeyboardState;
 			oldMouseState = input.MouseState;
+
+			mapScene.HostControl.MouseEnter += HostControl_MouseEnter;
+			mapScene.HostControl.MouseLeave += HostControl_MouseLeave;
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -102,6 +136,11 @@ namespace WiFindUs.Eye.Wave
 				if (WasMouseReleased(MouseButtons.Right))
 					MouseReleased(new MapSceneMouseEventArgs(mapScene, ref input.MouseState, MouseButtons.Right, modifiers));
 			}
+			//movement
+			int mouseDeltaX = oldMouseState.X - input.MouseState.X;
+			int mouseDeltaY = oldMouseState.Y - input.MouseState.Y;
+			if ((mouseDeltaX != 0 || mouseDeltaY != 0) && MouseMoved != null)
+				MouseMoved(new MapSceneMouseEventArgs(mapScene, ref input.MouseState, GetButtons(ref input.MouseState), modifiers));
 
 			//camera panning with keyboard arrows
 			if (!modifiers.HasFlag(KeyboardModifiers.Shift) && !modifiers.HasFlag(KeyboardModifiers.Control))
@@ -172,6 +211,24 @@ namespace WiFindUs.Eye.Wave
 		}
 
 		/////////////////////////////////////////////////////////////////////
+		// PRIVATE METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		private void HostControl_MouseEnter(object sender, EventArgs args)
+		{
+			mouseEntered = true;
+			if (MouseEnter != null)
+				MouseEnter(new MapSceneMouseEventArgs(mapScene, ref input.MouseState, GetButtons(ref input.MouseState), GetModifiers(ref input.KeyboardState)));
+		}
+
+		private void HostControl_MouseLeave(object sender, EventArgs args)
+		{
+			mouseEntered = false;
+			if (MouseLeave != null)
+				MouseLeave(new MapSceneMouseEventArgs(mapScene, ref input.MouseState, GetButtons(ref input.MouseState), GetModifiers(ref input.KeyboardState)));
+		}
+
+		/////////////////////////////////////////////////////////////////////
 		// KEYBOARD BUTTONS
 		/////////////////////////////////////////////////////////////////////
 
@@ -235,7 +292,8 @@ namespace WiFindUs.Eye.Wave
 
 		private static MouseButtons GetButtons(ref MouseState state)
 		{
-			return (state.LeftButton == ButtonState.Pressed ? MouseButtons.Left : MouseButtons.None)
+			return MouseButtons.None
+				| (state.LeftButton == ButtonState.Pressed ? MouseButtons.Left : MouseButtons.None)
 				| (state.MiddleButton == ButtonState.Pressed ? MouseButtons.Middle : MouseButtons.None)
 				| (state.RightButton == ButtonState.Pressed ? MouseButtons.Right : MouseButtons.None);
 		}

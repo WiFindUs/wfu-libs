@@ -13,8 +13,9 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
-		private Transform3D orbTransform, coreTransform;
-		private BasicMaterial spikeMat, orbMat, coreMat;
+		protected const float ROTATE_SPEED = 5f;
+		private Transform3D ringTransform, coreTransform;
+		private BasicMaterial spikeMat, ringMat, coreMat;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -23,11 +24,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		public Vector3 LinkPoint
 		{
 			get { return coreTransform.Position; }
-		}
-
-		protected override float RotationSpeed
-		{
-			get { return base.RotationSpeed * (Entity.Selected ? 10.0f : 5.0f); }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -86,16 +82,16 @@ namespace WiFindUs.Eye.Wave.Markers
 					}))
 					.AddComponent(Model.CreateSphere(4f, 4))
 					.AddComponent(new ModelRenderer())
-					//orb
+					//ring
 					.AddChild
 					(
-						new Entity("orb")
-						.AddComponent(marker.orbTransform = new Transform3D()
+						new Entity("ring")
+						.AddComponent(marker.ringTransform = new Transform3D()
 						{
 							LocalPosition = new Vector3(0.0f, 0.0f, 0.0f),
 							Rotation = new Vector3(90.0f.ToRadians(), 0f, 0f)
 						})
-						.AddComponent(new MaterialsMap(marker.orbMat = new BasicMaterial(MapScene.WhiteTexture)
+						.AddComponent(new MaterialsMap(marker.ringMat = new BasicMaterial(MapScene.WhiteTexture)
 						{
 							LayerType = typeof(Overlays),
 							LightingEnabled = true,
@@ -122,16 +118,15 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (!Owner.IsVisible)
 				return;
 
-			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
-			coreMat.Alpha = coreMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.5f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
-			orbMat.Alpha = orbMat.Alpha.Lerp(Entity.Selected ? 0.7f : 0.25f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
-			orbTransform.Rotation = new Vector3(
-				orbTransform.Rotation.X,
-				orbTransform.Rotation.Y + RotationSpeed * (float)gameTime.TotalSeconds,
-				orbTransform.Rotation.Z);
+			float secs = (float)gameTime.TotalSeconds;
+			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f, secs * FADE_SPEED);
+			coreMat.Alpha = coreMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.5f, secs * FADE_SPEED);
+			ringMat.Alpha = ringMat.Alpha.Lerp(Entity.Selected ? 0.7f : 0.25f, secs * FADE_SPEED);
+			ringTransform.Rotation = new Vector3(
+				ringTransform.Rotation.X,
+				ringTransform.Rotation.Y + ROTATE_SPEED * secs,
+				ringTransform.Rotation.Z
+			);
 		}
 	}
 }

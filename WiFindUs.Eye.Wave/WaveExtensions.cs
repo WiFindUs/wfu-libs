@@ -67,5 +67,14 @@ namespace WiFindUs.Eye.Wave
 				entity.IsActive = active;
 			return active;
 		}
+
+		public static WaveEngine.Common.Graphics.Color Coserp(this WaveEngine.Common.Graphics.Color start,
+			WaveEngine.Common.Graphics.Color finish, float amount)
+		{
+			return new WaveEngine.Common.Graphics.Color((byte)(((float)start.R).Coserp((float)finish.R, amount)),
+				(byte)(((float)start.G).Coserp((float)finish.G, amount)),
+				(byte)(((float)start.B).Coserp((float)finish.B, amount)),
+				(byte)(((float)start.A).Coserp((float)finish.A, amount)));
+		}
 	}
 }

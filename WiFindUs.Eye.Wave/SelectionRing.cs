@@ -19,7 +19,8 @@ namespace WiFindUs.Eye.Wave
 		protected readonly ISelectable selectable;
 		private Entity[] points;
 		private BasicMaterial matte;
-		protected const float ROTATE_SPEED = 5f;
+		protected const float ROTATE_SPEED = 2f;
+		private float fader = 0.0f;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -41,7 +42,7 @@ namespace WiFindUs.Eye.Wave
 			this.selectable = selectable;
 		}
 
-		public static Entity Create(ISelectable selectable, float yOffset = 10.0f, uint points = 6, float radius = 12.0f, float thickness = 2.5f)
+		public static Entity Create(ISelectable selectable, float yOffset = 10.0f, uint points = 8, float radius = 12.0f, float thickness = 2f)
 		{
 			SelectionRing ring = new SelectionRing(selectable);
 			ring.points = new Entity[points];
@@ -50,7 +51,6 @@ namespace WiFindUs.Eye.Wave
 				LayerType = typeof(Overlays),
 				LightingEnabled = true,
 				AmbientLightColor = Color.White * 0.75f,
-				//DiffuseColor = Color.White,
 				Alpha = 0.0f
 			};
 
@@ -84,13 +84,15 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void Update(TimeSpan gameTime)
 		{
+			float secs = (float)gameTime.TotalSeconds;
 			Transform3D.LocalRotation = new Vector3(
 				Transform3D.LocalRotation.X,
-				Transform3D.LocalRotation.Y + ROTATE_SPEED * (float)gameTime.TotalSeconds,
+				Transform3D.LocalRotation.Y + ROTATE_SPEED * secs,
 				Transform3D.LocalRotation.Z);
 
-			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 0.8f : 0.0f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
+			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 0.6f : 0.0f, secs * FADE_SPEED);
+			if (selectable.Selected)
+				matte.DiffuseColor = Color.Wheat.Coserp(Color.Gold, fader += secs);
 		}
 	}
 }

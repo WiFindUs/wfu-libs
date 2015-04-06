@@ -7,6 +7,7 @@ namespace WiFindUs.Eye.Wave
 	public abstract class MapSceneObject : Behavior
 	{
 		protected const float FADE_SPEED = 10f;
+		protected const float SCALE_SPEED = 15f;
 		
 		private Transform3D transform;
 		private MapScene scene;

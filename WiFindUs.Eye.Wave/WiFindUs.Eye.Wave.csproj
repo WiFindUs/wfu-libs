@@ -62,6 +62,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MapSceneCursor.cs" />
     <Compile Include="SelectionRing.cs" />
     <Compile Include="WaveExtensions.cs" />
     <Compile Include="Layers\Overlays.cs" />

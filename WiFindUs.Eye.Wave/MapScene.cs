@@ -49,6 +49,7 @@ namespace WiFindUs.Eye.Wave
 		private List<Marker> allMarkers = new List<Marker>();
 		private MapSceneInput inputBehaviour;
 		private MapSceneCamera cameraController;
+		private MapSceneCursor cursor;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -163,6 +164,11 @@ namespace WiFindUs.Eye.Wave
 		public MapSceneCamera CameraController
 		{
 			get { return cameraController; }
+		}
+
+		public MapSceneCursor Cursor
+		{
+			get { return cursor; }
 		}
 
 		public BoxCollider GroundPlane
@@ -359,6 +365,11 @@ namespace WiFindUs.Eye.Wave
 			//apply theme
 			ApplyTheme(Theme.Current);
 			Theme.ThemeChanged += ApplyTheme;
+
+			//create cursor
+			Entity cursorEntity = MapSceneCursor.Create();
+			cursor = cursorEntity.FindComponent<MapSceneCursor>();
+			EntityManager.Add(cursorEntity);
 		}
 
 		protected override void Start()

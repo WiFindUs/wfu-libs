@@ -10,7 +10,6 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public abstract class Marker : MapSceneObject
 	{
-		protected const float SCALE_SPEED = 15f;
 		private List<BoxCollider> colliders = new List<BoxCollider>();
 
 		/////////////////////////////////////////////////////////////////////

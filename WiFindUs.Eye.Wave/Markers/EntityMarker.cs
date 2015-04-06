@@ -34,11 +34,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			get { return false; }
 		}
 
-		protected virtual float RotationSpeed
-		{
-			get { return entity.Active ? 1.0f : 0.0f; }
-		}
-
 		public override bool Selected
 		{
 			get { return entity.Selected; }

@@ -32,8 +32,7 @@ namespace WiFindUs.Extensions
 
 		public static float Coserp(this float start, float finish, float amount)
 		{
-			float prc = (1.0f - (float)Math.Cos(amount * Math.PI)) * 0.5f;
-			return start * (1.0f - prc) + finish * prc;
+			return start + (finish - start) * ((1.0f + (float)Math.Cos(amount * Math.PI)) * 0.5f);
 		}
 
 		public static bool Tolerance(this float val, float other, float tolerance)
@@ -75,8 +74,7 @@ namespace WiFindUs.Extensions
 
 		public static double Coserp(this double start, double finish, double amount)
 		{
-			double prc = (1.0 - Math.Cos(amount * Math.PI)) * 0.5;
-			return start * (1.0 - prc) + finish * prc;
+			return start + (finish - start) * ((1.0 + Math.Cos(amount * Math.PI)) * 0.5);
 		}
 
 
