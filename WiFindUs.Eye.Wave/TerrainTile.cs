@@ -255,7 +255,7 @@ namespace WiFindUs.Eye.Wave
 			{
 				Alpha = UNTEXTURED_SCALE
 			};
-			Entity tileEntity = new Entity() { IsActive = false }
+			Entity tileEntity = new Entity()
 			.AddComponent(new Transform3D())
 			.AddComponent(new MaterialsMap(mat))
 			.AddComponent(Model.CreatePlane(Vector3.UnitY, size))
@@ -280,20 +280,20 @@ namespace WiFindUs.Eye.Wave
 		public void CalculatePosition()
 		{
 			if (baseTile == null)
-				transform3D.LocalPosition = new Vector3(0.0f,
+				Transform3D.LocalPosition = new Vector3(0.0f,
 					-UNTEXTURED_OFFSET + horizontalScale * UNTEXTURED_OFFSET,
 					0.0f);
 			else
 			{
 				float start = (baseTile.Size / -2.0f) + (size / 2.0f);
-				transform3D.LocalPosition = new Vector3(
+				Transform3D.LocalPosition = new Vector3(
 					start + (column * size),
 					-UNTEXTURED_OFFSET + horizontalScale * UNTEXTURED_OFFSET,
 					start + (row * size));
 			}
 
-			topLeft = new Vector3(transform3D.Position.X - size / 2.0f, 0.0f, transform3D.Position.Z - size / 2.0f);
-			bottomRight = new Vector3(transform3D.Position.X + size / 2.0f, 0.0f, transform3D.Position.Z + size / 2.0f);
+			topLeft = new Vector3(Transform3D.Position.X - size / 2.0f, 0.0f, Transform3D.Position.Z - size / 2.0f);
+			bottomRight = new Vector3(Transform3D.Position.X + size / 2.0f, 0.0f, Transform3D.Position.Z + size / 2.0f);
 		}
 
 		public void CancelThreads()
@@ -317,6 +317,7 @@ namespace WiFindUs.Eye.Wave
 		protected override void Initialize()
 		{
 			base.Initialize();
+			Owner.IsActive = false;
 			materialsMap = Owner.FindComponent<MaterialsMap>();
 			boxCollider = Owner.FindComponent<BoxCollider>();
 		}
@@ -382,10 +383,10 @@ namespace WiFindUs.Eye.Wave
 							stopScalingNextFrame = true;
 						}
 						texture.Alpha = horizontalScale;
-						transform3D.LocalScale = new Vector3(horizontalScale, 1.0f, horizontalScale);
-						transform3D.LocalPosition = new Vector3(transform3D.LocalPosition.X,
+						Transform3D.LocalScale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+						Transform3D.LocalPosition = new Vector3(Transform3D.LocalPosition.X,
 							-UNTEXTURED_OFFSET + horizontalScale * UNTEXTURED_OFFSET,
-							transform3D.LocalPosition.Z);
+							Transform3D.LocalPosition.Z);
 					}
 				}
 				else if (threadObject == null

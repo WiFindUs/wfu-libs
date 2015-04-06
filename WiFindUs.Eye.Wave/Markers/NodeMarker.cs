@@ -14,32 +14,19 @@ namespace WiFindUs.Eye.Wave.Markers
 	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
 		private Transform3D orbTransform;
-		private Entity spike, orb;
-		private BasicMaterial spikeMat, orbMat;
+		private BasicMaterial spikeMat, orbMat, coreMat;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public Vector3 LinkPointPrimary
+		public Vector3 LinkPoint
 		{
 			get
 			{
 				return new Vector3(
 					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 28.0f * this.Transform3D.Scale.Y,
-					this.Transform3D.Position.Z
-					);
-			}
-		}
-
-		public Vector3 LinkPointSecondary
-		{
-			get
-			{
-				return new Vector3(
-					this.Transform3D.Position.X,
-					this.Transform3D.Position.Y + 14.0f * this.Transform3D.Scale.Y,
+					this.Transform3D.Position.Y + 21.0f * this.Transform3D.Scale.Y,
 					this.Transform3D.Position.Z
 					);
 			}
@@ -63,17 +50,17 @@ namespace WiFindUs.Eye.Wave.Markers
 		public static Entity Create(Node node)
 		{
 			NodeMarker marker = new NodeMarker(node);
-			return new Entity() { IsActive = false, IsVisible = false }
+			return new Entity()
 				//base
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
 				//spike
 				.AddChild
 				(
-					marker.spike = new Entity("spike") { IsActive = false }
+					new Entity("spike")
 					.AddComponent(new Transform3D()
 					{
-						Position = new Vector3(0.0f, 7.0f, 0.0f),
+						LocalPosition = new Vector3(0.0f, 7.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
 					.AddComponent(new MaterialsMap(marker.spikeMat = new BasicMaterial(MapScene.WhiteTexture)
@@ -88,26 +75,45 @@ namespace WiFindUs.Eye.Wave.Markers
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
 				)
-				//orb
+				//core
 				.AddChild
 				(
-					marker.orb = new Entity("orb") { IsActive = false }
-					.AddComponent(marker.orbTransform = new Transform3D()
+					new Entity("core")
+					.AddComponent(new Transform3D()
 					{
-						Position = new Vector3(0.0f, 21.0f, 0.0f),
-						Rotation = new Vector3(90.0f.ToRadians(), 0f, 0f)
+						LocalPosition = new Vector3(0.0f, 21.0f, 0.0f)
 					})
-					.AddComponent(new MaterialsMap(marker.orbMat = new BasicMaterial(MapScene.WhiteTexture)
+					.AddComponent(new MaterialsMap(marker.coreMat = new BasicMaterial(MapScene.WhiteTexture)
 					{
 						LayerType = typeof(Overlays),
 						LightingEnabled = true,
-						AmbientLightColor = Color.White,
-						DiffuseColor = new Color(0, 200, 255),
-						Alpha = 0.25f
+						AmbientLightColor = Color.White * 0.75f,
+						DiffuseColor = new Color(180, 180, 180),
+						Alpha = 0.5f
 					}))
-					.AddComponent(Model.CreateTorus(14f, 3, 8))
+					.AddComponent(Model.CreateSphere(4f, 4))
 					.AddComponent(new ModelRenderer())
-					.AddComponent(marker.AddCollider(new BoxCollider()))
+					//orb
+					.AddChild
+					(
+						new Entity("orb")
+						.AddComponent(marker.orbTransform = new Transform3D()
+						{
+							LocalPosition = new Vector3(0.0f, 0.0f, 0.0f),
+							Rotation = new Vector3(90.0f.ToRadians(), 0f, 0f)
+						})
+						.AddComponent(new MaterialsMap(marker.orbMat = new BasicMaterial(MapScene.WhiteTexture)
+						{
+							LayerType = typeof(Overlays),
+							LightingEnabled = true,
+							AmbientLightColor = Color.White * 0.75f,
+							DiffuseColor = new Color(0, 200, 255),
+							Alpha = 0.25f
+						}))
+						.AddComponent(Model.CreateTorus(14f, 2, 8))
+						.AddComponent(new ModelRenderer())
+						.AddComponent(marker.AddCollider(new BoxCollider()))
+					)
 				)
 				//selection
 				.AddChild(SelectionRing.Create(node));
@@ -124,6 +130,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
+			coreMat.Alpha = coreMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.5f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);
 			orbMat.Alpha = orbMat.Alpha.Lerp(Entity.Selected ? 0.7f : 0.25f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);

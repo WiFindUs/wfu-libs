@@ -271,8 +271,9 @@ namespace WiFindUs.Eye
 		partial void OnLoaded()
 		{
 			if (!loaded)
-			{ 
+			{
 				loaded = true;
+				PropertyChanged += DevicePropertyChanged;
 				Debugger.V(this.ToString() + " loaded.");
 				if (OnDeviceLoaded != null)
 					OnDeviceLoaded(this);
@@ -339,6 +340,27 @@ namespace WiFindUs.Eye
 		{
 			if (OnDeviceGPSHasFixChanged != null)
 				OnDeviceGPSHasFixChanged(this);
+		}
+
+		private void DevicePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+			switch (e.PropertyName)
+			{
+				case "AssignedWaypoint":
+					if (OnDeviceAssignedWaypointChanged != null)
+						OnDeviceAssignedWaypointChanged(this);
+					break;
+
+				case "User":
+					if (OnDeviceUserChanged != null)
+						OnDeviceUserChanged(this);
+					break;
+
+				case "Node":
+					if (OnDeviceNodeChanged != null)
+						OnDeviceNodeChanged(this);
+					break;
+			}
 		}
 	}
 }

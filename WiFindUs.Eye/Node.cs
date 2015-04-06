@@ -183,6 +183,7 @@ namespace WiFindUs.Eye
 			if (!loaded)
 			{
 				loaded = true;
+				PropertyChanged += NodePropertyChanged;
 				Debugger.V(this.ToString() + " loaded.");
 				if (OnNodeLoaded != null)
 					OnNodeLoaded(this);
@@ -269,6 +270,11 @@ namespace WiFindUs.Eye
 		{
 			if (OnNodeMockLocationChanged != null)
 				OnNodeMockLocationChanged(this);
+		}
+
+		private void NodePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+		{
+
 		}
 
 	}

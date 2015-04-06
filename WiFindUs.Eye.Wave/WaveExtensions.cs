@@ -54,18 +54,18 @@ namespace WiFindUs.Eye.Wave
 			return System.Drawing.Color.FromArgb(color.A, color.R, color.G, color.B);
 		}
 
-		public static void SetVisible(this WaveEngine.Framework.Entity entity, bool visible)
+		public static bool SetVisible(this WaveEngine.Framework.Entity entity, bool visible)
 		{
-			if (visible == entity.IsVisible)
-				return ;
-			entity.IsVisible = visible;
+			if (visible != entity.IsVisible)
+				entity.IsVisible = visible;
+			return visible;
 		}
 
-		public static void SetActive(this WaveEngine.Framework.Entity entity, bool active)
+		public static bool SetActive(this WaveEngine.Framework.Entity entity, bool active)
 		{
-			if (active == entity.IsActive)
-				return;
-			entity.IsActive = active;
+			if (active != entity.IsActive)
+				entity.IsActive = active;
+			return active;
 		}
 	}
 }

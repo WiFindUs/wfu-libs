@@ -20,7 +20,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		private Transform3D linkTransform;
 		private float diameter = 1.5f;
 		private BasicMaterial matte;
-		private bool toSecondary = false, fromSecondary = false;
 		private Entity child;
 
 		/////////////////////////////////////////////////////////////////////
@@ -77,18 +76,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			set { if (matte != null) matte.Alpha = value.Clamp(0.0f,1.0f); }
 		}
 
-		public bool FromSecondaryPoint
-		{
-			get { return fromSecondary; }
-			set { fromSecondary = value; }
-		}
-
-		public bool ToSecondaryPoint
-		{
-			get { return toSecondary; }
-			set { toSecondary = value; }
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -104,14 +91,14 @@ namespace WiFindUs.Eye.Wave.Markers
 			LinkMarker marker = (LinkMarker)linkMarkerType.GetConstructor(
 				new Type[] { typeof(ILinkableMarker), typeof(ILinkableMarker) })
 				.Invoke(new object[] { fromMarker, toMarker });
-			return new Entity() { IsActive = true, IsVisible = true }
+			return new Entity()
 				//base
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
 				//link
 				.AddChild
 				(
-					marker.child = new Entity("link") { IsActive = false }
+					marker.child = new Entity("link")
 					.AddComponent(marker.linkTransform = new Transform3D())
 					.AddComponent(new MaterialsMap(marker.matte = new BasicMaterial(MapScene.WhiteTexture)
 					{
@@ -161,8 +148,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			Vector3 up = Vector3.Up;
-			Vector3 start = fromSecondary ? fromMarker.LinkPointSecondary : fromMarker.LinkPointPrimary;
-			Vector3 end = toSecondary ? toMarker.LinkPointSecondary : toMarker.LinkPointPrimary;
+			Vector3 start = fromMarker.LinkPoint;
+			Vector3 end = toMarker.LinkPoint;
 			Vector3 direction = end - start;
 			float scale = Scene.MarkerScale;
 			float distance = direction.Length();

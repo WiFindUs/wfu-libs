@@ -62,7 +62,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Markers\SelectionRing.cs" />
+    <Compile Include="SelectionRing.cs" />
     <Compile Include="WaveExtensions.cs" />
     <Compile Include="Layers\Overlays.cs" />
     <Compile Include="Layers\NonPremultipliedAlpha.cs" />

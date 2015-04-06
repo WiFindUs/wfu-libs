@@ -34,7 +34,9 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Initialize()
 		{
 			base.Initialize();
-			UpdateMarkerState();
+			Diameter = 2.5f;
+			IsOwnerActive = true;
+			UpdateNodeLink();
 		}
 
 		protected override void FromMarkerChanged(ILinkableMarker oldFromMarker)
@@ -90,8 +92,13 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (timer < 0.0)
 			{
 				UpdateNodeLink();
-				timer = 10.0;
+				timer = 5.0;
 			}
+
+			if (!Owner.IsVisible)
+				return;
+			Alpha = Alpha.Lerp(fromDevice.Selected || toNode.Selected ? 0.35f : 0.0f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -100,14 +107,17 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		private void UpdateNodeLink()
 		{
-			ToMarker = this.Scene.GetNodeMarker(fromDevice.Entity.Node);
+			if (fromDevice.Entity.Node == null)
+				ToMarker = null;
+
+			if (toNode == null || toNode.Entity == null || toNode.Entity != fromDevice.Entity.Node)
+				ToMarker = this.Scene.GetNodeMarker(fromDevice.Entity.Node);
+
 			UpdateMarkerState();
 		}
 
 		private void EntitySelectedChanged(ISelectable entity)
 		{
-			if (entity != toNode.Entity && entity != fromDevice.Entity)
-				return;
 			UpdateMarkerState();
 		}
 
@@ -135,7 +145,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			if (Owner == null)
 				return;
-			IsOwnerActive = IsOwnerVisible =
+			bool newVisible = 
 			(
 				fromDevice != null
 				&& toNode != null
@@ -144,6 +154,13 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& toNode.Entity.AccessPoint.GetValueOrDefault()
 				&& (toNode.Entity.Selected || fromDevice.Entity.Selected)
 			);
+
+			if (newVisible != IsOwnerVisible)
+			{
+				if (newVisible)
+					Alpha = 0.0f;
+				IsOwnerVisible = newVisible;
+			}
 		}
 	}
 }

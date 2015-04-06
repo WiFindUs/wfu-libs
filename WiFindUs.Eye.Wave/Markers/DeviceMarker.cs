@@ -21,7 +21,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public Vector3 LinkPointPrimary
+		public Vector3 LinkPoint
 		{
 			get
 			{
@@ -31,11 +31,6 @@ namespace WiFindUs.Eye.Wave.Markers
 					this.Transform3D.Position.Z
 					);
 			}
-		}
-
-		public Vector3 LinkPointSecondary
-		{
-			get { return LinkPointPrimary; }
 		}
 
 		protected override bool VisibilityOverride
@@ -61,7 +56,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		public static Entity Create(Device device)
 		{
 			DeviceMarker marker = new DeviceMarker(device);
-			return new Entity() { IsActive = false, IsVisible = false }
+			return new Entity()
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
 				//spike
@@ -77,7 +72,9 @@ namespace WiFindUs.Eye.Wave.Markers
 					.AddComponent(Model.CreateCone(8f, 6f, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
-				);
+				)
+				//selection
+				.AddChild(SelectionRing.Create(device, 5.0f, 6, 8f));
 		}
 
 		/////////////////////////////////////////////////////////////////////

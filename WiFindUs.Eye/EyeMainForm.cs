@@ -308,7 +308,7 @@ namespace WiFindUs.Eye
 			device.Active = true;
 			device.LastUpdated = DateTime.UtcNow.ToUnixTimestamp();
 			if (devicePacket.UserID.HasValue)
-				device.UserID = user == null || !user.Loaded ? (uint?)null : user.ID;
+				device.User = user;
 			if (devicePacket.DeviceType != null)
 				device.Type = devicePacket.DeviceType;
 			if (devicePacket.Charging.HasValue)
@@ -320,7 +320,7 @@ namespace WiFindUs.Eye
 			if (devicePacket.NodeNumber.HasValue)
 			{
 				Node node = devicePacket.NodeNumber.Value == 0 ? null : NodeByNumber(devicePacket.NodeNumber.Value);
-				device.NodeID = node == null || !node.Loaded? (uint?)null : node.ID;
+				device.Node = node == null || !node.Loaded ? null : node;
 			}
 
 			//location

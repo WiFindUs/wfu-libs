@@ -10,8 +10,9 @@ using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Materials;
 using WiFindUs.Eye.Wave.Layers;
+using WiFindUs.Extensions;
 
-namespace WiFindUs.Eye.Wave.Markers
+namespace WiFindUs.Eye.Wave
 {
 	public class SelectionRing : MapSceneObject
 	{
@@ -50,10 +51,10 @@ namespace WiFindUs.Eye.Wave.Markers
 				LightingEnabled = true,
 				AmbientLightColor = Color.White,
 				DiffuseColor = Color.White,
-				SpecularPower = 3
+				Alpha = 0.0f
 			};
 
-			Entity entity = new Entity() { IsActive = false, IsVisible = false }
+			Entity entity = new Entity()
 				.AddComponent(new Transform3D())
 				.AddComponent(ring);
 
@@ -63,7 +64,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				float pc = (float)i / (float)points;
 				entity.AddChild
 				(
-					ring.points[i] = new Entity() { IsActive = false }
+					ring.points[i] = new Entity()
 						.AddComponent(new Transform3D()
 						{
 							LocalPosition = new Vector3((float)Math.Cos(Math.PI * 2.0f * pc) * radius,
@@ -81,30 +82,15 @@ namespace WiFindUs.Eye.Wave.Markers
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		protected override void Initialize()
-		{
-			base.Initialize();
-
-			SelectedChanged(selectable);
-			selectable.SelectedChanged += SelectedChanged;
-		}
-
 		protected override void Update(TimeSpan gameTime)
 		{
-			if (!IsOwnerVisible)
-				return;
-
 			Transform3D.LocalRotation = new Vector3(
 				Transform3D.LocalRotation.X,
 				Transform3D.LocalRotation.Y + ROTATE_SPEED * (float)gameTime.TotalSeconds,
 				Transform3D.LocalRotation.Z);
-		}
 
-		protected virtual void SelectedChanged(ISelectable obj)
-		{
-			if (obj != selectable)
-				return;
-			IsOwnerActive = IsOwnerVisible = selectable.Selected;
+			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 1.0f : 0.0f,
+				(float)gameTime.TotalSeconds * FADE_SPEED);
 		}
 	}
 }

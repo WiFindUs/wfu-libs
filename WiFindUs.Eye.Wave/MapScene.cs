@@ -96,9 +96,7 @@ namespace WiFindUs.Eye.Wave
 
 				visibleLayer = layer;
 				for (int i = 0; i < tileLayers.Length; i++)
-				{ 
-					bool vis = 
-					tileLayers[i].SetActive();IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
+					tileLayers[i].IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
 			}
 		}
 
@@ -419,7 +417,6 @@ namespace WiFindUs.Eye.Wave
 			entity = LinkMarker.Create(marker, null, typeof(DeviceLinkMarker));
 			DeviceLinkMarker linkMarker = entity.FindComponent<DeviceLinkMarker>();
 			linkMarker.Diameter = 0.5f;
-			linkMarker.ToSecondaryPoint = true;
 			linkMarker.Colour = Color.Lime;
 			deviceLinkMarkers.Add(linkMarker);
 			allMarkers.Add(linkMarker);
@@ -466,11 +463,7 @@ namespace WiFindUs.Eye.Wave
 			if (layerEntity == null)
 			{
 				tileLayers[layer] = layerEntity = new Entity()
-				{
-					IsActive = false,
-					IsVisible = false
-				}
-				.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) });
+					.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) });
 				EntityManager.Add(layerEntity);
 			}
 

@@ -9,6 +9,7 @@ namespace WiFindUs.Eye
 		public event Action<User> OnUserFirstNameChanged;
 		public event Action<User> OnUserMiddleNameChanged;
 		public event Action<User> OnUserLastNameChanged;
+		public event Action<User> OnUserDeviceChanged;
 		private bool loaded = false;
 
 		/////////////////////////////////////////////////////////////////////
@@ -22,6 +23,11 @@ namespace WiFindUs.Eye
 				return String.Format("{0} {1}{2}",
 					NameFirst, (NameMiddle.Length == 0 ? "" : NameMiddle + " "), NameLast);
 			}
+		}
+
+		public bool Loaded
+		{
+			get { return loaded; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -42,6 +48,7 @@ namespace WiFindUs.Eye
 			if (!loaded)
 			{
 				loaded = true;
+				PropertyChanged += UserPropertyChanged;
 				Debugger.V(this.ToString() + " loaded.");
 				if (OnUserLoaded != null)
 					OnUserLoaded(this);
@@ -72,9 +79,15 @@ namespace WiFindUs.Eye
 				OnUserTypeChanged(this);
 		}
 
-		public bool Loaded
+		private void UserPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
 		{
-			get { return loaded; }
+			switch (e.PropertyName)
+			{
+				case "Device":
+					if (OnUserDeviceChanged != null)
+						OnUserDeviceChanged(this);
+					break;
+			}
 		}
 	}
 }
