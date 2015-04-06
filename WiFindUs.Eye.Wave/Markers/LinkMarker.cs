@@ -11,7 +11,6 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Materials;
 using WiFindUs.Eye.Wave.Layers;
 using WiFindUs.Extensions;
-using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
@@ -114,7 +113,14 @@ namespace WiFindUs.Eye.Wave.Markers
 				(
 					marker.child = new Entity("link") { IsActive = false }
 					.AddComponent(marker.linkTransform = new Transform3D())
-					.AddComponent(new MaterialsMap())
+					.AddComponent(new MaterialsMap(marker.matte = new BasicMaterial(MapScene.WhiteTexture)
+					{
+						LayerType = typeof(Overlays),
+						LightingEnabled = true,
+						AmbientLightColor = Color.White,
+						DiffuseColor = new Color(200, 240, 255),
+						Alpha = 1.0f
+					}))
 					.AddComponent(Model.CreateCylinder(1f, 1f, 6))
 					.AddComponent(new ModelRenderer())
 				);
@@ -148,19 +154,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		protected override void Initialize()
-		{
-			base.Initialize();
-			child.FindComponent<MaterialsMap>().DefaultMaterial =
-				matte = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(Overlays))
-				{
-					LightingEnabled = true,
-					AmbientLightColor = Color.White,
-					DiffuseColor = new Color(200, 240, 255),
-					Alpha = 1.0f
-				};
-		}
 
 		protected override void Update(TimeSpan gameTime)
 		{

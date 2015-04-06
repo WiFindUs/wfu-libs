@@ -56,23 +56,12 @@ namespace WiFindUs.Themes
 		}
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Rectangle SplitterBounds
-		{
-			get
-			{
-				if (Orientation == Orientation.Vertical)
-					return new Rectangle(Panel1.Right, ClientRectangle.Top, Panel2.Left - Panel1.Right, ClientRectangle.Height);
-				return new Rectangle(ClientRectangle.Left, Panel1.Bottom, ClientRectangle.Width, Panel2.Top - Panel1.Bottom);
-			}
-		}
-
-		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Rectangle HandleBounds
 		{
 			get
 			{
-				Rectangle sb = SplitterBounds;
-				int length = Math.Max(Math.Max(sb.Width, sb.Height) / 10, 40);
+				Rectangle sb = SplitterRectangle;
+				int length = Math.Max(Math.Max(sb.Width, sb.Height) / 8, 40);
 				if (Orientation == Orientation.Vertical)
 					return new Rectangle(sb.Left, sb.Top + sb.Height / 2 - length / 2, sb.Width, length);
 				return new Rectangle(sb.Left + sb.Width / 2 - length / 2, sb.Top, length, sb.Height);
@@ -150,6 +139,7 @@ namespace WiFindUs.Themes
 				return;
 			ApplyTheme(Theme.Current);
 			Theme.ThemeChanged += ApplyTheme;
+			SplitterMoved += SplitterMovedInternal;
 		}
 
 		protected virtual void OnMouseHoverChanged()
@@ -174,7 +164,7 @@ namespace WiFindUs.Themes
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			base.OnMouseMove(e);
-			MouseOverSplitter = SplitterBounds.Contains(e.Location);
+			MouseOverSplitter = SplitterRectangle.Contains(e.Location);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -188,6 +178,11 @@ namespace WiFindUs.Themes
 			region.Xor(Panel2.Bounds);
 			Invalidate(region);
 			Update();
+		}
+
+		private void SplitterMovedInternal(object sender, SplitterEventArgs e)
+		{
+			
 		}
 	}
 }

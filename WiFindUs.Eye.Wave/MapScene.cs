@@ -17,7 +17,6 @@ using WiFindUs.Eye.Wave.Layers;
 using System.IO;
 using WaveEngine.Materials;
 using WiFindUs.Themes;
-using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -41,7 +40,7 @@ namespace WiFindUs.Eye.Wave
 		private TerrainTile baseTile;
 		private uint visibleLayer = uint.MaxValue;
 		private float markerScale = 1.0f;
-		private Texture2D whiteTex = null;
+		private static Texture2D whiteTex = null;
 
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
@@ -97,7 +96,9 @@ namespace WiFindUs.Eye.Wave
 
 				visibleLayer = layer;
 				for (int i = 0; i < tileLayers.Length; i++)
-					tileLayers[i].IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
+				{ 
+					bool vis = 
+					tileLayers[i].SetActive();IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
 			}
 		}
 
@@ -182,16 +183,10 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public Texture2D WhiteTexture
+		public static Texture2D WhiteTexture
 		{
-			get
-			{
-				if (whiteTex == null)
-					using (System.Drawing.Bitmap bmp = new System.Drawing.Bitmap("textures/white.png"))
-						using (Stream stream = bmp.GetStream())
-							whiteTex = Texture2D.FromFile(RenderManager.GraphicsDevice, stream);
-				return whiteTex;
-			}
+			get { return whiteTex; }
+			private set { whiteTex = value; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -314,10 +309,13 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void CreateScene()
 		{
+			//load basic white texture
+			WhiteTexture = RenderManager.GraphicsDevice.Load("textures/white.png");
+			
 			//add custom layers
 			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), DefaultLayers.Opaque);
-			RenderManager.RegisterLayerAfter(new WireframeObjects(this.RenderManager), typeof(NonPremultipliedAlpha));
-			RenderManager.RegisterLayerAfter(new Overlays(this.RenderManager), typeof(WireframeObjects));
+			RenderManager.RegisterLayerAfter(new Overlays(this.RenderManager), typeof(NonPremultipliedAlpha));
+			RenderManager.RegisterLayerAfter(new Wireframes(this.RenderManager), typeof(Overlays));
 
 			//set up camera
 			Debugger.V("MapScene: initializing camera");

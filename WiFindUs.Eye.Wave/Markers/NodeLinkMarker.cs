@@ -62,7 +62,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Initialize()
 		{
 			base.Initialize();
-
+			Diameter = 5.0f;
 			UpdateMarkerState();
 		}
 
@@ -72,7 +72,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 			if (!Owner.IsVisible)
 				return;
-			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.7f : 0.0f,
+			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.35f : 0.0f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);
 		}
 
@@ -139,6 +139,8 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		private void EntitySelectedChanged(ISelectable entity)
 		{
+			if (entity != link.Start && entity != link.End)
+				return;
 			UpdateMarkerState();
 		}
 
@@ -164,14 +166,15 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& toNode.Entity.MeshPoint.GetValueOrDefault()
 				&& (toNode.Selected || fromNode.Selected)
 			);
-			if (newVisible != Owner.IsVisible)
+			IsOwnerActive = newVisible;
+			if (newVisible != IsOwnerVisible)
 			{
 				if (newVisible)
 					Alpha = 0.0f;
-				Owner.IsVisible = Owner.IsActive = newVisible;
+				IsOwnerVisible = newVisible;
 			}
 
-			if (Owner.IsVisible)
+			if (IsOwnerVisible)
 			{
 				if (!link.SignalStrength.HasValue || link.SignalStrength > -30)
 					Colour = Color.White;

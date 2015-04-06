@@ -8,7 +8,7 @@ using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class MapSceneCamera : MapSceneEntityBehavior
+	public class MapSceneCamera : MapSceneObject
 	{
 		private const float MIN_ZOOM = 100.0f;
 		private const float MAX_ZOOM = 2000.0f;

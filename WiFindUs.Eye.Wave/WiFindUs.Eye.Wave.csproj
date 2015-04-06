@@ -62,12 +62,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extensions\ColorExtensions.cs" />
-    <Compile Include="Extensions\RegionExtensions.cs" />
-    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="Markers\SelectionRing.cs" />
+    <Compile Include="WaveExtensions.cs" />
     <Compile Include="Layers\Overlays.cs" />
     <Compile Include="Layers\NonPremultipliedAlpha.cs" />
-    <Compile Include="Layers\WireframeObjects.cs" />
+    <Compile Include="Layers\Wireframes.cs" />
     <Compile Include="MapForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -75,7 +74,7 @@
     <Compile Include="Controls\MiniMapControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="MapSceneEntityBehavior.cs" />
+    <Compile Include="MapSceneObject.cs" />
     <Compile Include="Markers\ILinkableMarker.cs" />
     <Compile Include="Markers\LinkMarker.cs" />
     <Compile Include="Markers\DeviceLinkMarker.cs" />

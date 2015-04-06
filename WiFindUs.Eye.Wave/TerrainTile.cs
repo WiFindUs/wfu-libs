@@ -10,12 +10,11 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
-using WiFindUs.Eye.Wave.Extensions;
 using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class TerrainTile : Behavior
+	public class TerrainTile : MapSceneObject
 	{
 		public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError, CenterLocationChanged;
 
@@ -33,7 +32,6 @@ namespace WiFindUs.Eye.Wave
 		private static int currentLoads = 0;
 		private static int currentTextureCreations = 0;
 
-		private Transform3D transform3D;
 		private MaterialsMap materialsMap;
 		private BoxCollider boxCollider;
 
@@ -76,7 +74,7 @@ namespace WiFindUs.Eye.Wave
 				textured = false;
 				horizontalScale = UNTEXTURED_SCALE;
 				stopScalingNextFrame = false;
-				transform3D.LocalScale = new Vector3(horizontalScale, 1.0f, horizontalScale);
+				Transform3D.LocalScale = new Vector3(horizontalScale, 1.0f, horizontalScale);
 				if (TileImage != null)
 				{
 					TileImage.Dispose();
@@ -99,7 +97,7 @@ namespace WiFindUs.Eye.Wave
 					mapImageFileExists = File.Exists(ImagePath);
 				if (CenterLocationChanged != null)
 					CenterLocationChanged(this);
-				Owner.IsActive = true;
+				IsOwnerActive = true;
 			}
 		}
 
@@ -204,7 +202,7 @@ namespace WiFindUs.Eye.Wave
 				errorState = value;
 				if (errorState)
 				{
-					Owner.IsActive = false;
+					IsOwnerActive = false;
 					placeholder.DiffuseColor = Color.Red;
 					if (TextureError != null)
 						TextureError(this);
@@ -319,7 +317,6 @@ namespace WiFindUs.Eye.Wave
 		protected override void Initialize()
 		{
 			base.Initialize();
-			transform3D = Owner.FindComponent<Transform3D>();
 			materialsMap = Owner.FindComponent<MaterialsMap>();
 			boxCollider = Owner.FindComponent<BoxCollider>();
 		}
@@ -375,7 +372,7 @@ namespace WiFindUs.Eye.Wave
 				if (Textured)
 				{
 					if (stopScalingNextFrame)
-						Owner.IsActive = false;
+						IsOwnerActive = false;
 					else
 					{
 						horizontalScale += (float)gameTime.TotalSeconds * SCALE_SPEED;

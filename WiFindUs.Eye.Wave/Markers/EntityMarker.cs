@@ -17,8 +17,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		
 		protected readonly T entity;
 		protected const float MOVE_SPEED = 10f;
-		
-		private ILocation lastLocation = null;
+		private ILocation lastLocation;
 		private Vector3 destination;
 
 		/////////////////////////////////////////////////////////////////////
@@ -118,6 +117,8 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected virtual void SelectedChanged(ISelectable obj)
 		{
+			if (obj != entity)
+				return;
 			UpdateMarkerState();
 		}
 
@@ -139,11 +140,13 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& entity.Location.HasLatLong
 				&& VisibilityOverride;
 
-			bool oldVisible = Owner.IsVisible;
-			Owner.IsActive = Owner.IsVisible = active;
-
-			if (oldVisible != Owner.IsVisible && VisibleChanged != null)
-				VisibleChanged(this);
+			IsOwnerActive = active;
+			if (IsOwnerVisible != active)
+			{
+				IsOwnerVisible = active;
+				if (VisibleChanged != null)
+					VisibleChanged(this);
+			}
 		}
 	}
 }

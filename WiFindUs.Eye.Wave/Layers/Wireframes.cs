@@ -9,21 +9,22 @@ using WaveEngine.Framework.Managers;
 
 namespace WiFindUs.Eye.Wave.Layers
 {
-	public class WireframeObjects : Layer
+	public class Wireframes : Layer
 	{
-		public WireframeObjects(RenderManager renderManager)
+		public Wireframes(RenderManager renderManager)
 			: base(renderManager)
 		{
 		}
 
 		protected override void SetDevice()
 		{
-			renderState.BlendMode = BlendMode.Opaque;
+			renderState.BlendMode = BlendMode.NonPremultiplied;
 			renderState.SamplerMode = AddressMode.LinearClamp;
-			renderState.CullMode = CullMode.CounterClockWise;
+			renderState.CullMode = CullMode.None;
 			renderState.FillMode = FillMode.Wireframe;
 			renderState.DepthMode = DepthMode.Read;
 			renderState.MaxAnisotropy = AnisotropyLevel.Aniso1x;
+			renderState.DepthBias = DepthBias.Negative;
 		}
 
 		protected override void RestoreDevice()

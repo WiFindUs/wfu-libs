@@ -8,7 +8,6 @@ using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
-using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
@@ -77,7 +76,14 @@ namespace WiFindUs.Eye.Wave.Markers
 						Position = new Vector3(0.0f, 7.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap())
+					.AddComponent(new MaterialsMap(marker.spikeMat = new BasicMaterial(MapScene.WhiteTexture)
+					{
+						LayerType = typeof(NonPremultipliedAlpha),
+						LightingEnabled = true,
+						AmbientLightColor = Color.White * 0.75f,
+						DiffuseColor = new Color(0, 175, 255),
+						Alpha = 0.75f
+					}))
 					.AddComponent(Model.CreateCone(14f, 8f, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
@@ -91,37 +97,25 @@ namespace WiFindUs.Eye.Wave.Markers
 						Position = new Vector3(0.0f, 21.0f, 0.0f),
 						Rotation = new Vector3(90.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap())
+					.AddComponent(new MaterialsMap(marker.orbMat = new BasicMaterial(MapScene.WhiteTexture)
+					{
+						LayerType = typeof(Overlays),
+						LightingEnabled = true,
+						AmbientLightColor = Color.White,
+						DiffuseColor = new Color(0, 200, 255),
+						Alpha = 0.25f
+					}))
 					.AddComponent(Model.CreateTorus(14f, 3, 8))
 					.AddComponent(new ModelRenderer())
 					.AddComponent(marker.AddCollider(new BoxCollider()))
-				);
+				)
+				//selection
+				.AddChild(SelectionRing.Create(node));
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		protected override void Initialize()
-		{
-			base.Initialize();
-			spike.FindComponent<MaterialsMap>().DefaultMaterial =
-				spikeMat = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(NonPremultipliedAlpha))
-				{
-					LightingEnabled = true,
-					AmbientLightColor = Color.White * 0.75f,
-					DiffuseColor = new Color(0, 175, 255),
-					Alpha = 0.75f
-				};
-			orb.FindComponent<MaterialsMap>().DefaultMaterial =
-				orbMat = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(Overlays))
-				{
-					LightingEnabled = true,
-					AmbientLightColor = Color.White,
-					DiffuseColor = new Color(0, 200, 255),
-					Alpha = 0.25f
-				};
-		}
 
 		protected override void Update(TimeSpan gameTime)
 		{
@@ -133,15 +127,10 @@ namespace WiFindUs.Eye.Wave.Markers
 				(float)gameTime.TotalSeconds * FADE_SPEED);
 			orbMat.Alpha = orbMat.Alpha.Lerp(Entity.Selected ? 0.7f : 0.25f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);
-
-			float rot = RotationSpeed * (float)gameTime.TotalSeconds;
-			if (!rot.Tolerance(0.0f, 0.0001f))
-			{
-				orbTransform.Rotation = new Vector3(
-					orbTransform.Rotation.X,
-					orbTransform.Rotation.Y + rot,
-					orbTransform.Rotation.Z);
-			}
+			orbTransform.Rotation = new Vector3(
+				orbTransform.Rotation.X,
+				orbTransform.Rotation.Y + RotationSpeed * (float)gameTime.TotalSeconds,
+				orbTransform.Rotation.Z);
 		}
 	}
 }

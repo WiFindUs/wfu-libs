@@ -9,7 +9,6 @@ using WaveEngine.Framework.Physics3D;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
-using WiFindUs.Eye.Wave.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
@@ -89,7 +88,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			base.Initialize();
 			spike.FindComponent<MaterialsMap>().DefaultMaterial =
-				spikeMat = new BasicMaterial("textures/white.png".Load(RenderManager.GraphicsDevice), typeof(NonPremultipliedAlpha))
+				spikeMat = new BasicMaterial(MapScene.WhiteTexture, typeof(NonPremultipliedAlpha))
 				{
 					LightingEnabled = true,
 					AmbientLightColor = Color.White * 0.75f,

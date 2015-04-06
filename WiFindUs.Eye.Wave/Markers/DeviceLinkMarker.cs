@@ -106,6 +106,8 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		private void EntitySelectedChanged(ISelectable entity)
 		{
+			if (entity != toNode.Entity && entity != fromDevice.Entity)
+				return;
 			UpdateMarkerState();
 		}
 
@@ -133,7 +135,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			if (Owner == null)
 				return;
-			Owner.IsVisible =
+			IsOwnerActive = IsOwnerVisible =
 			(
 				fromDevice != null
 				&& toNode != null

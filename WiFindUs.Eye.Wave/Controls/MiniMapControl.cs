@@ -167,6 +167,7 @@ namespace WiFindUs.Eye.Wave.Controls
 			base.OnMouseDown(e);
 			if (e.Button == System.Windows.Forms.MouseButtons.Left)
 			{
+				Focus();
 				mouseDown = true;
 				MoveByMouse(e);
 			}
