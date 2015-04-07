@@ -62,7 +62,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MapSceneCursor.cs" />
+    <Compile Include="MapInput.DefaultHandlers.cs" />
+    <Compile Include="MapSceneBehavior.cs" />
+    <Compile Include="MapCursor.cs" />
     <Compile Include="SelectionRing.cs" />
     <Compile Include="WaveExtensions.cs" />
     <Compile Include="Layers\Overlays.cs" />
@@ -71,11 +73,11 @@
     <Compile Include="MapForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MapSceneCamera.cs" />
+    <Compile Include="MapCamera.cs" />
     <Compile Include="Controls\MiniMapControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="MapSceneObject.cs" />
+    <Compile Include="MapBehavior.cs" />
     <Compile Include="Markers\ILinkableMarker.cs" />
     <Compile Include="Markers\LinkMarker.cs" />
     <Compile Include="Markers\DeviceLinkMarker.cs" />
@@ -87,7 +89,7 @@
     </Compile>
     <Compile Include="Adapter\MapGame.cs" />
     <Compile Include="MapScene.cs" />
-    <Compile Include="MapSceneInput.cs" />
+    <Compile Include="MapInput.cs" />
     <Compile Include="Markers\DeviceMarker.cs" />
     <Compile Include="Markers\EntityMarker.cs" />
     <Compile Include="Markers\Marker.cs" />

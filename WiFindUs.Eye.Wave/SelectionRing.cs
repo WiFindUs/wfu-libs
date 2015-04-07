@@ -14,7 +14,7 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class SelectionRing : MapSceneObject
+	public class SelectionRing : MapBehavior
 	{
 		protected readonly ISelectable selectable;
 		private Entity[] points;

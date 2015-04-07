@@ -8,7 +8,7 @@ using WaveEngine.Materials;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public abstract class Marker : MapSceneObject
+	public abstract class Marker : MapBehavior
 	{
 		private List<BoxCollider> colliders = new List<BoxCollider>();
 
@@ -65,7 +65,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected override void Update(TimeSpan gameTime)
 		{
-			float scale = Scene.MarkerScale * ScaleMultiplier;
+			float scale = MapScene.MarkerScale * ScaleMultiplier;
 			Transform3D.Scale = Vector3.Lerp(Transform3D.Scale, new Vector3(scale, scale, scale),
 				(float)gameTime.TotalSeconds * SCALE_SPEED);
 		}

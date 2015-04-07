@@ -16,26 +16,27 @@ using WaveEngine.Framework.Physics3D;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class MapSceneCursor : MapSceneObject
+	public class MapCursor : MapBehavior
 	{
-		protected const float MOVE_SPEED = 30f;
 		protected const float BASE_SCALE = 1.5f;
 		protected const float RING_DIAMETER = 16f;
 		protected const float SPIKE_SPEED = 0.25f;
+		protected const float RAY_LENGTH = 50f;
+
 		private Transform3D coreTransform, spikeTransform;
 		private BasicMaterial matte;
 		private Vector3 destination = Vector3.Zero;
 		private Ray ray;
 		private float[] xOffsets = new float[12], zOffsets = new float[12];
 		private float fader = 0.0f;
-		
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
 		public static Entity Create()
 		{
-			MapSceneCursor cursor = new MapSceneCursor();
+			MapCursor cursor = new MapCursor();
 			cursor.matte = new BasicMaterial(MapScene.WhiteTexture)
 			{
 				LayerType = typeof(Overlays),
@@ -104,13 +105,13 @@ namespace WiFindUs.Eye.Wave
 
 		public T[] MarkersAtCursor<T>(bool visibleOnly = true) where T : Marker
 		{
-			if (Scene.AllMarkers.Count == 0)
+			if (MapScene.AllMarkers.Count == 0)
 				return new T[0];
 
 			List<T> markers = new List<T>();
 
 			//check nodes
-			foreach (Marker marker in Scene.AllMarkers)
+			foreach (Marker marker in MapScene.AllMarkers)
 			{
 				if (marker.Transform3D == null || (!marker.Owner.IsVisible && visibleOnly))
 					continue;
@@ -119,6 +120,7 @@ namespace WiFindUs.Eye.Wave
 				if (typedMarker == null || markers.Contains(typedMarker))
 					continue;
 
+				float len = RAY_LENGTH * Transform3D.Scale.Y;
 				for (int r = 1; r <= 2; r++)
 				{
 					bool found = false;
@@ -126,7 +128,7 @@ namespace WiFindUs.Eye.Wave
 					{
 						ConfigureCursorRay(xOffsets[i] / (float)r, zOffsets[i] / (float)r);
 						float? val;
-						if ((val = marker.Intersects(ref ray)).HasValue && val.Value >= 0.0f)
+						if ((val = marker.Intersects(ref ray)).HasValue && val.Value >= 0.0f && val.Value <= len)
 						{
 							markers.Add(typedMarker);
 							found = true;
@@ -154,9 +156,6 @@ namespace WiFindUs.Eye.Wave
 		{
 			base.Initialize();
 			ray = new Ray();
-			Scene.InputBehaviour.MouseEnter += MousePositionEvent;
-			Scene.InputBehaviour.MouseMoved += MousePositionEvent;
-			Scene.InputBehaviour.MouseLeave += MousePositionEvent;
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -164,16 +163,14 @@ namespace WiFindUs.Eye.Wave
 			float secs = (float)gameTime.TotalSeconds;
 
 			//alpha
-			matte.Alpha = matte.Alpha.Lerp(Scene.InputBehaviour.MouseEntered ? 0.8f : 0.0f, secs * FADE_SPEED);
+			matte.Alpha = matte.Alpha.Lerp(MapScene.Input.MouseInsideHost && !MapScene.Input.MousePanning
+				? 0.8f : 0.0f, secs * FADE_SPEED);
 			
 			//colour
 			matte.DiffuseColor = Color.Wheat.Coserp(Color.Gold, fader += secs);
 			
-			//position
-			Transform3D.Position = Vector3.Lerp(Transform3D.Position, destination, secs * MOVE_SPEED);
-
 			//scale
-			float scale = Scene.MarkerScale * BASE_SCALE;
+			float scale = MapScene.MarkerScale * BASE_SCALE;
 			Transform3D.Scale = Vector3.Lerp(Transform3D.Scale, new Vector3(scale, scale, scale),
 				secs * SCALE_SPEED);
 
@@ -192,18 +189,11 @@ namespace WiFindUs.Eye.Wave
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		private void MousePositionEvent(MapSceneInput.MapSceneMouseEventArgs obj)
-		{
-			Vector3? pos = Scene.CameraController.VectorFromScreenRay(
-				Scene.InputBehaviour.MouseX, Scene.InputBehaviour.MouseY);
-			if (pos.HasValue)
-				destination = pos.Value;
-		}
 
 		private void ConfigureCursorRay(float x = 0.0f, float z = 0.0f)
 		{
 			ray.Position = new Vector3(Transform3D.Position.X + x * Transform3D.Scale.X,
-				Transform3D.Position.Y + 50.0f * Transform3D.Scale.Y,
+				Transform3D.Position.Y + RAY_LENGTH * Transform3D.Scale.Y,
 				Transform3D.Position.Z + z * Transform3D.Scale.Z);
 			Vector3 dir = new Vector3(0.001f,-1.0f,0.001f);
 			dir.Normalize();

@@ -151,7 +151,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			Vector3 start = fromMarker.LinkPoint;
 			Vector3 end = toMarker.LinkPoint;
 			Vector3 direction = end - start;
-			float scale = Scene.MarkerScale;
+			float scale = MapScene.MarkerScale;
 			float distance = direction.Length();
 			direction.Normalize();
 

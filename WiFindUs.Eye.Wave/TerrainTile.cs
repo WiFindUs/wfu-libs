@@ -14,7 +14,7 @@ using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class TerrainTile : MapSceneObject
+	public class TerrainTile : MapBehavior
 	{
 		public event Action<TerrainTile> TextureLoadingFinished, TextureImageLoadingFinished, TextureError, CenterLocationChanged;
 

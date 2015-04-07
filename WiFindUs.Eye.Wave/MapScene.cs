@@ -47,9 +47,9 @@ namespace WiFindUs.Eye.Wave
 		private List<NodeLinkMarker> nodeLinkMarkers = new List<NodeLinkMarker>();
 		private List<DeviceLinkMarker> deviceLinkMarkers = new List<DeviceLinkMarker>();
 		private List<Marker> allMarkers = new List<Marker>();
-		private MapSceneInputOld inputBehaviour;
-		private MapSceneCamera cameraController;
-		private MapSceneCursor cursor;
+		private MapInput inputBehaviour;
+		private MapCamera cameraController;
+		private MapCursor cursor;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -85,10 +85,7 @@ namespace WiFindUs.Eye.Wave
 
 		public uint VisibleLayer
 		{
-			get
-			{
-				return visibleLayer;
-			}
+			get { return visibleLayer; }
 			set
 			{
 				uint layer = value >= tileLayers.Length ? (uint)tileLayers.Length - 1 : value;
@@ -111,11 +108,6 @@ namespace WiFindUs.Eye.Wave
 			get { return baseTile; }
 		}
 
-		public MapControl HostControl
-		{
-			get { return hostControl; }
-		}
-
 		public List<DeviceMarker> DeviceMarkers
 		{
 			get { return deviceMarkers; }
@@ -133,10 +125,7 @@ namespace WiFindUs.Eye.Wave
 
 		public bool DebugMode
 		{
-			get
-			{
-				return RenderManager.DebugLines;
-			}
+			get { return RenderManager.DebugLines; }
 			set
 			{
 				if (value == DebugMode)
@@ -146,17 +135,17 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public MapSceneInputOld Input
+		public MapInput Input
 		{
 			get { return inputBehaviour; }
 		}
 
-		public MapSceneCamera Camera
+		public MapCamera Camera
 		{
 			get { return cameraController; }
 		}
 
-		public MapSceneCursor Cursor
+		public MapCursor Cursor
 		{
 			get { return cursor; }
 		}
@@ -181,6 +170,16 @@ namespace WiFindUs.Eye.Wave
 		{
 			get { return whiteTex; }
 			private set { whiteTex = value; }
+		}
+
+		public int BackBufferWidth
+		{
+			get { return hostControl.BackBufferWidth; }
+		}
+
+		public int BackBufferHeight
+		{
+			get { return hostControl.BackBufferHeight; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -319,7 +318,7 @@ namespace WiFindUs.Eye.Wave
 				FarPlane = 10000.0f,
 				ClearFlags = ClearFlags.All,
 			};
-			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapSceneCamera());
+			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapCamera());
 			EntityManager.Add(camera);
 			RenderManager.SetFrustumCullingCamera(camera.Entity);
 
@@ -350,15 +349,15 @@ namespace WiFindUs.Eye.Wave
 
 			//add scene behaviours
 			Debugger.V("MapScene: creating behaviours");
-			AddSceneBehavior(inputBehaviour = new MapSceneInputOld(), SceneBehavior.Order.PostUpdate);
+			AddSceneBehavior(inputBehaviour = new MapInput(hostControl), SceneBehavior.Order.PostUpdate);
 
 			//apply theme
 			ApplyTheme(Theme.Current);
 			Theme.ThemeChanged += ApplyTheme;
 
 			//create cursor
-			Entity cursorEntity = MapSceneCursor.Create();
-			cursor = cursorEntity.FindComponent<MapSceneCursor>();
+			Entity cursorEntity = MapCursor.Create();
+			cursor = cursorEntity.FindComponent<MapCursor>();
 			EntityManager.Add(cursorEntity);
 		}
 

@@ -78,13 +78,13 @@ namespace WiFindUs.Themes
 		{
 			if (theme == null)
 				return;
-			Panel1.BackColor = theme.Background.Light.Colour;
-			Panel1.ForeColor = theme.Foreground.Light.Colour;
-			Panel1.Font = theme.Controls.Normal.Regular;
+			//Panel1.BackColor = theme.Background.Light.Colour;
+			//Panel1.ForeColor = theme.Foreground.Light.Colour;
+			//Panel1.Font = theme.Controls.Normal.Regular;
 			
-			Panel2.BackColor = theme.Background.Light.Colour;
-			Panel2.ForeColor = theme.Foreground.Light.Colour;
-			Panel2.Font = theme.Controls.Normal.Regular;
+			//Panel2.BackColor = theme.Background.Light.Colour;
+			//Panel2.ForeColor = theme.Foreground.Light.Colour;
+			//Panel2.Font = theme.Controls.Normal.Regular;
 		}
 
 		/////////////////////////////////////////////////////////////////////

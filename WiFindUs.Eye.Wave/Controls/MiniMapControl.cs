@@ -11,11 +11,13 @@ namespace WiFindUs.Eye.Wave.Controls
 {
 	public class MiniMapControl : ThemedControl
 	{
+		private const int UPDATE_FPS = 15;
 		private WiFindUs.Eye.Wave.MapScene scene;
 		private Rectangle mapArea = Rectangle.Empty;
 		private bool mouseDown = false;
 		private Image image;
 		private long lastCameraUpdate = 0;
+		private Timer timer;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -32,10 +34,9 @@ namespace WiFindUs.Eye.Wave.Controls
 					return;
 				if (scene != null)
 				{
+					timer.Stop();
 					if (scene.BaseTile != null)
 						scene.BaseTile.TextureImageLoadingFinished -= BaseTile_TextureImageLoadingFinished;
-					if (scene.Camera != null)
-						scene.Camera.Moved -= CameraController_Moved;
 					scene.CenterLocationChanged -= Scene_CenterLocationChanged;
 					DisposeImage();
 				}
@@ -44,9 +45,9 @@ namespace WiFindUs.Eye.Wave.Controls
 				{
 					if (scene.BaseTile != null)
 						scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
-					if (scene.Camera != null)
-						scene.Camera.Moved += CameraController_Moved;
 					scene.CenterLocationChanged += Scene_CenterLocationChanged;
+					if (Visible && Enabled)
+						timer.Start();
 				}
 				Refresh();
 			}
@@ -59,6 +60,8 @@ namespace WiFindUs.Eye.Wave.Controls
 		public MiniMapControl()
 		{
 			TabStop = false;
+			timer = new Timer() { Interval = (1000 / UPDATE_FPS) };
+			timer.Tick += timer_Tick;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -98,6 +101,18 @@ namespace WiFindUs.Eye.Wave.Controls
 			base.OnResize(e);
 			RecalculateMapArea();
 			Refresh();
+		}
+
+		protected override void OnVisibleChanged(EventArgs e)
+		{
+			base.OnVisibleChanged(e);
+			timer.Enabled = Visible && Enabled && scene != null;
+		}
+
+		protected override void OnEnabledChanged(EventArgs e)
+		{
+			base.OnEnabledChanged(e);
+			timer.Enabled = Visible && Enabled && scene != null;
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -214,6 +229,19 @@ namespace WiFindUs.Eye.Wave.Controls
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		private void timer_Tick(object sender, EventArgs e)
+		{
+			if (!Visible)
+				return;
+			long timer = DateTime.Now.Ticks;
+			TimeSpan span = new TimeSpan(timer - lastCameraUpdate);
+			if (span.TotalMilliseconds > 66.0) //15fps
+			{
+				lastCameraUpdate = timer;
+				Refresh();
+			}
+		}
+
 		private void CheckMapImage()
 		{
 			if (!scene.BaseTile.Textured || scene.BaseTile.Error)
@@ -262,19 +290,6 @@ namespace WiFindUs.Eye.Wave.Controls
 			mapArea = new Rectangle(ClientRectangle.Width / 2 - size / 2,
 				ClientRectangle.Height / 2 - size / 2,
 				size, size);
-		}
-
-		private void CameraController_Moved(MapSceneCamera obj)
-		{
-			if (!Visible)
-				return;
-			long timer = DateTime.Now.Ticks;
-			TimeSpan span = new TimeSpan(timer - lastCameraUpdate);
-			if (span.TotalMilliseconds > 66.0) //15fps
-			{
-				lastCameraUpdate = timer;
-				Refresh();
-			}
 		}
 
 		private void Scene_CenterLocationChanged(MapScene obj)

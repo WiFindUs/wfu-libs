@@ -81,7 +81,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			entity.LocationChanged += LocationChanged;
 			entity.ActiveChanged += ActiveChanged;
 			entity.Updated += Updated;
-			Scene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
+			MapScene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -104,7 +104,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (!entity.Location.HasLatLong)
 				return;
 
-			destination = Scene.LocationToVector(entity.Location);
+			destination = MapScene.LocationToVector(entity.Location);
 			if (lastLocation == null || Location.Distance(entity.Location, lastLocation) > 50.0)
 				Transform3D.Position = destination;
 			lastLocation = new Location(entity.Location);
@@ -129,8 +129,8 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected virtual void UpdateMarkerState()
 		{
-			bool active = Scene.BaseTile != null
-				&& Scene.BaseTile.Region != null
+			bool active = MapScene.BaseTile != null
+				&& MapScene.BaseTile.Region != null
 				&& (VisibleWhileInactive || entity.Active)
 				&& entity.Location.HasLatLong
 				&& VisibilityOverride;

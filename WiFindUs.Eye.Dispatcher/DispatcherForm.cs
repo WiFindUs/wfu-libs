@@ -317,7 +317,6 @@ namespace WiFindUs.Eye.Dispatcher
 		protected override void OnMapSceneStarted(MapScene scene)
 		{
 			base.OnMapSceneStarted(scene);
-			scene.Input.MouseDown += InputBehaviour_MouseDown;
 			if (minimap != null && scene == map.Scene)
 				minimap.Scene = scene;
 			SetApplicationStatus("Map scene ready.", Theme.Current.Highlight.Mid.Colour);
@@ -409,9 +408,10 @@ namespace WiFindUs.Eye.Dispatcher
 			 * */
 		}
 
-		private void InputBehaviour_MouseDown(MapSceneInputOld.MouseButtonEventArgs args)
+		/*
+		private void InputBehaviour_MouseDown(MapInputOld.MouseButtonEventArgs args)
 		{
-			if (args.Button != MapSceneInputOld.MouseButtons.Left)
+			if (args.Button != MapInputOld.MouseButtons.Left)
 				return;
 
 			Marker[] clickedMarkers = args.Scene.Cursor.MarkersAtCursor<Marker>();
@@ -443,6 +443,7 @@ namespace WiFindUs.Eye.Dispatcher
 					globalSelectionGroup.SetSelection(selectables[((selectables.IndexOf(intersection[intersection.Length - 1]) + 1) % selectables.Count)]);
 			}
 		}
+		 * */
 
 		private void TestKeys(object sender, KeyEventArgs e)
 		{

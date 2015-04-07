@@ -236,12 +236,12 @@ namespace WiFindUs
 		/// <summary>
 		/// Debug only flow tracing-method.
 		/// </summary>
-		public static void T(string text,
+		public static void T(string text = "",
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			V("[TRACE] {0}:{1} {2} : {3}", Path.GetFileName(sourceFilePath), sourceLineNumber, memberName, text);
+			V("[TRACE] {0}:{1} {2} {3}", Path.GetFileName(sourceFilePath), sourceLineNumber, memberName, text);
 		}
 #endif
 

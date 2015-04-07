@@ -4,7 +4,7 @@ using WaveEngine.Framework.Graphics;
 
 namespace WiFindUs.Eye.Wave
 {
-	public abstract class MapSceneObject : Behavior
+	public abstract class MapBehavior : Behavior
 	{
 		protected const float FADE_SPEED = 10f;
 		protected const float SCALE_SPEED = 15f;
@@ -16,7 +16,7 @@ namespace WiFindUs.Eye.Wave
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public MapScene Scene
+		public MapScene MapScene
 		{
 			get { return scene; }
 		}
