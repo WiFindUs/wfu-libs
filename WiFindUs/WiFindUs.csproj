@@ -68,6 +68,7 @@
       <DependentUpon>SplashForm.cs</DependentUpon>
     </Compile>
     <Compile Include="HashCode.cs" />
+    <Compile Include="HighResolutionTimer.cs" />
     <Compile Include="IO\ConfigFile.cs" />
     <Compile Include="Debugger.cs" />
     <Compile Include="Forms\MainForm.cs">
@@ -80,7 +81,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="StackedLock.cs" />
+    <Compile Include="ReferenceCountedLock.cs" />
     <Compile Include="Themes\ITheme.cs" />
     <Compile Include="Themes\IThemeable.cs" />
     <Compile Include="Themes\Theme.cs" />

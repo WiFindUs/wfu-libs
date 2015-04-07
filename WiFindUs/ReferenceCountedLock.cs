@@ -2,9 +2,9 @@
 
 namespace WiFindUs
 {
-	public class StackedLock
+	public class ReferenceCountedLock
 	{
-		public event Action<StackedLock> OnLocked, OnUnlocked;
+		public event Action<ReferenceCountedLock> OnLocked, OnUnlocked;
 
 		private object lockObject = new object();
 		private int lockCount = 0;

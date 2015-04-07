@@ -25,7 +25,7 @@ namespace WiFindUs.Eye
 		public event Action<Node> OnNodeMockLocationChanged;
 
 		private bool loaded = false;
-		private StackedLock locationEventLock = new StackedLock();
+		private ReferenceCountedLock locationEventLock = new ReferenceCountedLock();
 		private bool fireLocationEvents = false;
 
 		/////////////////////////////////////////////////////////////////////
@@ -158,12 +158,12 @@ namespace WiFindUs.Eye
 			locationEventLock.OnUnlocked += OnLocationUnlocked;
 		}
 
-		private void OnLocationLocked(StackedLock obj)
+		private void OnLocationLocked(ReferenceCountedLock obj)
 		{
 			fireLocationEvents = false;
 		}
 
-		private void OnLocationUnlocked(StackedLock obj)
+		private void OnLocationUnlocked(ReferenceCountedLock obj)
 		{
 			if (fireLocationEvents && LocationChanged != null)
 				LocationChanged(this);
