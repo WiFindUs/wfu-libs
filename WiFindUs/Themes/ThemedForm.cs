@@ -10,10 +10,7 @@ using WiFindUs.Themes;
 namespace WiFindUs.Themes
 {
 	public class ThemedForm : Form, IThemeable
-	{
-		public event Action<ThemedForm> MouseHoveringChanged;
-		private bool mouseHovering = false;
-		
+	{	
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
@@ -22,24 +19,7 @@ namespace WiFindUs.Themes
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsDesignMode
 		{
-			get
-			{
-				return DesignMode || this.IsDesignMode();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool MouseHovering
-		{
-			get { return mouseHovering; }
-			private set
-			{
-				if (value == mouseHovering)
-					return;
-				mouseHovering = value;
-				OnMouseHoverChanged();
-			}
+			get { return DesignMode || this.IsDesignMode(); }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -84,24 +64,6 @@ namespace WiFindUs.Themes
 				return;
 			ApplyTheme(Theme.Current);
 			Theme.ThemeChanged += ApplyTheme;
-		}
-
-		protected virtual void OnMouseHoverChanged()
-		{
-			if (MouseHoveringChanged != null)
-				MouseHoveringChanged(this);
-		}
-
-		protected override void OnMouseEnter(EventArgs e)
-		{
-			MouseHovering = true;
-			base.OnMouseEnter(e);
-		}
-
-		protected override void OnMouseLeave(EventArgs e)
-		{
-			base.OnMouseLeave(e);
-			MouseHovering = false;
 		}
 	}
 }

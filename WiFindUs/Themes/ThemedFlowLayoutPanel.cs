@@ -14,10 +14,7 @@ namespace WiFindUs.Themes
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsDesignMode
 		{
-			get
-			{
-				return DesignMode || this.IsDesignMode();
-			}
+			get { return DesignMode || this.IsDesignMode(); }
 		}
 
 		/////////////////////////////////////////////////////////////////////

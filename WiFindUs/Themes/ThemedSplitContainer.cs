@@ -12,8 +12,6 @@ namespace WiFindUs.Themes
 {
 	public class ThemedSplitContainer : SplitContainer, IThemeable
 	{
-		public event Action<ThemedSplitContainer> MouseHoveringChanged;
-		private bool mouseHovering = false;
 		private bool mouseOverSplitter = false;
 
 		/////////////////////////////////////////////////////////////////////
@@ -36,23 +34,7 @@ namespace WiFindUs.Themes
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool IsDesignMode
 		{
-			get
-			{
-				return DesignMode || this.IsDesignMode();
-			}
-		}
-
-		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool MouseHovering
-		{
-			get { return mouseHovering; }
-			private set
-			{
-				if (value == mouseHovering)
-					return;
-				mouseHovering = value;
-				OnMouseHoverChanged();
-			}
+			get { return DesignMode || this.IsDesignMode(); }
 		}
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -94,11 +76,15 @@ namespace WiFindUs.Themes
 
 		public virtual void ApplyTheme(ITheme theme)
 		{
-			//if (theme == null)
-			//	return;
-			//BackColor = theme.Background.Light.Colour;
-			//ForeColor = theme.Foreground.Light.Colour;
-			//Font = theme.Controls.Normal.Regular;
+			if (theme == null)
+				return;
+			Panel1.BackColor = theme.Background.Light.Colour;
+			Panel1.ForeColor = theme.Foreground.Light.Colour;
+			Panel1.Font = theme.Controls.Normal.Regular;
+			
+			Panel2.BackColor = theme.Background.Light.Colour;
+			Panel2.ForeColor = theme.Foreground.Light.Colour;
+			Panel2.Font = theme.Controls.Normal.Regular;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -139,26 +125,6 @@ namespace WiFindUs.Themes
 				return;
 			ApplyTheme(Theme.Current);
 			Theme.ThemeChanged += ApplyTheme;
-			SplitterMoved += SplitterMovedInternal;
-		}
-
-		protected virtual void OnMouseHoverChanged()
-		{
-			if (MouseHoveringChanged != null)
-				MouseHoveringChanged(this);
-		}
-
-		protected override void OnMouseEnter(EventArgs e)
-		{
-			MouseHovering = true;
-			base.OnMouseEnter(e);
-		}
-
-		protected override void OnMouseLeave(EventArgs e)
-		{
-			base.OnMouseLeave(e);
-			MouseHovering = false;
-			MouseOverSplitter = false;
 		}
 
 		protected override void OnMouseMove(MouseEventArgs e)
@@ -178,11 +144,6 @@ namespace WiFindUs.Themes
 			region.Xor(Panel2.Bounds);
 			Invalidate(region);
 			Update();
-		}
-
-		private void SplitterMovedInternal(object sender, SplitterEventArgs e)
-		{
-			
 		}
 	}
 }

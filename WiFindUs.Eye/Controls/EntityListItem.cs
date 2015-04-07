@@ -44,7 +44,7 @@ namespace WiFindUs.Eye.Controls
 		{
 			get
 			{
-				return MouseHovering || entity.Selected
+				return entity.Selected
 					? Theme.Current.Background.Light.Colour 
 					: Theme.Current.Background.Dark.Colour;
 			}
@@ -106,9 +106,7 @@ namespace WiFindUs.Eye.Controls
 
 		protected override void OnPaintBackground(PaintEventArgs e)
 		{
-			if (MouseHovering)
-				e.Graphics.Clear(Theme.Current.Highlight.Light.Colour);
-			else if (entity.Selected)
+			if (entity.Selected)
 				e.Graphics.Clear(Theme.Current.Highlight.Mid.Colour);
 			else
 				base.OnPaintBackground(e);
@@ -155,12 +153,6 @@ namespace WiFindUs.Eye.Controls
 				Theme.Current.Foreground.Mid.Brush,
 				new Point(48, (int)sz.Height),
 				StringFormat.GenericTypographic);
-		}
-
-		protected override void OnMouseHoverChanged()
-		{
-			base.OnMouseHoverChanged();
-			Refresh();
 		}
 
 		protected override void OnMouseClick(MouseEventArgs e)

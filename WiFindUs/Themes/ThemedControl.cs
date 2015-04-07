@@ -7,9 +7,6 @@ namespace WiFindUs.Themes
 {
 	public class ThemedControl : Control, IThemeable
 	{
-		public event Action<ThemedControl> MouseHoveringChanged;
-		private bool mouseHovering = false;
-
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
@@ -21,20 +18,6 @@ namespace WiFindUs.Themes
 			get
 			{
 				return DesignMode || this.IsDesignMode();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool MouseHovering
-		{
-			get { return mouseHovering; }
-			private set
-			{
-				if (value == mouseHovering)
-					return;
-				mouseHovering = value;
-				OnMouseHoverChanged();
 			}
 		}
 
@@ -82,24 +65,6 @@ namespace WiFindUs.Themes
 				return;
 			ApplyTheme(Theme.Current);
 			Theme.ThemeChanged += ApplyTheme;
-		}
-
-		protected virtual void OnMouseHoverChanged()
-		{
-			if (MouseHoveringChanged != null)
-				MouseHoveringChanged(this);
-		}
-
-		protected override void OnMouseEnter(EventArgs e)
-		{
-			MouseHovering = true;
-			base.OnMouseEnter(e);
-		}
-
-		protected override void OnMouseLeave(EventArgs e)
-		{
-			base.OnMouseLeave(e);
-			MouseHovering = false;
 		}
 	}
 }
