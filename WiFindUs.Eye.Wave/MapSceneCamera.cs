@@ -5,6 +5,8 @@ using WaveEngine.Common.Math;
 using WaveEngine.Framework.Graphics;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Markers;
+using WaveEngine.Common.System;
+using WaveEngine.Framework.Services;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -27,7 +29,7 @@ namespace WiFindUs.Eye.Wave
 		private bool interpolate = true;
 		private Camera3D camera;
 		private Ray ray;
-
+		
 		public event Action<MapSceneCamera> Moved;
 
 		/////////////////////////////////////////////////////////////////////
@@ -91,17 +93,17 @@ namespace WiFindUs.Eye.Wave
 
 		public ILocation FrustumNorthEast
 		{
-			get { return LocationFromScreenRay(Scene.HostApplication.Width, 0); }
+			get { return LocationFromScreenRay(Scene.HostControl.BackBufferWidth, 0); }
 		}
 
 		public ILocation FrustumSouthEast
 		{
-			get { return LocationFromScreenRay(Scene.HostApplication.Width, Scene.HostApplication.Height); }
+			get { return LocationFromScreenRay(Scene.HostControl.BackBufferWidth, Scene.HostControl.BackBufferHeight); }
 		}
 
 		public ILocation FrustumSouthWest
 		{
-			get { return LocationFromScreenRay(0, Scene.HostApplication.Height); }
+			get { return LocationFromScreenRay(0, Scene.HostControl.BackBufferHeight); }
 		}
 
 		/////////////////////////////////////////////////////////////////////

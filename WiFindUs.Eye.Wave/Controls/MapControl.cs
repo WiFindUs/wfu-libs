@@ -19,19 +19,11 @@ namespace WiFindUs.Eye.Wave.Controls
 		private MapApplication mapApp;
 		private Input input;
 		private float scaleFactor = 1.0f;
-		private Form form = null;
 		private bool started = false;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Form Form
-		{
-			get { return form; }
-		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -51,8 +43,7 @@ namespace WiFindUs.Eye.Wave.Controls
 				if (newVal.Tolerance(scaleFactor, 0.01f))
 					return;
 				scaleFactor = newVal;
-				if (mapApp != null)
-					mapApp.ResizeScreen(BackBufferWidth, BackBufferHeight);
+				ResizeBackBuffer();
 			}
 		}
 
@@ -60,22 +51,14 @@ namespace WiFindUs.Eye.Wave.Controls
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public int BackBufferWidth
 		{
-			get
-			{
-				int val = (int)((float)ClientRectangle.Width * scaleFactor);
-				return val <= 0 ? 1 : val;
-			}
+			get { return mapApp != null ? mapApp.Width : 0; }
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public int BackBufferHeight
 		{
-			get
-			{
-				int val = (int)((float)ClientRectangle.Height * scaleFactor);
-				return val <= 0 ? 1 : val;
-			}
+			get { return mapApp != null ? mapApp.Height : 0; }
 		}
 
 		[Browsable(false)]
@@ -117,12 +100,21 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			if (mapApp != null || started)
 				return;
+#if DEBUG
+			Debugger.T("entry");
+#endif
 			if (WFUApplication.Config != null)
 				BackBufferScale = WFUApplication.Config.Get("map.resolution_scale", 1.0f);
-			mapApp = new MapApplication(this, BackBufferWidth, BackBufferHeight);
+			mapApp = new MapApplication(this,
+				Math.Max((int)((float)ClientRectangle.Width * scaleFactor), 1),
+				Math.Max((int)((float)ClientRectangle.Height * scaleFactor), 1)
+				);
 			mapApp.SceneStarted += scene_SceneStarted;
 			mapApp.Configure(this.Handle);
 			started = true;
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
 		public void Render()
 		{
@@ -140,12 +132,6 @@ namespace WiFindUs.Eye.Wave.Controls
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		protected override void OnParentChanged(EventArgs e)
-		{
-			form = FindForm();
-			base.OnParentChanged(e);
-		}
-
 		protected override void OnHandleDestroyed(EventArgs e)
 		{
 			if (mapApp != null)
@@ -160,8 +146,8 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		protected override void OnResize(EventArgs e)
 		{
-			if (!IsDesignMode && mapApp != null)
-				mapApp.ResizeScreen(BackBufferWidth, BackBufferHeight);
+			if (!IsDesignMode)
+				ResizeBackBuffer();
 			base.OnResize(e);
 		}
 
@@ -188,6 +174,7 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
+		/*
 		protected override void OnMouseEnter(EventArgs e)
 		{
 			base.OnMouseEnter(e);
@@ -265,10 +252,20 @@ namespace WiFindUs.Eye.Wave.Controls
 				e.Handled = true;
 			}
 		}
+		 * */
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		private void ResizeBackBuffer()
+		{
+			if (mapApp == null)
+				return;
+			int w = Math.Max((int)((float)ClientRectangle.Width * scaleFactor), 1);
+			int h = Math.Max((int)((float)ClientRectangle.Height * scaleFactor), 1);
+			mapApp.ResizeScreen(w, h);
+		}
 
 		private void UpdateMousePosition(int x, int y)
 		{

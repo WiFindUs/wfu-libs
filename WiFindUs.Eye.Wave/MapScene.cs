@@ -29,7 +29,7 @@ namespace WiFindUs.Eye.Wave
 		private const float TILT_RATE = 1.0f;
 		public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM + 1;
 
-		private MapGame hostGame;
+		private MapControl hostControl;
 		private EyeMainForm eyeForm;
 		private FixedCamera camera;
 		private ILocation center;
@@ -47,7 +47,7 @@ namespace WiFindUs.Eye.Wave
 		private List<NodeLinkMarker> nodeLinkMarkers = new List<NodeLinkMarker>();
 		private List<DeviceLinkMarker> deviceLinkMarkers = new List<DeviceLinkMarker>();
 		private List<Marker> allMarkers = new List<Marker>();
-		private MapSceneInput inputBehaviour;
+		private MapSceneInputOld inputBehaviour;
 		private MapSceneCamera cameraController;
 		private MapSceneCursor cursor;
 
@@ -111,19 +111,9 @@ namespace WiFindUs.Eye.Wave
 			get { return baseTile; }
 		}
 
-		public MapGame HostGame
-		{
-			get { return hostGame; }
-		}
-
-		public MapApplication HostApplication
-		{
-			get { return hostGame.HostApplication; }
-		}
-
 		public MapControl HostControl
 		{
-			get { return hostGame.HostControl; }
+			get { return hostControl; }
 		}
 
 		public List<DeviceMarker> DeviceMarkers
@@ -156,12 +146,12 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public MapSceneInput InputBehaviour
+		public MapSceneInputOld Input
 		{
 			get { return inputBehaviour; }
 		}
 
-		public MapSceneCamera CameraController
+		public MapSceneCamera Camera
 		{
 			get { return cameraController; }
 		}
@@ -197,11 +187,11 @@ namespace WiFindUs.Eye.Wave
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public MapScene(MapGame hostGame)
+		public MapScene(MapControl hostControl)
 		{
-			if (hostGame == null)
-				throw new ArgumentNullException("hostGame", "MapScene cannot be instantiated outside of a host MapGame.");
-			this.hostGame = hostGame;
+			if (hostControl == null)
+				throw new ArgumentNullException("hostControl", "MapScene cannot be instantiated outside of a host MapControl.");
+			this.hostControl = hostControl;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -360,7 +350,7 @@ namespace WiFindUs.Eye.Wave
 
 			//add scene behaviours
 			Debugger.V("MapScene: creating behaviours");
-			AddSceneBehavior(inputBehaviour = new MapSceneInput(), SceneBehavior.Order.PostUpdate);
+			AddSceneBehavior(inputBehaviour = new MapSceneInputOld(), SceneBehavior.Order.PostUpdate);
 
 			//apply theme
 			ApplyTheme(Theme.Current);

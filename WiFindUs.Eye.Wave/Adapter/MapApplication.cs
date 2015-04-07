@@ -20,11 +20,6 @@ namespace WiFindUs.Eye.Wave.Adapter
 			get { return game == null ? null : game.Scene; }
 		}
 
-		public MapControl HostControl
-		{
-			get { return hostControl; }
-		}
-
 		public bool DebugMode
 		{
 			get { return Scene == null ? false : Scene.DebugMode; }
@@ -54,7 +49,7 @@ namespace WiFindUs.Eye.Wave.Adapter
 
 		public override void Initialize()
 		{
-			game = new MapGame(this);
+			game = new MapGame(hostControl);
 			game.SceneStarted += scene_SceneStarted;
 			game.Initialize(this);
 		}

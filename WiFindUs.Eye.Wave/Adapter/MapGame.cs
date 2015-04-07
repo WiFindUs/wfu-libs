@@ -10,21 +10,16 @@ namespace WiFindUs.Eye.Wave.Adapter
 	{
 		public event Action<MapScene> SceneStarted;
 		private MapScene scene;
-		private MapApplication hostApplication;
+		private MapControl hostControl;
 
 		public MapScene Scene
 		{
 			get { return scene; }
 		}
 
-		public MapApplication HostApplication
-		{
-			get { return hostApplication; }
-		}
-
 		public MapControl HostControl
 		{
-			get { return hostApplication.HostControl; }
+			get { return hostControl; }
 		}
 
 		public bool DebugMode
@@ -38,17 +33,17 @@ namespace WiFindUs.Eye.Wave.Adapter
 			}
 		}
 
-		public MapGame(MapApplication hostApplication)
+		public MapGame(MapControl hostControl)
 		{
-			if (hostApplication == null)
-				throw new ArgumentNullException("HostApplication", "MapGame cannot be instantiated outside of a host MapApplication.");
-			this.hostApplication = hostApplication;
+			if (hostControl == null)
+				throw new ArgumentNullException("hostControl", "MapGame cannot be instantiated outside of a host MapControl.");
+			this.hostControl = hostControl;
 		}
 
 		public override void Initialize(IApplication application)
 		{
 			base.Initialize(application);
-			scene = new MapScene(this);
+			scene = new MapScene(hostControl);
 			scene.SceneStarted += scene_SceneStarted;
 			scene.Initialize(WaveServices.GraphicsDevice);
 

@@ -34,8 +34,8 @@ namespace WiFindUs.Eye.Wave.Controls
 				{
 					if (scene.BaseTile != null)
 						scene.BaseTile.TextureImageLoadingFinished -= BaseTile_TextureImageLoadingFinished;
-					if (scene.CameraController != null)
-						scene.CameraController.Moved -= CameraController_Moved;
+					if (scene.Camera != null)
+						scene.Camera.Moved -= CameraController_Moved;
 					scene.CenterLocationChanged -= Scene_CenterLocationChanged;
 					DisposeImage();
 				}
@@ -44,8 +44,8 @@ namespace WiFindUs.Eye.Wave.Controls
 				{
 					if (scene.BaseTile != null)
 						scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
-					if (scene.CameraController != null)
-						scene.CameraController.Moved += CameraController_Moved;
+					if (scene.Camera != null)
+						scene.Camera.Moved += CameraController_Moved;
 					scene.CenterLocationChanged += Scene_CenterLocationChanged;
 				}
 				Refresh();
@@ -122,7 +122,7 @@ namespace WiFindUs.Eye.Wave.Controls
 			//initialize render state
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
 			e.Graphics.Clear(Theme.Current.Background.Dark.Colour);
-			if (scene == null || scene.BaseTile == null || scene.CameraController == null)
+			if (scene == null || scene.BaseTile == null || scene.Camera == null)
 			{
 				e.Graphics.FillRectangle(Theme.Current.Background.Light.Brush, mapArea);
 				return;
@@ -133,10 +133,10 @@ namespace WiFindUs.Eye.Wave.Controls
 			e.Graphics.DrawImageSafe(image, mapArea, Brushes.White, CompositingMode.SourceCopy);
 
 			//get frustum coords
-			ILocation nw = scene.CameraController.FrustumNorthWest;
-			ILocation ne = scene.CameraController.FrustumNorthEast;
-			ILocation sw = scene.CameraController.FrustumSouthWest;
-			ILocation se = scene.CameraController.FrustumSouthEast;
+			ILocation nw = scene.Camera.FrustumNorthWest;
+			ILocation ne = scene.Camera.FrustumNorthEast;
+			ILocation sw = scene.Camera.FrustumSouthWest;
+			ILocation se = scene.Camera.FrustumSouthEast;
 
 			//generate frustum poly
 			Point[] points = new Point[4];
@@ -204,10 +204,10 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			base.OnDoubleClick(e);
 
-			if (!mouseDown || scene == null || scene.CameraController == null)
+			if (!mouseDown || scene == null || scene.Camera == null)
 				return;
-			scene.CameraController.Zoom = 0.35f;
-			scene.CameraController.Tilt = 0.5f;
+			scene.Camera.Zoom = 0.35f;
+			scene.Camera.Tilt = 0.5f;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -248,7 +248,7 @@ namespace WiFindUs.Eye.Wave.Controls
 				|| scene.BaseTile.Region == null)
 				return;
 
-			scene.CameraController.Target =
+			scene.Camera.Target =
 				ScreenToLocation(
 				new Point(
 					e.X < mapArea.Left ? mapArea.Left : (e.X > mapArea.Right ? mapArea.Right : e.X),
