@@ -30,10 +30,16 @@ namespace WiFindUs.Forms
 
 		public MainForm()
 		{
+#if DEBUG
+			Debugger.T("entry");
+#endif
 			if (IsDesignMode)
 				return;
 
 			ShowInTaskbar = false;
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -47,8 +53,14 @@ namespace WiFindUs.Forms
 
 		protected override void OnFirstShown(EventArgs e)
 		{
+#if DEBUG
+			Debugger.T("entry");
+#endif
 			base.OnFirstShown(e);
 			ApplyWindowStateFromConfig("main");
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
 
 		/////////////////////////////////////////////////////////////////////

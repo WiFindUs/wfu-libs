@@ -43,6 +43,10 @@ namespace WiFindUs.Eye.Dispatcher
 				if (value == FullScreen)
 					return;
 
+#if DEBUG
+				Debugger.T("entry");
+#endif
+
 				//disable/enable mapform user close
 				mapForm.PreventUserClose = value;
 
@@ -92,6 +96,10 @@ namespace WiFindUs.Eye.Dispatcher
 
 				//resume layout stuff
 				targetForm.ResumeAllLayout();
+
+#if DEBUG
+				Debugger.T("exit");
+#endif
 			}
 		}
 
@@ -145,6 +153,9 @@ namespace WiFindUs.Eye.Dispatcher
 
 		public DispatcherForm()
 		{
+#if DEBUG
+			Debugger.T("entry");
+#endif
 			InitializeComponent();
 			if (DesignMode)
 				return;
@@ -194,7 +205,6 @@ namespace WiFindUs.Eye.Dispatcher
 			listUsers.SelectionGroup = globalSelectionGroup;
 			listIncidents.SelectionGroup = globalSelectionGroup;
 			listNodes.SelectionGroup = globalSelectionGroup;
-			//actionsTab.Controls.Add(actionPanel = new ActionPanel(3, 3) { Dock = DockStyle.Fill });
 
 			//events
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
@@ -202,6 +212,9 @@ namespace WiFindUs.Eye.Dispatcher
 			WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			globalSelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -242,6 +255,9 @@ namespace WiFindUs.Eye.Dispatcher
 
 		protected override void OnFirstShown(EventArgs e)
 		{
+#if DEBUG
+			Debugger.T("entry");
+#endif
 			SetApplicationStatus("Initializing 3D scene...", Theme.Current.Warning.Mid.Colour);
 			base.OnFirstShown(e);
 
@@ -256,7 +272,6 @@ namespace WiFindUs.Eye.Dispatcher
 
 			//map windowed
 			bool startWindowed = WFUApplication.Config.Get("map.start_windowed", false);
-			Debugger.V("Start map windowed: " + startWindowed);
 			if (startWindowed)
 				ShowMapInWindow = true;
 
@@ -265,6 +280,9 @@ namespace WiFindUs.Eye.Dispatcher
 			Debugger.V("Start fullscreen: " + startFullScreen);
 			if (startFullScreen)
 				FullScreen = true;
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
 
 		protected override void OnDebugModeChanged()
@@ -299,7 +317,7 @@ namespace WiFindUs.Eye.Dispatcher
 		protected override void OnMapSceneStarted(MapScene scene)
 		{
 			base.OnMapSceneStarted(scene);
-			scene.InputBehaviour.MousePressed += InputBehaviour_MousePressed;
+			scene.Input.MouseDown += InputBehaviour_MouseDown;
 			if (minimap != null && scene == map.Scene)
 				minimap.Scene = scene;
 			SetApplicationStatus("Map scene ready.", Theme.Current.Highlight.Mid.Colour);
@@ -391,9 +409,9 @@ namespace WiFindUs.Eye.Dispatcher
 			 * */
 		}
 
-		private void InputBehaviour_MousePressed(MapSceneInput.MapSceneMouseEventArgs args)
+		private void InputBehaviour_MouseDown(MapSceneInputOld.MouseButtonEventArgs args)
 		{
-			if (args.Button != MapSceneInput.MouseButtons.Left)
+			if (args.Button != MapSceneInputOld.MouseButtons.Left)
 				return;
 
 			Marker[] clickedMarkers = args.Scene.Cursor.MarkersAtCursor<Marker>();

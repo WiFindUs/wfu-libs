@@ -140,7 +140,12 @@ namespace WiFindUs.Controls
 
 			SelectionStart = TextLength;
 			SelectionLength = 0;
-			SelectionColor = Debugger.Colours[logItem.Verbosity];
+#if DEBUG
+			if (logItem.Verbosity == Debugger.Verbosity.Verbose && logItem.Message.StartsWith("[TRACE]"))
+				SelectionColor = Color.Green;
+			else
+#endif
+				SelectionColor = Debugger.Colours[logItem.Verbosity];
 			AppendText(logItem.ToString() + "\n");
 		}
 

@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace WiFindUs
@@ -189,32 +191,38 @@ namespace WiFindUs
 			Log(Verbosity.Error, text, args);
 		}
 
-		public static void Ex(Exception e, bool printStackTrace = false)
+		public static void Ex(Exception e, bool printStackTrace = false,
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
 		{
 			if (!allowedFlags.HasFlag(Verbosity.Exception))
 				return;
-			string log = "EXCEPTION THROWN!";
-			log += "\n  Type: " + e.GetType().FullName;
-			log += "\n  Message: " + e.Message;
+			StringBuilder sb = new StringBuilder("EXCEPTION THROWN!");
+			sb.AppendLine("  Calling Member: " + memberName);
+			sb.AppendLine("  Source File: " + sourceFilePath);
+			sb.AppendLine("  Source Line: " + sourceLineNumber.ToString());
+			sb.AppendLine("  Type: " + e.GetType().FullName);
+			sb.AppendLine("  Message: " + e.Message);
 			if (e.InnerException != null)
 			{
-				log += "\n  Inner Type: " + e.InnerException.GetType().FullName;
-				log += "\n  Message: " + e.InnerException.Message;
+				sb.AppendLine("  Inner Type: " + e.InnerException.GetType().FullName);
+				sb.AppendLine("  Message: " + e.InnerException.Message);
 			}
 #if DEBUG
 			printStackTrace = true;
 #endif
 			if (printStackTrace)
 			{
-				log += "\n  Stack trace: ";
+				sb.AppendLine("  Stack trace: ");
 
 				StackTrace stackTrace = new StackTrace(1, true);           // get call stack
 				StackFrame[] stackFrames = stackTrace.GetFrames();  // get method calls (frames)
 
 				foreach (StackFrame stackFrame in stackFrames)
-					log += "\n    " + stackFrame.ToString();
+					sb.AppendLine("    " + stackFrame.ToString());
 			}
-			Log(Verbosity.Exception, log);
+			Log(Verbosity.Exception, sb.ToString());
 		}
 
 		public static void C(string text, params object[] args)
@@ -223,6 +231,19 @@ namespace WiFindUs
 				return;
 			Log(Verbosity.Console, text, args);
 		}
+
+#if DEBUG
+		/// <summary>
+		/// Debug only flow tracing-method.
+		/// </summary>
+		public static void T(string text,
+        [CallerMemberName] string memberName = "",
+        [CallerFilePath] string sourceFilePath = "",
+        [CallerLineNumber] int sourceLineNumber = 0)
+		{
+			V("[TRACE] {0}:{1} {2} : {3}", Path.GetFileName(sourceFilePath), sourceLineNumber, memberName, text);
+		}
+#endif
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS

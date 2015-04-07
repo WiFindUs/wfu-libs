@@ -40,10 +40,16 @@ namespace WiFindUs.Eye.Wave
 			{
 				if (map != null || value == null)
 					return;
+#if DEBUG
+				Debugger.T("entry");
+#endif
 				map = value;
 				map.SceneStarted += OnMapSceneStarted;
 				if (FirstShown)
 					map.StartMapApplication(); //no-op if called already
+#if DEBUG
+				Debugger.T("exit");
+#endif
 			}
 		}
 
@@ -62,6 +68,9 @@ namespace WiFindUs.Eye.Wave
 
 		public static void StartRenderLoop(WiFindUs.Forms.MainForm form)
 		{
+#if DEBUG
+			Debugger.T("entry");
+#endif
 			WaveMainForm mapForm = form as WaveMainForm;
 			if (mapForm == null)
 			{
@@ -76,13 +85,10 @@ namespace WiFindUs.Eye.Wave
 				if (mapForm.map != null)
 					mapForm.map.Render();
 			});
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
-
-		public void AddMapControl(MapControl mapControl)
-		{
-
-		}
-
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
@@ -90,11 +96,17 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void OnFirstShown(EventArgs e)
 		{
+#if DEBUG
+			Debugger.T("entry");
+#endif
 			base.OnFirstShown(e);
 			if (IsDesignMode)
 				return;
 			if (map != null)
 				map.StartMapApplication(); //no-op if called already
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
 
 		protected virtual void OnMapSceneStarted(MapScene scene)
