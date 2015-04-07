@@ -20,7 +20,7 @@ namespace WiFindUs.Eye.Wave
 
 		private const float UNTEXTURED_SCALE = 0.25f;
 		private const float UNTEXTURED_OFFSET = 40.0f;
-		private const float SCALE_SPEED = 2.0f;
+		private const float TILE_SCALE_SPEED = 2.0f;
 		private const int MAX_CONCURRENT_TEXTURE_CREATIONS = 1;
 		private readonly int MAX_CONCURRENT_LOADS = Math.Max(Environment.ProcessorCount - 1, 1);
 		private const int MAX_CONCURRENT_DOWNLOADS = 1;
@@ -376,7 +376,7 @@ namespace WiFindUs.Eye.Wave
 						IsOwnerActive = false;
 					else
 					{
-						horizontalScale += (float)gameTime.TotalSeconds * SCALE_SPEED;
+						horizontalScale += (float)gameTime.TotalSeconds * TILE_SCALE_SPEED;
 						if (horizontalScale > 1.0f)
 						{
 							horizontalScale = 1.0f;
