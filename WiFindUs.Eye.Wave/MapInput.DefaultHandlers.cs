@@ -89,6 +89,13 @@ namespace WiFindUs.Eye.Wave
 				{
 					mousePanning = false;
 					args.Handled = true;
+
+					if (hostControl.Bounds.Contains(args.MouseX, args.MouseY))
+					{
+						Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY);
+						if (pos.HasValue)
+							MapScene.Cursor.Transform3D.Position = pos.Value;
+					}
 				}
 			}
 		}
@@ -134,28 +141,24 @@ namespace WiFindUs.Eye.Wave
 			{
 				args.Handled = true;
 
-				Marker[] clickedMarkers = MapScene.Cursor.MarkersAtCursor<Marker>();
-				if (clickedMarkers == null || clickedMarkers.Length == 0)
+				ISelectable[] selectables = MapScene.Cursor.MarkersAtCursor<Marker>()
+					.OfType<IEntityMarker>()
+					.Where(mk => mk.Updateable.Active && mk.Locatable.Location.HasLatLong)
+					.Select<IEntityMarker,ISelectable>(mk => mk.Selectable)
+					.ToArray();
+
+				if (selectables == null || selectables.Length == 0)
 				{
 					if (!Control)
 						MapScene.SelectionGroup.ClearSelection();
 					return;
 				}
 
-				List<ISelectable> selectables = new List<ISelectable>();
-				foreach (Marker marker in clickedMarkers)
-				{
-					ISelectableProxy sp = marker as ISelectableProxy;
-					if (sp != null)
-						selectables.Add(sp.Selectable);
-				}
 				if (Control)
 					MapScene.SelectionGroup.ToggleSelection(selectables);
 				else
 				{
-					if (selectables.Count == 0)
-						MapScene.SelectionGroup.ClearSelection();
-					else if (selectables.Count == 1 || MapScene.SelectionGroup.SelectedEntities.Length == 0)
+					if (selectables.Length == 1 || MapScene.SelectionGroup.SelectedEntities.Length == 0)
 						MapScene.SelectionGroup.SetSelection(selectables[0]);
 					else
 					{
@@ -164,7 +167,7 @@ namespace WiFindUs.Eye.Wave
 							MapScene.SelectionGroup.SetSelection(selectables[0]);
 						else
 							MapScene.SelectionGroup.SetSelection(
-								selectables[((selectables.IndexOf(intersection[intersection.Length - 1]) + 1) % selectables.Count)]);
+								selectables[((Array.IndexOf(selectables, intersection[intersection.Length - 1]) + 1) % selectables.Length)]);
 					}
 				}
 

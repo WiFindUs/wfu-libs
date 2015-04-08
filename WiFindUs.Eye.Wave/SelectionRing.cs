@@ -42,7 +42,8 @@ namespace WiFindUs.Eye.Wave
 			this.selectable = selectable;
 		}
 
-		public static Entity Create(ISelectable selectable, float yOffset = 10.0f, uint points = 8, float radius = 12.0f, float thickness = 2f)
+		public static Entity Create(ISelectable selectable,
+			float yOffset = 10.0f, uint points = 16, float radius = 10.0f, float thickness = 1f)
 		{
 			SelectionRing ring = new SelectionRing(selectable);
 			ring.points = new Entity[points];

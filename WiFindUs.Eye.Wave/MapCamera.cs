@@ -189,7 +189,6 @@ namespace WiFindUs.Eye.Wave
 					&& mk.Selectable.Selected
 					&& mk.Locatable.Location.HasLatLong)
 				.ToArray();
-			
 
 			//if none, clear selection
 			if (selectedMarkers == null || selectedMarkers.Length == 0)
