@@ -242,14 +242,8 @@ namespace WiFindUs.Eye
 				{
 					Invoke(new Action<EyePacketListener, DevicePacket>(DevicePacketReceived), new object[] { sender, devicePacket });
 				}
-				catch (ObjectDisposedException)
-				{
-					return;
-				}
-				catch (InvalidAsynchronousStateException)
-				{
-					return;
-				}
+				catch (ObjectDisposedException) { return; }
+				catch (InvalidAsynchronousStateException) { return; }
 				return;
 			}
 
@@ -304,17 +298,12 @@ namespace WiFindUs.Eye
 				}
 			}
 
-			//device stats
-			device.Active = true;
-			device.LastUpdated = DateTime.UtcNow.ToUnixTimestamp();
+			//process packet
+			device.ProcessPacket(devicePacket);
+
+			//current user
 			if (devicePacket.UserID.HasValue)
 				device.User = user;
-			if (devicePacket.DeviceType != null)
-				device.Type = devicePacket.DeviceType;
-			if (devicePacket.Charging.HasValue)
-				device.Charging = devicePacket.Charging;
-			if (devicePacket.BatteryLevel.HasValue)
-				device.BatteryLevel = devicePacket.BatteryLevel;
 
 			//connected node
 			if (devicePacket.NodeNumber.HasValue)
@@ -323,21 +312,7 @@ namespace WiFindUs.Eye
 				device.Node = node == null || !node.Loaded ? null : node;
 			}
 
-			//location
-			if (devicePacket.GPSEnabled.HasValue)
-				device.GPSEnabled = devicePacket.GPSEnabled;
-			if (devicePacket.GPSHasFix.HasValue)
-				device.GPSHasFix = devicePacket.GPSHasFix;
-			device.LockLocationEvents();
-			if (devicePacket.Accuracy.HasValue)
-				device.Accuracy = devicePacket.Accuracy;
-			if (devicePacket.Latitude.HasValue)
-				device.Latitude = devicePacket.Latitude;
-			if (devicePacket.Longitude.HasValue)
-				device.Longitude = devicePacket.Longitude;
-			if (devicePacket.Altitude.HasValue)
-				device.Altitude = devicePacket.Altitude;
-			device.UnlockLocationEvents();
+			//save changes
 			SubmitPacketChanges();
 		}
 
@@ -352,14 +327,8 @@ namespace WiFindUs.Eye
 				{
 					Invoke(new Action<EyePacketListener, NodePacket>(NodePacketReceived), new object[] { sender, nodePacket });
 				}
-				catch (ObjectDisposedException)
-				{
-					return;
-				}
-				catch (InvalidAsynchronousStateException)
-				{
-					return;
-				}
+				catch (ObjectDisposedException) { return; }
+				catch (InvalidAsynchronousStateException) { return; }
 				return;
 			}
 
@@ -386,32 +355,10 @@ namespace WiFindUs.Eye
 					nodes[nodePacket.ID] = node;
 			}
 
-			node.Active = true;
-			node.LastUpdated = DateTime.UtcNow.ToUnixTimestamp();
-			if (nodePacket.Number.HasValue)
-				node.Number = nodePacket.Number;
-			if (nodePacket.GPSD.HasValue)
-				node.GPSD = nodePacket.GPSD;
-			if (nodePacket.MockLocation.HasValue)
-				node.MockLocation = nodePacket.MockLocation;
-			node.LockLocationEvents();
-			if (nodePacket.Accuracy.HasValue)
-				node.Accuracy = nodePacket.Accuracy;
-			if (nodePacket.Latitude.HasValue)
-				node.Latitude = nodePacket.Latitude;
-			if (nodePacket.Longitude.HasValue)
-				node.Longitude = nodePacket.Longitude;
-			if (nodePacket.Altitude.HasValue)
-				node.Altitude = nodePacket.Altitude;
-			node.UnlockLocationEvents();
-			if (nodePacket.AccessPoint.HasValue)
-				node.AccessPoint = nodePacket.AccessPoint;
-			if (nodePacket.DHCPD.HasValue)
-				node.DHCPD = nodePacket.DHCPD;
-			if (nodePacket.MeshPoint.HasValue)
-				node.MeshPoint = nodePacket.MeshPoint;
-			if (nodePacket.SatelliteCount.HasValue)
-				node.SatelliteCount = nodePacket.SatelliteCount;
+			//process packet
+			node.ProcessPacket(nodePacket);
+
+			//process node-node links
 			if (nodePacket.NodeLinks != null)
 			{
 				//get all existing links for node
@@ -474,6 +421,8 @@ namespace WiFindUs.Eye
 				foreach (NodeLink link in inactiveLinks)
 					link.Active = false;
 			}
+
+			//save changes
 			SubmitPacketChanges();
 		}
 

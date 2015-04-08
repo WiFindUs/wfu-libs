@@ -19,6 +19,7 @@ namespace WiFindUs.Eye.Wave.Controls
 		private MapApplication mapApp;
 		private float scaleFactor = 1.0f;
 		private bool started = false;
+		private ISelectableGroup selectionGroup = new SelectableEntityGroup();
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -26,14 +27,14 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public MapScene Scene
+		internal MapScene Scene
 		{
 			get { return mapApp == null ? null : mapApp.Scene; }
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public float BackBufferScale
+		internal float BackBufferScale
 		{
 			get { return scaleFactor; }
 			set
@@ -48,21 +49,21 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int BackBufferWidth
+		internal int BackBufferWidth
 		{
 			get { return mapApp != null ? mapApp.Width : 0; }
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int BackBufferHeight
+		internal int BackBufferHeight
 		{
 			get { return mapApp != null ? mapApp.Height : 0; }
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool DebugMode
+		internal bool DebugMode
 		{
 			get { return Scene == null ? false : Scene.DebugMode; }
 			set
@@ -71,6 +72,13 @@ namespace WiFindUs.Eye.Wave.Controls
 					return;
 				Scene.DebugMode = value;
 			}
+		}
+
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public ISelectableGroup SelectionGroup
+		{
+			get { return selectionGroup; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -95,7 +103,7 @@ namespace WiFindUs.Eye.Wave.Controls
 			Font = theme.Controls.Normal.Regular;
 		}
 
-		public void StartMapApplication()
+		internal void StartMapApplication()
 		{
 			if (mapApp != null || started)
 				return;
@@ -115,16 +123,11 @@ namespace WiFindUs.Eye.Wave.Controls
 			Debugger.T("exit");
 #endif
 		}
-		public void Render()
+
+		internal void Render()
 		{
 			if (mapApp != null)
 				mapApp.Render();
-		}
-
-		public void CancelThreads()
-		{
-			if (mapApp != null)
-				mapApp.CancelThreads();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -173,26 +176,28 @@ namespace WiFindUs.Eye.Wave.Controls
 			}
 		}
 
-		
 		protected override void OnMouseEnter(EventArgs e)
 		{
+#if !DEBUG
 			CursorManager.Hide();
+#endif
 			base.OnMouseEnter(e);
 		}
 
 		protected override void OnMouseLeave(EventArgs e)
 		{
+
 			base.OnMouseLeave(e);
+#if !DEBUG
 			CursorManager.Show();
+#endif
 		}
-		
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
 			Focus();
 			base.OnMouseDown(e);
 		}
-
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS

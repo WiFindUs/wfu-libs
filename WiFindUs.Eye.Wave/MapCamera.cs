@@ -28,6 +28,7 @@ namespace WiFindUs.Eye.Wave
 		private ILocation target;
 		private Camera3D camera;
 		private Ray ray;
+		private ILocatable trackingTarget = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -70,6 +71,26 @@ namespace WiFindUs.Eye.Wave
 				target = loc;
 				targetVector = MapScene.LocationToVector(target);
 				UpdateMetrics();
+			}
+		}
+
+		public ILocatable TrackingTarget
+		{
+			get { return trackingTarget; }
+			set
+			{
+				if (value == trackingTarget)
+					return;
+				if (trackingTarget != null)
+					trackingTarget.LocationChanged -= trackingTarget_LocationChanged;
+				trackingTarget = value;
+				if (trackingTarget != null)
+				{
+					trackingTarget_LocationChanged(trackingTarget);
+					trackingTarget.LocationChanged += trackingTarget_LocationChanged;
+					Tilt = 0.1f;
+					Zoom = Math.Min(Zoom, 0.1f);
+				}
 			}
 		}
 
@@ -159,6 +180,52 @@ namespace WiFindUs.Eye.Wave
 			}).ToArray();
 		}
 
+		public void TrackSelectedMarkers()
+		{
+			//get all active, selected markers which have a valid location
+			IEntityMarker[] selectedMarkers = MapScene.AllMarkers
+				.OfType<IEntityMarker>()
+				.Where(mk => mk.Updateable.Active
+					&& mk.Selectable.Selected
+					&& mk.Locatable.Location.HasLatLong)
+				.ToArray();
+			
+
+			//if none, clear selection
+			if (selectedMarkers == null || selectedMarkers.Length == 0)
+			{
+				TrackingTarget = null;
+				return;
+			}
+
+			//find the current tracked object in the selection
+			int index = -1;
+			if (TrackingTarget != null)
+			{
+				for (int i = 0; i < selectedMarkers.Length; i++)
+				{
+					if (TrackingTarget == selectedMarkers[i].Locatable)
+					{
+						index = i;
+						break;
+					}
+				}
+			}
+
+			//if we have no current tracked object, or there was only selected object found,
+			//or the currently tracked object was not part of the selection,
+			//set the first selected object as the tracked object
+			if (TrackingTarget == null || selectedMarkers.Length == 1 || index == -1)
+			{
+				TrackingTarget = selectedMarkers[0].Locatable;
+				return;
+			}
+
+			//otherwise, we're a member of the set and progressing through a loop,
+			//so advance to the next selected object
+			TrackingTarget = selectedMarkers[(index + 1) % selectedMarkers.Length].Locatable;
+		}
+
 		public void SnapToDestination()
 		{
 			camera.Position = destination;
@@ -186,6 +253,11 @@ namespace WiFindUs.Eye.Wave
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		private void trackingTarget_LocationChanged(ILocatable target)
+		{
+			Target = target.Location;
+		}
 
 		private void UpdateMetrics()
 		{

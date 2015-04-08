@@ -7,17 +7,19 @@ using WaveEngine.Common.Math;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Services;
 using WiFindUs.Eye.Wave.Controls;
+using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Wave
 {
 	public partial class MapInput : MapSceneBehavior
 	{
 		private bool mousePanning = false;
+
 		public bool MousePanning
 		{
 			get { return mousePanning; }
 		}
-		
+
 		/////////////////////////////////////////////////////////////////////
 		// DEFAULT HANDLERS
 		// everything in this file is the 'fallback' input handling;
@@ -28,25 +30,34 @@ namespace WiFindUs.Eye.Wave
 		// the event from being passed back to Windows, where applicable.
 		/////////////////////////////////////////////////////////////////////
 
+		protected virtual void OnHostGainedFocus(InputEventArgs args)
+		{
+
+		}
+
+		protected virtual void OnHostLostFocus(InputEventArgs args)
+		{
+
+		}
+
 		protected virtual void OnKeyDown(KeyEventArgs args)
 		{
-			if (ControlOnly)
+			if (args.Key == System.Windows.Forms.Keys.Add
+				|| args.Key == System.Windows.Forms.Keys.Subtract)
 			{
-				if (args.Key == System.Windows.Forms.Keys.Add
-					|| args.Key == System.Windows.Forms.Keys.Subtract)
-				{
+				if (ControlOnly) //keyboard zoom
 					MapScene.Camera.Zoom -= 0.10f * (args.Key == System.Windows.Forms.Keys.Add
 						? 1.0f : -1.0f);
-					args.Handled = true;
-				}
-			}
-			else if (ShiftOnly)
-			{
-				if (args.Key == System.Windows.Forms.Keys.Add
-					|| args.Key == System.Windows.Forms.Keys.Subtract)
-				{
+				else if (ShiftOnly) //keyboard tilt
 					MapScene.Camera.Tilt -= 0.10f * (args.Key == System.Windows.Forms.Keys.Add
 						? 1.0f : -1.0f);
+				args.Handled = true;
+			}
+			else if (args.Key == System.Windows.Forms.Keys.T)
+			{
+				if (NoModifiers)
+				{
+					MapScene.Camera.TrackSelectedMarkers();
 					args.Handled = true;
 				}
 			}
@@ -61,8 +72,12 @@ namespace WiFindUs.Eye.Wave
 		{
 			if (args.Button == System.Windows.Forms.MouseButtons.Middle)
 			{
-				mousePanning = true;
-				args.Handled = true;
+				if ((ShiftOnly || NoModifiers) && MouseInsideHost)
+				{
+					MapScene.Camera.TrackingTarget = null;
+					mousePanning = true;
+					args.Handled = true;
+				}
 			}
 		}
 
@@ -70,49 +85,120 @@ namespace WiFindUs.Eye.Wave
 		{
 			if (args.Button == System.Windows.Forms.MouseButtons.Middle)
 			{
-				mousePanning = false;
-				args.Handled = true;
+				if (mousePanning)
+				{
+					mousePanning = false;
+					args.Handled = true;
+				}
 			}
 		}
 
 		protected virtual void OnMouseWheel(MouseWheelEventArgs args)
 		{
-			if (ShiftOnly)
-			{
-				MapScene.Camera.Tilt -= args.Delta * 0.05f;
-				args.Handled = true;
-			}
-			else if (NoModifiers)
-			{
-				MapScene.Camera.Zoom -= args.Delta * 0.05f;
-				args.Handled = true;
-			}
+			//mouse zoom
+			MapScene.Camera.Zoom -= args.Delta * 0.05f;
+			args.Handled = true;
 		}
 
 		protected virtual void OnMouseMove(MouseMoveEventArgs args)
 		{
 			if (mousePanning)
 			{
-				float diff = 1.0f + MapScene.Camera.Zoom;
-				MapScene.Camera.Target = MapScene.VectorToLocation(
-					MapScene.Camera.TargetVector - new Vector3(args.DeltaX * diff, 0.0f, args.DeltaY * diff));
+				//mouse tilt
+				if (ShiftOnly)
+					MapScene.Camera.Tilt -= args.DeltaY * 0.01f;
+				else
+				{
+					//mouse pan
+					float diff = 1.0f + MapScene.Camera.Zoom;
+					MapScene.Camera.Target = MapScene.VectorToLocation(
+						MapScene.Camera.TargetVector - new Vector3(args.DeltaX * diff, 0.0f, args.DeltaY * diff));
+				}
 			}
-
-			Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY);
-			if (pos.HasValue)
-				MapScene.Cursor.Transform3D.Position = pos.Value;
+			else
+			{
+				Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY);
+				if (pos.HasValue)
+					MapScene.Cursor.Transform3D.Position = pos.Value;
+			}
 
 			 args.Handled = true;
 		}
 
 		protected virtual void OnMouseClick(MouseButtonEventArgs args)
 		{
+			if (mousePanning)
+				return;
 
+			if (args.Button == System.Windows.Forms.MouseButtons.Left)
+			{
+				args.Handled = true;
+
+				Marker[] clickedMarkers = MapScene.Cursor.MarkersAtCursor<Marker>();
+				if (clickedMarkers == null || clickedMarkers.Length == 0)
+				{
+					if (!Control)
+						MapScene.SelectionGroup.ClearSelection();
+					return;
+				}
+
+				List<ISelectable> selectables = new List<ISelectable>();
+				foreach (Marker marker in clickedMarkers)
+				{
+					ISelectableProxy sp = marker as ISelectableProxy;
+					if (sp != null)
+						selectables.Add(sp.Selectable);
+				}
+				if (Control)
+					MapScene.SelectionGroup.ToggleSelection(selectables);
+				else
+				{
+					if (selectables.Count == 0)
+						MapScene.SelectionGroup.ClearSelection();
+					else if (selectables.Count == 1 || MapScene.SelectionGroup.SelectedEntities.Length == 0)
+						MapScene.SelectionGroup.SetSelection(selectables[0]);
+					else
+					{
+						ISelectable[] intersection = MapScene.SelectionGroup.SelectedEntities.Intersect(selectables).ToArray();
+						if (intersection.Length == 0)
+							MapScene.SelectionGroup.SetSelection(selectables[0]);
+						else
+							MapScene.SelectionGroup.SetSelection(
+								selectables[((selectables.IndexOf(intersection[intersection.Length - 1]) + 1) % selectables.Count)]);
+					}
+				}
+
+			}
 		}
 
 		protected virtual void OnMouseDoubleClick(MouseButtonEventArgs args)
 		{
 
+		}
+
+		protected override void Update(TimeSpan gameTime)
+		{
+			if (!HostHasFocus)
+				return;
+			
+			if (!NoArrows)
+			{
+				Vector3 moveDelta = new Vector3();
+				if (Left)
+					moveDelta.X -= 1.0f;
+				if (Right)
+					moveDelta.X += 1.0f;
+				if (Up)
+					moveDelta.Z -= 1.0f;
+				if (Down)
+					moveDelta.Z += 1.0f;
+				moveDelta.Normalize();
+				moveDelta *= (float)gameTime.TotalSeconds * 1000.0f;
+				MapScene.Camera.TrackingTarget = null;
+				MapScene.Camera.Target = MapScene.VectorToLocation(
+					MapScene.Camera.TargetVector + moveDelta);
+
+			}
 		}
 	}
 }

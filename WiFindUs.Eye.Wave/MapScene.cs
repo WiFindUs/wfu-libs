@@ -17,6 +17,7 @@ using WiFindUs.Eye.Wave.Layers;
 using System.IO;
 using WaveEngine.Materials;
 using WiFindUs.Themes;
+using System.Linq;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -55,7 +56,7 @@ namespace WiFindUs.Eye.Wave
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public ILocation CenterLocation
+		internal ILocation CenterLocation
 		{
 			get { return center; }
 			set
@@ -83,7 +84,7 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public uint VisibleLayer
+		internal uint VisibleLayer
 		{
 			get { return visibleLayer; }
 			set
@@ -98,32 +99,32 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public uint LayerCount
+		internal uint LayerCount
 		{
 			get { return (uint)tileLayers.Length; }
 		}
 
-		public TerrainTile BaseTile
+		internal TerrainTile BaseTile
 		{
 			get { return baseTile; }
 		}
 
-		public List<DeviceMarker> DeviceMarkers
+		internal List<DeviceMarker> DeviceMarkers
 		{
 			get { return deviceMarkers; }
 		}
 
-		public List<NodeMarker> NodeMarkers
+		internal List<NodeMarker> NodeMarkers
 		{
 			get { return nodeMarkers; }
 		}
 
-		public List<Marker> AllMarkers
+		internal List<Marker> AllMarkers
 		{
 			get { return allMarkers; }
 		}
 
-		public bool DebugMode
+		internal bool DebugMode
 		{
 			get { return RenderManager.DebugLines; }
 			set
@@ -135,27 +136,27 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public MapInput Input
+		internal MapInput Input
 		{
 			get { return inputBehaviour; }
 		}
 
-		public MapCamera Camera
+		internal MapCamera Camera
 		{
 			get { return cameraController; }
 		}
 
-		public MapCursor Cursor
+		internal MapCursor Cursor
 		{
 			get { return cursor; }
 		}
 
-		public BoxCollider GroundPlane
+		internal BoxCollider GroundPlane
 		{
 			get { return groundPlaneCollider; }
 		}
 
-		public float MarkerScale
+		internal float MarkerScale
 		{
 			get { return markerScale; }
 			set
@@ -166,20 +167,25 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public static Texture2D WhiteTexture
+		internal static Texture2D WhiteTexture
 		{
 			get { return whiteTex; }
 			private set { whiteTex = value; }
 		}
 
-		public int BackBufferWidth
+		internal int BackBufferWidth
 		{
 			get { return hostControl.BackBufferWidth; }
 		}
 
-		public int BackBufferHeight
+		internal int BackBufferHeight
 		{
 			get { return hostControl.BackBufferHeight; }
+		}
+
+		internal ISelectableGroup SelectionGroup
+		{
+			get { return hostControl.SelectionGroup; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -232,17 +238,9 @@ namespace WiFindUs.Eye.Wave
 		{
 			if (node == null)
 				return null;
-
-			NodeMarker marker = null;
-			foreach (NodeMarker mk in nodeMarkers)
-			{
-				if (mk.Entity == node)
-				{
-					marker = mk;
-					break;
-				}
-			}
-			return marker;
+			return (from mk in nodeMarkers
+				   where mk.Entity == node
+				   select mk).FirstOrDefault();
 		}
 
 		public NodeMarker GetNodeMarker(uint nodeNumber)
@@ -250,16 +248,9 @@ namespace WiFindUs.Eye.Wave
 			if (nodeNumber == 0 || nodeNumber > 254)
 				return null;
 
-			NodeMarker marker = null;
-			foreach (NodeMarker mk in nodeMarkers)
-			{
-				if (mk.Entity.Number.GetValueOrDefault() == nodeNumber)
-				{
-					marker = mk;
-					break;
-				}
-			}
-			return marker;
+			return (from mk in nodeMarkers
+					where mk.Entity.Number.GetValueOrDefault() == nodeNumber
+					select mk).FirstOrDefault();
 		}
 
 		public DeviceMarker GetDeviceMarker(Device device)
@@ -267,16 +258,9 @@ namespace WiFindUs.Eye.Wave
 			if (device == null)
 				return null;
 
-			DeviceMarker marker = null;
-			foreach (DeviceMarker mk in deviceMarkers)
-			{
-				if (mk.Entity == device)
-				{
-					marker = mk;
-					break;
-				}
-			}
-			return marker;
+			return (from mk in deviceMarkers
+					where mk.Entity == device
+					select mk).FirstOrDefault();
 		}
 
 		public NodeLinkMarker GetNodeLinkMarker(NodeMarker nodeA, NodeMarker nodeB)
@@ -284,16 +268,10 @@ namespace WiFindUs.Eye.Wave
 			if (nodeA == null || nodeB == null)
 				return null;
 
-			NodeLinkMarker marker = null;
-			foreach (NodeLinkMarker mk in nodeLinkMarkers)
-			{
-				if (mk.LinksMarkers(nodeA, nodeB))
-				{
-					marker = mk;
-					break;
-				}
-			}
-			return marker;
+			return (from mk in nodeLinkMarkers
+					where mk.LinksMarkers(nodeA, nodeB)
+					select mk
+					).FirstOrDefault();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -412,6 +390,7 @@ namespace WiFindUs.Eye.Wave
 			deviceMarkers.Add(marker);
 			allMarkers.Add(marker);
 			EntityManager.Add(entity);
+			device.SelectionGroup = SelectionGroup;
 
 			//device link
 			entity = LinkMarker.Create(marker, null, typeof(DeviceLinkMarker));
@@ -431,6 +410,7 @@ namespace WiFindUs.Eye.Wave
 			nodeMarkers.Add(marker);
 			allMarkers.Add(marker);
 			EntityManager.Add(entity);
+			node.SelectionGroup = SelectionGroup;
 		}
 
 		private void NodeLink_OnNodeLinkLoaded(NodeLink nodeLink)

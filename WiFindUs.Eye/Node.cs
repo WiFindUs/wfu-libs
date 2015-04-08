@@ -138,14 +138,37 @@ namespace WiFindUs.Eye
 			get { return this.ToString(); }
 		}
 
-		public void LockLocationEvents()
+		internal void ProcessPacket(NodePacket packet)
 		{
-			locationEventLock.Lock();
-		}
+			Active = true;
+			LastUpdated = DateTime.UtcNow.ToUnixTimestamp();
 
-		public void UnlockLocationEvents()
-		{
+			if (packet.Number.HasValue)
+				Number = packet.Number;
+			if (packet.GPSD.HasValue)
+				GPSD = packet.GPSD;
+			if (packet.MockLocation.HasValue)
+				MockLocation = packet.MockLocation;
+
+			locationEventLock.Lock();
+			if (packet.Accuracy.HasValue)
+				Accuracy = packet.Accuracy;
+			if (packet.Latitude.HasValue)
+				Latitude = packet.Latitude;
+			if (packet.Longitude.HasValue)
+				Longitude = packet.Longitude;
+			if (packet.Altitude.HasValue)
+				Altitude = packet.Altitude;
 			locationEventLock.Unlock();
+
+			if (packet.AccessPoint.HasValue)
+				AccessPoint = packet.AccessPoint;
+			if (packet.DHCPD.HasValue)
+				DHCPD = packet.DHCPD;
+			if (packet.MeshPoint.HasValue)
+				MeshPoint = packet.MeshPoint;
+			if (packet.SatelliteCount.HasValue)
+				SatelliteCount = packet.SatelliteCount;
 		}
 
 		/////////////////////////////////////////////////////////////////////

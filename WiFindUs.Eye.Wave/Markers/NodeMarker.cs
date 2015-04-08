@@ -99,7 +99,7 @@ namespace WiFindUs.Eye.Wave.Markers
 							DiffuseColor = new Color(0, 200, 255),
 							Alpha = 0.25f
 						}))
-						.AddComponent(Model.CreateTorus(14f, 2, 8))
+						.AddComponent(Model.CreateTorus(14f, 2, 12))
 						.AddComponent(new ModelRenderer())
 						.AddComponent(marker.AddCollider(new BoxCollider()))
 					)
@@ -119,9 +119,10 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			float secs = (float)gameTime.TotalSeconds;
-			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f, secs * FADE_SPEED);
-			coreMat.Alpha = coreMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.5f, secs * FADE_SPEED);
-			ringMat.Alpha = ringMat.Alpha.Lerp(Entity.Selected ? 0.7f : 0.25f, secs * FADE_SPEED);
+			bool fullAlpha = Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity;
+			spikeMat.Alpha = spikeMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.75f, secs * FADE_SPEED);
+			coreMat.Alpha = coreMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.5f, secs * FADE_SPEED);
+			ringMat.Alpha = ringMat.Alpha.Lerp(fullAlpha ? 0.7f : 0.25f, secs * FADE_SPEED);
 			ringTransform.Rotation = new Vector3(
 				ringTransform.Rotation.X,
 				ringTransform.Rotation.Y + ROTATE_SPEED * secs,

@@ -11,7 +11,8 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public abstract class EntityMarker<T> : Marker, ISelectableProxy where T : class, ILocatable, ISelectable, IUpdateable
+	public abstract class EntityMarker<T> : Marker, ISelectableProxy, ILocatableProxy, IUpdateableProxy, IEntityMarker
+		where T : class, ILocatable, ISelectable, IUpdateable
 	{
 		public event Action<EntityMarker<T>> VisibleChanged;
 		
@@ -29,6 +30,21 @@ namespace WiFindUs.Eye.Wave.Markers
 			get { return entity; }
 		}
 
+		public ILocatable Locatable
+		{
+			get { return entity; }
+		}
+
+		public IUpdateable Updateable
+		{
+			get { return entity; }
+		}
+
+		public ISelectable Selectable
+		{
+			get { return entity; }
+		}
+
 		public virtual bool VisibleWhileInactive
 		{
 			get { return false; }
@@ -38,11 +54,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			get { return entity.Selected; }
 			set { entity.Selected = value; }
-		}
-
-		public ISelectable Selectable
-		{
-			get { return entity; }
 		}
 
 		protected virtual bool VisibilityOverride
@@ -105,7 +116,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			destination = MapScene.LocationToVector(entity.Location);
-			if (lastLocation == null || Location.Distance(entity.Location, lastLocation) > 50.0)
+			if (lastLocation == null || WiFindUs.Eye.Location.Distance(entity.Location, lastLocation) > 50.0)
 				Transform3D.Position = destination;
 			lastLocation = new Location(entity.Location);
 		}

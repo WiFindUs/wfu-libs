@@ -120,16 +120,6 @@ namespace WiFindUs.Eye
 			get { return Type.ToLower().CompareTo("incident") == 0; }
 		}
 
-		public void LockLocationEvents()
-		{
-			locationEventLock.Lock();
-		}
-
-		public void UnlockLocationEvents()
-		{
-			locationEventLock.Unlock();
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////

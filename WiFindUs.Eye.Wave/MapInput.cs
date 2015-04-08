@@ -85,6 +85,10 @@ namespace WiFindUs.Eye.Wave
 		private Dictionary<System.Windows.Forms.Keys, bool> keyStates = new Dictionary<System.Windows.Forms.Keys, bool>();
 		private Dictionary<System.Windows.Forms.MouseButtons, bool> mouseStates = new Dictionary<System.Windows.Forms.MouseButtons, bool>();
 		private int mouseX = 0, mouseY = 0;
+		private int mouseButtonCount = 0;
+		private int modifierCount = 0;
+		private int arrowCount = 0;
+		private int keyCount = 0;
 		private MapControl hostControl;
 
 		/////////////////////////////////////////////////////////////////////
@@ -99,10 +103,22 @@ namespace WiFindUs.Eye.Wave
 				if (value == hostHasFocus)
 					return;
 				hostHasFocus = value;
-				if (hostHasFocus && HostGainedFocus != null)
-					HostGainedFocus(this, new InputEventArgs());
-				else if (!hostHasFocus && HostLostFocus != null)
-					HostLostFocus(this, new InputEventArgs());
+				InputEventArgs args = new InputEventArgs();
+				if (hostHasFocus)
+				{
+					if (HostGainedFocus != null)
+						HostGainedFocus(this, args);
+					if (!args.Handled)
+						OnHostGainedFocus(args);
+				}
+				else
+				{
+					ClearAllStates();
+					if (HostLostFocus != null)
+						HostLostFocus(this, args);
+					if (!args.Handled)
+						OnHostLostFocus(args);
+				}
 			}
 		}
 
@@ -133,34 +149,14 @@ namespace WiFindUs.Eye.Wave
 
 		public bool LeftMouse
 		{
-			get { return IsMouseButtonDown(System.Windows.Forms.MouseButtons.Left); }
+			get { return mouseButtonCount > 0 && IsMouseButtonDown(System.Windows.Forms.MouseButtons.Left); }
 		}
 
-		public bool MiddleMouse
-		{
-			get { return IsMouseButtonDown(System.Windows.Forms.MouseButtons.Middle); }
-		}
-
-		public bool RightMouse
-		{
-			get { return IsMouseButtonDown(System.Windows.Forms.MouseButtons.Right); }
-		}
-
-		public bool MouseButton4
-		{
-			get { return IsMouseButtonDown(System.Windows.Forms.MouseButtons.XButton1); }
-		}
-
-		public bool MouseButton5
-		{
-			get { return IsMouseButtonDown(System.Windows.Forms.MouseButtons.XButton2); }
-		}
-
-		public bool NoMouseButtons
+		public bool LeftMouseOnly
 		{
 			get
 			{
-				return !LeftMouse
+				return LeftMouse
 					&& !MiddleMouse
 					&& !RightMouse
 					&& !MouseButton4
@@ -168,19 +164,82 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
+		public bool MiddleMouse
+		{
+			get { return mouseButtonCount > 0 && IsMouseButtonDown(System.Windows.Forms.MouseButtons.Middle); }
+		}
+
+		public bool MiddleMouseOnly
+		{
+			get
+			{
+				return MiddleMouse
+					&& !LeftMouse
+					&& !RightMouse
+					&& !MouseButton4
+					&& !MouseButton5;
+			}
+		}
+
+		public bool RightMouse
+		{
+			get { return mouseButtonCount > 0 && IsMouseButtonDown(System.Windows.Forms.MouseButtons.Right); }
+		}
+
+		public bool RightMouseOnly
+		{
+			get
+			{
+				return RightMouse
+					&& !LeftMouse
+					&& !MiddleMouse
+					&& !MouseButton4
+					&& !MouseButton5;
+			}
+		}
+
+		public bool MouseButton4
+		{
+			get { return mouseButtonCount > 0 && IsMouseButtonDown(System.Windows.Forms.MouseButtons.XButton1); }
+		}
+
+		public bool MouseButton4Only
+		{
+			get
+			{
+				return MouseButton4
+					&& !LeftMouse
+					&& !MiddleMouse
+					&& !RightMouse
+					&& !MouseButton5;
+			}
+		}
+
+		public bool MouseButton5
+		{
+			get { return mouseButtonCount > 0 && IsMouseButtonDown(System.Windows.Forms.MouseButtons.XButton2); }
+		}
+
+		public bool MouseButton5Only
+		{
+			get
+			{
+				return MouseButton5
+					&& !LeftMouse
+					&& !MiddleMouse
+					&& !RightMouse
+					&& !MouseButton4;
+			}
+		}
+
+		public bool NoMouseButtons
+		{
+			get { return mouseButtonCount == 0; }
+		}
+
 		public bool Shift
 		{
-			get { return IsKeyDown(System.Windows.Forms.Keys.ShiftKey); }
-		}
-
-		public bool Control
-		{
-			get { return IsKeyDown(System.Windows.Forms.Keys.ControlKey); }
-		}
-
-		public bool Alt
-		{
-			get { return IsKeyDown(System.Windows.Forms.Keys.Menu); }
+			get { return modifierCount > 0 && IsKeyDown(System.Windows.Forms.Keys.ShiftKey); }
 		}
 
 		public bool ShiftOnly
@@ -188,19 +247,74 @@ namespace WiFindUs.Eye.Wave
 			get { return Shift && !Control && !Alt; }
 		}
 
-		public bool AltOnly
+		public bool Control
 		{
-			get { return !Shift && !Control && Alt; }
+			get { return modifierCount > 0 && IsKeyDown(System.Windows.Forms.Keys.ControlKey); }
 		}
 
 		public bool ControlOnly
 		{
-			get { return !Shift && Control && !Alt; }
+			get { return Control && !Shift && !Alt; }
+		}
+
+		public bool Alt
+		{
+			get { return modifierCount > 0 && IsKeyDown(System.Windows.Forms.Keys.Menu); }
+		}
+
+		public bool AltOnly
+		{
+			get { return Alt && !Shift && !Control; }
 		}
 
 		public bool NoModifiers
 		{
-			get { return !Shift && !Control && !Alt; }
+			get { return modifierCount == 0; }
+		}
+
+		public bool Left
+		{
+			get { return arrowCount > 0 && IsKeyDown(System.Windows.Forms.Keys.Left); }
+		}
+
+		public bool LeftOnly
+		{
+			get { return Left && !Right && !Up && !Down; }
+		}
+
+		public bool Right
+		{
+			get { return arrowCount > 0 && IsKeyDown(System.Windows.Forms.Keys.Right); }
+		}
+
+		public bool RightOnly
+		{
+			get { return Right && !Left && !Up && !Down; }
+		}
+
+		public bool Up
+		{
+			get { return arrowCount > 0 && IsKeyDown(System.Windows.Forms.Keys.Up); }
+		}
+
+		public bool UpOnly
+		{
+			get { return Up && !Right && !Left && !Down; }
+		}
+
+		public bool Down
+		{
+			get { return arrowCount > 0 && IsKeyDown(System.Windows.Forms.Keys.Down); }
+		}
+
+		public bool DownOnly
+		{
+			get { return Down && !Up && !Right && !Left; }
+		}
+
+		public bool NoArrows
+		{
+			get { return arrowCount == 0; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -252,6 +366,21 @@ namespace WiFindUs.Eye.Wave
 			if (!mouseStates.TryGetValue(button, out down))
 				down = false;
 			return down;
+		}
+
+		public static bool IsModifierKey(System.Windows.Forms.Keys key)
+		{
+			return key == System.Windows.Forms.Keys.ShiftKey
+				|| key == System.Windows.Forms.Keys.ControlKey
+				|| key == System.Windows.Forms.Keys.Menu;
+		}
+
+		public static bool IsArrowKey(System.Windows.Forms.Keys key)
+		{
+			return key == System.Windows.Forms.Keys.Left
+				|| key == System.Windows.Forms.Keys.Right
+				|| key == System.Windows.Forms.Keys.Up
+				|| key == System.Windows.Forms.Keys.Down;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -318,6 +447,8 @@ namespace WiFindUs.Eye.Wave
 
 		private void control_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
 		{
+			if (!MouseInsideHost && hostControl.Bounds.Contains(e.X, e.Y))
+				MouseInsideHost = true;
 			UpdateMousePosition(e);
 		}
 
@@ -339,13 +470,30 @@ namespace WiFindUs.Eye.Wave
 
 		private void UpdateKeyState(System.Windows.Forms.KeyEventArgs e, bool down)
 		{
-			if (e.Handled || IsKeyDown(e.KeyCode) == down)
+			if (e.Handled)
 				return;
 
-			keyStates[e.KeyCode] = down;
 			KeyEventArgs args = new KeyEventArgs(e.KeyCode, down);
-			if (down)
+			UpdateKeyState(args);
+			if (args.Handled)
+				e.Handled = true;
+		}
+
+		private void UpdateKeyState(KeyEventArgs args)
+		{
+			if (IsKeyDown(args.Key) == args.Down)
+				return;
+
+			keyStates[args.Key] = args.Down;
+
+			if (args.Down)
 			{
+				keyCount++;
+				if (IsModifierKey(args.Key))
+					modifierCount++;
+				else if (IsArrowKey(args.Key))
+					arrowCount++;
+
 				if (KeyDown != null)
 					KeyDown(this, args);
 				if (!args.Handled)
@@ -353,13 +501,17 @@ namespace WiFindUs.Eye.Wave
 			}
 			else
 			{
+				keyCount--;
+				if (IsModifierKey(args.Key))
+					modifierCount--;
+				else if (IsArrowKey(args.Key))
+					arrowCount--;
+
 				if (KeyUp != null)
 					KeyUp(this, args);
 				if (!args.Handled)
 					OnKeyUp(args);
 			}
-			if (args.Handled)
-				e.Handled = true;
 		}
 
 		private void UpdateMouseButtonState(System.Windows.Forms.MouseButtons button, bool down)
@@ -371,6 +523,7 @@ namespace WiFindUs.Eye.Wave
 			MouseButtonEventArgs args = new MouseButtonEventArgs(mouseX, mouseY, button, down);
 			if (down)
 			{
+				mouseButtonCount++;
 				if (MouseDown != null)
 					MouseDown(this, args);
 				if (!args.Handled)
@@ -378,6 +531,7 @@ namespace WiFindUs.Eye.Wave
 			}
 			else
 			{
+				mouseButtonCount--;
 				if (MouseUp != null)
 					MouseUp(this, args);
 				if (!args.Handled)
@@ -398,6 +552,17 @@ namespace WiFindUs.Eye.Wave
 				MouseMove(this, args);
 			if (!args.Handled)
 				OnMouseMove(args);
+		}
+
+		private void ClearAllStates()
+		{
+			System.Windows.Forms.Keys[] keys = keyStates.Keys.ToArray();
+			foreach (System.Windows.Forms.Keys key in keys)
+				UpdateKeyState(new KeyEventArgs(key, false));
+
+			System.Windows.Forms.MouseButtons[] mbs = mouseStates.Keys.ToArray();
+			foreach (System.Windows.Forms.MouseButtons mb in mbs)
+				UpdateMouseButtonState(mb, false);
 		}
 	}
 }

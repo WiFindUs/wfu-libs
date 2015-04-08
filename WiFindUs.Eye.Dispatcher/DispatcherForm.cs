@@ -19,7 +19,6 @@ namespace WiFindUs.Eye.Dispatcher
 	{
 		private FormWindowState oldWindowState;
 		private Rectangle oldBounds;
-		private ISelectableGroup globalSelectionGroup = new SelectableEntityGroup();
 		//private ActionPanel actionPanel;
 		private MapForm mapForm;
 		private BaseForm consoleForm;
@@ -105,13 +104,6 @@ namespace WiFindUs.Eye.Dispatcher
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public ISelectableGroup GlobalSelectionGroup
-		{
-			get { return globalSelectionGroup; }
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool ShowMapInWindow
 		{
 			get { return mapForm == null ? false : mapForm.Visible; }
@@ -162,6 +154,7 @@ namespace WiFindUs.Eye.Dispatcher
 
 			//map
 			Map = map;
+			minimap.Map = map;
 
 			//title
 			Text = WFUApplication.Name;
@@ -201,17 +194,17 @@ namespace WiFindUs.Eye.Dispatcher
 			KeyPreview = true;
 
 			//controls
-			listDevices.SelectionGroup = globalSelectionGroup;
-			listUsers.SelectionGroup = globalSelectionGroup;
-			listIncidents.SelectionGroup = globalSelectionGroup;
-			listNodes.SelectionGroup = globalSelectionGroup;
+			listDevices.SelectionGroup = map.SelectionGroup;
+			listUsers.SelectionGroup = map.SelectionGroup;
+			listIncidents.SelectionGroup = map.SelectionGroup;
+			listNodes.SelectionGroup = map.SelectionGroup;
 
 			//events
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
 			WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
 			WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
-			globalSelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
+			map.SelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
 #if DEBUG
 			Debugger.T("exit");
 #endif
@@ -317,8 +310,6 @@ namespace WiFindUs.Eye.Dispatcher
 		protected override void OnMapSceneStarted(MapScene scene)
 		{
 			base.OnMapSceneStarted(scene);
-			if (minimap != null && scene == map.Scene)
-				minimap.Scene = scene;
 			SetApplicationStatus("Map scene ready.", Theme.Current.Highlight.Mid.Colour);
 #if DEBUG
 			DebugMode = true;
@@ -370,7 +361,7 @@ namespace WiFindUs.Eye.Dispatcher
 
 		private void OnSelectionGroupSelectionChanged(ISelectableGroup obj)
 		{
-			if (obj != globalSelectionGroup)
+			if (obj != map.SelectionGroup)
 				return;
 			/*
 			ISelectable[] selectedEntities = globalSelectionGroup.SelectedEntities;
@@ -407,43 +398,6 @@ namespace WiFindUs.Eye.Dispatcher
 			}
 			 * */
 		}
-
-		/*
-		private void InputBehaviour_MouseDown(MapInputOld.MouseButtonEventArgs args)
-		{
-			if (args.Button != MapInputOld.MouseButtons.Left)
-				return;
-
-			Marker[] clickedMarkers = args.Scene.Cursor.MarkersAtCursor<Marker>();
-
-			if (clickedMarkers == null || clickedMarkers.Length == 0)
-			{
-				globalSelectionGroup.ClearSelection();
-				return;
-			}
-
-			List<ISelectable> selectables = new List<ISelectable>();
-			foreach (Marker marker in clickedMarkers)
-			{
-				ISelectableProxy sp = marker as ISelectableProxy;
-				if (sp != null)
-					selectables.Add(sp.Selectable);
-			}
-
-			if (selectables.Count == 0)
-				globalSelectionGroup.ClearSelection();
-			else if (selectables.Count == 1 || globalSelectionGroup.SelectedEntities.Length == 0)
-				globalSelectionGroup.SetSelection(selectables[0]);
-			else
-			{
-				ISelectable[] intersection = globalSelectionGroup.SelectedEntities.Intersect(selectables).ToArray();
-				if (intersection.Length == 0)
-					globalSelectionGroup.SetSelection(selectables[0]);
-				else
-					globalSelectionGroup.SetSelection(selectables[((selectables.IndexOf(intersection[intersection.Length - 1]) + 1) % selectables.Count)]);
-			}
-		}
-		 * */
 
 		private void TestKeys(object sender, KeyEventArgs e)
 		{

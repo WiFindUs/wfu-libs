@@ -1,5 +1,5 @@
 ﻿
-namespace WiFindUs.Eye
+namespace WiFindUs.Eye.Wave
 {
 	public interface ISelectableProxy
 	{

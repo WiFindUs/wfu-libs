@@ -6,7 +6,5 @@ namespace WiFindUs.Eye
 	{
 		ILocation Location { get; }
 		event Action<ILocatable> LocationChanged;
-		void LockLocationEvents();
-		void UnlockLocationEvents();
 	}
 }

@@ -208,13 +208,31 @@ namespace WiFindUs.Eye
 
 		}
 
-		public void LockLocationEvents()
+		internal void ProcessPacket(DevicePacket packet)
 		{
-			locationEventLock.Lock();
-		}
+			Active = true;
+			LastUpdated = DateTime.UtcNow.ToUnixTimestamp();
+			if (packet.DeviceType != null)
+				Type = packet.DeviceType;
+			if (packet.Charging.HasValue)
+				Charging = packet.Charging;
+			if (packet.BatteryLevel.HasValue)
+				BatteryLevel = packet.BatteryLevel;
 
-		public void UnlockLocationEvents()
-		{
+			if (packet.GPSEnabled.HasValue)
+				GPSEnabled = packet.GPSEnabled;
+			if (packet.GPSHasFix.HasValue)
+				GPSHasFix = packet.GPSHasFix;
+
+			locationEventLock.Lock();
+			if (packet.Accuracy.HasValue)
+				Accuracy = packet.Accuracy;
+			if (packet.Latitude.HasValue)
+				Latitude = packet.Latitude;
+			if (packet.Longitude.HasValue)
+				Longitude = packet.Longitude;
+			if (packet.Altitude.HasValue)
+				Altitude = packet.Altitude;
 			locationEventLock.Unlock();
 		}
 

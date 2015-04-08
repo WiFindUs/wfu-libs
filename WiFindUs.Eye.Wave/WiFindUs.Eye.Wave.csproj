@@ -62,9 +62,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ILocatableProxy.cs" />
+    <Compile Include="IUpdateableProxy.cs" />
+    <Compile Include="ISelectableProxy.cs" />
     <Compile Include="MapInput.DefaultHandlers.cs" />
     <Compile Include="MapSceneBehavior.cs" />
     <Compile Include="MapCursor.cs" />
+    <Compile Include="Markers\IEntityMarker.cs" />
     <Compile Include="SelectionRing.cs" />
     <Compile Include="WaveExtensions.cs" />
     <Compile Include="Layers\Overlays.cs" />

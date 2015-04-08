@@ -12,7 +12,7 @@ namespace WiFindUs.Eye.Wave.Controls
 	public class MiniMapControl : ThemedControl
 	{
 		private const int UPDATE_FPS = 15;
-		private WiFindUs.Eye.Wave.MapScene scene;
+		private MapControl hostControl;
 		private Rectangle mapArea = Rectangle.Empty;
 		private bool mouseDown = false;
 		private Image image;
@@ -22,33 +22,41 @@ namespace WiFindUs.Eye.Wave.Controls
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-		
+
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public WiFindUs.Eye.Wave.MapScene Scene
+		public MapControl Map
 		{
-			get { return scene; }
+			get { return hostControl; }
 			set
 			{
-				if (value == scene)
+				if (value == hostControl)
 					return;
-				if (scene != null)
+
+				//suspend/release resources
+				timer.Stop();
+				DisposeImage();
+
+				//unset previous
+				if (hostControl != null)
+					hostControl.SceneStarted -= hostControl_SceneStarted;
+
+				//change value
+				hostControl = value;
+
+				//set new
+				if (hostControl != null)
 				{
-					timer.Stop();
-					if (scene.BaseTile != null)
-						scene.BaseTile.TextureImageLoadingFinished -= BaseTile_TextureImageLoadingFinished;
-					scene.CenterLocationChanged -= Scene_CenterLocationChanged;
-					DisposeImage();
+					hostControl.SceneStarted += hostControl_SceneStarted;
+					if (hostControl.Scene != null)
+					{
+						if (hostControl.Scene.IsStarted)
+							hostControl_SceneStarted(hostControl.Scene);
+					}
 				}
-				scene = value;
-				if (scene != null)
-				{
-					if (scene.BaseTile != null)
-						scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
-					scene.CenterLocationChanged += Scene_CenterLocationChanged;
-					if (Visible && Enabled)
-						timer.Start();
-				}
+
+				//update
+				SetTimerState();
 				Refresh();
 			}
 		}
@@ -72,23 +80,25 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			if (loc == null
 				|| !loc.HasLatLong
-				|| scene == null
-				|| scene.BaseTile == null
-				|| scene.BaseTile.Region == null)
+				|| hostControl == null
+				|| hostControl.Scene == null
+				|| hostControl.Scene.BaseTile == null
+				|| hostControl.Scene.BaseTile.Region == null)
 				return Point.Empty;
-			return Scene.BaseTile.Region.LocationToScreen(mapArea, loc);
+			return hostControl.Scene.BaseTile.Region.LocationToScreen(mapArea, loc);
 		}
 
 		public ILocation ScreenToLocation(Point point)
 		{
-			if (scene == null
-				|| scene.BaseTile == null
-				|| scene.BaseTile.Region == null)
+			if (hostControl == null
+				|| hostControl.Scene == null
+				|| hostControl.Scene.BaseTile == null
+				|| hostControl.Scene.BaseTile.Region == null)
 				return WiFindUs.Eye.Location.EMPTY;
 
 			return new WiFindUs.Eye.Location(
-				scene.BaseTile.Region.NorthWest.Latitude - ((point.Y - mapArea.Top) / (float)mapArea.Height) * scene.BaseTile.Region.LatitudinalSpan,
-				scene.BaseTile.Region.NorthWest.Longitude + ((point.X - mapArea.Left) / (float)mapArea.Width) * scene.BaseTile.Region.LongitudinalSpan
+				hostControl.Scene.BaseTile.Region.NorthWest.Latitude - ((point.Y - mapArea.Top) / (float)mapArea.Height) * hostControl.Scene.BaseTile.Region.LatitudinalSpan,
+				hostControl.Scene.BaseTile.Region.NorthWest.Longitude + ((point.X - mapArea.Left) / (float)mapArea.Width) * hostControl.Scene.BaseTile.Region.LongitudinalSpan
 				);
 		}
 
@@ -106,13 +116,13 @@ namespace WiFindUs.Eye.Wave.Controls
 		protected override void OnVisibleChanged(EventArgs e)
 		{
 			base.OnVisibleChanged(e);
-			timer.Enabled = Visible && Enabled && scene != null;
+			SetTimerState();
 		}
 
 		protected override void OnEnabledChanged(EventArgs e)
 		{
 			base.OnEnabledChanged(e);
-			timer.Enabled = Visible && Enabled && scene != null;
+			SetTimerState();
 		}
 
 		protected override void OnPaint(PaintEventArgs e)
@@ -137,7 +147,7 @@ namespace WiFindUs.Eye.Wave.Controls
 			//initialize render state
 			e.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
 			e.Graphics.Clear(Theme.Current.Background.Dark.Colour);
-			if (scene == null || scene.BaseTile == null || scene.Camera == null)
+			if (hostControl == null || hostControl.Scene == null || hostControl.Scene.BaseTile == null || hostControl.Scene.Camera == null)
 			{
 				e.Graphics.FillRectangle(Theme.Current.Background.Light.Brush, mapArea);
 				return;
@@ -148,10 +158,10 @@ namespace WiFindUs.Eye.Wave.Controls
 			e.Graphics.DrawImageSafe(image, mapArea, Brushes.White, CompositingMode.SourceCopy);
 
 			//get frustum coords
-			ILocation nw = scene.Camera.FrustumNorthWest;
-			ILocation ne = scene.Camera.FrustumNorthEast;
-			ILocation sw = scene.Camera.FrustumSouthWest;
-			ILocation se = scene.Camera.FrustumSouthEast;
+			ILocation nw = hostControl.Scene.Camera.FrustumNorthWest;
+			ILocation ne = hostControl.Scene.Camera.FrustumNorthEast;
+			ILocation sw = hostControl.Scene.Camera.FrustumSouthWest;
+			ILocation se = hostControl.Scene.Camera.FrustumSouthEast;
 
 			//generate frustum poly
 			Point[] points = new Point[4];
@@ -204,7 +214,7 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		protected virtual void OnDisposing()
 		{
-			Scene = null;
+			Map = null;
 			DisposeImage();
 		}
 
@@ -219,15 +229,33 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			base.OnDoubleClick(e);
 
-			if (!mouseDown || scene == null || scene.Camera == null)
+			if (!mouseDown || hostControl == null || hostControl.Scene == null || hostControl.Scene.Camera == null)
 				return;
-			scene.Camera.Zoom = 0.35f;
-			scene.Camera.Tilt = 0.5f;
+			hostControl.Scene.Camera.Zoom = Math.Min(hostControl.Scene.Camera.Zoom, 0.35f);
+			hostControl.Scene.Camera.Tilt = 0.5f;
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
+
+		private void hostControl_SceneStarted(MapScene scene)
+		{
+			if (scene.BaseTile != null)
+				scene.BaseTile.TextureImageLoadingFinished += BaseTile_TextureImageLoadingFinished;
+			scene.CenterLocationChanged += Scene_CenterLocationChanged;
+			SetTimerState();
+			Refresh();
+		}
+
+		private void SetTimerState()
+		{
+			timer.Enabled = Visible
+				&& Enabled
+				&& hostControl != null
+				&& hostControl.Scene != null;
+				//&& hostControl.Scene.IsStarted;
+		}
 
 		private void timer_Tick(object sender, EventArgs e)
 		{
@@ -244,7 +272,7 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		private void CheckMapImage()
 		{
-			if (!scene.BaseTile.Textured || scene.BaseTile.Error)
+			if (!hostControl.Scene.BaseTile.Textured || hostControl.Scene.BaseTile.Error)
 				return;
 
 			int targetSize = ((int)((float)Math.Min(ClientRectangle.Width, ClientRectangle.Height)
@@ -258,7 +286,8 @@ namespace WiFindUs.Eye.Wave.Controls
 			//draw base image
 			try
 			{
-				image = scene.BaseTile.TileImage.Resize(targetSize, targetSize, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+				image = hostControl.Scene.BaseTile.TileImage.Resize(
+					targetSize, targetSize, System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
 			}
 			catch { image = null; } //just wait until next time
 		}
@@ -271,12 +300,14 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		private void MoveByMouse(MouseEventArgs e)
 		{
-			if (scene == null
-				|| scene.BaseTile == null
-				|| scene.BaseTile.Region == null)
+			if (hostControl == null
+				|| hostControl.Scene == null
+				|| hostControl.Scene.BaseTile == null
+				|| hostControl.Scene.BaseTile.Region == null)
 				return;
 
-			scene.Camera.Target =
+			hostControl.Scene.Camera.TrackingTarget = null;
+			hostControl.Scene.Camera.Target =
 				ScreenToLocation(
 				new Point(
 					e.X < mapArea.Left ? mapArea.Left : (e.X > mapArea.Right ? mapArea.Right : e.X),

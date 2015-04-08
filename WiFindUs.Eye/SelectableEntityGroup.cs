@@ -46,14 +46,7 @@ namespace WiFindUs.Eye
 
 		public ISelectable[] SelectedEntities
 		{
-			get
-			{
-				List<ISelectable> selectedEntities = new List<ISelectable>();
-				foreach (ISelectable entity in managedEntities)
-					if (entity.Selected)
-						selectedEntities.Add(entity);
-				return selectedEntities.ToArray();
-			}
+			get { return managedEntities.FindAll(e => e.Selected).ToArray(); }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -212,6 +205,16 @@ namespace WiFindUs.Eye
 		public void ToggleSelection(IEnumerable<ISelectable> entities)
 		{
 			ToggleSelection(entities.ToArray());
+		}
+
+		public T[] EntitiesByType<T>()
+		{
+			return Entities.OfType<T>().ToArray();
+		}
+
+		public T[] SelectedEntitiesByType<T>()
+		{
+			return SelectedEntities.OfType<T>().ToArray();
 		}
 	}
 }

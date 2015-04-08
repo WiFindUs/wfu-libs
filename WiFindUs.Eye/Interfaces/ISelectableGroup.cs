@@ -14,6 +14,8 @@ namespace WiFindUs.Eye
 		event Action<ISelectableGroup> SelectionChanged;
 		void NotifySelectionChanged(ISelectable sender);
 		bool CaptureNotifies { get; set; }
+		T[] EntitiesByType<T>();
+		T[] SelectedEntitiesByType<T>();
 
 		//entire collection selection
 		void SelectAll();

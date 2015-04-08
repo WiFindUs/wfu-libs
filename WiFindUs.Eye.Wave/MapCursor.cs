@@ -163,7 +163,8 @@ namespace WiFindUs.Eye.Wave
 			float secs = (float)gameTime.TotalSeconds;
 
 			//alpha
-			matte.Alpha = matte.Alpha.Lerp(MapScene.Input.MouseInsideHost && !MapScene.Input.MousePanning
+			matte.Alpha = matte.Alpha.Lerp(MapScene.Input.MouseInsideHost
+				&& !MapScene.Input.MousePanning
 				? 0.8f : 0.0f, secs * FADE_SPEED);
 			
 			//colour

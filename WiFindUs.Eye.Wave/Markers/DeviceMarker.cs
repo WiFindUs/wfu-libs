@@ -115,9 +115,10 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (!Owner.IsVisible)
 				return;
 
-			spikeMat.Alpha = spikeMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.75f,
+			bool fullAlpha = Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity;
+			spikeMat.Alpha = spikeMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.75f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);
-			coreMat.Alpha = coreMat.Alpha.Lerp(Entity.Selected ? 1.0f : 0.5f,
+			coreMat.Alpha = coreMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.5f,
 				(float)gameTime.TotalSeconds * FADE_SPEED);
 		}
 

@@ -26,10 +26,5 @@ namespace WiFindUs.Eye.Wave
 		{
 			scene = Scene as MapScene;
 		}
-
-		protected override void Update(TimeSpan gameTime)
-		{
-
-		}
 	}
 }
