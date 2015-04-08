@@ -93,7 +93,7 @@ namespace WiFindUs.Eye.Wave.Markers
 					.AddComponent(new ModelRenderer())
 				)
 				//selection
-				.AddChild(SelectionRing.Create(device, 6.0f, 6, 8f, 2f));
+				.AddChild(SelectionRing.Create(device, 6.0f, 10, 7f));
 		}
 
 		/////////////////////////////////////////////////////////////////////
