@@ -51,6 +51,7 @@
     <Compile Include="Controls\ConsoleTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="CursorManager.cs" />
     <Compile Include="DebuggerLogItem.cs" />
     <Compile Include="Extensions\ColorExtensions.cs" />
     <Compile Include="Extensions\ControlExtensions.cs" />
