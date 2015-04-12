@@ -45,20 +45,10 @@ namespace WiFindUs.Eye.Wave.Markers
 			get { return entity; }
 		}
 
-		public virtual bool VisibleWhileInactive
-		{
-			get { return false; }
-		}
-
 		public override bool Selected
 		{
 			get { return entity.Selected; }
 			set { entity.Selected = value; }
-		}
-
-		protected virtual bool VisibilityOverride
-		{
-			get { return true; }
 		}
 
 		protected override float ScaleMultiplier
@@ -70,7 +60,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public EntityMarker(T entity)
+		internal EntityMarker(T entity)
 		{
 			if (entity == null)
 				throw new ArgumentNullException("entity", "Entity cannot be null!");
@@ -92,7 +82,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			entity.LocationChanged += LocationChanged;
 			entity.ActiveChanged += ActiveChanged;
 			entity.Updated += Updated;
-			MapScene.BaseTile.CenterLocationChanged += BaseTileCenterLocationChanged;
+			MapScene.BaseTile.Source.RegionChanged += Source_RegionChanged;
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -105,7 +95,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				(float)gameTime.TotalSeconds * MOVE_SPEED);
 		}
 
-		protected virtual void BaseTileCenterLocationChanged(TerrainTile obj)
+		protected virtual void Source_RegionChanged(Tile obj)
 		{
 			LocationChanged(entity);
 		}
@@ -141,10 +131,9 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected virtual void UpdateMarkerState()
 		{
 			bool active = MapScene.BaseTile != null
-				&& MapScene.BaseTile.Region != null
-				&& (VisibleWhileInactive || entity.Active)
+				&& MapScene.BaseTile.Source != null
 				&& entity.Location.HasLatLong
-				&& VisibilityOverride;
+				&& (entity.Active || entity.LastUpdatedSecondsAgo < (entity.TimeoutLength * 5));
 
 			IsOwnerActive = active;
 			if (IsOwnerVisible != active)

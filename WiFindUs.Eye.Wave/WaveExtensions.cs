@@ -22,13 +22,13 @@ namespace WiFindUs.Eye.Wave
 			return tex;
 		}
 
-		public static Vector3 LocationToVector(this Region region, Vector3 tl, Vector3 br, double latitude, double longitude)
+		public static Vector3 LocationToVector(this Tile tile, Vector3 tl, Vector3 br, double latitude, double longitude)
 		{
 			float width = br.X - tl.X;
 			float depth = br.Z - tl.Z;
 
-			double w = (longitude - region.NorthWest.Longitude.Value) / region.LongitudinalSpan;
-			double d = (region.NorthWest.Latitude.Value - latitude) / region.LatitudinalSpan;
+			double w = (longitude - tile.NorthWest.Longitude.Value) / tile.LongitudinalSpan;
+			double d = (tile.NorthWest.Latitude.Value - latitude) / tile.LatitudinalSpan;
 
 			return new Vector3(
 					tl.X + (float)(w * width),
@@ -37,11 +37,11 @@ namespace WiFindUs.Eye.Wave
 				);
 		}
 
-		public static Vector3 LocationToVector(this Region region, Vector3 tl, Vector3 br, ILocation location)
+		public static Vector3 LocationToVector(this Tile tile, Vector3 tl, Vector3 br, ILocation location)
 		{
 			if (!location.HasLatLong)
 				throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
-			return LocationToVector(region, tl, br, location.Latitude.Value, location.Longitude.Value);
+			return LocationToVector(tile, tl, br, location.Latitude.Value, location.Longitude.Value);
 		}
 
 		public static WaveEngine.Common.Graphics.Color Wave(this System.Drawing.Color color)

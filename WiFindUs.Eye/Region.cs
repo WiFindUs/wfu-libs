@@ -15,7 +15,7 @@ namespace WiFindUs.Eye
 		private static readonly double GOOGLE_MAPS_TILE_LONG_SCALE = 1.22;
 		private ILocation northWest, northEast, southWest, southEast, center;
 		private double latSpan, longSpan, width, height;
-		private uint googleMapsZoomLevel = 0;
+		private uint zoomLevel = 0;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -136,31 +136,36 @@ namespace WiFindUs.Eye
 		/// <summary>
 		/// The google maps zoom level represented by this region, if it was constructed as one. Meaningless otherwise.
 		/// </summary>
-		public uint GoogleMapsZoomLevel
+		public uint ZoomLevel
 		{
-			get { return googleMapsZoomLevel; }
+			get { return zoomLevel; }
 		}
 
+		/// <summary>
+		/// Implements ILocation's HasLatLong. Always returns true.
+		/// </summary>
 		public bool HasLatLong
 		{
-			get
-			{
-				return true;
-			}
+			get { return true; }
 		}
 
+		/// <summary>
+		/// Implements ILocation's EmptyLocation. Always returns false.
+		/// </summary>
 		public bool EmptyLocation
 		{
-			get
-			{
-				return false;
-			}
+			get { return false; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
+		/// <summary>
+		/// Creates a Region from two ILocation objects.
+		/// </summary>
+		/// <param name="northWest">The ILocation representing the top-left, or north-west, point of the region.</param>
+		/// <param name="southEast">The ILocation representing the bottom-right, or south-east, point of the region.</param>
 		public Region(ILocation northWest, ILocation southEast)
 		{
 			if (northWest == null)
@@ -185,6 +190,12 @@ namespace WiFindUs.Eye
 			center = new Location(northWest.Latitude - latSpan / 2.0, northWest.Longitude + longSpan / 2.0);
 		}
 
+		/// <summary>
+		/// Creates a Region from a center ILocation and width (longitude) / height (latitude) spans.
+		/// </summary>
+		/// <param name="center">The point that will be the center of the region.</param>
+		/// <param name="latSpan">The region's height, in degrees latitude.</param>
+		/// <param name="longSpan">The region's width, in degrees longitude.</param>
 		public Region(ILocation center, double latSpan, double longSpan)
 		{
 			if (center == null)
@@ -207,18 +218,24 @@ namespace WiFindUs.Eye
 			height = northWest.DistanceTo(southWest);
 		}
 
-		public Region(ILocation center, uint googleMapsZoomLevel)
+		/// <summary>
+		/// Creates a Region from a center ILocation and a formula for determining lat and long span based on a Google Maps API Zoom level.
+		/// </summary>
+		/// <param name="center">The point that will be the center of the region.</param>
+		/// <param name="zoomLevel">The zoom level at which to create the tile. Must be between Region.GOOGLE_MAPS_TILE_MIN_ZOOM and
+		/// Region.GOOGLE_MAPS_TILE_MAX_ZOOM.</param>
+		public Region(ILocation center, uint zoomLevel)
 		{
 			if (center == null)
 				throw new ArgumentNullException("center");
 			if (!center.HasLatLong)
 				throw new ArgumentException("Center must have both lat and long components.");
-			if (googleMapsZoomLevel < GOOGLE_MAPS_TILE_MIN_ZOOM || googleMapsZoomLevel > GOOGLE_MAPS_TILE_MAX_ZOOM)
-				throw new ArgumentOutOfRangeException("googleMapsZoomLevel", "Zoom level must be between "
+			if (zoomLevel < GOOGLE_MAPS_TILE_MIN_ZOOM || zoomLevel > GOOGLE_MAPS_TILE_MAX_ZOOM)
+				throw new ArgumentOutOfRangeException("zoomLevel", "Zoom level must be between "
 					+ GOOGLE_MAPS_TILE_MIN_ZOOM + " and " + GOOGLE_MAPS_TILE_MAX_ZOOM + " (inclusive).");
 
-			this.googleMapsZoomLevel = googleMapsZoomLevel;
-			double scaledRadius = GOOGLE_MAPS_TILE_RADIUS / Math.Pow(2.0, (googleMapsZoomLevel - GOOGLE_MAPS_TILE_MIN_ZOOM));
+			this.zoomLevel = zoomLevel;
+			double scaledRadius = GOOGLE_MAPS_TILE_RADIUS / Math.Pow(2.0, (zoomLevel - GOOGLE_MAPS_TILE_MIN_ZOOM));
 			this.center = center;
 			northWest = new Location(center.Latitude + scaledRadius, center.Longitude - (scaledRadius * GOOGLE_MAPS_TILE_LONG_SCALE));
 			southEast = new Location(center.Latitude - scaledRadius, center.Longitude + (scaledRadius * GOOGLE_MAPS_TILE_LONG_SCALE));
@@ -276,13 +293,18 @@ namespace WiFindUs.Eye
 			return Contains(this, latitude, longitude);
 		}
 
-		public bool Contains(ILocation location)
+		public static bool Contains(IRegion region, ILocation location)
 		{
-			if (location == null)
+			if (region == null || location == null)
 				return false;
 			if (!location.HasLatLong)
 				throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
-			return Contains(this, location.Latitude.Value, location.Longitude.Value);
+			return Contains(region, location.Latitude.Value, location.Longitude.Value);
+		}
+
+		public bool Contains(ILocation location)
+		{
+			return Contains(this, location);
 		}
 
 		public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude)

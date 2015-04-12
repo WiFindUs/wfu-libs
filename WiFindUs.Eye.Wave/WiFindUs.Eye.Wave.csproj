@@ -65,9 +65,11 @@
     <Compile Include="ILocatableProxy.cs" />
     <Compile Include="IUpdateableProxy.cs" />
     <Compile Include="ISelectableProxy.cs" />
+    <Compile Include="Layers\Terrain.cs" />
     <Compile Include="MapInput.DefaultHandlers.cs" />
     <Compile Include="MapSceneBehavior.cs" />
     <Compile Include="MapCursor.cs" />
+    <Compile Include="MapTile.cs" />
     <Compile Include="Markers\IEntityMarker.cs" />
     <Compile Include="SelectionRing.cs" />
     <Compile Include="WaveExtensions.cs" />
@@ -78,9 +80,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="MapCamera.cs" />
-    <Compile Include="Controls\MiniMapControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="MapBehavior.cs" />
     <Compile Include="Markers\ILinkableMarker.cs" />
     <Compile Include="Markers\LinkMarker.cs" />
@@ -88,7 +87,7 @@
     <Compile Include="Markers\NodeLinkMarker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Adapter\MapApplication.cs" />
-    <Compile Include="Controls\MapControl.cs">
+    <Compile Include="Map3D.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Adapter\MapGame.cs" />
@@ -98,7 +97,6 @@
     <Compile Include="Markers\EntityMarker.cs" />
     <Compile Include="Markers\Marker.cs" />
     <Compile Include="Markers\NodeMarker.cs" />
-    <Compile Include="TerrainTile.cs" />
     <Compile Include="WaveMainForm.cs">
       <SubType>Form</SubType>
     </Compile>

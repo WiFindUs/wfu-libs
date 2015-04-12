@@ -11,6 +11,7 @@ using WaveEngine.Framework.Graphics;
 using WaveEngine.Materials;
 using WiFindUs.Eye.Wave.Layers;
 using WiFindUs.Extensions;
+using System.Reflection;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
@@ -21,6 +22,8 @@ namespace WiFindUs.Eye.Wave.Markers
 		private float diameter = 1.5f;
 		private BasicMaterial matte;
 		private Entity child;
+		protected static readonly Color inactiveLinkColour = new Color(0.5f, 0.5f, 0.5f);
+
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -80,12 +83,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public LinkMarker(ILinkableMarker fromMarker, ILinkableMarker toMarker)
-		{
-			FromMarker = fromMarker;
-			ToMarker = toMarker;
-		}
-
 		public static Entity Create(ILinkableMarker fromMarker, ILinkableMarker toMarker, Type linkMarkerType)
 		{
 			LinkMarker marker = (LinkMarker)linkMarkerType.GetConstructor(
@@ -105,7 +102,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(Overlays),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White,
-						DiffuseColor = new Color(200, 240, 255),
+						DiffuseColor = Color.Yellow,
 						Alpha = 1.0f
 					}))
 					.AddComponent(Model.CreateCylinder(1f, 1f, 6))
@@ -116,6 +113,12 @@ namespace WiFindUs.Eye.Wave.Markers
 		public static Entity Create(ILinkableMarker fromMarker, ILinkableMarker markerB)
 		{
 			return Create(fromMarker, markerB, typeof(LinkMarker));
+		}
+
+		public LinkMarker(ILinkableMarker fromMarker, ILinkableMarker toMarker)
+		{
+			FromMarker = fromMarker;
+			ToMarker = toMarker;
 		}
 
 		/////////////////////////////////////////////////////////////////////

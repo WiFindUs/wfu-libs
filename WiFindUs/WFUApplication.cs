@@ -15,7 +15,7 @@ namespace WiFindUs
 {
 	public static class WFUApplication
 	{
-		private static Random random = new Random();
+		private static volatile Random random = new Random();
 		private static string executablePath = "";
 		private static Version assemblyVersion = null;
 		private static string entryAssemblyName = "";
@@ -523,13 +523,13 @@ namespace WiFindUs
 				Theme.Current = new Theme(true);
 			}
 			Debugger.V("Invoking MainForm constructor...");
-			mainForm = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { });
-			StartSplashLoading(mainForm.LoadingTasks);
+			MainForm form = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { });
+			StartSplashLoading(form.LoadingTasks);
 			Debugger.V("Invoking Main() launch action...");
 			if (mainLaunchAction == null)
-				DefaultMainLaunch(mainForm);
+				DefaultMainLaunch(form);
 			else
-				mainLaunchAction(mainForm);
+				mainLaunchAction(form);
 
 			Debugger.V("Application terminating...");
 

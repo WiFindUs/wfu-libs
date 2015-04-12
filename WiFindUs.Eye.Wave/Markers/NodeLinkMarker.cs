@@ -18,6 +18,7 @@ namespace WiFindUs.Eye.Wave.Markers
 	{
 		private NodeMarker fromNode, toNode;
 		private NodeLink link;
+		private Color currentColor;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -69,11 +70,14 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Update(TimeSpan gameTime)
 		{
 			base.Update(gameTime);
-
 			if (!Owner.IsVisible)
 				return;
-			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.35f : 0.0f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
+
+			float secs = (float)gameTime.TotalSeconds;
+			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.35f : 0.0f, secs * FADE_SPEED);
+			Colour = Color.Lerp(Colour,
+				!toNode.Entity.Active || !fromNode.Entity.Active ? inactiveLinkColour : currentColor,
+				secs * FADE_SPEED * 0.3f);
 		}
 
 		protected override void FromMarkerChanged(ILinkableMarker oldFromMarker)
@@ -177,17 +181,17 @@ namespace WiFindUs.Eye.Wave.Markers
 			if (IsOwnerVisible)
 			{
 				if (!link.SignalStrength.HasValue || link.SignalStrength > -30)
-					Colour = Color.White;
+					currentColor = Color.White;
 				if (link.SignalStrength <= -30 && link.SignalStrength > -50)
-					Colour = Color.Lime;
+					currentColor = Color.Lime;
 				else if (link.SignalStrength > -65)
-					Colour = Color.LawnGreen;
+					currentColor = Color.LawnGreen;
 				else if (link.SignalStrength > -70)
-					Colour = Color.Yellow;
+					currentColor = Color.Yellow;
 				else if (link.SignalStrength > -80)
-					Colour = Color.Orange;
+					currentColor = Color.Orange;
 				else
-					Colour = Color.Red;
+					currentColor = Color.Red;
 			}
 		}
 

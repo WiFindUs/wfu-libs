@@ -1,6 +1,5 @@
 ﻿using System;
 using WaveEngine.Adapter;
-using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave.Adapter
 {
@@ -9,7 +8,7 @@ namespace WiFindUs.Eye.Wave.Adapter
 		public event Action<MapScene> SceneStarted;
 		public event Action<MapApplication> ScreenResized;
 		private MapGame game;
-		private MapControl hostControl;
+		private Map3D hostControl;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -35,7 +34,7 @@ namespace WiFindUs.Eye.Wave.Adapter
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public MapApplication(MapControl hostControl, int width, int height)
+		public MapApplication(Map3D hostControl, int width, int height)
 			: base(width, height)
 		{
 			if (hostControl == null)
@@ -91,12 +90,6 @@ namespace WiFindUs.Eye.Wave.Adapter
 			base.ResizeScreen(width, height);
 			if (ScreenResized != null)
 				ScreenResized(this);
-		}
-
-		public void CancelThreads()
-		{
-			if (game != null)
-				game.CancelThreads();
 		}
 
 		/////////////////////////////////////////////////////////////////////

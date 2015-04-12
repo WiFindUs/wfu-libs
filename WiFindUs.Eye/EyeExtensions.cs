@@ -1,9 +1,9 @@
 ﻿using System;
 using WiFindUs.IO;
 
-namespace WiFindUs.Eye.Extensions
+namespace WiFindUs.Eye
 {
-	public static class ConfigFileExtensions
+	public static class EyeExtensions
 	{
 		public static ILocation Get(this ConfigFile config, string key, int index, ILocation defaultValue)
 		{

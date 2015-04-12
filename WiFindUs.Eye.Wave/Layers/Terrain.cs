@@ -9,9 +9,9 @@ using WaveEngine.Framework.Managers;
 
 namespace WiFindUs.Eye.Wave.Layers
 {
-	public class NonPremultipliedAlpha : Layer
+	public class Terrain : Layer
 	{
-		public NonPremultipliedAlpha(RenderManager renderManager)
+		public Terrain(RenderManager renderManager)
 			: base(renderManager)
 		{
 		}
@@ -23,7 +23,8 @@ namespace WiFindUs.Eye.Wave.Layers
 			renderState.CullMode = CullMode.CounterClockWise;
 			renderState.FillMode = FillMode.Solid;
 			renderState.DepthMode = DepthMode.Read;
-			renderState.MaxAnisotropy = AnisotropyLevel.Aniso1x;
+			renderState.DepthBias = DepthBias.Positive;
+			renderState.MaxAnisotropy = AnisotropyLevel.Aniso2x;
 		}
 
 		protected override void RestoreDevice()

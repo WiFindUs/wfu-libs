@@ -6,13 +6,12 @@ using WaveEngine.Framework.Services;
 using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
-using WiFindUs.Eye.Extensions;
 using System.ComponentModel;
 using WiFindUs.Themes;
 
-namespace WiFindUs.Eye.Wave.Controls
+namespace WiFindUs.Eye.Wave
 {
-	public class MapControl : ThemedControl
+	public class Map3D : ThemedControl
 	{
 		public event Action<MapScene> SceneStarted;
 
@@ -85,7 +84,7 @@ namespace WiFindUs.Eye.Wave.Controls
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public MapControl()
+		public Map3D()
 		{
 			TabStop = false;
 		}
@@ -138,7 +137,6 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			if (mapApp != null)
 			{
-				mapApp.CancelThreads();
 				mapApp.OnDeactivate();
 				mapApp.Dispose();
 				mapApp = null;
@@ -155,14 +153,8 @@ namespace WiFindUs.Eye.Wave.Controls
 
 		protected override void OnPaintBackground(PaintEventArgs e)
 		{
-			if (Scene == null || IsDesignMode)
-				base.OnPaintBackground(e);
-		}
-
-		protected override void OnPaint(PaintEventArgs e)
-		{
 			bool design = IsDesignMode;
-			if (design || Scene == null)
+			if (Scene == null || design)
 			{
 				e.Graphics.Clear(design ? SystemColors.InactiveCaption : Theme.Current.Background.Dark.Colour);
 				string text = design ? "Wave Engine 3D Map Control" : "Waiting for map scene to initialize...";
@@ -216,16 +208,6 @@ namespace WiFindUs.Eye.Wave.Controls
 		{
 			SetStyle(ControlStyles.Opaque, true);
 			UpdateStyles();
-
-			if (WFUApplication.Config != null)
-			{
-				ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
-				if (location == null)
-					Debugger.E("Could not parse map.center from config files!");
-				else
-					scene.CenterLocation = location;
-			}
-
 			if (SceneStarted != null)
 				SceneStarted(scene);
 		}

@@ -45,14 +45,14 @@
 			this.splitterRight = new WiFindUs.Themes.ThemedSplitContainer();
 			this.tabsMiddle = new WiFindUs.Themes.ThemedTabControl();
 			this.tab3DMap = new System.Windows.Forms.TabPage();
-			this.map = new WiFindUs.Eye.Wave.Controls.MapControl();
+			this.map = new WiFindUs.Eye.Wave.Map3D();
 			this.splitterRightMiddle = new WiFindUs.Themes.ThemedSplitContainer();
 			this.tabsTopRight = new WiFindUs.Themes.ThemedTabControl();
 			this.tabIncidents = new System.Windows.Forms.TabPage();
 			this.listIncidents = new WiFindUs.Eye.Controls.EntityList();
 			this.tabsBottomRight = new WiFindUs.Themes.ThemedTabControl();
 			this.tab2DMap = new System.Windows.Forms.TabPage();
-			this.minimap = new WiFindUs.Eye.Wave.Controls.MiniMapControl();
+			this.minimap = new WiFindUs.Eye.Controls.Map2D();
 			tabDevices = new System.Windows.Forms.TabPage();
 			tabDevices.SuspendLayout();
 			this.statusStrip.SuspendLayout();
@@ -431,8 +431,8 @@
 		private WiFindUs.Themes.ThemedTabControl tabsMiddle;
         private System.Windows.Forms.TabPage tab3DMap;
 		private System.Windows.Forms.TabPage tabUsers;
-		private Wave.Controls.MiniMapControl minimap;
-		private Wave.Controls.MapControl map;
+		private WiFindUs.Eye.Controls.Map2D minimap;
+		private WiFindUs.Eye.Wave.Map3D map;
     }
 }
 

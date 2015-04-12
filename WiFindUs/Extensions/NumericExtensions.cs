@@ -21,6 +21,21 @@ namespace WiFindUs.Extensions
 			return value < min ? min : (value > max ? max : value);
 		}
 
+		public static bool Between(this int value, int min, int max)
+		{
+			return value >= min && value <= max;
+		}
+
+		public static uint Clamp(this uint value, uint min, uint max)
+		{
+			return value < min ? min : (value > max ? max : value);
+		}
+
+		public static bool Between(this uint value, uint min, uint max)
+		{
+			return value >= min && value <= max;
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// FLOATS
 		/////////////////////////////////////////////////////////////////////

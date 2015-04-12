@@ -10,5 +10,5 @@ ECHO output: %OUTPUT_DIR%
 xcopy /C /R /Y /D %INPUT_DIR%\*.dll %OUTPUT_DIR%
 xcopy /C /R /Y /D %INPUT_DIR%\*.exe %OUTPUT_DIR%
 xcopy /C /R /Y /D %INPUT_DIR%\*.conf %OUTPUT_DIR%
-xcopy /C /R /Y /D /S %INPUT_DIR%\images %OUTPUT_DIR%\images
-xcopy /C /R /Y /D /S %INPUT_DIR%\maps %OUTPUT_DIR%\maps
+xcopy /C /R /Y /D /S /I %INPUT_DIR%\images %OUTPUT_DIR%\images
+xcopy /C /R /Y /D /S /I %INPUT_DIR%\maps %OUTPUT_DIR%\maps

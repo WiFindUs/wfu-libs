@@ -21,6 +21,7 @@ namespace WiFindUs.Eye
 		private bool serverMode = false;
 		private double deviceMaxAccuracy = 20.0;
 		private double nodeMaxAccuracy = 20.0;
+		private volatile Tile mapTile = null;
 
 		//non-mysql collections (client mode):
 		private Dictionary<ulong, Device> devices;
@@ -112,12 +113,24 @@ namespace WiFindUs.Eye
 			}
 		}
 
+		[Browsable(false)]
+		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public Tile BaseTile
+		{
+			get { return mapTile; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
 		public EyeMainForm()
 		{
+			mapTile = new Tile()
+			{
+				LoadImageAutomatically = false,
+				LoadElevationAutomatically = false
+			};
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			WiFindUs.Eye.NodeLink.OnNodeLinkLoaded += OnNodeLinkLoaded;
@@ -196,6 +209,16 @@ namespace WiFindUs.Eye
 			timer.Interval = 100;
 			timer.Tick += TimerTick;
 			timer.Enabled = true;
+
+			//set tile centre
+			if (WFUApplication.Config != null)
+			{
+				ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
+				if (location == null)
+					Debugger.E("Could not parse map.center from config files!");
+				else
+					mapTile.Center = location;
+			}
 		}
 
 		protected override void OnDisposing()

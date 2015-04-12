@@ -53,7 +53,7 @@ namespace WiFindUs.Eye
 
 		public void Start()
 		{
-			if (thread != null)
+			if (thread != null || WiFindUs.Forms.MainForm.HasClosed)
 				return;
 			cancel = false;
 			thread = new Thread(new ThreadStart(ListenThread));
@@ -114,7 +114,7 @@ namespace WiFindUs.Eye
 
 			if (listener != null)
 			{
-				while (!cancel)
+				while (!cancel || WiFindUs.Forms.MainForm.HasClosed)
 				{
 					IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, port);
 					byte[] bytes = null;
@@ -124,7 +124,7 @@ namespace WiFindUs.Eye
 					}
 					catch (Exception) { }
 
-					if (cancel)
+					if (cancel || WiFindUs.Forms.MainForm.HasClosed)
 						break;
 					if (bytes == null)
 						continue;

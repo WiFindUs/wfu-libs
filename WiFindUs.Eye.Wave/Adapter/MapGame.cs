@@ -2,7 +2,6 @@
 using WaveEngine.Common;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Services;
-using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave.Adapter
 {
@@ -10,14 +9,14 @@ namespace WiFindUs.Eye.Wave.Adapter
 	{
 		public event Action<MapScene> SceneStarted;
 		private MapScene scene;
-		private MapControl hostControl;
+		private Map3D hostControl;
 
 		public MapScene Scene
 		{
 			get { return scene; }
 		}
 
-		public MapControl HostControl
+		public Map3D HostControl
 		{
 			get { return hostControl; }
 		}
@@ -33,7 +32,7 @@ namespace WiFindUs.Eye.Wave.Adapter
 			}
 		}
 
-		public MapGame(MapControl hostControl)
+		public MapGame(Map3D hostControl)
 		{
 			if (hostControl == null)
 				throw new ArgumentNullException("hostControl", "MapGame cannot be instantiated outside of a host MapControl.");
@@ -49,12 +48,6 @@ namespace WiFindUs.Eye.Wave.Adapter
 
 			ScreenContext sc = new ScreenContext(scene);
 			WaveServices.ScreenContextManager.To(sc);
-		}
-
-		public void CancelThreads()
-		{
-			if (scene != null)
-				scene.CancelThreads();
 		}
 
 		private void scene_SceneStarted(MapScene obj)

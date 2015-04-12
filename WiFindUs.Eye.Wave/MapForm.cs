@@ -2,22 +2,20 @@
 
 using System;
 using WiFindUs.Extensions;
-using WiFindUs.Eye.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
-using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Forms;
 
 namespace WiFindUs.Eye.Wave
 {
 	public class MapForm : BaseForm
 	{
-		private MapControl map;
+		private Map3D map;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public MapControl Map
+		public Map3D Map
 		{
 			get { return map; }
 			set

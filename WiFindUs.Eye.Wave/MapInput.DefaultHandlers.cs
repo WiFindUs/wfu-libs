@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using WaveEngine.Common.Math;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Services;
-using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Wave
@@ -143,7 +142,7 @@ namespace WiFindUs.Eye.Wave
 
 				ISelectable[] selectables = MapScene.Cursor.MarkersAtCursor<Marker>()
 					.OfType<IEntityMarker>()
-					.Where(mk => mk.Updateable.Active && mk.Locatable.Location.HasLatLong)
+					.Where(mk => mk.Locatable.Location.HasLatLong)
 					.Select<IEntityMarker,ISelectable>(mk => mk.Selectable)
 					.ToArray();
 

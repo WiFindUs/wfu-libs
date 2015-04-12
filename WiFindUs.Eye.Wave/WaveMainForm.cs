@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using WaveEngine.Adapter.Win32;
-using WiFindUs.Eye.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
-using WiFindUs.Eye.Wave.Controls;
+using WiFindUs.Eye.Wave;
 
 namespace WiFindUs.Eye.Wave
 {
 	public class WaveMainForm : EyeMainForm
 	{
-		private MapControl map = null;
+		private Map3D map = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -33,7 +32,7 @@ namespace WiFindUs.Eye.Wave
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public MapControl Map
+		public Map3D Map
 		{
 			get { return map; }
 			protected set
@@ -111,7 +110,9 @@ namespace WiFindUs.Eye.Wave
 
 		protected virtual void OnMapSceneStarted(MapScene scene)
 		{
-
+#if DEBUG
+			DebugMode = true;
+#endif
 		}
 
 		protected virtual void OnDebugModeChanged()

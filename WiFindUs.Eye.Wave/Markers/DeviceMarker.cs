@@ -26,25 +26,9 @@ namespace WiFindUs.Eye.Wave.Markers
 			get { return coreTransform.Position; }
 		}
 
-		protected override bool VisibilityOverride
-		{
-			get
-			{
-				return entity.GPSEnabled.GetValueOrDefault()
-					&& entity.GPSHasFix.GetValueOrDefault()
-					&& base.VisibilityOverride;
-			}
-		}
-
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
-
-		public DeviceMarker(Device d)
-			: base(d)
-		{
-
-		}
 
 		public static Entity Create(Device device)
 		{
@@ -83,11 +67,11 @@ namespace WiFindUs.Eye.Wave.Markers
 					})
 					.AddComponent(new MaterialsMap(marker.coreMat = new BasicMaterial(MapScene.WhiteTexture)
 					{
-						LayerType = typeof(Overlays),
+						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
 						DiffuseColor = new Color(220, 220, 220),
-						Alpha = 0.5f
+						Alpha = 0.75f
 					}))
 					.AddComponent(Model.CreateSphere(3f, 4))
 					.AddComponent(new ModelRenderer())
@@ -95,6 +79,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				//selection
 				.AddChild(SelectionRing.Create(device, 6.0f, 10, 7f));
 		}
+
+		internal DeviceMarker(Device d) : base(d) { }
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
@@ -114,12 +100,11 @@ namespace WiFindUs.Eye.Wave.Markers
 			base.Update(gameTime);
 			if (!Owner.IsVisible)
 				return;
-
-			bool fullAlpha = Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity;
-			spikeMat.Alpha = spikeMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.75f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
-			coreMat.Alpha = coreMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.5f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
+			
+			float secs = (float)gameTime.TotalSeconds;
+			float targetAlpha = !Entity.Active ? 0.5f : (Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity ? 1.0f : 0.75f);
+			spikeMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED);
+			coreMat.Alpha = spikeMat.Alpha;
 		}
 
 		/////////////////////////////////////////////////////////////////////

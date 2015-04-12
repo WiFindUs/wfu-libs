@@ -12,8 +12,8 @@ namespace WiFindUs.Eye.Wave
 {
 	public class MapCamera : MapBehavior
 	{
-		private const float MIN_ZOOM = 100.0f;
-		private const float MAX_ZOOM = 2000.0f;
+		private const float MIN_ZOOM = 128.0f;
+		internal const float MAX_ZOOM = MapTile.BASE_SIZE * 1.5f;
 		private const float MIN_ANGLE = (float)(Math.PI / 10.0);
 		private const float MAX_ANGLE = (float)(Math.PI / 2.0001);
 		private const float MOVE_SPEED = 15f;
@@ -65,7 +65,7 @@ namespace WiFindUs.Eye.Wave
 			get { return target; }
 			set
 			{
-				ILocation loc = MapScene.BaseTile.Region.Clamp(value ?? MapScene.CenterLocation);
+				ILocation loc = MapScene.BaseTile.Source.Clamp(value ?? MapScene.BaseTile.Source.Center);
 				if (WiFindUs.Eye.Location.Equals(loc, target))
 					return;
 				target = loc;
@@ -278,7 +278,7 @@ namespace WiFindUs.Eye.Wave
 				(float)gameTime.TotalSeconds * ROTATE_SPEED);
 
 			//tile layer
-			MapScene.VisibleLayer = (uint)((1.0f - zoom) * (float)MapScene.LayerCount);
+			MapScene.VisibleLevel = (uint)((1.0f - zoom) * (float)Tile.ZoomLevelCount);
 
 			//marker scale
 			MapScene.MarkerScale = MIN_MARKER_SCALE + (MAX_MARKER_SCALE - MIN_MARKER_SCALE) * zoom;

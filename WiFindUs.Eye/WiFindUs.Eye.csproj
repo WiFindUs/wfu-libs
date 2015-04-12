@@ -93,13 +93,16 @@
     <Compile Include="EyeContext.NodeLink.cs">
       <DependentUpon>EyeContext.lqml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Map2D.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="NodeLink.cs" />
     <Compile Include="NodePacket.cs" />
     <Compile Include="DevicePacket.cs" />
     <Compile Include="Interfaces\IActionSubscriber.cs" />
     <Compile Include="SelectableEntity.cs" />
     <Compile Include="SelectableEntityGroup.cs" />
-    <Compile Include="Extensions\ConfigFileExtensions.cs" />
+    <Compile Include="EyeExtensions.cs" />
     <Compile Include="EyeMainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -137,6 +140,7 @@
     <Compile Include="Region.cs" />
     <Compile Include="DeviceHistory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tile.cs" />
     <Compile Include="User.cs" />
     <Compile Include="Waypoint.cs" />
   </ItemGroup>

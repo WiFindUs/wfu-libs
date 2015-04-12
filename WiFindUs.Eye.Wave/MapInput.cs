@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Services;
-using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -89,7 +88,7 @@ namespace WiFindUs.Eye.Wave
 		private int modifierCount = 0;
 		private int arrowCount = 0;
 		private int keyCount = 0;
-		private MapControl hostControl;
+		private Map3D hostControl;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES 
@@ -321,7 +320,7 @@ namespace WiFindUs.Eye.Wave
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
 
-		public MapInput(MapControl hostControl)
+		public MapInput(Map3D hostControl)
 		{
 			if (hostControl == null)
 				throw new ArgumentNullException("hostControl", "MapSceneControlInput cannot be instantiated outside of a host MapControl.");

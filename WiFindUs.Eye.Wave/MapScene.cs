@@ -10,7 +10,6 @@ using WaveEngine.Framework.Physics3D;
 using WaveEngine.Framework.Services;
 using WiFindUs.Controls;
 using WiFindUs.Eye.Wave.Adapter;
-using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
@@ -28,21 +27,14 @@ namespace WiFindUs.Eye.Wave
 
 		private const float ZOOM_RATE = 1.0f;
 		private const float TILT_RATE = 1.0f;
-		public const uint MIN_LEVEL = Region.GOOGLE_MAPS_TILE_MIN_ZOOM + 1;
 
-		private MapControl hostControl;
-		private EyeMainForm eyeForm;
+		private Map3D hostControl;
 		private FixedCamera camera;
-		private ILocation center;
-		private Entity[] tileLayers;
-		private Entity[][,] tiles;
-		private Entity groundPlane;
 		private BoxCollider groundPlaneCollider;
-		private TerrainTile baseTile;
-		private uint visibleLayer = uint.MaxValue;
+		private MapTile baseTile;
+		private uint visibleLevel = 0;
 		private float markerScale = 1.0f;
 		private static Texture2D whiteTex = null;
-
 		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
 		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
 		private List<NodeLinkMarker> nodeLinkMarkers = new List<NodeLinkMarker>();
@@ -56,55 +48,22 @@ namespace WiFindUs.Eye.Wave
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		internal ILocation CenterLocation
+		internal uint VisibleLevel
 		{
-			get { return center; }
+			get { return visibleLevel; }
 			set
 			{
-				if (value == null || WiFindUs.Eye.Location.Equals(center, value))
+				uint level = value.Clamp(Tile.LevelMin, Tile.LevelMax);
+				if (level == visibleLevel)
 					return;
-				Debugger.I("Setting map center to " + value.ToString());
 
-				center = value;
-				baseTile.CenterLocation = value;
-				Tiles((tile) =>
-				{
-					float ratio = (tile.Size / baseTile.Size);
-					float latSize = (float)baseTile.Region.LatitudinalSpan * ratio;
-					float longSize = (float)baseTile.Region.LongitudinalSpan * ratio;
-
-					tile.CenterLocation = new Location(
-						baseTile.Region.NorthWest.Latitude.Value - latSize * ((float)tile.Row + 0.5f), //lat
-						baseTile.Region.NorthWest.Longitude.Value + longSize * ((float)tile.Column + 0.5f)//long
-						);
-				}, 1);
-
-				if (CenterLocationChanged != null)
-					CenterLocationChanged(this);
+				visibleLevel = level;
+				//for (int i = 0; i < tileLayers.Length; i++)
+					//tileLayers[i].IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
 			}
 		}
 
-		internal uint VisibleLayer
-		{
-			get { return visibleLayer; }
-			set
-			{
-				uint layer = value >= tileLayers.Length ? (uint)tileLayers.Length - 1 : value;
-				if (layer == visibleLayer)
-					return;
-
-				visibleLayer = layer;
-				for (int i = 0; i < tileLayers.Length; i++)
-					tileLayers[i].IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
-			}
-		}
-
-		internal uint LayerCount
-		{
-			get { return (uint)tileLayers.Length; }
-		}
-
-		internal TerrainTile BaseTile
+		internal MapTile BaseTile
 		{
 			get { return baseTile; }
 		}
@@ -192,7 +151,7 @@ namespace WiFindUs.Eye.Wave
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public MapScene(MapControl hostControl)
+		public MapScene(Map3D hostControl)
 		{
 			if (hostControl == null)
 				throw new ArgumentNullException("hostControl", "MapScene cannot be instantiated outside of a host MapControl.");
@@ -220,18 +179,13 @@ namespace WiFindUs.Eye.Wave
 
 		public ILocation VectorToLocation(Vector3 vec)
 		{
-			if (baseTile == null || baseTile.Region == null)
+			if (baseTile == null || baseTile.Source == null)
 				return WiFindUs.Eye.Location.EMPTY;
 
 			return new Location(
-				baseTile.Region.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LatitudinalSpan,
-				baseTile.Region.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Region.LongitudinalSpan
+				baseTile.Source.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Source.LatitudinalSpan,
+				baseTile.Source.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Source.LongitudinalSpan
 				);
-		}
-
-		public void CancelThreads()
-		{
-			Tiles((tile) => tile.CancelThreads());
 		}
 
 		public NodeMarker GetNodeMarker(Node node)
@@ -284,7 +238,8 @@ namespace WiFindUs.Eye.Wave
 			WhiteTexture = RenderManager.GraphicsDevice.Load("textures/white.png");
 			
 			//add custom layers
-			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), DefaultLayers.Opaque);
+			RenderManager.RegisterLayerAfter(new Terrain(this.RenderManager), DefaultLayers.Opaque);
+			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), typeof(Terrain));
 			RenderManager.RegisterLayerAfter(new Overlays(this.RenderManager), typeof(NonPremultipliedAlpha));
 			RenderManager.RegisterLayerAfter(new Wireframes(this.RenderManager), typeof(Overlays));
 
@@ -293,7 +248,7 @@ namespace WiFindUs.Eye.Wave
 			camera = new FixedCamera("camera", Vector3.Up * 200.0f, Vector3.Zero)
 			{
 				NearPlane = 1f,
-				FarPlane = 10000.0f,
+				FarPlane = MapCamera.MAX_ZOOM * 3.0f,
 				ClearFlags = ClearFlags.All,
 			};
 			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapCamera());
@@ -310,20 +265,18 @@ namespace WiFindUs.Eye.Wave
 			};
 			EntityManager.Add(skylight);
 
-			//create terrain layers
-			Debugger.V("MapScene: creating layers");
-			tileLayers = new Entity[Region.GOOGLE_MAPS_TILE_MAX_ZOOM - MIN_LEVEL + 1];
-			tiles = new Entity[tileLayers.Length][,];
-			for (uint layer = 0; layer < tiles.Length; layer++)
-				CreateTileLayer(layer);
+			//create terrain tiles
+			Debugger.V("MapScene: creating tiles");
+			Entity tileEntity = MapTile.Create();
+			baseTile = tileEntity.FindComponent<MapTile>();
+			EntityManager.Add(tileEntity);
 
 			//create ground plane
 			Debugger.V("MapScene: creating ground plane");
-			groundPlane = new Entity()
+			EntityManager.Add(new Entity()
 				.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
-				.AddComponent(Model.CreatePlane(Vector3.UnitY, baseTile.Size * 100f))
-				.AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red });
-			EntityManager.Add(groundPlane);
+				.AddComponent(Model.CreatePlane(Vector3.UnitY, MapTile.BASE_SIZE * 100f))
+				.AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red }));
 
 			//add scene behaviours
 			Debugger.V("MapScene: creating behaviours");
@@ -342,9 +295,8 @@ namespace WiFindUs.Eye.Wave
 		protected override void Start()
 		{
 			base.Start();
-			Tiles((tile) => tile.CalculatePosition());
-			VisibleLayer = 0;
-			eyeForm = (WFUApplication.MainForm as EyeMainForm);
+			//Tiles((tile) => tile.CalculatePosition());
+			EyeMainForm eyeForm = (WFUApplication.MainForm as EyeMainForm);
 
 			//load existing devices
 			foreach (Device device in eyeForm.Devices)
@@ -437,6 +389,7 @@ namespace WiFindUs.Eye.Wave
 			EntityManager.Add(entity);
 		}
 
+		/*
 		private void CreateTileLayer(uint layer)
 		{
 			Entity layerEntity = tileLayers[layer];
@@ -466,7 +419,9 @@ namespace WiFindUs.Eye.Wave
 				}
 			}
 		}
+		 * */
 
+		/*
 		private void Tiles(Action<TerrainTile> action, int firstLayer = -1, int lastLayer = -1, int excludeLayer = -1)
 		{
 			if (action == null || tiles == null || firstLayer >= tiles.Length)
@@ -486,5 +441,6 @@ namespace WiFindUs.Eye.Wave
 						action(tiles[layer][row, column].FindComponent<TerrainTile>());
 			}
 		}
+		 * */
 	}
 }

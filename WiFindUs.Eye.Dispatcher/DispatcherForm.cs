@@ -8,7 +8,6 @@ using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Controls;
 using WiFindUs.Eye.Wave;
-using WiFindUs.Eye.Wave.Controls;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Forms;
 using WiFindUs.Themes;
@@ -154,7 +153,6 @@ namespace WiFindUs.Eye.Dispatcher
 
 			//map
 			Map = map;
-			minimap.Map = map;
 
 			//title
 			Text = WFUApplication.Name;
@@ -311,9 +309,7 @@ namespace WiFindUs.Eye.Dispatcher
 		{
 			base.OnMapSceneStarted(scene);
 			SetApplicationStatus("Map scene ready.", Theme.Current.Highlight.Mid.Colour);
-#if DEBUG
-			DebugMode = true;
-#endif
+
 		}
 
 		private void OnDeviceLoaded(Device device)

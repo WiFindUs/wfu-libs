@@ -24,6 +24,7 @@ namespace WiFindUs.Eye.Wave
 		public Transform3D Transform3D
 		{
 			get { return transform; }
+			set { if (transform == null) transform = value; }
 		}
 
 		public bool IsOwnerVisible
@@ -56,7 +57,9 @@ namespace WiFindUs.Eye.Wave
 		{
 			base.Initialize();
 			scene = Owner.Scene as MapScene;
-			transform = Owner.FindComponent<Transform3D>();
+			Transform3D t3d = Owner.FindComponent<Transform3D>();
+			if (t3d != transform)
+				transform = t3d;
 		}
 	}
 }

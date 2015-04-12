@@ -1,6 +1,5 @@
 ﻿using System;
 using WiFindUs.Eye.Wave;
-using WiFindUs.Eye.Wave.Controls;
 
 namespace WiFindUs.Eye.Dispatcher
 {

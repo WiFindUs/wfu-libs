@@ -84,6 +84,16 @@ namespace WiFindUs.Eye
 			get { return loaded; }
 		}
 
+		public ulong LastUpdatedSecondsAgo
+		{
+			get { return DateTime.UtcNow.ToUnixTimestamp() - LastUpdated; }
+		}
+
+		public ulong TimeoutLength
+		{
+			get { return TIMEOUT; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -100,7 +110,7 @@ namespace WiFindUs.Eye
 
 		public void CheckActive()
 		{
-			Active = (DateTime.UtcNow.ToUnixTimestamp() - LastUpdated) <= TIMEOUT;
+			Active = LastUpdatedSecondsAgo <= TimeoutLength;
 		}
 
 		public bool ActionEnabled(uint index)

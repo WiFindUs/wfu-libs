@@ -30,12 +30,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public NodeMarker(Node n)
-			: base(n)
-		{
-
-		}
-
 		public static Entity Create(Node node)
 		{
 			NodeMarker marker = new NodeMarker(node);
@@ -74,11 +68,11 @@ namespace WiFindUs.Eye.Wave.Markers
 					})
 					.AddComponent(new MaterialsMap(marker.coreMat = new BasicMaterial(MapScene.WhiteTexture)
 					{
-						LayerType = typeof(Overlays),
+						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
 						DiffuseColor = new Color(220, 220, 220),
-						Alpha = 0.5f
+						Alpha = 0.75f
 					}))
 					.AddComponent(Model.CreateSphere(4f, 4))
 					.AddComponent(new ModelRenderer())
@@ -93,7 +87,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						})
 						.AddComponent(new MaterialsMap(marker.ringMat = new BasicMaterial(MapScene.WhiteTexture)
 						{
-							LayerType = typeof(Overlays),
+							LayerType = typeof(NonPremultipliedAlpha),
 							LightingEnabled = true,
 							AmbientLightColor = Color.White * 0.75f,
 							DiffuseColor = new Color(0, 200, 255),
@@ -108,6 +102,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				.AddChild(SelectionRing.Create(node));
 		}
 
+		internal NodeMarker(Node n) : base(n) { }
+
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -119,15 +115,18 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			float secs = (float)gameTime.TotalSeconds;
-			bool fullAlpha = Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity;
-			spikeMat.Alpha = spikeMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.75f, secs * FADE_SPEED);
-			coreMat.Alpha = coreMat.Alpha.Lerp(fullAlpha ? 1.0f : 0.5f, secs * FADE_SPEED);
-			ringMat.Alpha = ringMat.Alpha.Lerp(fullAlpha ? 0.7f : 0.25f, secs * FADE_SPEED);
-			ringTransform.Rotation = new Vector3(
-				ringTransform.Rotation.X,
-				ringTransform.Rotation.Y + ROTATE_SPEED * secs,
-				ringTransform.Rotation.Z
-			);
+			float targetAlpha = !Entity.Active ? 0.5f : (Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity ? 1.0f : 0.75f);
+			spikeMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED);
+			coreMat.Alpha = spikeMat.Alpha;
+			ringMat.Alpha = spikeMat.Alpha * 0.5f;
+			if (Entity.Active)
+			{
+				ringTransform.Rotation = new Vector3(
+				   ringTransform.Rotation.X,
+				   ringTransform.Rotation.Y + ROTATE_SPEED * secs,
+				   ringTransform.Rotation.Z
+					);
+			}
 		}
 	}
 }

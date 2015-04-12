@@ -87,7 +87,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Update(TimeSpan gameTime)
 		{
 			base.Update(gameTime);
-
 			timer -= gameTime.TotalSeconds;
 			if (timer < 0.0)
 			{
@@ -95,10 +94,14 @@ namespace WiFindUs.Eye.Wave.Markers
 				timer = 5.0;
 			}
 
+			float secs = (float)gameTime.TotalSeconds;
+
 			if (!Owner.IsVisible)
 				return;
-			Alpha = Alpha.Lerp(fromDevice.Selected || toNode.Selected ? 0.35f : 0.0f,
-				(float)gameTime.TotalSeconds * FADE_SPEED);
+			Alpha = Alpha.Lerp(fromDevice.Selected || toNode.Selected ? 0.35f : 0.0f, secs * FADE_SPEED);
+			Colour = Color.Lerp(Colour,
+				!fromDevice.Entity.Active || !toNode.Entity.Active ? inactiveLinkColour : Color.Yellow,
+				secs * FADE_SPEED * 0.3f);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -149,6 +152,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			(
 				fromDevice != null
 				&& toNode != null
+				&& fromDevice.Owner != null
+				&& toNode.Owner != null
 				&& fromDevice.Owner.IsVisible
 				&& toNode.Owner.IsVisible
 				&& toNode.Entity.AccessPoint.GetValueOrDefault()
