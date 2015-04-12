@@ -234,9 +234,17 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void CreateScene()
 		{
-			//load basic white texture
-			WhiteTexture = RenderManager.GraphicsDevice.Load("textures/white.png");
-			
+			//create basic white texture
+			Texture2D tex;
+			using (System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(8,8))
+			{
+				using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp))
+					g.Clear(System.Drawing.Color.White);
+				using (Stream stream = bmp.GetStream())
+					tex = Texture2D.FromFile(RenderManager.GraphicsDevice, stream);
+			}
+			WhiteTexture = tex;
+		
 			//add custom layers
 			RenderManager.RegisterLayerAfter(new Terrain(this.RenderManager), DefaultLayers.Opaque);
 			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), typeof(Terrain));
