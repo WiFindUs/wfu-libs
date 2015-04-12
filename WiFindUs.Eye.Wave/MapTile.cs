@@ -29,9 +29,9 @@ namespace WiFindUs.Eye.Wave
 		private float size;
 		private MaterialsMap materialsMap;
 		private volatile bool changingTexture = false;
-		private static volatile bool anyChangingTexture = false;
 		private const float LAYER_SPACING = 0.1f;
 		private BoxCollider boxCollider;
+		private static readonly object texLock = new object();
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -196,6 +196,16 @@ namespace WiFindUs.Eye.Wave
 				Transform3D.Position = Vector3.Lerp(Transform3D.Position,
 					new Vector3(0.0f, -MapScene.VisibleLevel*LAYER_SPACING, 0.0f),
 					secs * SCALE_SPEED);
+				/*
+			else if (source.ElevationState == Tile.LoadingState.Finished)
+			{
+				Transform3D.LocalPosition = Vector3.Lerp(Transform3D.LocalPosition,
+					new Vector3(Transform3D.LocalPosition.X,
+						(float)source.Elevation(source.Center.Latitude.Value, source.Center.Longitude.Value) *0.1f,
+						Transform3D.LocalPosition.Z),
+					secs * SCALE_SPEED);
+			}
+				 * */
 			
 			//alpha
 			bool visible = MapScene.VisibleLevel == Level || (Textured && !AllChildrenTextured);
@@ -203,19 +213,24 @@ namespace WiFindUs.Eye.Wave
 				texture.Alpha = texture.Alpha.Lerp(visible ? 1.0f : 0.0f,
 					(float)gameTime.TotalSeconds * FADE_SPEED * (visible ? 1.0f : 0.5f));
 
-			//check for need to instigate texture creation
-			if (!changingTexture && texture == null
-				&& MapScene.VisibleLevel == Level
+			//check for need to instigate texture or elevation creation
+			if (MapScene.VisibleLevel == Level
 				&& Owner.Scene.RenderManager.ActiveCamera3D.Contains(boxCollider)
 				&& !WiFindUs.Forms.MainForm.HasClosed)
 			{
-				if (source.ImageState == Tile.LoadingState.Waiting)
-					source.LoadImage();
-				else if (source.ImageState == Tile.LoadingState.Finished)
+				if (!changingTexture && texture == null)
 				{
-					changingTexture = true;
-					ThreadPool.QueueUserWorkItem(ChangeTexture);
+					if (source.ImageState == Tile.LoadingState.Waiting)
+						source.LoadImage();
+					else if (source.ImageState == Tile.LoadingState.Finished)
+					{
+						changingTexture = true;
+						ThreadPool.QueueUserWorkItem(ChangeTexture);
+					}
 				}
+
+				if (parent == null && source.ElevationState == Tile.LoadingState.Waiting)
+					source.LoadElevation();
 			}
 		}
 
@@ -237,53 +252,45 @@ namespace WiFindUs.Eye.Wave
 
 		private void ChangeTexture(Object args)
 		{
-			while (anyChangingTexture && !WiFindUs.Forms.MainForm.HasClosed)
-				Thread.Sleep(WFUApplication.Random.Next(50, 100));
-			if (WiFindUs.Forms.MainForm.HasClosed || source.ImageState != Tile.LoadingState.Finished)
+			WiFindUs.Forms.MainForm.SpinLock(texLock, 100, () =>
 			{
-				changingTexture = false;
-				return;
-			}
-			anyChangingTexture = true;
-
-			BasicMaterial nextMaterial;
-			bool isTexture = false;
-			if (source.Image == null)
-				nextMaterial = matte;
-			else
-			{
-				try
-				{
-					using (Stream stream = source.Image.GetStream())
-						nextMaterial = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream))
-						{
-							LayerType = typeof(Terrain)
-						};
-					nextMaterial.Alpha = 0.0f;
-					isTexture = true;
-					if (parent != null)
-						source.DisposeImage();
-				}
-				catch
-				{
+				BasicMaterial nextMaterial;
+				bool isTexture = false;
+				if (source.Image == null)
 					nextMaterial = matte;
-					isTexture = false;
+				else
+				{
+					try
+					{
+						using (Stream stream = source.Image.GetStream())
+							nextMaterial = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream))
+							{
+								LayerType = typeof(Terrain)
+							};
+						nextMaterial.Alpha = 0.0f;
+						isTexture = true;
+						if (parent != null)
+							source.DisposeImage();
+					}
+					catch
+					{
+						nextMaterial = matte;
+						isTexture = false;
+					}
 				}
-			}
 
-			materialsMap.DefaultMaterial = nextMaterial;
+				materialsMap.DefaultMaterial = nextMaterial;
 
-			if (texture != null)
-			{
-				texture.Texture.Unload();
-				texture = null;
-			}
+				if (texture != null)
+				{
+					texture.Texture.Unload();
+					texture = null;
+				}
 
-			if (isTexture)
-				texture = nextMaterial;
-
-			anyChangingTexture = false;
-			changingTexture = false;
+				if (isTexture)
+					texture = nextMaterial;
+				changingTexture = false;
+			});
 		}
 	}
 }

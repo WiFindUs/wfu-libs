@@ -77,7 +77,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.35f : 0.0f, secs * FADE_SPEED);
 			Colour = Color.Lerp(Colour,
 				!toNode.Entity.Active || !fromNode.Entity.Active ? inactiveLinkColour : currentColor,
-				secs * FADE_SPEED * 0.3f);
+				secs * COLOUR_SPEED);
 		}
 
 		protected override void FromMarkerChanged(ILinkableMarker oldFromMarker)

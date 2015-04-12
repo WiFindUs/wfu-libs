@@ -307,6 +307,12 @@ namespace WiFindUs.Eye
 			return Contains(this, location);
 		}
 
+		public void LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude, out int x, out int y)
+		{
+			x = screenBounds.X + (int)(((longitude - northWest.Longitude) / longSpan) * (double)screenBounds.Width);
+			y = screenBounds.Y + (int)(((northWest.Latitude - latitude) / latSpan) * (double)screenBounds.Height);
+		}
+
 		public System.Drawing.Point LocationToScreen(System.Drawing.Rectangle screenBounds, double latitude, double longitude)
 		{
 			return new System.Drawing.Point(

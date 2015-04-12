@@ -19,8 +19,6 @@ namespace WiFindUs.Eye.Wave
 		protected readonly ISelectable selectable;
 		private Entity[] points;
 		private BasicMaterial matte;
-		protected const float ROTATE_SPEED = 2f;
-		private float fader = 0.0f;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -52,7 +50,8 @@ namespace WiFindUs.Eye.Wave
 				LayerType = typeof(Overlays),
 				LightingEnabled = true,
 				AmbientLightColor = Color.White * 0.75f,
-				Alpha = 0.0f
+				Alpha = 0.0f,
+				DiffuseColor = Color.Gold
 			};
 
 			Entity entity = new Entity()
@@ -88,12 +87,10 @@ namespace WiFindUs.Eye.Wave
 			float secs = (float)gameTime.TotalSeconds;
 			Transform3D.LocalRotation = new Vector3(
 				Transform3D.LocalRotation.X,
-				Transform3D.LocalRotation.Y + ROTATE_SPEED * secs,
+				Transform3D.LocalRotation.Y + ROTATE_SPEED * secs * 0.5f,
 				Transform3D.LocalRotation.Z);
 
 			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 0.6f : 0.0f, secs * FADE_SPEED);
-			if (selectable.Selected)
-				matte.DiffuseColor = Color.Wheat.Coserp(Color.Gold, fader += secs);
 		}
 	}
 }

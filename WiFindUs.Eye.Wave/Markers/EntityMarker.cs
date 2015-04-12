@@ -17,7 +17,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		public event Action<EntityMarker<T>> VisibleChanged;
 		
 		protected readonly T entity;
-		protected const float MOVE_SPEED = 10f;
 		private ILocation lastLocation;
 		private Vector3 destination;
 

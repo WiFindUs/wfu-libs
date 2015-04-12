@@ -23,10 +23,6 @@ namespace WiFindUs.Eye.Wave
 	public class MapScene : Scene, IThemeable
 	{
 		public event Action<MapScene> SceneStarted;
-		public event Action<MapScene> CenterLocationChanged;
-
-		private const float ZOOM_RATE = 1.0f;
-		private const float TILT_RATE = 1.0f;
 
 		private Map3D hostControl;
 		private FixedCamera camera;

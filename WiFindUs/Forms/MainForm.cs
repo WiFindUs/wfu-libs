@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace WiFindUs.Forms
@@ -55,6 +56,30 @@ namespace WiFindUs.Forms
 #if DEBUG
 			Debugger.T("exit");
 #endif
+		}
+
+		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		public static void SpinLock(Object lockObject, int timeout, Action action)
+		{
+			bool done = false;
+			while (!done && !closed)
+			{
+				if (Monitor.TryEnter(lockObject, timeout))
+				{
+					try
+					{
+						action();
+					}
+					finally
+					{
+						Monitor.Exit(lockObject);
+						done = true;
+					}
+				}
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////

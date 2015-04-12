@@ -16,8 +16,6 @@ namespace WiFindUs.Eye.Wave
 		internal const float MAX_ZOOM = MapTile.BASE_SIZE * 1.5f;
 		private const float MIN_ANGLE = (float)(Math.PI / 10.0);
 		private const float MAX_ANGLE = (float)(Math.PI / 2.0001);
-		private const float MOVE_SPEED = 15f;
-		private const float ROTATE_SPEED = MOVE_SPEED;
 		private const float MIN_MARKER_SCALE = 0.5f;
 		private const float MAX_MARKER_SCALE = 4.0f;
 
@@ -271,11 +269,11 @@ namespace WiFindUs.Eye.Wave
 		{
 			//position
 			camera.Position = Vector3.Lerp(camera.Position, destination,
-				(float)gameTime.TotalSeconds * MOVE_SPEED);
+				(float)gameTime.TotalSeconds * CAMERA_SPEED);
 
 			//look at target
 			camera.LookAt = Vector3.Lerp(camera.LookAt, targetVector,
-				(float)gameTime.TotalSeconds * ROTATE_SPEED);
+				(float)gameTime.TotalSeconds * CAMERA_SPEED);
 
 			//tile layer
 			MapScene.VisibleLevel = (uint)((1.0f - zoom) * (float)Tile.ZoomLevelCount);

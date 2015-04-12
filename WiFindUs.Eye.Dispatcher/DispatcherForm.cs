@@ -133,7 +133,7 @@ namespace WiFindUs.Eye.Dispatcher
 				else
 				{
 					consoleForm.Show(this);
-					console.RegenerateFromHistory();
+					//console.RegenerateFromHistory();
 				}
 			}
 		}

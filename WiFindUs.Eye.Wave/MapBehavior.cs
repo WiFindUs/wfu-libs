@@ -6,9 +6,14 @@ namespace WiFindUs.Eye.Wave
 {
 	public abstract class MapBehavior : Behavior
 	{
-		protected const float FADE_SPEED = 10f;
-		protected const float SCALE_SPEED = 15f;
-		
+		protected const float SPEED_SCALE	= 1f;
+		protected const float FADE_SPEED	= 10f * SPEED_SCALE;
+		protected const float SCALE_SPEED	= 15f * SPEED_SCALE;
+		protected const float MOVE_SPEED	= 5f * SPEED_SCALE;
+		protected const float ROTATE_SPEED	= 5f * SPEED_SCALE;
+		protected const float COLOUR_SPEED	= FADE_SPEED * 0.15f;
+		protected const float CAMERA_SPEED	= MOVE_SPEED * 3.0f;
+
 		private Transform3D transform;
 		private MapScene scene;
 

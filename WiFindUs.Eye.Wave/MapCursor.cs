@@ -20,7 +20,6 @@ namespace WiFindUs.Eye.Wave
 	{
 		protected const float BASE_SCALE = 1.5f;
 		protected const float RING_DIAMETER = 16f;
-		protected const float SPIKE_SPEED = 0.25f;
 		protected const float RAY_LENGTH = 50f;
 
 		private Transform3D coreTransform, spikeTransform;
@@ -41,7 +40,8 @@ namespace WiFindUs.Eye.Wave
 			{
 				LayerType = typeof(Overlays),
 				LightingEnabled = true,
-				AmbientLightColor = Color.White * 0.75f
+				AmbientLightColor = Color.White * 0.75f,
+				DiffuseColor = Color.Gold
 			};
 
 			cursor.xOffsets[0] = 0.0f;
@@ -167,9 +167,6 @@ namespace WiFindUs.Eye.Wave
 				&& !MapScene.Input.MousePanning
 				? 0.8f : 0.0f, secs * FADE_SPEED);
 			
-			//colour
-			matte.DiffuseColor = Color.Wheat.Coserp(Color.Gold, fader += secs);
-			
 			//scale
 			float scale = MapScene.MarkerScale * BASE_SCALE;
 			Transform3D.Scale = Vector3.Lerp(Transform3D.Scale, new Vector3(scale, scale, scale),
@@ -178,11 +175,11 @@ namespace WiFindUs.Eye.Wave
 			//spike movement
 			spikeTransform.Rotation = new Vector3(
 				spikeTransform.Rotation.X,
-				spikeTransform.Rotation.Y + SPIKE_SPEED * secs,
+				spikeTransform.Rotation.Y + MOVE_SPEED * secs,
 				spikeTransform.Rotation.Z);
 			spikeTransform.LocalPosition = new Vector3(
 				spikeTransform.LocalPosition.X,
-				(25.0f).Coserp(35.0f,fader += (secs * SPIKE_SPEED)),
+				(25.0f).Coserp(35.0f, fader += (secs * MOVE_SPEED * 0.25f)),
 				spikeTransform.LocalPosition.Z);
 		}
 

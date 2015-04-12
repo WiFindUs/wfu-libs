@@ -223,6 +223,12 @@ namespace WiFindUs.Eye
 
 		protected override void OnDisposing()
 		{
+			if (mapTile != null)
+			{
+				mapTile.Dispose();
+				mapTile = null;
+			}
+			
 			if (timer != null)
 			{
 				timer.Tick -= TimerTick;

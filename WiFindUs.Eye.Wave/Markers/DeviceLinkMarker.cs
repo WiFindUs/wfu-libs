@@ -101,7 +101,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			Alpha = Alpha.Lerp(fromDevice.Selected || toNode.Selected ? 0.35f : 0.0f, secs * FADE_SPEED);
 			Colour = Color.Lerp(Colour,
 				!fromDevice.Entity.Active || !toNode.Entity.Active ? inactiveLinkColour : Color.Yellow,
-				secs * FADE_SPEED * 0.3f);
+				secs * COLOUR_SPEED);
 		}
 
 		/////////////////////////////////////////////////////////////////////

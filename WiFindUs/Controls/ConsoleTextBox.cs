@@ -100,7 +100,7 @@ namespace WiFindUs.Controls
 
 		protected virtual void OnDebugOutput(DebuggerLogItem logItem)
 		{
-			if (!allowedVerbosities.HasFlag(logItem.Verbosity))
+			if (!Visible || !allowedVerbosities.HasFlag(logItem.Verbosity))
 				return;
 
 			if (InvokeRequired)
@@ -123,6 +123,13 @@ namespace WiFindUs.Controls
 			if (DesignMode || this.IsDesignMode())
 				return;
 			HideCaret(this.Handle);
+		}
+
+		protected override void OnVisibleChanged(EventArgs e)
+		{
+			base.OnVisibleChanged(e);
+			if (Visible)
+				RegenerateFromHistory();
 		}
 
 		/////////////////////////////////////////////////////////////////////

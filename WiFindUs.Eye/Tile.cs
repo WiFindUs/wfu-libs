@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
@@ -62,25 +66,39 @@ namespace WiFindUs.Eye
 		public event Action<Tile> ImageChanged;
 		public event Action<Tile> ElevationChanged;
 
-		private const uint ELEV_DENSITY = 8;
+		private const int ELEV_SIZE = 2048;
+		private const int ELEV_SAMPLES = 128;
+		private const double ELEV_MIN = -50.0;
+		private const double ELEV_MAX = 2500.0;
 		private const int TILE_IMAGE_SIZE = 640;
 		private static readonly string MAPS_DIR = "maps" + Path.DirectorySeparatorChar;
 		private static readonly string ELEV_URL
-			= "https://maps.googleapis.com/maps/api/elevation/json?locations={0:0.######},{1:0.######}&key={2}";
-		private double[,] elevation;
+			= "https://maps.googleapis.com/maps/api/elevation/json?path=enc:{0}&samples={1}&key={2}";
 		private readonly Tile[] children;
 		private readonly Tile parent;
 		private readonly uint childIndex; //which sub-tile this one is on the parent
 		private Region region;
 		private readonly uint zoomLevel, level, row, column;
-		private Image image = null;
+		private volatile Image image = null;
+		private volatile Bitmap elevation = null;
 		private volatile LoadingState imageState = LoadingState.Waiting;
 		private volatile LoadingState elevationState = LoadingState.Waiting;
 		private bool loadImageAutomatically = true;
 		private bool loadElevationAutomatically = true;
 		private readonly Tile[][,] tileMap;
-		private bool disposed = false;
+		private volatile bool disposed = false;
 		private volatile int downloadRetries = 0;
+		private const uint MAX_IMAGE_DOWNLOAD_THREADS = 4;
+		private static volatile uint currentImageDownloadThreads = 0;
+		private static readonly Regex PATTERN_ELEV_STATUS
+			= new Regex("\"status\"\\s+[:]\\s+\"OK\"", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex PATTERN_ELEV_DATA = new Regex("[{]\\s*"
+				+ "\"elevation\"\\s*[:]\\s*([+-]?[0-9]+(?:[.][0-9]+)?)\\s*[,]\\s*"
+				+ "\"location\"\\s*[:]\\s*[{]\\s*"
+				+ "\"lat\"\\s*[:]\\s*([+-]?[0-9]+(?:[.][0-9]+)?)\\s*[,]\\s*"
+				+ "\"lng\"\\s*[:]\\s*([+-]?[0-9]+(?:[.][0-9]+)?)\\s*[}]\\s*[,]\\s*"
+				+ "\"resolution\"\\s*[:]\\s*([+-]?[0-9]+(?:[.][0-9]+)?)\\s*[}]",
+				RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -109,22 +127,19 @@ namespace WiFindUs.Eye
 
 		public bool LoadElevationAutomatically
 		{
-			get { return loadElevationAutomatically; }
+			get { return parent == null ? loadElevationAutomatically : parent.LoadElevationAutomatically; }
 			set
 			{
-				if (value == loadElevationAutomatically)
-					return;
-				loadElevationAutomatically = value;
-				if (loadElevationAutomatically && elevation == null && ElevationState == LoadingState.Waiting)
-					LoadElevation();
-
-				if (children != null)
+				if (parent == null)
 				{
-					children[0].LoadElevationAutomatically
-					= children[1].LoadElevationAutomatically
-					= children[2].LoadElevationAutomatically
-					= children[3].LoadElevationAutomatically = value;
+					if (value == loadElevationAutomatically)
+						return;
+					loadElevationAutomatically = value;
+					if (loadElevationAutomatically && elevation == null && ElevationState == LoadingState.Waiting)
+						LoadElevation();
 				}
+				else
+					parent.LoadElevationAutomatically = value;
 			}
 		}
 
@@ -170,9 +185,11 @@ namespace WiFindUs.Eye
 
 		public LoadingState ElevationState
 		{
-			get { return elevationState; }
+			get { return parent == null ? elevationState : parent.ElevationState; }
 			private set
 			{
+				if (parent != null)
+					return;
 				if (elevationState == value)
 					return;
 				elevationState = value;
@@ -181,13 +198,16 @@ namespace WiFindUs.Eye
 			}
 		}
 
-		public double[,] Elevation
+		private Bitmap ElevationImage
 		{
-			get { return elevation; }
-			private set
+			get { return parent == null ? elevation : parent.ElevationImage; }
+			set
 			{
+				if (parent != null)
+					return;
 				if (value == elevation)
 					return;
+				DisposeElevation();
 				elevation = value;
 				if (ElevationChanged != null)
 					ElevationChanged(this);
@@ -218,20 +238,27 @@ namespace WiFindUs.Eye
 					catch
 					{
 						Debugger.E("Error creating maps directory {0}", RootDirectory);
-						ImageState = ElevationState = LoadingState.Error;
+						ImageState = LoadingState.Error;
+						if (parent == null)
+							ElevationState = LoadingState.Error;
 						return;
 					}
 				}
 
-				//clear data
+				//clear data and set states
+				LoadingState state = (region == null ? LoadingState.NoLocation : LoadingState.Waiting);;
 				Image = null;
-				Elevation = null;
+				ImageState = state;
+				if (parent == null)
+				{
+					ElevationImage = null;
+					ElevationState = state;
+				}
 
-				//set states
-				ImageState = ElevationState = (region == null ? LoadingState.NoLocation : LoadingState.Waiting);
+				//start threads
 				if (loadImageAutomatically)
 					LoadImage();
-				if (loadElevationAutomatically)
+				if (parent == null && loadElevationAutomatically)
 					LoadElevation();
 
 				//do children
@@ -324,7 +351,6 @@ namespace WiFindUs.Eye
 		public static uint ZoomLevelMax
 		{
 			get { return WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM; }
-			//get { return ZoomLevelMin + 2; }
 		}
 
 		public static uint ZoomLevelCount
@@ -374,7 +400,7 @@ namespace WiFindUs.Eye
 
 		internal string ElevationFilename
 		{
-			get { return String.Format("{0}_{1}_elevation.xml", FilenameLatLong, zoomLevel); }
+			get { return parent == null ? String.Format("{0}_elevation.png", FilenameLatLong) : parent.ElevationFilename; }
 		}
 
 		internal string RootDirectory
@@ -446,6 +472,22 @@ namespace WiFindUs.Eye
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		public double Elevation(double lat, double lng)
+		{
+			if (parent != null)
+				return parent.Elevation(lat, lng);
+			if (elevation == null)
+				return ELEV_MIN;
+			int x, y;
+			region.LocationToScreen(new Rectangle(0,0,ELEV_SIZE,ELEV_SIZE),lat,lng, out x, out y);
+			Color col = elevation.GetPixel(x, y);
+
+			uint val = (uint)((col.A << 24) | (col.R << 16) |
+					(col.G << 8) | (col.B << 0));
+
+			return ELEV_MIN + ((double)val / (double)0xFFFFFFFF) * (ELEV_MAX - ELEV_MIN);
+		}
+
 		public void Dispose()
 		{
 			Dispose(true);
@@ -495,6 +537,9 @@ namespace WiFindUs.Eye
 
 			if (!File.Exists(ImagePath))
 			{
+				if (currentImageDownloadThreads >= MAX_IMAGE_DOWNLOAD_THREADS)
+					return;
+				currentImageDownloadThreads++;
 				ImageState = LoadingState.Downloading;
 				ThreadPool.QueueUserWorkItem(DownloadImageThread);
 			}
@@ -507,18 +552,18 @@ namespace WiFindUs.Eye
 
 		public void LoadElevation()
 		{
-			if (elevation != null || ElevationState != LoadingState.Waiting)
+			if (parent != null || elevation != null || ElevationState != LoadingState.Waiting)
 				return;
 
 			if (!File.Exists(ElevationPath))
 			{
 				ElevationState = LoadingState.Downloading;
-				//ThreadPool.QueueUserWorkItem(DownloadElevationThread);
+				ThreadPool.QueueUserWorkItem(DownloadElevationThread);
 			}
 			else
 			{
 				ElevationState = LoadingState.Loading;
-				//ThreadPool.QueueUserWorkItem(LoadElevationThread);
+				ThreadPool.QueueUserWorkItem(LoadElevationThread);
 			}
 		}
 
@@ -533,6 +578,17 @@ namespace WiFindUs.Eye
 			image = null;
 		}
 
+		public void DisposeElevation()
+		{
+			try
+			{
+				if (elevation != null)
+					elevation.Dispose();
+			}
+			catch { }
+			elevation = null;
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -544,7 +600,16 @@ namespace WiFindUs.Eye
 
 			if (disposing)
 			{
+				if (children != null)
+				{
+					children[0].Dispose();
+					children[1].Dispose();
+					children[2].Dispose();
+					children[3].Dispose();
+				}
+				
 				DisposeImage();
+				DisposeElevation();
 			}
 
 			disposed = true;
@@ -564,11 +629,199 @@ namespace WiFindUs.Eye
 			return level == 0 ? 0 : (uint)(1 << (int)(level)) - 1;
 		}
 
+		private void DownloadElevationThread(object args)
+		{
+#if DEBUG
+			Debugger.T("enter");
+#endif
+			//generate zigzag list of points for polyline
+			double latStep = LatitudinalSpan / (double)(ELEV_SAMPLES - 1);
+			double longStep = LongitudinalSpan / (double)(ELEV_SAMPLES - 1);
+			List<ILocation> points = new List<ILocation>();
+			for (int row = 0; row < ELEV_SAMPLES; row++)
+			{
+				for (int column = (row % 2 == 0 ? 0 : ELEV_SAMPLES-1);
+					(row % 2 == 0 ? column < ELEV_SAMPLES : column >= 0);
+						column += (row % 2 == 0 ? 1 : -1))
+				{
+					double lat = NorthWest.Latitude.Value - (latStep * row);
+					double lng = NorthWest.Longitude.Value + (longStep * column);
+					points.Add(new Location(lat, lng));
+				}
+			}
+			
+			//download and check data
+			StringBuilder sb = new StringBuilder();
+			while (points.Count > 0)
+			{
+				int count = Math.Min(250, points.Count);
+				List<ILocation> pts = new List<ILocation>(points.GetRange(0, count));
+				points.RemoveRange(0, count);
+
+				string url = String.Format(ELEV_URL, Location.ToPolyline(pts), count, WFUApplication.GoogleAPIKey);
+				string data = "";
+				try
+				{
+					using (WebClient elevationClient = new WebClient())
+						data = elevationClient.DownloadString(url);
+				}
+				catch (Exception e) { continue; }
+
+				if (PATTERN_ELEV_STATUS.IsMatch(data))
+					sb.Append(data + "\n");
+				if (points.Count > 0)
+					Thread.Sleep(WFUApplication.Random.Next(250, 500));
+			}
+				
+
+			//check data
+			MatchCollection matches = PATTERN_ELEV_DATA.Matches(sb.ToString());
+			if (matches.Count == 0)
+			{
+				Debugger.E("Error downloading elevation data: no data?");
+				ElevationState = LoadingState.ErrorDownloading;
+				return;
+			}
+
+			//create bitmap
+			int rad = (int)((double)ELEV_SIZE / (double)(ELEV_SAMPLES-1));
+			Bitmap bmp = new Bitmap(ELEV_SIZE, ELEV_SIZE, PixelFormat.Format32bppArgb);
+			Rectangle bmpRect = new Rectangle(0, 0, ELEV_SIZE, ELEV_SIZE);
+			using (Graphics g = Graphics.FromImage(bmp))
+			{
+				g.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
+				g.CompositingMode = CompositingMode.SourceOver;
+				for (int i = 0; i < matches.Count; i++)
+				{
+					//parse data
+					double lat = Double.Parse(matches[i].Groups[2].Value);
+					double lng = Double.Parse(matches[i].Groups[3].Value);
+					double elev = Double.Parse(matches[i].Groups[1].Value);
+
+					//get coords
+					int x, y;
+					region.LocationToScreen(bmpRect, lat, lng, out x, out y);
+					Rectangle radRect = new Rectangle(x - rad, y - rad, rad * 2, rad * 2);
+
+					//get colour values
+
+					uint cval = (uint)(((elev - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)) * (double)0xFFFFFFFF);
+					Color col = Color.FromArgb((byte)(cval >> 24), (byte)(cval >> 16), (byte)(cval >> 8), (byte)(cval >> 0));
+
+					//paint heightmap
+					using (SolidBrush b = new SolidBrush(col))
+						g.FillRectangle(b, radRect);
+					/*
+					int step = (rad * 2) / ELEV_RESOLUTION;
+					for (int row = 0; row < ELEV_RESOLUTION; row++)
+					{
+						for (int column = 0; column < ELEV_RESOLUTION; column++)
+						{
+							Rectangle rect = new Rectangle(radRect.Left + step*column,
+								radRect.Top + step * row, step, step);
+							int xDelta = (rect.Left + step/2) - x;
+							int yDelta = (rect.Top + step / 2) - y;
+							Color newcol = Color.FromArgb((byte)((1.0 - (Math.Sqrt(xDelta * xDelta + yDelta * yDelta) / (double)rad)) * 255.0), col);
+
+						}
+					}
+					*/
+
+					/*
+					radRect.Intersect(bmpRect);
+
+					for (int yy = radRect.Top; yy <= radRect.Bottom; yy++)
+					{
+						byte* row = (byte*)bmd.Scan0 + (yy * bmd.Stride);
+						for (int xx = radRect.Left; xx <= radRect.Right; xx++)
+						{
+							int xDelta = xx - x;
+							int yDelta = yy - y;
+							int dist = (int)Math.Sqrt(xDelta * xDelta + yDelta * yDelta);
+							if (dist > rad)
+								continue;
+
+							double strength = 1.0 - ((double)dist / (double)rad);
+							byte cval = (byte)((row[xx * 4] + ((elev - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)) * 255.0 * strength).Clamp(0, 255));
+							row[x * 4] = cval;   //Blue
+							row[x * 4 + 1] = cval; //Green
+							row[x * 4 + 2] = cval;   //Red
+						}
+					}
+					 * */
+				}
+			}
+			bmp.Save(ElevationPath,System.Drawing.Imaging.ImageFormat.Png);
+			bmp.Dispose();
+
+			ElevationImage = bmp;
+			ElevationState = LoadingState.Finished;
+
+#if DEBUG
+			Debugger.T("exit");
+#endif
+		}
+
+		private void LoadElevationThread(Object args)
+		{
+			try
+			{
+				//get source image
+				System.Drawing.Bitmap image;
+				try
+				{
+					image = new System.Drawing.Bitmap(ElevationPath);
+				}
+				catch (ArgumentException) //corrupt file
+				{
+					if (downloadRetries >= 3)
+					{
+						Debugger.E("Error loading map elevation data {0}: file was corrupt.", ElevationFilename);
+						ElevationState = LoadingState.ErrorLoading;
+						return;
+					}
+
+					image = null;
+					if (File.Exists(ElevationPath))
+					{
+						try { File.Delete(ElevationPath); }
+						catch
+						{
+							Debugger.E("Error deleting corrupt map elevation data {0}", ElevationFilename);
+							ElevationState = LoadingState.ErrorLoading;
+							return;
+						}
+					}
+					downloadRetries++;
+					ElevationState = LoadingState.Downloading;
+					DownloadElevationThread(null); //already in a thread, call this directly
+					return;
+				}
+
+				ElevationImage = image;
+				ElevationState = LoadingState.Finished;
+				return;
+
+			}
+			catch (FileNotFoundException)
+			{
+				Debugger.E("Error loading map elevation data {0}: file not found", ElevationFilename);
+			}
+			catch (OutOfMemoryException)
+			{
+				Debugger.E("Error loading  map elevation data {0}: out of system memory", ElevationFilename);
+			}
+			ElevationState = LoadingState.ErrorLoading;
+		}
+
 		private void DownloadImageThread(Object args)
 		{
+#if DEBUG
+			Debugger.T("enter");
+#endif
 			WebClient imageClient = new WebClient();
 			imageClient.DownloadFileCompleted += imageClient_DownloadFileCompleted;
-			imageClient.DownloadProgressChanged += webClient_DownloadProgressChanged;
+			imageClient.DownloadProgressChanged += imageClient_DownloadProgressChanged;
 			imageClient.DownloadFileAsync(new Uri(ImageDownloadURL), ImagePath, null);
 		}
 
@@ -593,25 +846,27 @@ namespace WiFindUs.Eye
 				ImageState = LoadingState.Loading;
 				ThreadPool.QueueUserWorkItem(LoadImageThread);
 			}
-
+			currentImageDownloadThreads--;
 			imageClient.DownloadFileCompleted -= imageClient_DownloadFileCompleted;
-			imageClient.DownloadProgressChanged -= webClient_DownloadProgressChanged;
+			imageClient.DownloadProgressChanged -= imageClient_DownloadProgressChanged;
 			imageClient.Dispose();
+#if DEBUG
+			Debugger.T("exit");
+#endif
 		}
 
-		private void webClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+		private void imageClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
 		{
-			WebClient webClient = sender as WebClient;
+			WebClient imageClient = sender as WebClient;
 			if (WiFindUs.Forms.MainForm.HasClosed)
 			{
-				webClient.CancelAsync();
+				imageClient.CancelAsync();
 				return;
 			}
 		}
 
 		private void LoadImageThread(Object args)
 		{
-			
 			try
 			{
 				//get source image
@@ -684,10 +939,6 @@ namespace WiFindUs.Eye
 			{
 				Debugger.E("Error loading map tile texture {0}: out of system memory", ImageFilename);
 			}
-			//catch (Exception ex)
-			//{
-			//	Debugger.E("Error loading map tile texture {0}: {1}",ImageFilename,ex.Message);
-			//}
 			ImageState = LoadingState.ErrorLoading;
 		}
 	}

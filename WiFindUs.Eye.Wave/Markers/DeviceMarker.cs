@@ -16,7 +16,9 @@ namespace WiFindUs.Eye.Wave.Markers
 	{
 		private Transform3D coreTransform;
 		private BasicMaterial spikeMat, coreMat;
-		
+		private Color colour = Color.White;
+		private float fader = 0.0f;
+
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
@@ -50,7 +52,6 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						DiffuseColor = Color.White,
 						Alpha = 0.75f
 					}))
 					.AddComponent(Model.CreateCone(8f, 6f, 8))
@@ -70,7 +71,6 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						DiffuseColor = new Color(220, 220, 220),
 						Alpha = 0.75f
 					}))
 					.AddComponent(Model.CreateSphere(3f, 4))
@@ -105,6 +105,10 @@ namespace WiFindUs.Eye.Wave.Markers
 			float targetAlpha = !Entity.Active ? 0.5f : (Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity ? 1.0f : 0.75f);
 			spikeMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED);
 			coreMat.Alpha = spikeMat.Alpha;
+			spikeMat.DiffuseColor = Color.Lerp(spikeMat.DiffuseColor,
+				!Entity.Active ? Color.DimGray : colour, secs * COLOUR_SPEED);
+			if (Entity.Active)
+				coreMat.DiffuseColor = Color.White.Coserp(Color.Cyan, fader += secs);
 		}
 
 		/////////////////////////////////////////////////////////////////////

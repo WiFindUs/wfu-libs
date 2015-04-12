@@ -13,9 +13,10 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
-		protected const float ROTATE_SPEED = 5f;
 		private Transform3D ringTransform, coreTransform;
 		private BasicMaterial spikeMat, ringMat, coreMat;
+		private float fader = 0.0f;
+		private Color colour = new Color(0, 175, 255);
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -51,7 +52,6 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						DiffuseColor = new Color(0, 175, 255),
 						Alpha = 0.75f
 					}))
 					.AddComponent(Model.CreateCone(14f, 8f, 8))
@@ -71,7 +71,6 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						DiffuseColor = new Color(220, 220, 220),
 						Alpha = 0.75f
 					}))
 					.AddComponent(Model.CreateSphere(4f, 4))
@@ -90,7 +89,6 @@ namespace WiFindUs.Eye.Wave.Markers
 							LayerType = typeof(NonPremultipliedAlpha),
 							LightingEnabled = true,
 							AmbientLightColor = Color.White * 0.75f,
-							DiffuseColor = new Color(0, 200, 255),
 							Alpha = 0.25f
 						}))
 						.AddComponent(Model.CreateTorus(14f, 2, 12))
@@ -115,17 +113,36 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			float secs = (float)gameTime.TotalSeconds;
-			float targetAlpha = !Entity.Active ? 0.5f : (Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity ? 1.0f : 0.75f);
+			float targetAlpha = (Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity ? 1.0f : 0.75f);
 			spikeMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED);
 			coreMat.Alpha = spikeMat.Alpha;
-			ringMat.Alpha = spikeMat.Alpha * 0.5f;
+			ringMat.Alpha = spikeMat.Alpha * 0.75f;
+			spikeMat.DiffuseColor = Color.Lerp(spikeMat.DiffuseColor,
+				!Entity.Active ? Color.Black : colour, secs * COLOUR_SPEED);
+			ringMat.DiffuseColor = spikeMat.DiffuseColor;
 			if (Entity.Active)
 			{
+				coreMat.DiffuseColor = Color.White.Coserp(colour, fader += secs * 2.0f);
 				ringTransform.Rotation = new Vector3(
 				   ringTransform.Rotation.X,
 				   ringTransform.Rotation.Y + ROTATE_SPEED * secs,
 				   ringTransform.Rotation.Z
 					);
+			}
+		}
+
+		protected override void ActiveChanged(IUpdateable obj)
+		{
+			base.ActiveChanged(obj);
+
+			if (!obj.Active)
+			{
+				ringTransform.Rotation = new Vector3(
+				   ringTransform.Rotation.X,
+				   0.0f,
+				   ringTransform.Rotation.Z
+					);
+				coreMat.DiffuseColor = Color.White;
 			}
 		}
 	}
