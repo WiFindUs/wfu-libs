@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -10,18 +11,22 @@ namespace WiFindUs.Eye
 {
 	public class EyePacketListener : IDisposable
 	{
+		public const int PORT_FIRST = 33339;
+		public const int PORT_LAST = 33345;
+		public const int PORT_COUNT = PORT_LAST - PORT_FIRST;
+
 		public event Action<EyePacketListener, DevicePacket> DevicePacketReceived;
 		public event Action<EyePacketListener, NodePacket> NodePacketReceived;
 
 		private static readonly Regex REGEX_EYE_MESSAGE = new Regex(
 			@"^EYE\{([A-Za-z]+)\|([0-9A-Fa-f]+)\|([0-9A-Fa-f]+)\s*(?:\{\s*(.*)\s*\}\s*)?\}$", RegexOptions.Compiled);
-		private int port = 33339;
-		private Thread thread;
-		private bool cancel = false;
-		private UdpClient listener = null;
-		private bool disposed = false;
-		private Dictionary<string, Dictionary<uint, ulong>> timestamps = new Dictionary<string, Dictionary<uint, ulong>>();
-		private bool logPackets = false;
+		private Thread[] threads = new Thread[PORT_COUNT];
+		private ConcurrentDictionary<string, ConcurrentDictionary<uint, ulong>> timestamps
+			= new ConcurrentDictionary<string, ConcurrentDictionary<uint, ulong>>();
+		private volatile bool listening = false;
+		private volatile bool cancel = false;
+		private volatile bool disposed = false;
+		private volatile bool logPackets = false;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -37,12 +42,8 @@ namespace WiFindUs.Eye
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public EyePacketListener(int port = 33339, bool startImmediately = true)
+		public EyePacketListener(bool startImmediately = true)
 		{
-			if (port < 1024 || port > 65535)
-				throw new ArgumentOutOfRangeException("port", "Port must be between 1024 and 65535 (inclusive)");
-			this.port = port;
-
 			if (startImmediately)
 				Start();
 		}
@@ -53,21 +54,26 @@ namespace WiFindUs.Eye
 
 		public void Start()
 		{
-			if (thread != null || WiFindUs.Forms.MainForm.HasClosed)
+			if (listening || WiFindUs.Forms.MainForm.HasClosed)
 				return;
+			listening = true;
 			cancel = false;
-			thread = new Thread(new ThreadStart(ListenThread));
-			thread.Start();
+			for (int i = 0; i < PORT_COUNT; i++)
+			{
+				threads[i] = new Thread(new ParameterizedThreadStart(ListenThread));
+				threads[i].IsBackground = true;
+				threads[i].Start(PORT_FIRST + i);
+			}
 		}
 
 		public void Stop()
 		{
+			if (!listening)
+				return;
 			cancel = true;
-			if (listener != null)
-			{
-				listener.Close();
-				listener = null;
-			}
+			for (int i = 0; i < PORT_COUNT; i++)
+				threads[i] = null;
+			listening = false;
 		}
 
 		public void Dispose()
@@ -90,7 +96,6 @@ namespace WiFindUs.Eye
 				Stop();
 				DevicePacketReceived = null;
 				NodePacketReceived = null;
-				thread = null;
 			}
 
 			disposed = true;
@@ -100,9 +105,12 @@ namespace WiFindUs.Eye
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		private void ListenThread()
+		private void ListenThread(object portObj)
 		{
-			Debugger.V("Eye listener thread started.");
+			int port = (int)portObj;
+			int index = port - PORT_FIRST;
+			Debugger.V("Eye listener thread started on port {0}.", port);
+			UdpClient listener;
 			try
 			{
 				listener = new UdpClient(port);
@@ -110,11 +118,12 @@ namespace WiFindUs.Eye
 			catch (SocketException)
 			{
 				Debugger.E("Error creating UDP listener on port {0}", port);
+				listener = null;
 			}
 
 			if (listener != null)
 			{
-				while (!cancel || WiFindUs.Forms.MainForm.HasClosed)
+				while (!cancel && !WiFindUs.Forms.MainForm.HasClosed)
 				{
 					IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, port);
 					byte[] bytes = null;
@@ -126,7 +135,7 @@ namespace WiFindUs.Eye
 
 					if (cancel || WiFindUs.Forms.MainForm.HasClosed)
 						break;
-					if (bytes == null)
+					if (bytes == null || bytes.Length == 0)
 						continue;
 					string message = Encoding.UTF8.GetString(bytes).Trim();
 
@@ -140,9 +149,9 @@ namespace WiFindUs.Eye
 					ulong timestamp = UInt64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
 
 					//check for existing timestamp
-					Dictionary<uint, ulong> idTimestamps = null;
+					ConcurrentDictionary<uint, ulong> idTimestamps = null;
 					if (!timestamps.TryGetValue(type, out idTimestamps))
-						idTimestamps = timestamps[type] = new Dictionary<uint, ulong>();
+						idTimestamps = timestamps[type] = new ConcurrentDictionary<uint, ulong>();
 					ulong lastTimeStamp;
 					if (!idTimestamps.TryGetValue(id, out lastTimeStamp))
 						lastTimeStamp = 0;
@@ -197,11 +206,11 @@ namespace WiFindUs.Eye
 				}
 				if (listener != null)
 				{
-					listener.Close();
+					try { listener.Close(); }
+					catch { }
 					listener = null;
 				}
 			}
-			thread = null;
 			Debugger.I("Eye listener thread terminated.");
 		}
 	}

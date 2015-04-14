@@ -641,7 +641,7 @@ namespace WiFindUs.Eye
 			WFUApplication.SplashStatus = "Starting server thread";
 			try
 			{
-				eyeListener = new EyePacketListener(WFUApplication.Config.Get("server.udp_port", 33339));
+				eyeListener = new EyePacketListener();
 #if DEBUG
 				eyeListener.LogPackets = WFUApplication.Config.Get("server.log_packets", true);
 #else
