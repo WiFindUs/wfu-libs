@@ -113,8 +113,8 @@ namespace WiFindUs.Eye
 			return WiFindUs.Eye.Location.Distance(this, other);
 		}
 
-		public NodePacket(IPEndPoint sender, string type, uint id, ulong timestamp, string payload)
-			: base(sender, type, id, timestamp, payload)
+		public NodePacket(string type, uint id, ulong timestamp, string payload)
+			: base(type, id, timestamp, payload)
 		{
 			//check packet
 			if (type.CompareTo("NODE") != 0)

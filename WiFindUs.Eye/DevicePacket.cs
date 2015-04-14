@@ -100,8 +100,8 @@ namespace WiFindUs.Eye
 			}
 		}
 
-		public DevicePacket(IPEndPoint sender, string type, uint id, ulong timestamp, string payload)
-			: base(sender, type, id, timestamp, payload)
+		public DevicePacket(string type, uint id, ulong timestamp, string payload)
+			: base(type, id, timestamp, payload)
 		{
 			//check packet
 			if (type.CompareTo("DEV") != 0)
