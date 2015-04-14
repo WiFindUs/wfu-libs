@@ -82,6 +82,50 @@ namespace WiFindUs.Eye
 			GC.SuppressFinalize(this);
 		}
 
+		public bool ProcessIncomingPacket(string packetMessage)
+		{
+			//check format
+			Match match = REGEX_EYE_MESSAGE.Match(packetMessage);
+			if (!match.Success)
+				return false;
+
+			//get identifiers
+			string type = match.Groups[1].Value.Trim().ToUpper();
+			uint id = UInt32.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
+			ulong timestamp = UInt64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
+
+			//check for existing timestamp
+			ConcurrentDictionary<uint, ulong> idTimestamps = null;
+			if (!timestamps.TryGetValue(type, out idTimestamps))
+				idTimestamps = timestamps[type] = new ConcurrentDictionary<uint, ulong>();
+			ulong lastTimeStamp;
+			if (!idTimestamps.TryGetValue(id, out lastTimeStamp))
+				lastTimeStamp = 0;
+
+			//check timestamp age, discard if same or older
+			if (timestamp <= lastTimeStamp)
+				return false;
+			idTimestamps[id] = timestamp;
+
+			//parse based on type
+			switch (type)
+			{
+				case "DEV":
+					if (DevicePacketReceived != null)
+						DevicePacketReceived(this, new DevicePacket(type,id,timestamp,match.Groups[4].Value));
+					return true;
+
+				case "NODE":
+					if (NodePacketReceived != null)
+						NodePacketReceived(this, new NodePacket(type, id, timestamp, match.Groups[4].Value));
+					return true;
+			}
+			
+			//fallback
+			Debugger.W("EyePacket received with unknown type: \"{0}\"", type);
+			return false;
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -137,72 +181,10 @@ namespace WiFindUs.Eye
 						break;
 					if (bytes == null || bytes.Length == 0)
 						continue;
+
 					string message = Encoding.UTF8.GetString(bytes).Trim();
-
-					Match match = REGEX_EYE_MESSAGE.Match(message);
-					if (!match.Success)
-						continue;
-
-					//get identifiers
-					string type = match.Groups[1].Value.Trim().ToUpper();
-					uint id = UInt32.Parse(match.Groups[2].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
-					ulong timestamp = UInt64.Parse(match.Groups[3].Value.ToUpper(), System.Globalization.NumberStyles.HexNumber);
-
-					//check for existing timestamp
-					ConcurrentDictionary<uint, ulong> idTimestamps = null;
-					if (!timestamps.TryGetValue(type, out idTimestamps))
-						idTimestamps = timestamps[type] = new ConcurrentDictionary<uint, ulong>();
-					ulong lastTimeStamp;
-					if (!idTimestamps.TryGetValue(id, out lastTimeStamp))
-						lastTimeStamp = 0;
-
-					//check timestamp age, discard if same or older
-					if (timestamp <= lastTimeStamp)
-						continue;
-					idTimestamps[id] = timestamp;
-
-					if (logPackets)
-						Debugger.V(message);
-
-					Type eyePacketType = null;
-					switch (type)
-					{
-						case "DEV":
-							if (DevicePacketReceived != null)
-								eyePacketType = typeof(DevicePacket);
-							break;
-						case "NODE":
-							if (NodePacketReceived != null)
-								eyePacketType = typeof(NodePacket);
-							break;
-					}
-					if (eyePacketType != null)
-					{
-						EyePacket packet = (EyePacket)eyePacketType.GetConstructor(
-							new Type[]
-							{
-								typeof(IPEndPoint),
-								typeof(String),
-								typeof(uint),
-								typeof(ulong),
-								typeof(String)
-							})
-							.Invoke(new object[]
-							{
-								endPoint, //sender
-								type, //type
-								id, //id
-								timestamp, //timestamp
-								match.Groups[4].Value //payload
-							});
-						switch (type)
-						{
-							case "DEV": DevicePacketReceived(this, packet as DevicePacket); break;
-							case "NODE": NodePacketReceived(this, packet as NodePacket); break;
-						}
-					}
-					else
-						Debugger.W("EyePacket received with unknown type: \"{0}\"", type);
+					if (ProcessIncomingPacket(message) && logPackets)
+						Debugger.V("[{0}] {1}",port,message);
 				}
 				if (listener != null)
 				{
