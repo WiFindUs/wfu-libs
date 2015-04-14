@@ -66,8 +66,9 @@ namespace WiFindUs.Eye
 		public event Action<Tile> ImageChanged;
 		public event Action<Tile> ElevationChanged;
 
-		private const int ELEV_SIZE = 2048;
-		private const int ELEV_SAMPLES = 128;
+		private const int ELEV_SAMPLE_COUNT = 128;
+		private const int ELEV_SAMPLE_SIZE = 8;
+		private const int ELEV_SIZE = ELEV_SAMPLE_COUNT * ELEV_SAMPLE_SIZE;
 		private const double ELEV_MIN = -50.0;
 		private const double ELEV_MAX = 2500.0;
 		private const int TILE_IMAGE_SIZE = 640;
@@ -635,13 +636,13 @@ namespace WiFindUs.Eye
 			Debugger.T("enter");
 #endif
 			//generate zigzag list of points for polyline
-			double latStep = LatitudinalSpan / (double)(ELEV_SAMPLES - 1);
-			double longStep = LongitudinalSpan / (double)(ELEV_SAMPLES - 1);
+			double latStep = LatitudinalSpan / (double)(ELEV_SAMPLE_COUNT - 1);
+			double longStep = LongitudinalSpan / (double)(ELEV_SAMPLE_COUNT - 1);
 			List<ILocation> points = new List<ILocation>();
-			for (int row = 0; row < ELEV_SAMPLES; row++)
+			for (int row = 0; row < ELEV_SAMPLE_COUNT; row++)
 			{
-				for (int column = (row % 2 == 0 ? 0 : ELEV_SAMPLES-1);
-					(row % 2 == 0 ? column < ELEV_SAMPLES : column >= 0);
+				for (int column = (row % 2 == 0 ? 0 : ELEV_SAMPLE_COUNT - 1);
+					(row % 2 == 0 ? column < ELEV_SAMPLE_COUNT : column >= 0);
 						column += (row % 2 == 0 ? 1 : -1))
 				{
 					double lat = NorthWest.Latitude.Value - (latStep * row);
@@ -684,12 +685,12 @@ namespace WiFindUs.Eye
 			}
 
 			//create bitmap
-			int rad = (int)((double)ELEV_SIZE / (double)(ELEV_SAMPLES-1));
 			Bitmap bmp = new Bitmap(ELEV_SIZE, ELEV_SIZE, PixelFormat.Format32bppArgb);
 			Rectangle bmpRect = new Rectangle(0, 0, ELEV_SIZE, ELEV_SIZE);
 			using (Graphics g = Graphics.FromImage(bmp))
 			{
 				g.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
+				g.PixelOffsetMode = PixelOffsetMode.None;
 				g.CompositingMode = CompositingMode.SourceOver;
 				for (int i = 0; i < matches.Count; i++)
 				{
@@ -701,54 +702,18 @@ namespace WiFindUs.Eye
 					//get coords
 					int x, y;
 					region.LocationToScreen(bmpRect, lat, lng, out x, out y);
-					Rectangle radRect = new Rectangle(x - rad, y - rad, rad * 2, rad * 2);
+					x = (x / ELEV_SAMPLE_SIZE) * ELEV_SAMPLE_SIZE; //rounding
+					y = (y / ELEV_SAMPLE_SIZE) * ELEV_SAMPLE_SIZE; //rounding
+					Rectangle radRect = new Rectangle(x, y, ELEV_SAMPLE_SIZE, ELEV_SAMPLE_SIZE);
 
 					//get colour values
-
 					uint cval = (uint)(((elev - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)) * (double)0xFFFFFFFF);
 					Color col = Color.FromArgb((byte)(cval >> 24), (byte)(cval >> 16), (byte)(cval >> 8), (byte)(cval >> 0));
 
 					//paint heightmap
 					using (SolidBrush b = new SolidBrush(col))
 						g.FillRectangle(b, radRect);
-					/*
-					int step = (rad * 2) / ELEV_RESOLUTION;
-					for (int row = 0; row < ELEV_RESOLUTION; row++)
-					{
-						for (int column = 0; column < ELEV_RESOLUTION; column++)
-						{
-							Rectangle rect = new Rectangle(radRect.Left + step*column,
-								radRect.Top + step * row, step, step);
-							int xDelta = (rect.Left + step/2) - x;
-							int yDelta = (rect.Top + step / 2) - y;
-							Color newcol = Color.FromArgb((byte)((1.0 - (Math.Sqrt(xDelta * xDelta + yDelta * yDelta) / (double)rad)) * 255.0), col);
 
-						}
-					}
-					*/
-
-					/*
-					radRect.Intersect(bmpRect);
-
-					for (int yy = radRect.Top; yy <= radRect.Bottom; yy++)
-					{
-						byte* row = (byte*)bmd.Scan0 + (yy * bmd.Stride);
-						for (int xx = radRect.Left; xx <= radRect.Right; xx++)
-						{
-							int xDelta = xx - x;
-							int yDelta = yy - y;
-							int dist = (int)Math.Sqrt(xDelta * xDelta + yDelta * yDelta);
-							if (dist > rad)
-								continue;
-
-							double strength = 1.0 - ((double)dist / (double)rad);
-							byte cval = (byte)((row[xx * 4] + ((elev - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)) * 255.0 * strength).Clamp(0, 255));
-							row[x * 4] = cval;   //Blue
-							row[x * 4 + 1] = cval; //Green
-							row[x * 4 + 2] = cval;   //Red
-						}
-					}
-					 * */
 				}
 			}
 			bmp.Save(ElevationPath,System.Drawing.Imaging.ImageFormat.Png);
