@@ -13,7 +13,7 @@ namespace WiFindUs.Eye.Wave
 	public class MapCamera : MapBehavior
 	{
 		private const float MIN_ZOOM = 128.0f;
-		internal const float MAX_ZOOM = MapTile.BASE_SIZE * 1.5f;
+		internal const float MAX_ZOOM = Terrain.SIZE * 1.5f;
 		private const float MIN_ANGLE = (float)(Math.PI / 10.0);
 		private const float MAX_ANGLE = (float)(Math.PI / 2.0001);
 		private const float MIN_MARKER_SCALE = 0.5f;

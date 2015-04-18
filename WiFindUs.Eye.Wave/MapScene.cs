@@ -27,7 +27,7 @@ namespace WiFindUs.Eye.Wave
 		private Map3D hostControl;
 		private FixedCamera camera;
 		private BoxCollider groundPlaneCollider;
-		private MapTile baseTile;
+		private Terrain baseTile;
 		private uint visibleLevel = 0;
 		private float markerScale = 1.0f;
 		private static Texture2D whiteTex = null;
@@ -59,7 +59,7 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		internal MapTile BaseTile
+		internal Terrain BaseTile
 		{
 			get { return baseTile; }
 		}
@@ -242,8 +242,8 @@ namespace WiFindUs.Eye.Wave
 			WhiteTexture = tex;
 		
 			//add custom layers
-			RenderManager.RegisterLayerAfter(new Terrain(this.RenderManager), DefaultLayers.Opaque);
-			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), typeof(Terrain));
+			RenderManager.RegisterLayerAfter(new TerrainLayer(this.RenderManager), DefaultLayers.Opaque);
+			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), typeof(TerrainLayer));
 			RenderManager.RegisterLayerAfter(new Overlays(this.RenderManager), typeof(NonPremultipliedAlpha));
 			RenderManager.RegisterLayerAfter(new Wireframes(this.RenderManager), typeof(Overlays));
 
@@ -271,15 +271,15 @@ namespace WiFindUs.Eye.Wave
 
 			//create terrain tiles
 			Debugger.V("MapScene: creating tiles");
-			Entity tileEntity = MapTile.Create();
-			baseTile = tileEntity.FindComponent<MapTile>();
+			Entity tileEntity = Terrain.Create();
+			baseTile = tileEntity.FindComponent<Terrain>();
 			EntityManager.Add(tileEntity);
 
 			//create ground plane
 			Debugger.V("MapScene: creating ground plane");
 			EntityManager.Add(new Entity()
 				.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
-				.AddComponent(Model.CreatePlane(Vector3.UnitY, MapTile.BASE_SIZE * 100f))
+				.AddComponent(Model.CreatePlane(Vector3.UnitY, Terrain.SIZE * 100f))
 				.AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red }));
 
 			//add scene behaviours

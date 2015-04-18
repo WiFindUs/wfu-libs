@@ -12,7 +12,7 @@ namespace WiFindUs.Eye.Controls
 	public class Map2D : ThemedControl
 	{
 		private Rectangle mapArea = Rectangle.Empty;
-		private Tile source;
+		private BaseTile source;
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
@@ -24,8 +24,7 @@ namespace WiFindUs.Eye.Controls
 			if (IsDesignMode)
 				return;
 			source = (WFUApplication.MainForm as EyeMainForm).BaseTile;
-			source.ImageChanged += source_ImageChanged;
-			source.ImageStateChanged += source_ImageChanged;
+			source.CompositeImageChanged += source_CompositeImageChanged;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -86,15 +85,8 @@ namespace WiFindUs.Eye.Controls
 			pevent.Graphics.SetQuality(GraphicsExtensions.GraphicsQuality.Low);
 			pevent.Graphics.Clear(Theme.Current.Background.Dark.Colour);
 
-			//draw rectangle if no source present
-			if (source == null || source.ImageState != Tile.LoadingState.Finished)
-			{
-				pevent.Graphics.FillRectangle(Theme.Current.Background.Light.Brush, mapArea);
-				return;
-			}
-
 			//draw image
-			pevent.Graphics.DrawImageSafe(source.Image, mapArea,
+			pevent.Graphics.DrawImageSafe(source.Composite, mapArea,
 				Theme.Current.Background.Light.Brush, CompositingMode.SourceCopy);
 
 		}
@@ -170,6 +162,11 @@ namespace WiFindUs.Eye.Controls
 		/////////////////////////////////////////////////////////////////////
 
 		private void source_ImageChanged(Tile obj)
+		{
+			
+		}
+
+		private void source_CompositeImageChanged(BaseTile source)
 		{
 			this.RefreshThreadSafe();
 		}

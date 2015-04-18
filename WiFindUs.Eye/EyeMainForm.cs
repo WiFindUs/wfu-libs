@@ -21,7 +21,7 @@ namespace WiFindUs.Eye
 		private bool serverMode = false;
 		private double deviceMaxAccuracy = 20.0;
 		private double nodeMaxAccuracy = 20.0;
-		private volatile Tile mapTile = null;
+		private volatile BaseTile mapTile = null;
 
 		//non-mysql collections (client mode):
 		private Dictionary<ulong, Device> devices;
@@ -115,7 +115,7 @@ namespace WiFindUs.Eye
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Tile BaseTile
+		public BaseTile BaseTile
 		{
 			get { return mapTile; }
 		}
@@ -126,11 +126,7 @@ namespace WiFindUs.Eye
 
 		public EyeMainForm()
 		{
-			mapTile = new Tile()
-			{
-				LoadImageAutomatically = false,
-				LoadElevationAutomatically = false
-			};
+			mapTile = new BaseTile();
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			WiFindUs.Eye.NodeLink.OnNodeLinkLoaded += OnNodeLinkLoaded;

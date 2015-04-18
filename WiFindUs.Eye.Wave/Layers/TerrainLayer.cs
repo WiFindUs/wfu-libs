@@ -9,9 +9,9 @@ using WaveEngine.Framework.Managers;
 
 namespace WiFindUs.Eye.Wave.Layers
 {
-	public class Terrain : Layer
+	public class TerrainLayer : Layer
 	{
-		public Terrain(RenderManager renderManager)
+		public TerrainLayer(RenderManager renderManager)
 			: base(renderManager)
 		{
 		}

@@ -65,12 +65,14 @@
     <Compile Include="ILocatableProxy.cs" />
     <Compile Include="IUpdateableProxy.cs" />
     <Compile Include="ISelectableProxy.cs" />
-    <Compile Include="Layers\Terrain.cs" />
+    <Compile Include="Layers\TerrainLayer.cs" />
     <Compile Include="MapInput.DefaultHandlers.cs" />
     <Compile Include="MapSceneBehavior.cs" />
     <Compile Include="MapCursor.cs" />
-    <Compile Include="MapTile.cs" />
+    <Compile Include="Terrain.cs" />
     <Compile Include="Markers\IEntityMarker.cs" />
+    <Compile Include="PolyPlane.cs" />
+    <Compile Include="PolyPlaneRenderer.cs" />
     <Compile Include="SelectionRing.cs" />
     <Compile Include="WaveExtensions.cs" />
     <Compile Include="Layers\Overlays.cs" />

@@ -45,7 +45,21 @@ namespace WiFindUs.Extensions
 
 			Stream stream = new MemoryStream();
 			input.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
+			stream.Flush();
 			return stream;
+		}
+
+		public static void G(this Image input, Action<Graphics> paintMethod,
+			GraphicsExtensions.GraphicsQuality quality = GraphicsExtensions.GraphicsQuality.Low)
+		{
+			if (input == null || paintMethod == null)
+				return;
+
+			using (Graphics g = Graphics.FromImage(input))
+			{
+				g.SetQuality(quality);
+				paintMethod(g);
+			}
 		}
 	}
 }
