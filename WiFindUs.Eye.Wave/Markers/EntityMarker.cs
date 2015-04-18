@@ -81,7 +81,10 @@ namespace WiFindUs.Eye.Wave.Markers
 			entity.LocationChanged += LocationChanged;
 			entity.ActiveChanged += ActiveChanged;
 			entity.Updated += Updated;
-			MapScene.BaseTile.Source.RegionChanged += Source_RegionChanged;
+			MapScene.Terrain.Source.ElevationStateChanged += Source_ElevationStateChanged;
+			MapScene.Terrain.Source.RegionChanged += Source_RegionChanged;
+
+			LocationChanged(entity);
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -94,7 +97,12 @@ namespace WiFindUs.Eye.Wave.Markers
 				(float)gameTime.TotalSeconds * MOVE_SPEED);
 		}
 
-		protected virtual void Source_RegionChanged(Tile obj)
+		protected virtual void Source_RegionChanged(Tile source)
+		{
+			LocationChanged(entity);
+		}
+
+		protected void Source_ElevationStateChanged(Map source)
 		{
 			LocationChanged(entity);
 		}
@@ -129,8 +137,8 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected virtual void UpdateMarkerState()
 		{
-			bool active = MapScene.BaseTile != null
-				&& MapScene.BaseTile.Source != null
+			bool active = MapScene.Terrain != null
+				&& MapScene.Terrain.Source != null
 				&& entity.Location.HasLatLong
 				&& (entity.Active || entity.LastUpdatedSecondsAgo < (entity.TimeoutLength * 5));
 

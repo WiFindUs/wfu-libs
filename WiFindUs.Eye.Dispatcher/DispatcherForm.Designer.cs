@@ -45,7 +45,7 @@
 			this.splitterRight = new WiFindUs.Themes.ThemedSplitContainer();
 			this.tabsMiddle = new WiFindUs.Themes.ThemedTabControl();
 			this.tab3DMap = new System.Windows.Forms.TabPage();
-			this.map = new WiFindUs.Eye.Wave.Map3D();
+			this.map3D = new WiFindUs.Eye.Wave.Map3D();
 			this.splitterRightMiddle = new WiFindUs.Themes.ThemedSplitContainer();
 			this.tabsTopRight = new WiFindUs.Themes.ThemedTabControl();
 			this.tabIncidents = new System.Windows.Forms.TabPage();
@@ -247,7 +247,7 @@
 			// tab3DMap
 			// 
 			this.tab3DMap.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
-			this.tab3DMap.Controls.Add(this.map);
+			this.tab3DMap.Controls.Add(this.map3D);
 			this.tab3DMap.Font = new System.Drawing.Font("Segoe UI", 9F);
 			this.tab3DMap.Location = new System.Drawing.Point(4, 34);
 			this.tab3DMap.Margin = new System.Windows.Forms.Padding(0);
@@ -256,19 +256,19 @@
 			this.tab3DMap.TabIndex = 0;
 			this.tab3DMap.Text = "3D Map";
 			// 
-			// map
+			// map3D
 			// 
-			this.map.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
-			this.map.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.map.Font = new System.Drawing.Font("Segoe UI", 9F);
-			this.map.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-			this.map.Location = new System.Drawing.Point(0, 0);
-			this.map.Margin = new System.Windows.Forms.Padding(0);
-			this.map.Name = "map";
-			this.map.Size = new System.Drawing.Size(224, 502);
-			this.map.TabIndex = 0;
-			this.map.TabStop = false;
-			this.map.Text = "map";
+			this.map3D.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(30)))), ((int)(((byte)(30)))));
+			this.map3D.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.map3D.Font = new System.Drawing.Font("Segoe UI", 9F);
+			this.map3D.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+			this.map3D.Location = new System.Drawing.Point(0, 0);
+			this.map3D.Margin = new System.Windows.Forms.Padding(0);
+			this.map3D.Name = "map";
+			this.map3D.Size = new System.Drawing.Size(224, 502);
+			this.map3D.TabIndex = 0;
+			this.map3D.TabStop = false;
+			this.map3D.Text = "map";
 			// 
 			// splitterRightMiddle
 			// 
@@ -432,7 +432,7 @@
         private System.Windows.Forms.TabPage tab3DMap;
 		private System.Windows.Forms.TabPage tabUsers;
 		private WiFindUs.Eye.Controls.Map2D minimap;
-		private WiFindUs.Eye.Wave.Map3D map;
+		private WiFindUs.Eye.Wave.Map3D map3D;
     }
 }
 

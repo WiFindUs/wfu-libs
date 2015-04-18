@@ -12,7 +12,7 @@ namespace WiFindUs.Eye.Controls
 	public class Map2D : ThemedControl
 	{
 		private Rectangle mapArea = Rectangle.Empty;
-		private BaseTile source;
+		private Map source;
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
@@ -23,7 +23,7 @@ namespace WiFindUs.Eye.Controls
 			TabStop = false;
 			if (IsDesignMode)
 				return;
-			source = (WFUApplication.MainForm as EyeMainForm).BaseTile;
+			source = (WFUApplication.MainForm as EyeMainForm).Map;
 			source.CompositeImageChanged += source_CompositeImageChanged;
 		}
 
@@ -166,7 +166,7 @@ namespace WiFindUs.Eye.Controls
 			
 		}
 
-		private void source_CompositeImageChanged(BaseTile source)
+		private void source_CompositeImageChanged(Map source)
 		{
 			this.RefreshThreadSafe();
 		}

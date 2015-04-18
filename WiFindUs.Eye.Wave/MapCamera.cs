@@ -63,7 +63,7 @@ namespace WiFindUs.Eye.Wave
 			get { return target; }
 			set
 			{
-				ILocation loc = MapScene.BaseTile.Source.Clamp(value ?? MapScene.BaseTile.Source.Center);
+				ILocation loc = MapScene.Terrain.Source.Clamp(value ?? MapScene.Terrain.Source.Center);
 				if (WiFindUs.Eye.Location.Equals(loc, target))
 					return;
 				target = loc;
@@ -126,15 +126,26 @@ namespace WiFindUs.Eye.Wave
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public Vector3? VectorFromScreenRay(int x, int y)
+		public Vector3? VectorFromScreenRay(int x, int y, out Vector3 normal)
 		{
 			//set up ray
 			ConfigureScreenRay(x, y);
-
-			//test for collision with ground plane
-			float? result = MapScene.GroundPlane.Intersects(ref ray);
+			
+			//test for collision with terrain, then ground plane
+			float? result = MapScene.Terrain.Intersects(ref ray, out normal);
 			if (!result.HasValue)
+			{
+				result = MapScene.GroundPlane.Intersects(ref ray);
+				if (result.HasValue)
+					normal = Vector3.Up;
+			}
+			
+			//no hit
+			if (!result.HasValue)
+			{
+				normal = Vector3.Zero;
 				return null;
+			}
 
 			//return result
 			return ray.Position + ray.Direction * result.Value;
@@ -142,7 +153,8 @@ namespace WiFindUs.Eye.Wave
 
 		public ILocation LocationFromScreenRay(int x, int y)
 		{
-			Vector3? vec = VectorFromScreenRay(x, y);
+			Vector3 fn;
+			Vector3? vec = VectorFromScreenRay(x, y, out fn);
 			return vec == null ? null : MapScene.VectorToLocation(vec.Value);
 		}
 

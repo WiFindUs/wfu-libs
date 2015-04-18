@@ -27,7 +27,7 @@ namespace WiFindUs.Eye.Wave
 		private Map3D hostControl;
 		private FixedCamera camera;
 		private BoxCollider groundPlaneCollider;
-		private Terrain baseTile;
+		private Terrain terrain;
 		private uint visibleLevel = 0;
 		private float markerScale = 1.0f;
 		private static Texture2D whiteTex = null;
@@ -59,9 +59,9 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		internal Terrain BaseTile
+		internal Terrain Terrain
 		{
-			get { return baseTile; }
+			get { return terrain; }
 		}
 
 		internal List<DeviceMarker> DeviceMarkers
@@ -168,19 +168,19 @@ namespace WiFindUs.Eye.Wave
 
 		public Vector3 LocationToVector(ILocation loc)
 		{
-			if (baseTile == null)
+			if (terrain == null)
 				return Vector3.Zero;
-			return baseTile.LocationToVector(loc);
+			return terrain.LocationToVector(loc);
 		}
 
 		public ILocation VectorToLocation(Vector3 vec)
 		{
-			if (baseTile == null || baseTile.Source == null)
+			if (terrain == null || terrain.Source == null)
 				return WiFindUs.Eye.Location.EMPTY;
 
 			return new Location(
-				baseTile.Source.NorthWest.Latitude - ((vec.Z - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Source.LatitudinalSpan,
-				baseTile.Source.NorthWest.Longitude + ((vec.X - (baseTile.Size / -2f)) / baseTile.Size) * baseTile.Source.LongitudinalSpan
+				terrain.Source.NorthWest.Latitude - ((vec.Z - (Terrain.SIZE / -2f)) / Terrain.SIZE) * terrain.Source.LatitudinalSpan,
+				terrain.Source.NorthWest.Longitude + ((vec.X - (Terrain.SIZE / -2f)) / Terrain.SIZE) * terrain.Source.LongitudinalSpan
 				);
 		}
 
@@ -261,18 +261,13 @@ namespace WiFindUs.Eye.Wave
 
 			//create global lighting
 			Debugger.V("MapScene: creating lighting");
-			Vector3 sun = new Vector3(0f, 100f, 35f);
-			sun.Normalize();
-			DirectionalLight skylight = new DirectionalLight("SkyLight", sun)
-			{
-				Color = Color.Gray
-			};
+			DirectionalLight skylight = new DirectionalLight("SkyLight", new Vector3(1));
 			EntityManager.Add(skylight);
 
 			//create terrain tiles
 			Debugger.V("MapScene: creating tiles");
 			Entity tileEntity = Terrain.Create();
-			baseTile = tileEntity.FindComponent<Terrain>();
+			terrain = tileEntity.FindComponent<Terrain>();
 			EntityManager.Add(tileEntity);
 
 			//create ground plane

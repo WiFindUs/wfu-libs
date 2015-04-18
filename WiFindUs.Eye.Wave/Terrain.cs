@@ -19,16 +19,16 @@ namespace WiFindUs.Eye.Wave
 {
 	public class Terrain : MapBehavior
 	{
-		internal const float SIZE = 2048.0f;
-		internal const int SUBDIVISIONS = 62;
+		public const float SIZE = 2048.0f;
+		public const int RESOLUTION = 7; //subdivisions = (2 ^ RESOLUTION)-2
 		internal const float UPDATE_INTERVAL = 3.0f;
 		
-		private readonly BaseTile source;
-		private BasicMaterial matte;
+		private readonly Map source;
+		private BasicMaterial textureMaterial;
+		private Texture2D texture;
+		private byte[][][] textureData;
 		private Vector3 northWest, southEast;
-		private float size;
 		private MaterialsMap materialsMap;
-		private BoxCollider boxCollider;
 		private PolyPlane plane = null;
 		private float meterSize = 0.0f;
 		private volatile bool updatingTexture = false;
@@ -36,25 +36,20 @@ namespace WiFindUs.Eye.Wave
 		private volatile bool pendingTextureUpdate = false;
 		private volatile bool updatingElevation = false;
 		private volatile bool pendingElevationUpdate = false;
+		private Ray ray;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		internal BaseTile Source
+		internal Map Source
 		{
 			get { return source; }
 		}
-
-		internal float Size
-		{
-			get { return size; }
-		}
-
 		internal float MeterSize
 		{
 			get { return meterSize; }
-		}	
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS/INITIALIZERS
@@ -62,17 +57,12 @@ namespace WiFindUs.Eye.Wave
 
 		public static Entity Create()
 		{
-			BaseTile source = (WFUApplication.MainForm as EyeMainForm).BaseTile;
+			Map source = (WFUApplication.MainForm as EyeMainForm).Map;
 			if (source == null)
-				throw new InvalidOperationException("EyeMainForm's BaseTile was null");
+				throw new InvalidOperationException("EyeMainForm's Map was null");
 
 			Terrain terrain = new Terrain(source);
-			terrain.size = SIZE;
-			terrain.meterSize = SIZE / (float)source.Width;
-
-			terrain.northWest = new Vector3(terrain.size / -2.0f, 0.0f, terrain.size / -2.0f);
-			terrain.southEast = new Vector3(terrain.size / 2.0f, 0.0f, terrain.size / 2.0f);
-
+			
 			//entity
 			Entity entity = new Entity()
 				.AddComponent(terrain.Transform3D = new Transform3D()
@@ -80,23 +70,53 @@ namespace WiFindUs.Eye.Wave
 					Position = Vector3.Zero,
 					LocalPosition = Vector3.Zero
 				})
-				.AddComponent(terrain.plane = new PolyPlane(Vector3.Up, terrain.size, SUBDIVISIONS))
+				.AddComponent(terrain.plane = new PolyPlane(Vector3.Up, SIZE, (1 << RESOLUTION) - 2))
 				.AddComponent(new PolyPlaneRenderer())
-				.AddComponent(terrain.materialsMap = new MaterialsMap(terrain.matte = new BasicMaterial(MapScene.WhiteTexture)
-				{
-					LayerType = typeof(TerrainLayer),
-					DiffuseColor = Color.Peru,
-					Alpha = 1.0f
-				}))
-				.AddComponent(new MeshCollider())
+				.AddComponent(terrain.materialsMap = new MaterialsMap(terrain.textureMaterial))
 				.AddComponent(terrain);
 
 			return entity;
 		}
 
-		internal Terrain(BaseTile source)
+		internal Terrain(Map source)
 		{
 			this.source = source;
+			meterSize = SIZE / (float)source.Width;
+			northWest = new Vector3(SIZE / -2.0f, 0.0f, SIZE / -2.0f);
+			southEast = new Vector3(SIZE / 2.0f, 0.0f, SIZE / 2.0f);
+
+			//create texture
+			texture = new Texture2D()
+			{
+				Format = PixelFormat.R8G8B8A8,
+				Width = Map.COMPOSITE_SIZE,
+				Height = Map.COMPOSITE_SIZE,
+				Levels = 1
+			};
+			textureData = new byte[1][][]; // only 1 texture part
+			textureData[0] = new byte[1][]; // 1 mipmap level
+			textureData[0][0] = new byte[texture.Width * texture.Height * 4]; // texture data size is ( width * height * bytesperpixel )
+			for (int i = 0; i < texture.Width * texture.Height; i++)
+			{
+				textureData[0][0][i * 4] = Color.Peru.R;		//red
+				textureData[0][0][i * 4 + 1] = Color.Peru.G;	//green
+				textureData[0][0][i * 4 + 2] = Color.Peru.B;	//blue
+				textureData[0][0][i * 4 + 3] = 255;	//alpha
+			}
+			texture.Data = textureData;
+
+			//create basic material shader
+			textureMaterial = new BasicMaterial(texture)
+			{
+				LayerType = typeof(TerrainLayer),
+				LightingEnabled = true,
+			};
+
+			//location altitude ray
+			ray = new Ray();
+			Vector3 dir = new Vector3(0.001f, -1.0f, 0.001f);
+			dir.Normalize();
+			ray.Direction = dir;
 		}
 
 		protected override void Initialize()
@@ -125,9 +145,21 @@ namespace WiFindUs.Eye.Wave
 			if (source == null)
 				return Vector3.Zero;
 			Vector3 output = source.LocationToVector(northWest, southEast, loc);
-			if (loc.Altitude.HasValue)
-				output.Y = meterSize * (float)loc.Altitude.Value;
+			if (source.ElevationState == Tile.LoadingState.Finished && source.Contains(loc))
+			{
+				ray.Position = new Vector3(output.X, plane.BoundingBox.Max.Y + 20.0f, output.Z);
+				Vector3 normal;
+				float? result = Intersects(ref ray, out normal);
+				if (result.HasValue)
+					output.Y = (ray.Position + ray.Direction * result.Value).Y;
+
+			}
 			return output;
+		}
+
+		public float? Intersects(ref Ray ray, out Vector3 normal)
+		{
+			return plane.Intersects(ref ray, out normal);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -153,7 +185,7 @@ namespace WiFindUs.Eye.Wave
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		private void source_ElevationStateChanged(BaseTile source)
+		private void source_ElevationStateChanged(Map source)
 		{
 			if (updatingElevation)
 				pendingElevationUpdate = true;
@@ -175,6 +207,8 @@ namespace WiFindUs.Eye.Wave
 		private void UpdateElevationThread()
 		{
 			Thread.Sleep(500);
+			
+			//update vertex positions
 			if (source.ElevationState == Tile.LoadingState.Finished)
 			{
 				double latStep = source.LatitudinalSpan / (double)(plane.Subdivisions + 1);
@@ -199,11 +233,19 @@ namespace WiFindUs.Eye.Wave
 					for (uint column = 0; column < plane.Subdivisions + 2; column++)
 						plane.SetVertexPosition(row, column, 0.0f);
 			}
+
+			//update vertex normals (lighting etc)
+			for (uint row = 0; row < plane.Subdivisions + 2; row++)
+				for (uint column = 0; column < plane.Subdivisions + 2; column++)
+					plane.RecalculateVertexNormal(row, column);
+
+			//push updates
 			plane.FlushVertices();
+			plane.UpdateBoundingBox();
 			updatingElevation = false;
 		}
 
-		private void source_CompositeImageChanged(BaseTile obj)
+		private void source_CompositeImageChanged(Map obj)
 		{
 			if (updatingTexture || textureTimer < UPDATE_INTERVAL)
 				pendingTextureUpdate = true;
@@ -224,23 +266,39 @@ namespace WiFindUs.Eye.Wave
 
 		private void UpdateTextureThread()
 		{
-			BasicMaterial nextTexture;
-
 			lock (source.CompositeLock)
-			{
-				//http://forum.waveengine.net/forum/general/4339-how-to-update-and-draw-the-texture-at-runtime
-				//might be of use to speed this up?
-				//also this: http://bobpowell.net/lockingbits.aspx
-				using (Stream stream = source.Composite.GetStream())
+			{			
+				//RenderManager.GraphicsDevice.Textures.DestroyTexture(texture);
+				unsafe
 				{
-					nextTexture = new BasicMaterial(Texture2D.FromFile(RenderManager.GraphicsDevice, stream))
+					System.Drawing.Imaging.BitmapData bmd = source.Composite.LockBits(
+						new System.Drawing.Rectangle(0, 0, source.Composite.Width, source.Composite.Height),
+						System.Drawing.Imaging.ImageLockMode.ReadOnly,
+						source.Composite.PixelFormat);
+					for (int y = 0; y < bmd.Height; y++)
 					{
-						LayerType = typeof(TerrainLayer)
-					};
+						byte* row = (byte*)bmd.Scan0 + (y * bmd.Stride);
+						for (int x = 0; x < bmd.Width; x++)
+						{
+							if (WiFindUs.Forms.MainForm.HasClosed)
+							{
+								source.Composite.UnlockBits(bmd);
+								return;
+							}
+							
+							int ti = y * source.Composite.Width + x;
+							textureData[0][0][ti * 4] = row[x * 4 + 2];		//red
+							textureData[0][0][ti * 4 + 1] = row[x * 4 + 1];	//green
+							textureData[0][0][ti * 4 + 2] = row[x * 4];	//blue
+							textureData[0][0][ti * 4 + 3] = row[x * 4 + 3];	//alpha
+						}
+					}
+					source.Composite.UnlockBits(bmd);
 				}
+				texture.Data = textureData;
+				RenderManager.GraphicsDevice.Textures.UploadTexture(texture);
 			}
 
-			materialsMap.DefaultMaterial = nextTexture;
 			updatingTexture = false;
 			textureTimer = 0.0f;
 		}

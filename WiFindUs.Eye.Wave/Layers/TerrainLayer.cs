@@ -20,10 +20,10 @@ namespace WiFindUs.Eye.Wave.Layers
 		{
 			renderState.BlendMode = BlendMode.NonPremultiplied;
 			renderState.SamplerMode = AddressMode.AnisotropicClamp;
-			renderState.CullMode = CullMode.CounterClockWise;
+			renderState.CullMode = CullMode.ClockWise;
 			renderState.FillMode = FillMode.Solid;
-			renderState.DepthMode = DepthMode.Read;
-			renderState.DepthBias = DepthBias.Positive;
+			//renderState.DepthMode = DepthMode.Read;
+			//renderState.DepthBias = DepthBias.Positive;
 			renderState.MaxAnisotropy = AnisotropyLevel.Aniso2x;
 		}
 

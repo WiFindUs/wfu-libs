@@ -70,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Atmosphere.cs" />
-    <Compile Include="BaseTile.cs" />
+    <Compile Include="Map.cs" />
     <Compile Include="Controls\ActionPanel.cs">
       <SubType>Component</SubType>
     </Compile>

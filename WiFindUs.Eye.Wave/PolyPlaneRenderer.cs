@@ -24,8 +24,6 @@ namespace WiFindUs.Eye.Wave
 		private Color diffuseColor;
 		private float alpha;
 		private static int instances;
-		private static readonly BasicMaterial debugMaterial
-			= new BasicMaterial(Color.Red);
 		private bool disposed;
 
 		/////////////////////////////////////////////////////////////////////
@@ -108,18 +106,8 @@ namespace WiFindUs.Eye.Wave
 			Matrix localWorld = Transform.WorldTransform;
 			RenderManager.DrawMesh(PolyPlane.Mesh, MaterialMap.DefaultMaterial, ref localWorld);
 
-			/*
 			if (RenderManager.DebugLines)
-			{
-				RenderManager.GraphicsDevice.RenderState.FillMode = FillMode.Wireframe;
-				debugMaterial.Apply(RenderManager);
-				GraphicsDevice.Graphics.DrawVertexBuffer(PolyPlane.Mesh.NumVertices,
-					PolyPlane.Mesh.NumPrimitives,
-					PrimitiveType.TriangleList,
-					PolyPlane.Mesh.VertexBuffer,
-					PolyPlane.Mesh.IndexBuffer);
-			}
-			 * */
+				PolyPlane.DrawDebugLines();
 		}
 
 		protected override void Dispose(bool disposing)

@@ -70,7 +70,7 @@ namespace WiFindUs.Eye.Dispatcher
 						splitterLeft.HidePanel(1);
 						splitterRight.HidePanel(2);
 						statusStrip.Visible = false;
-						map.Parent = splitterRight.Panel1;
+						map3D.Parent = splitterRight.Panel1;
 						tabsMiddle.Visible = false;
 					}
 				}
@@ -79,7 +79,7 @@ namespace WiFindUs.Eye.Dispatcher
 					if (targetForm == this)
 					{
 						tabsMiddle.Visible = true;
-						map.Parent = tab3DMap;
+						map3D.Parent = tab3DMap;
 						statusStrip.Visible = true;
 						splitterLeft.ShowPanel(1);
 						splitterRight.ShowPanel(2);
@@ -131,10 +131,7 @@ namespace WiFindUs.Eye.Dispatcher
 				if (consoleForm.Visible)
 					consoleForm.Hide();
 				else
-				{
 					consoleForm.Show(this);
-					//console.RegenerateFromHistory();
-				}
 			}
 		}
 
@@ -150,9 +147,6 @@ namespace WiFindUs.Eye.Dispatcher
 			InitializeComponent();
 			if (DesignMode)
 				return;
-
-			//map
-			Map = map;
 
 			//title
 			Text = WFUApplication.Name;
@@ -192,17 +186,17 @@ namespace WiFindUs.Eye.Dispatcher
 			KeyPreview = true;
 
 			//controls
-			listDevices.SelectionGroup = map.SelectionGroup;
-			listUsers.SelectionGroup = map.SelectionGroup;
-			listIncidents.SelectionGroup = map.SelectionGroup;
-			listNodes.SelectionGroup = map.SelectionGroup;
+			listDevices.SelectionGroup = map3D.SelectionGroup;
+			listUsers.SelectionGroup = map3D.SelectionGroup;
+			listIncidents.SelectionGroup = map3D.SelectionGroup;
+			listNodes.SelectionGroup = map3D.SelectionGroup;
 
 			//events
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
 			WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
 			WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
-			map.SelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
+			map3D.SelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;
 #if DEBUG
 			Debugger.T("exit");
 #endif
@@ -290,7 +284,7 @@ namespace WiFindUs.Eye.Dispatcher
 		{
 			if (mapForm.Visible)
 			{
-				mapForm.Map = map;
+				mapForm.Map = map3D;
 				tabsMiddle.Visible = false;
 				tabsBottomRight.Parent = splitterRight.Panel1;
 				splitterRightMiddle.HidePanel(2);
@@ -301,7 +295,7 @@ namespace WiFindUs.Eye.Dispatcher
 				tabsBottomRight.Parent = splitterRightMiddle.Panel2;
 				tabsMiddle.Visible = true;
 				mapForm.Map = null;
-				map.Parent = tab3DMap;
+				map3D.Parent = tab3DMap;
 			}
 		}
 
@@ -357,7 +351,7 @@ namespace WiFindUs.Eye.Dispatcher
 
 		private void OnSelectionGroupSelectionChanged(ISelectableGroup obj)
 		{
-			if (obj != map.SelectionGroup)
+			if (obj != map3D.SelectionGroup)
 				return;
 			/*
 			ISelectable[] selectedEntities = globalSelectionGroup.SelectedEntities;

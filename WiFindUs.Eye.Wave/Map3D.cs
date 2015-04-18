@@ -87,6 +87,14 @@ namespace WiFindUs.Eye.Wave
 		public Map3D()
 		{
 			TabStop = false;
+			if (IsDesignMode)
+				return;
+			WaveMainForm form = WFUApplication.MainForm as WaveMainForm;
+			if (form == null)
+				throw new InvalidOperationException("You cannot instantiate a Map3D without a WaveMainForm!");
+			if (form.Map3D != null)
+				throw new InvalidOperationException("The application already has a Map3D control!");
+			form.Map3D = this;
 		}
 
 		/////////////////////////////////////////////////////////////////////

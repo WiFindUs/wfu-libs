@@ -10,7 +10,7 @@ namespace WiFindUs.Eye.Wave
 {
 	public class WaveMainForm : EyeMainForm
 	{
-		private Map3D map = null;
+		private Map3D map3D = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -20,32 +20,32 @@ namespace WiFindUs.Eye.Wave
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public bool DebugMode
 		{
-			get { return map == null ? false : map.DebugMode; }
+			get { return map3D == null ? false : map3D.DebugMode; }
 			set
 			{
-				if (map == null || value == map.DebugMode)
+				if (map3D == null || value == map3D.DebugMode)
 					return;
-				map.DebugMode = value;
+				map3D.DebugMode = value;
 				OnDebugModeChanged();
 			}
 		}
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public Map3D Map
+		public Map3D Map3D
 		{
-			get { return map; }
-			protected set
+			get { return map3D; }
+			internal set
 			{
-				if (map != null || value == null)
+				if (map3D != null || value == null)
 					return;
 #if DEBUG
 				Debugger.T("entry");
 #endif
-				map = value;
-				map.SceneStarted += OnMapSceneStarted;
+				map3D = value;
+				map3D.SceneStarted += OnMapSceneStarted;
 				if (FirstShown)
-					map.StartMapApplication(); //no-op if called already
+					map3D.StartMapApplication(); //no-op if called already
 #if DEBUG
 				Debugger.T("exit");
 #endif
@@ -81,8 +81,8 @@ namespace WiFindUs.Eye.Wave
 
 			RenderLoop.Run(form, () =>
 			{
-				if (mapForm.map != null)
-					mapForm.map.Render();
+				if (mapForm.map3D != null)
+					mapForm.map3D.Render();
 			});
 #if DEBUG
 			Debugger.T("exit");
@@ -101,8 +101,8 @@ namespace WiFindUs.Eye.Wave
 			base.OnFirstShown(e);
 			if (IsDesignMode)
 				return;
-			if (map != null)
-				map.StartMapApplication(); //no-op if called already
+			if (map3D != null)
+				map3D.StartMapApplication(); //no-op if called already
 #if DEBUG
 			Debugger.T("exit");
 #endif

@@ -65,7 +65,7 @@ namespace WiFindUs.Eye
 		private static readonly string MAPS_DIR = "maps" + Path.DirectorySeparatorChar;
 		private readonly Tile[] children;
 		private readonly Tile parent;
-		private readonly BaseTile root;
+		private readonly Map root;
 		private readonly uint childIndex; //which sub-tile this one is on the parent
 		private Region region;
 		private readonly uint zoomLevel, level, row, column;
@@ -235,7 +235,7 @@ namespace WiFindUs.Eye
 			get { return region == null ? 0.0 : region.Width; }
 		}
 
-		internal BaseTile Root
+		internal Map Root
 		{
 			get { return root; }
 		}
@@ -339,11 +339,11 @@ namespace WiFindUs.Eye
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
 
-		internal Tile(BaseTile root, Tile parent, uint childIndex)
+		internal Tile(Map root, Tile parent, uint childIndex)
 		{
 			this.parent = parent;
 			bool isRoot = parent == null;
-			this.root = isRoot ? this as BaseTile : root;
+			this.root = isRoot ? this as Map : root;
 			this.root.AllTiles.Add(this);
 			this.childIndex = childIndex;
 			zoomLevel = isRoot ? ZoomLevelMin : parent.zoomLevel + 1;
@@ -469,6 +469,7 @@ namespace WiFindUs.Eye
 			
 			//paint image
 			g.CompositingMode = CompositingMode.SourceCopy;
+			g.PixelOffsetMode = PixelOffsetMode.None;
 			g.DrawImage(image, rect);
 #if DEBUG
 			//paint some debug stuff

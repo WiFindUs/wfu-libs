@@ -22,12 +22,26 @@ namespace WiFindUs.Eye.Wave
 		protected const float RING_DIAMETER = 16f;
 		protected const float RAY_LENGTH = 50f;
 
-		private Transform3D coreTransform, spikeTransform;
+		private Transform3D coreTransform, spikeTransform, ringTransform;
 		private BasicMaterial matte;
 		private Vector3 destination = Vector3.Zero;
 		private Ray ray;
 		private float[] xOffsets = new float[12], zOffsets = new float[12];
 		private float fader = 0.0f;
+
+		public Vector3 Normal
+		{
+			set
+			{
+				Vector3 up = Vector3.Up;
+				Quaternion rot;
+				Quaternion.CreateFromTwoVectors(ref up, ref value, out rot);
+				Vector3 euler;
+				Quaternion.ToEuler(ref rot, out euler);
+
+				ringTransform.Rotation = euler;
+			}
+		}
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
@@ -87,7 +101,7 @@ namespace WiFindUs.Eye.Wave
 					.AddChild
 					(
 						new Entity("ring")
-						.AddComponent(new Transform3D()
+						.AddComponent(cursor.ringTransform = new Transform3D()
 						{
 							LocalPosition = new Vector3(0.0f, 0.0f, 0.0f),
 							LocalRotation = new Vector3(0f, 90.0f.ToRadians(), 0f)
@@ -156,6 +170,9 @@ namespace WiFindUs.Eye.Wave
 		{
 			base.Initialize();
 			ray = new Ray();
+			Vector3 dir = new Vector3(0.001f, -1.0f, 0.001f);
+			dir.Normalize();
+			ray.Direction = dir;
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -193,9 +210,6 @@ namespace WiFindUs.Eye.Wave
 			ray.Position = new Vector3(Transform3D.Position.X + x * Transform3D.Scale.X,
 				Transform3D.Position.Y + RAY_LENGTH * Transform3D.Scale.Y,
 				Transform3D.Position.Z + z * Transform3D.Scale.Z);
-			Vector3 dir = new Vector3(0.001f,-1.0f,0.001f);
-			dir.Normalize();
-			ray.Direction = dir;
 		}
 	}
 }

@@ -14,10 +14,10 @@ using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-	public class BaseTile : Tile
+	public class Map : Tile
 	{
-		public event Action<BaseTile> ElevationStateChanged;
-		public event Action<BaseTile> CompositeImageChanged;
+		public event Action<Map> ElevationStateChanged;
+		public event Action<Map> CompositeImageChanged;
 
 		//elevation
 		private const int ELEV_SAMPLE_COUNT = 128;
@@ -37,19 +37,20 @@ namespace WiFindUs.Eye
 				+ "\"resolution\"\\s*[:]\\s*([+-]?[0-9]+(?:[.][0-9]+)?)\\s*[}]",
 				RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private Bitmap elevation = null;
-		private volatile LoadingState elevationState = LoadingState.Waiting;
-		private volatile int elevationDownloadRetries = 0;
+		private LoadingState elevationState = LoadingState.Waiting;
+		private int elevationDownloadRetries = 0;
 		private object elevationLock = new object();
 
 		//image
-		private const int COMPOSITE_SIZE = 2048;
+		public const int COMPOSITE_SIZE = 2048;
 		private readonly List<Tile> allTiles = new List<Tile>();
 		private TilePaintLayer[] paintLayers;
 		private TileCompositeLayer composite;
 		private object compositeLock = new object();
 		private readonly int[] totalTiles;
 		private readonly int[] visibleTiles;
-		private readonly List<Thread> threads = new List<Thread>();
+		private readonly List<Thread> imageThreads = new List<Thread>();
+		private Thread elevationThread = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -57,7 +58,7 @@ namespace WiFindUs.Eye
 
 		public override bool ThreadlessState
 		{
-			get { return threads.Count == 0; }
+			get { return imageThreads.Count == 0 && elevationThread == null; }
 		}
 
 		public LoadingState ElevationState
@@ -102,7 +103,7 @@ namespace WiFindUs.Eye
 
 		public Bitmap Composite
 		{
-			get { return composite.bitmap; }
+			get { return composite == null ? null : composite.bitmap; }
 		}
 
 		public Object CompositeLock
@@ -119,7 +120,7 @@ namespace WiFindUs.Eye
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
 
-		public BaseTile() : base(null,null,0)
+		public Map() : base(null,null,0)
 		{
 			totalTiles = new int[ZoomLevelCount];
 			visibleTiles = new int[totalTiles.Length];
@@ -164,6 +165,8 @@ namespace WiFindUs.Eye
 		{
 			if (!ThreadlessState)
 				throw new InvalidOperationException("You may not start loading operations - the tile is currently in a threaded state.");
+
+			Debugger.V("Map: starting load operations");
 			
 			var orderedTiles = allTiles
 				.OrderBy((tile) => tile.Level)
@@ -176,13 +179,12 @@ namespace WiFindUs.Eye
 				.Reverse()
 				.ToList();
 
-			Thread thread = null;
 			//downloads
 			if (downloads.Count > 0)
 			{
-				thread = new Thread(new ParameterizedThreadStart(DownloadImagesThread));
+				Thread thread = new Thread(new ParameterizedThreadStart(DownloadImagesThread));
 				thread.IsBackground = true;
-				threads.Add(thread);
+				imageThreads.Add(thread);
 				thread.Start(downloads);
 			}
 
@@ -193,9 +195,9 @@ namespace WiFindUs.Eye
 				List<Tile> subLoads = loads.GetRange(0, count);
 				loads.RemoveRange(0, count);
 
-				thread = new Thread(new ParameterizedThreadStart(LoadImagesThread));
+				Thread thread = new Thread(new ParameterizedThreadStart(LoadImagesThread));
 				thread.IsBackground = true;
-				threads.Add(thread);
+				imageThreads.Add(thread);
 				thread.Start(subLoads);
 			}
 
@@ -203,10 +205,9 @@ namespace WiFindUs.Eye
 			if (ElevationState != LoadingState.Waiting)
 				return;
 
-			thread = new Thread(new ThreadStart(ElevationThread));
-			thread.IsBackground = true;
-			threads.Add(thread);
-			thread.Start();
+			elevationThread = new Thread(new ThreadStart(ElevationThread));
+			elevationThread.IsBackground = true;
+			elevationThread.Start();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -220,8 +221,8 @@ namespace WiFindUs.Eye
 
 			if (disposing)
 			{
-				lock (CompositeLock)
-				{
+				//lock (CompositeLock)
+				//{
 					for (int i = 0; i < paintLayers.Length; i++)
 					{
 						if (paintLayers[i] != null)
@@ -231,9 +232,9 @@ namespace WiFindUs.Eye
 					if (composite != null)
 						composite.Dispose();
 					composite = null;
-				}
+				//}
 				allTiles.Clear();
-				lock (ElevationLock)
+				//lock (ElevationLock)
 					DisposeElevation();
 			}
 
@@ -250,7 +251,7 @@ namespace WiFindUs.Eye
 			{
 				composite.Clear();
 				for (int i = 0; i < paintLayers.Length; i++)
-					paintLayers[i].Clear();
+					paintLayers[i].CreateBitmap();
 			}
 			if (CompositeImageChanged != null)
 				CompositeImageChanged(this);
@@ -284,8 +285,91 @@ namespace WiFindUs.Eye
 			elevation = null;
 		}
 
+		private void DownloadImagesThread(object listObj)
+		{
+#if DEBUG
+			Debugger.T("enter");
+#endif
+			List<Tile> tileList = listObj as List<Tile>;
+			foreach (Tile tile in tileList)
+			{
+				tile.downloadRetries = 0;
+				DownloadImage(tile);
+			}
+
+			lock (imageThreads)
+			{
+				imageThreads.Remove(Thread.CurrentThread);
+				if (imageThreads.Count == 0)
+					ImageThreadsFinished();
+			}
+#if DEBUG
+			Debugger.T("exit");
+#endif
+		}
+
+		private void LoadImagesThread(object listObj)
+		{
+#if DEBUG
+			Debugger.T("enter");
+#endif
+
+			List<Tile> tileList = listObj as List<Tile>;
+			foreach (Tile tile in tileList)
+			{
+				tile.downloadRetries = 0;
+				LoadImage(tile);
+			}
+
+			lock (imageThreads)
+			{
+				imageThreads.Remove(Thread.CurrentThread);
+				if (imageThreads.Count == 0)
+					ImageThreadsFinished();
+			}
+#if DEBUG
+			Debugger.T("exit");
+#endif
+		}
+
+		private void ElevationThread()
+		{
+#if DEBUG
+			Debugger.T("enter");
+#endif
+			elevationDownloadRetries = 0;
+			ElevationState = File.Exists(ElevationPath)
+				? LoadingState.Loading : LoadingState.Downloading;
+			if (ElevationState == LoadingState.Downloading)
+				DownloadElevation();
+			else
+				LoadElevation();
+
+			elevationThread = null;
+#if DEBUG
+			Debugger.T("exit");
+#endif
+		}
+
+		private void ImageThreadsFinished()
+		{
+			lock (CompositeLock)
+			{
+				for (int i = 0; i < paintLayers.Length; i++)
+					paintLayers[i].DestroyBitmap();
+			}
+			Debugger.V("Map: image load operations completed.");
+		}
+
 		private void DownloadImage(Tile tile)
 		{
+			//if it's already being obscured by a higher-level tile, don't bother downloading it
+			if (tile.ObscuredByChildren)
+			{
+				tile.ImageState = LoadingState.Finished;
+				return;
+			}
+
 			bool ok = false;
 			int tries = 0;
 			while (!ok && tries < 3)
@@ -324,31 +408,6 @@ namespace WiFindUs.Eye
 				try { File.Delete(tile.ImagePath); }
 				catch { }
 			}
-		}
-
-		private void DownloadImagesThread(object listObj)
-		{
-#if DEBUG
-			Debugger.T("enter");
-#endif
-			List<Tile> tileList = listObj as List<Tile>;
-			foreach (Tile tile in tileList)
-			{
-				tile.downloadRetries = 0;
-				DownloadImage(tile);
-			}
-
-			lock (threads)
-			{
-				if (!threads.Contains(Thread.CurrentThread))
-					Debugger.E("DownloadImagesThread mismatch!");
-				else
-					threads.Remove(Thread.CurrentThread);
-			}
-
-#if DEBUG
-			Debugger.T("exit");
-#endif
 		}
 
 		private void LoadImage(Tile tile)
@@ -408,7 +467,8 @@ namespace WiFindUs.Eye
 							paintLayers[tile.Level].Paint(tile, image);
 
 						//repaint the composite
-						composite.Paint(paintLayers);
+						if (composite != null)
+							composite.Paint(paintLayers);
 
 						//fire event handler
 						if (CompositeImageChanged != null)
@@ -430,59 +490,6 @@ namespace WiFindUs.Eye
 				Debugger.E("Error loading map tile texture {0}: out of system memory", tile.ImageFilename);
 			}
 			tile.ImageState = LoadingState.ErrorLoading;
-		}
-
-		private void LoadImagesThread(object listObj)
-		{
-#if DEBUG
-			Debugger.T("enter");
-#endif
-			
-			List<Tile> tileList = listObj as List<Tile>;
-			foreach (Tile tile in tileList)
-			{
-				tile.downloadRetries = 0;
-				LoadImage(tile);
-				Thread.Sleep(250);
-			}
-
-			lock (threads)
-			{
-				if (!threads.Contains(Thread.CurrentThread))
-					Debugger.E("LoadImagesThread mismatch!");
-				else
-					threads.Remove(Thread.CurrentThread);
-			}
-
-#if DEBUG
-			Debugger.T("exit");
-#endif
-		}
-
-		private void ElevationThread()
-		{
-#if DEBUG
-			Debugger.T("enter");
-#endif
-			elevationDownloadRetries = 0;
-			ElevationState = File.Exists(ElevationPath)
-				? LoadingState.Loading : LoadingState.Downloading;
-			if (ElevationState == LoadingState.Downloading)
-				DownloadElevation();
-			else
-				LoadElevation();
-
-
-			lock (threads)
-			{
-				if (!threads.Contains(Thread.CurrentThread))
-					Debugger.E("ElevationThread mismatch!");
-				else
-					threads.Remove(Thread.CurrentThread);
-			}
-#if DEBUG
-			Debugger.T("exit");
-#endif
 		}
 
 		private void DownloadElevation()
@@ -647,20 +654,18 @@ namespace WiFindUs.Eye
 
 		private abstract class PaintLayerBase : IDisposable
 		{
-			public volatile Bitmap bitmap;
+			public Bitmap bitmap = null;
 			public static Rectangle rectangle = new Rectangle(0, 0, COMPOSITE_SIZE, COMPOSITE_SIZE);
 			protected readonly Color clearColor;
 
 			public PaintLayerBase(Color clearColor)
 			{
-				bitmap = new Bitmap(COMPOSITE_SIZE, COMPOSITE_SIZE, PixelFormat.Format32bppPArgb);
 				this.clearColor = clearColor;
-				Clear();
 			}
 
 			public void Dispose()
 			{
-				bitmap.Dispose();
+				DestroyBitmap();
 			}
 
 			public virtual void Clear(Graphics graphics = null)
@@ -670,11 +675,25 @@ namespace WiFindUs.Eye
 				else
 					bitmap.G((g) => g.Clear(clearColor));				
 			}
+
+			public void CreateBitmap()
+			{
+				if (bitmap == null)
+					bitmap = new Bitmap(COMPOSITE_SIZE, COMPOSITE_SIZE, PixelFormat.Format32bppPArgb);
+				Clear();
+			}
+
+			public void DestroyBitmap()
+			{
+				if (bitmap != null)
+					bitmap.Dispose();
+				bitmap = null;
+			}
 		}
 
 		private class TilePaintLayer : PaintLayerBase
 		{
-			public volatile bool visible = false;
+			public bool visible = false;
 
 			public TilePaintLayer() : base(Color.Transparent) { }
 
@@ -694,7 +713,10 @@ namespace WiFindUs.Eye
 
 		private class TileCompositeLayer : PaintLayerBase
 		{
-			public TileCompositeLayer() : base(Color.Peru) { }
+			public TileCompositeLayer(): base(Color.Peru)
+			{
+				CreateBitmap();
+			}
 
 			public void Paint(TilePaintLayer[] layers)
 			{
@@ -705,9 +727,11 @@ namespace WiFindUs.Eye
 					Clear(g);
 					for (int i = 0; i < layers.Length; i++)
 					{
-						if (layers[i] == null || !layers[i].visible)
+						if (layers[i] == null || !layers[i].visible || layers[i].bitmap == null)
 							continue;
-						g.DrawImageUnscaled(layers[i].bitmap, 0, 0);
+						try
+						{ g.DrawImageUnscaled(layers[i].bitmap, 0, 0); }
+						catch { }
 					}
 				});
 			}

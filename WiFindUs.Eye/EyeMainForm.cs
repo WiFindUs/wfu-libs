@@ -13,7 +13,7 @@ namespace WiFindUs.Eye
 	{
 		private const long TIMEOUT_CHECK_INTERVAL = 1000;
 
-		private volatile EyeContext eyeContext = null;
+		private EyeContext eyeContext = null;
 		private EyePacketListener eyeListener = null;
 		private Timer timer;
 		private long timeoutCheckTimer = 0;
@@ -21,7 +21,7 @@ namespace WiFindUs.Eye
 		private bool serverMode = false;
 		private double deviceMaxAccuracy = 20.0;
 		private double nodeMaxAccuracy = 20.0;
-		private volatile BaseTile mapTile = null;
+		private Map map = null;
 
 		//non-mysql collections (client mode):
 		private Dictionary<ulong, Device> devices;
@@ -115,9 +115,9 @@ namespace WiFindUs.Eye
 
 		[Browsable(false)]
 		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public BaseTile BaseTile
+		public Map Map
 		{
-			get { return mapTile; }
+			get { return map; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ namespace WiFindUs.Eye
 
 		public EyeMainForm()
 		{
-			mapTile = new BaseTile();
+			map = new Map();
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			WiFindUs.Eye.NodeLink.OnNodeLinkLoaded += OnNodeLinkLoaded;
@@ -213,16 +213,16 @@ namespace WiFindUs.Eye
 				if (location == null)
 					Debugger.E("Could not parse map.center from config files!");
 				else
-					mapTile.Center = location;
+					map.Center = location;
 			}
 		}
 
 		protected override void OnDisposing()
 		{
-			if (mapTile != null)
+			if (map != null)
 			{
-				mapTile.Dispose();
-				mapTile = null;
+				map.Dispose();
+				map = null;
 			}
 			
 			if (timer != null)

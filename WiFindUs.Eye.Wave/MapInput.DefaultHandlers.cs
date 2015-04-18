@@ -91,9 +91,13 @@ namespace WiFindUs.Eye.Wave
 
 					if (hostControl.Bounds.Contains(args.MouseX, args.MouseY))
 					{
-						Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY);
+						Vector3 normal;
+						Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY, out normal);
 						if (pos.HasValue)
+						{
 							MapScene.Cursor.Transform3D.Position = pos.Value;
+							MapScene.Cursor.Normal = normal;
+						}
 					}
 				}
 			}
@@ -123,9 +127,13 @@ namespace WiFindUs.Eye.Wave
 			}
 			else
 			{
-				Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY);
+				Vector3 normal;
+				Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY, out normal);
 				if (pos.HasValue)
+				{
 					MapScene.Cursor.Transform3D.Position = pos.Value;
+					MapScene.Cursor.Normal = normal;
+				}
 			}
 
 			 args.Handled = true;
