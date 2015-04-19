@@ -26,57 +26,27 @@ namespace WiFindUs.Eye.Wave
 
 		private Map3D hostControl;
 		private FixedCamera camera;
-		private BoxCollider groundPlaneCollider;
 		private Terrain terrain;
-		private uint visibleLevel = 0;
 		private float markerScale = 1.0f;
 		private static Texture2D whiteTex = null;
-		private List<DeviceMarker> deviceMarkers = new List<DeviceMarker>();
-		private List<NodeMarker> nodeMarkers = new List<NodeMarker>();
-		private List<NodeLinkMarker> nodeLinkMarkers = new List<NodeLinkMarker>();
-		private List<DeviceLinkMarker> deviceLinkMarkers = new List<DeviceLinkMarker>();
-		private List<Marker> allMarkers = new List<Marker>();
+		private readonly List<Marker> markers = new List<Marker>();
 		private MapInput inputBehaviour;
 		private MapCamera cameraController;
 		private MapCursor cursor;
+		private readonly Plane groundPlane;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
-
-		internal uint VisibleLevel
-		{
-			get { return visibleLevel; }
-			set
-			{
-				uint level = value.Clamp(Tile.LevelMin, Tile.LevelMax);
-				if (level == visibleLevel)
-					return;
-
-				visibleLevel = level;
-				//for (int i = 0; i < tileLayers.Length; i++)
-					//tileLayers[i].IsVisible = tileLayers[i].IsActive = (i == visibleLayer);
-			}
-		}
 
 		internal Terrain Terrain
 		{
 			get { return terrain; }
 		}
 
-		internal List<DeviceMarker> DeviceMarkers
+		internal List<Marker> Markers
 		{
-			get { return deviceMarkers; }
-		}
-
-		internal List<NodeMarker> NodeMarkers
-		{
-			get { return nodeMarkers; }
-		}
-
-		internal List<Marker> AllMarkers
-		{
-			get { return allMarkers; }
+			get { return markers; }
 		}
 
 		internal bool DebugMode
@@ -104,11 +74,6 @@ namespace WiFindUs.Eye.Wave
 		internal MapCursor Cursor
 		{
 			get { return cursor; }
-		}
-
-		internal BoxCollider GroundPlane
-		{
-			get { return groundPlaneCollider; }
 		}
 
 		internal float MarkerScale
@@ -143,6 +108,11 @@ namespace WiFindUs.Eye.Wave
 			get { return hostControl.SelectionGroup; }
 		}
 
+		internal Plane GroundPlane
+		{
+			get { return groundPlane; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -152,6 +122,7 @@ namespace WiFindUs.Eye.Wave
 			if (hostControl == null)
 				throw new ArgumentNullException("hostControl", "MapScene cannot be instantiated outside of a host MapControl.");
 			this.hostControl = hostControl;
+			this.groundPlane = new Plane(Vector3.Up, 0.0f);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -175,53 +146,9 @@ namespace WiFindUs.Eye.Wave
 
 		public ILocation VectorToLocation(Vector3 vec)
 		{
-			if (terrain == null || terrain.Source == null)
+			if (terrain == null)
 				return WiFindUs.Eye.Location.EMPTY;
-
-			return new Location(
-				terrain.Source.NorthWest.Latitude - ((vec.Z - (Terrain.SIZE / -2f)) / Terrain.SIZE) * terrain.Source.LatitudinalSpan,
-				terrain.Source.NorthWest.Longitude + ((vec.X - (Terrain.SIZE / -2f)) / Terrain.SIZE) * terrain.Source.LongitudinalSpan
-				);
-		}
-
-		public NodeMarker GetNodeMarker(Node node)
-		{
-			if (node == null)
-				return null;
-			return (from mk in nodeMarkers
-				   where mk.Entity == node
-				   select mk).FirstOrDefault();
-		}
-
-		public NodeMarker GetNodeMarker(uint nodeNumber)
-		{
-			if (nodeNumber == 0 || nodeNumber > 254)
-				return null;
-
-			return (from mk in nodeMarkers
-					where mk.Entity.Number.GetValueOrDefault() == nodeNumber
-					select mk).FirstOrDefault();
-		}
-
-		public DeviceMarker GetDeviceMarker(Device device)
-		{
-			if (device == null)
-				return null;
-
-			return (from mk in deviceMarkers
-					where mk.Entity == device
-					select mk).FirstOrDefault();
-		}
-
-		public NodeLinkMarker GetNodeLinkMarker(NodeMarker nodeA, NodeMarker nodeB)
-		{
-			if (nodeA == null || nodeB == null)
-				return null;
-
-			return (from mk in nodeLinkMarkers
-					where mk.LinksMarkers(nodeA, nodeB)
-					select mk
-					).FirstOrDefault();
+			return terrain.VectorToLocation(vec);
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -242,8 +169,7 @@ namespace WiFindUs.Eye.Wave
 			WhiteTexture = tex;
 		
 			//add custom layers
-			RenderManager.RegisterLayerAfter(new TerrainLayer(this.RenderManager), DefaultLayers.Opaque);
-			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), typeof(TerrainLayer));
+			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), DefaultLayers.Opaque);
 			RenderManager.RegisterLayerAfter(new Overlays(this.RenderManager), typeof(NonPremultipliedAlpha));
 			RenderManager.RegisterLayerAfter(new Wireframes(this.RenderManager), typeof(Overlays));
 
@@ -269,13 +195,6 @@ namespace WiFindUs.Eye.Wave
 			Entity tileEntity = Terrain.Create();
 			terrain = tileEntity.FindComponent<Terrain>();
 			EntityManager.Add(tileEntity);
-
-			//create ground plane
-			Debugger.V("MapScene: creating ground plane");
-			EntityManager.Add(new Entity()
-				.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) })
-				.AddComponent(Model.CreatePlane(Vector3.UnitY, Terrain.SIZE * 100f))
-				.AddComponent(groundPlaneCollider = new BoxCollider() { DebugLineColor = Color.Red }));
 
 			//add scene behaviours
 			Debugger.V("MapScene: creating behaviours");
@@ -338,8 +257,7 @@ namespace WiFindUs.Eye.Wave
 			//device entity
 			Entity entity = DeviceMarker.Create(device);
 			DeviceMarker marker = entity.FindComponent<DeviceMarker>();
-			deviceMarkers.Add(marker);
-			allMarkers.Add(marker);
+			markers.Add(marker);
 			EntityManager.Add(entity);
 			device.SelectionGroup = SelectionGroup;
 
@@ -348,8 +266,7 @@ namespace WiFindUs.Eye.Wave
 			DeviceLinkMarker linkMarker = entity.FindComponent<DeviceLinkMarker>();
 			linkMarker.Diameter = 0.5f;
 			linkMarker.Colour = Color.Lime;
-			deviceLinkMarkers.Add(linkMarker);
-			allMarkers.Add(linkMarker);
+			markers.Add(linkMarker);
 			EntityManager.Add(entity);
 		}
 
@@ -358,8 +275,7 @@ namespace WiFindUs.Eye.Wave
 			//node entity
 			Entity entity = NodeMarker.Create(node);
 			NodeMarker marker = entity.FindComponent<NodeMarker>();
-			nodeMarkers.Add(marker);
-			allMarkers.Add(marker);
+			markers.Add(marker);
 			EntityManager.Add(entity);
 			node.SelectionGroup = SelectionGroup;
 		}
@@ -371,75 +287,20 @@ namespace WiFindUs.Eye.Wave
 				|| nodeLink.End == null)
 				return;
 
-			NodeMarker A = GetNodeMarker(nodeLink.Start);
-			NodeMarker B = GetNodeMarker(nodeLink.End);
+			NodeMarker A = markers.OfType<NodeMarker>().Where(mk => mk.Entity == nodeLink.Start).FirstOrDefault();
+			NodeMarker B = markers.OfType<NodeMarker>().Where(mk => mk.Entity == nodeLink.End).FirstOrDefault();
 			if (A == null || B == null)
 				return;
 
-			NodeLinkMarker link = GetNodeLinkMarker(A, B);
+			NodeLinkMarker link = markers.OfType<NodeLinkMarker>().Where(mk => mk.LinksMarkers(A, B)).FirstOrDefault();
 			if (link != null)
 				return;
 
 			Entity entity = LinkMarker.Create(A, B, typeof(NodeLinkMarker));
 			link = entity.FindComponent<NodeLinkMarker>();
-			nodeLinkMarkers.Add(link);
-			allMarkers.Add(link);
+			markers.Add(link);
 			link.NodeLink = nodeLink;
 			EntityManager.Add(entity);
 		}
-
-		/*
-		private void CreateTileLayer(uint layer)
-		{
-			Entity layerEntity = tileLayers[layer];
-			if (layerEntity == null)
-			{
-				tileLayers[layer] = layerEntity = new Entity()
-					.AddComponent(new Transform3D() { Position = new Vector3(0f, 0f, 0f) });
-				EntityManager.Add(layerEntity);
-			}
-
-			int depth = 1 << (int)layer;
-			Entity[,] layerTiles = tiles[layer];
-			if (layerTiles == null)
-				tiles[layer] = layerTiles = new Entity[depth, depth];
-			for (uint row = 0; row < depth; row++)
-			{
-				for (uint column = 0; column < depth; column++)
-				{
-					Entity tileEntity = layerTiles[row, column];
-					if (tileEntity == null)
-					{
-						layerTiles[row, column] = tileEntity = TerrainTile.Create(layer, row, column, baseTile);
-						layerEntity.AddChild(tileEntity);
-						if (baseTile == null && layer == 0)
-							baseTile = tileEntity.FindComponent<TerrainTile>();
-					}
-				}
-			}
-		}
-		 * */
-
-		/*
-		private void Tiles(Action<TerrainTile> action, int firstLayer = -1, int lastLayer = -1, int excludeLayer = -1)
-		{
-			if (action == null || tiles == null || firstLayer >= tiles.Length)
-				return;
-
-			firstLayer = firstLayer < 0 ? 0 : firstLayer;
-			lastLayer = lastLayer < 0 ? tiles.Length - 1 : (lastLayer < firstLayer ? firstLayer
-				: (lastLayer >= tiles.Length ? tiles.Length - 1 : lastLayer));
-
-			for (int layer = firstLayer; layer <= lastLayer; layer++)
-			{
-				if (layer == excludeLayer)
-					continue;
-				int depth = 1 << (int)layer;
-				for (uint row = 0; row < depth; row++)
-					for (uint column = 0; column < depth; column++)
-						action(tiles[layer][row, column].FindComponent<TerrainTile>());
-			}
-		}
-		 * */
 	}
 }

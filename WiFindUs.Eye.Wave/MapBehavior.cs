@@ -29,7 +29,7 @@ namespace WiFindUs.Eye.Wave
 		public Transform3D Transform3D
 		{
 			get { return transform; }
-			set { if (transform == null) transform = value; }
+			internal set { if (transform == null) transform = value; }
 		}
 
 		public bool IsOwnerVisible

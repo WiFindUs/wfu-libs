@@ -162,7 +162,19 @@ namespace WiFindUs.Eye.Wave
 				}
 
 				if (Control)
-					MapScene.SelectionGroup.ToggleSelection(selectables);
+				{
+					
+					if (selectables.Length == 1)
+						MapScene.SelectionGroup.ToggleSelection(selectables);
+					else
+					{
+						bool sel = selectables.First().Selected;
+						if (selectables.All(s => s.Selected == sel))
+							MapScene.SelectionGroup.ToggleSelection(selectables);
+						else
+							MapScene.SelectionGroup.AddToSelection(selectables);
+					}
+				}
 				else
 				{
 					if (selectables.Length == 1 || MapScene.SelectionGroup.SelectedEntities.Length == 0)

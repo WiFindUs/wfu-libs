@@ -78,6 +78,11 @@ namespace WiFindUs.Extensions
 			return value < min ? min : (value > max ? max : value);
 		}
 
+		public static bool Between(this float value, float min, float max)
+		{
+			return value >= min && value <= max;
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// DOUBLES
 		/////////////////////////////////////////////////////////////////////
@@ -119,6 +124,11 @@ namespace WiFindUs.Extensions
 		public static double Clamp(this double value, double min, double max)
 		{
 			return value < min ? min : (value > max ? max : value);
+		}
+
+		public static bool Between(this double value, double min, double max)
+		{
+			return value >= min && value <= max;
 		}
 
 		/////////////////////////////////////////////////////////////////////

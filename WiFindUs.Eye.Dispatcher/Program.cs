@@ -10,9 +10,8 @@ namespace WiFindUs.Eye.Dispatcher
 		{
 			WFUApplication.Name = "Ubi";
 			WFUApplication.Description = "First-Responder Asset Management System";
-			WFUApplication.ConfigFilePath += "|eye.conf|dispatcher.conf|ubi.conf";
 			WFUApplication.MainFormType = typeof(DispatcherForm);
-			WFUApplication.MainLaunchAction = WaveMainForm.StartRenderLoop;
+			WFUApplication.RunApplicationDelegate = WaveMainForm.RunApplication;
 			WFUApplication.Run(args);
 		}
 	}

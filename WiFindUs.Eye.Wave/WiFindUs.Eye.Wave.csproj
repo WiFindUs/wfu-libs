@@ -62,10 +62,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CylindricalCollider.cs" />
+    <Compile Include="CylindricalColliderRenderer.cs" />
     <Compile Include="ILocatableProxy.cs" />
     <Compile Include="IUpdateableProxy.cs" />
     <Compile Include="ISelectableProxy.cs" />
-    <Compile Include="Layers\TerrainLayer.cs" />
     <Compile Include="MapInput.DefaultHandlers.cs" />
     <Compile Include="MapSceneBehavior.cs" />
     <Compile Include="MapCursor.cs" />

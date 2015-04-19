@@ -60,7 +60,7 @@ namespace WiFindUs.Eye
 			Finished = 4
 		}
 
-		public event Action<Tile> RegionChanged;
+		public readonly uint Level, Row, Column, ZoomLevel, LevelCount;
 
 		private static readonly string MAPS_DIR = "maps" + Path.DirectorySeparatorChar;
 		private readonly Tile[] children;
@@ -68,7 +68,6 @@ namespace WiFindUs.Eye
 		private readonly Map root;
 		private readonly uint childIndex; //which sub-tile this one is on the parent
 		private Region region;
-		private readonly uint zoomLevel, level, row, column;
 		private static readonly Color[] debugColours = new Color[]
 		{
 			Color.FromArgb(50, Color.Red),
@@ -83,7 +82,9 @@ namespace WiFindUs.Eye
 		//image
 		private const int IMAGE_SIZE = 640;
 		private const int IMAGE_SCALE = 2;
-		private static readonly string IMAGE_FORMAT = "jpg";
+		private static readonly Regex PATTERN_BASELINE
+			= new Regex("[-]baseline$",RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly string IMAGE_FORMAT = "jpg-baseline";
 		private static readonly string IMAGE_TYPE = "satellite";
 		private static readonly string IMAGE_URL
 			= "https://maps.googleapis.com/maps/api/staticmap?center={0:0.######},{1:0.######}&zoom={2}&scale={3}&size={4}x{5}&maptype={6}&format={7}&key={8}";
@@ -152,7 +153,7 @@ namespace WiFindUs.Eye
 				if (!ThreadlessState)
 					throw new InvalidOperationException("You may not change the Center location - the tile is currently in a threaded state.");
 
-				region = value == null ? null : new Region(value, zoomLevel); //throws an exception on invalid value
+				region = value == null ? null : new Region(value, ZoomLevel); //throws an exception on invalid value
 
 				//change location
 				LocationChanged();
@@ -184,15 +185,9 @@ namespace WiFindUs.Eye
 			}
 		}
 
-		public virtual Region Region
+		public Region Region
 		{
 			get { return region; }
-			internal set
-			{
-				region = value;
-				if (RegionChanged != null)
-					RegionChanged(this);
-			}
 		}
 
 		public double Height
@@ -240,62 +235,6 @@ namespace WiFindUs.Eye
 			get { return root; }
 		}
 
-		internal Tile Parent
-		{
-			get { return parent; }
-		}
-
-		internal Tile[] Children
-		{
-			get { return children; }
-		}
-
-		public static uint ZoomLevelMin
-		{
-			get { return WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM + 1; }
-		}
-
-		public static uint ZoomLevelMax
-		{
-			//get { return ZoomLevelMin; }
-			get { return WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM; }
-		}
-
-		public static uint ZoomLevelCount
-		{
-			get { return ZoomLevelMax - ZoomLevelMin + 1; }
-		}
-
-		public uint ZoomLevel
-		{
-			get { return zoomLevel; }
-		}
-
-		public static uint LevelMin
-		{
-			get { return 0; }
-		}
-
-		public static uint LevelMax
-		{
-			get { return ZoomLevelMax - ZoomLevelMin; }
-		}
-
-		public uint Level
-		{
-			get { return level; }
-		}
-
-		public uint Row
-		{
-			get { return row; }
-		}
-
-		public uint Column
-		{
-			get { return column; }
-		}
-
 		internal string FilenameLatLong
 		{
 			get { return String.Format("{0:0.000000}_{1:0.000000}", region.Latitude.Value, region.Longitude.Value); }
@@ -303,7 +242,7 @@ namespace WiFindUs.Eye
 
 		internal string ImageFilename
 		{
-			get { return String.Format("{0}_{1}_satellite.{2}", FilenameLatLong, zoomLevel, IMAGE_FORMAT); }
+			get { return String.Format("{0}_satellite_{1}.{2}", ZoomLevel, FilenameLatLong, PATTERN_BASELINE.Replace(IMAGE_FORMAT,"")); }
 		}
 
 		internal string RootDirectory
@@ -324,7 +263,7 @@ namespace WiFindUs.Eye
 					IMAGE_URL, //url
 					region.Latitude.Value, //lat {0}
 					region.Longitude.Value, //long {1}
-					zoomLevel, //zoom {2}
+					ZoomLevel, //zoom {2}
 					IMAGE_SCALE, //scale {3}
 					IMAGE_SIZE, //width {4}
 					IMAGE_SIZE, //height {5}
@@ -339,30 +278,31 @@ namespace WiFindUs.Eye
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
 
-		internal Tile(Map root, Tile parent, uint childIndex)
+		internal Tile(Map root, Tile parent, uint childIndex, uint levelCount)
 		{
+			LevelCount = Math.Max(levelCount,
+				Math.Min(levelCount, WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM));
 			this.parent = parent;
 			bool isRoot = parent == null;
 			this.root = isRoot ? this as Map : root;
 			this.root.AllTiles.Add(this);
 			this.childIndex = childIndex;
-			zoomLevel = isRoot ? ZoomLevelMin : parent.zoomLevel + 1;
-			level = zoomLevel - ZoomLevelMin;
-			row = isRoot ? 0 : (parent.Row * 2) + (childIndex / 2);
-			column = isRoot ? 0 : (parent.Column * 2) + (childIndex % 2);
-			
+			Level = isRoot ? 0 : parent.Level + 1;
+			ZoomLevel = Region.GOOGLE_MAPS_TILE_MIN_ZOOM + 1 + Level;
+			Row = isRoot ? 0 : (parent.Row * 2) + (childIndex / 2);
+			Column = isRoot ? 0 : (parent.Column * 2) + (childIndex % 2);
 
-			if (zoomLevel >= ZoomLevelMax)
+			if (Level >= LevelCount - 1)
 			{
 				children = null;
 				return;
 			}
 
 			children = new Tile[4] { null, null, null, null };
-			children[0] = new Tile(this.root, this, 0);
-			children[1] = new Tile(this.root, this, 1);
-			children[2] = new Tile(this.root, this, 2);
-			children[3] = new Tile(this.root, this, 3);
+			children[0] = new Tile(this.root, this, 0, LevelCount);
+			children[1] = new Tile(this.root, this, 1, LevelCount);
+			children[2] = new Tile(this.root, this, 2, LevelCount);
+			children[3] = new Tile(this.root, this, 3, LevelCount);
 		}
 
 
@@ -384,7 +324,7 @@ namespace WiFindUs.Eye
 		public override string ToString()
 		{
 			return String.Format("Tile[{0},{1},{2} I:{3}]",
-				level, row, column, imageState);
+				Level, Row, Column, imageState);
 		}
 
 		public bool Contains(double latitude, double longitude)
@@ -460,11 +400,11 @@ namespace WiFindUs.Eye
 		internal void PaintComposite(Bitmap image, Graphics g, ref Rectangle outputBounds)
 		{
 			//determine bounds
-			int xStep = (int)((float)outputBounds.Width / (float)(ColumnMax(level) + 1));
-			int yStep = (int)((float)outputBounds.Height / (float)(RowMax(level) + 1));
+			int xStep = (int)((float)outputBounds.Width / (float)(ColumnMax(Level) + 1));
+			int yStep = (int)((float)outputBounds.Height / (float)(RowMax(Level) + 1));
 			Rectangle rect = new Rectangle(
-				outputBounds.X + (int)column * xStep,
-				outputBounds.Y + (int)row * yStep,
+				outputBounds.X + (int)Column * xStep,
+				outputBounds.Y + (int)Row * yStep,
 				xStep, yStep);
 			
 			//paint image

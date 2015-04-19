@@ -76,5 +76,13 @@ namespace WiFindUs.Eye.Wave
 				(byte)(((float)start.B).Coserp((float)finish.B, amount)),
 				(byte)(((float)start.A).Coserp((float)finish.A, amount)));
 		}
+
+		public static BoundingBox Transform(this BoundingBox box, ref Matrix transform)
+		{
+			BoundingBox bb = new BoundingBox(box.Min, box.Max);
+			Vector3.Transform(ref bb.Min, ref transform, out bb.Min);
+			Vector3.Transform(ref bb.Max, ref transform, out bb.Max);
+			return bb;
+		}
 	}
 }

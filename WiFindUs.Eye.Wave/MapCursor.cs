@@ -25,9 +25,10 @@ namespace WiFindUs.Eye.Wave
 		private Transform3D coreTransform, spikeTransform, ringTransform;
 		private BasicMaterial matte;
 		private Vector3 destination = Vector3.Zero;
-		private Ray ray;
 		private float[] xOffsets = new float[12], zOffsets = new float[12];
 		private float fader = 0.0f;
+		[RequiredComponent]
+		public CylindricalCollider CylindricalCollider;
 
 		public Vector3 Normal
 		{
@@ -52,7 +53,7 @@ namespace WiFindUs.Eye.Wave
 			MapCursor cursor = new MapCursor();
 			cursor.matte = new BasicMaterial(MapScene.WhiteTexture)
 			{
-				LayerType = typeof(Overlays),
+				LayerType = typeof(NonPremultipliedAlpha),
 				LightingEnabled = true,
 				AmbientLightColor = Color.White * 0.75f,
 				DiffuseColor = Color.Gold
@@ -73,6 +74,9 @@ namespace WiFindUs.Eye.Wave
 					Position = Vector3.Zero
 				})
 				.AddComponent(cursor)
+				//clolider
+				.AddComponent(new CylindricalCollider(40.0f, RING_DIAMETER/2.0f,20.0f))
+				.AddComponent(new CylindricalColliderRenderer())
 				//spike
 				.AddChild
 				(
@@ -92,12 +96,12 @@ namespace WiFindUs.Eye.Wave
 					new Entity("core")
 					.AddComponent(cursor.coreTransform = new Transform3D()
 					{
-						LocalPosition = new Vector3(0.0f, 0.5f, 0.0f)
+						LocalPosition = new Vector3(0.0f, 1.0f, 0.0f)
 					})
 					.AddComponent(new MaterialsMap(cursor.matte))
 					.AddComponent(Model.CreateSphere(1f, 3))
 					.AddComponent(new ModelRenderer())
-					//ring
+				//ring
 					.AddChild
 					(
 						new Entity("ring")
@@ -119,61 +123,19 @@ namespace WiFindUs.Eye.Wave
 
 		public T[] MarkersAtCursor<T>(bool visibleOnly = true) where T : Marker
 		{
-			if (MapScene.AllMarkers.Count == 0)
+			if (CylindricalCollider == null || MapScene.Markers.Count == 0)
 				return new T[0];
 
-			List<T> markers = new List<T>();
-
-			//check nodes
-			foreach (Marker marker in MapScene.AllMarkers)
-			{
-				if (marker.Transform3D == null || (!marker.Owner.IsVisible && visibleOnly))
-					continue;
-
-				T typedMarker = marker as T;
-				if (typedMarker == null || markers.Contains(typedMarker))
-					continue;
-
-				float len = RAY_LENGTH * Transform3D.Scale.Y;
-				for (int r = 1; r <= 2; r++)
-				{
-					bool found = false;
-					for (int i = (r == 2 ? 1 : 0); i < xOffsets.Length; i++)
-					{
-						ConfigureCursorRay(xOffsets[i] / (float)r, zOffsets[i] / (float)r);
-						float? val;
-						if ((val = marker.Intersects(ref ray)).HasValue && val.Value >= 0.0f && val.Value <= len)
-						{
-							markers.Add(typedMarker);
-							found = true;
-							break;
-						}
-					}
-					if (found)
-						break;
-				}
-
-			}
-
-			//sort based on distance
-			return markers.OrderBy(o =>
-			{
-				return Vector3.DistanceSquared(o.Transform3D.Position, ray.Position);
-			}).ToArray();
+			return MapScene.Markers.Where(m => m.Transform3D != null && m.CylindricalCollider != null && (m.Owner.IsVisible || !visibleOnly))
+				.OfType<T>()
+				.Where(m => m.CylindricalCollider.Intersects(CylindricalCollider))
+				.OrderBy(m => { return Vector3.DistanceSquared(m.CylindricalCollider.Position, CylindricalCollider.Position); })
+				.ToArray();
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		protected override void Initialize()
-		{
-			base.Initialize();
-			ray = new Ray();
-			Vector3 dir = new Vector3(0.001f, -1.0f, 0.001f);
-			dir.Normalize();
-			ray.Direction = dir;
-		}
 
 		protected override void Update(TimeSpan gameTime)
 		{
@@ -198,18 +160,6 @@ namespace WiFindUs.Eye.Wave
 				spikeTransform.LocalPosition.X,
 				(25.0f).Coserp(35.0f, fader += (secs * MOVE_SPEED * 0.25f)),
 				spikeTransform.LocalPosition.Z);
-		}
-
-		/////////////////////////////////////////////////////////////////////
-		// PRIVATE METHODS
-		/////////////////////////////////////////////////////////////////////
-
-
-		private void ConfigureCursorRay(float x = 0.0f, float z = 0.0f)
-		{
-			ray.Position = new Vector3(Transform3D.Position.X + x * Transform3D.Scale.X,
-				Transform3D.Position.Y + RAY_LENGTH * Transform3D.Scale.Y,
-				Transform3D.Position.Z + z * Transform3D.Scale.Z);
 		}
 	}
 }

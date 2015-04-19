@@ -19,7 +19,7 @@ namespace WiFindUs.Eye.Wave
 		[RequiredComponent]
 		public MaterialsMap MaterialMap;
 		[RequiredComponent]
-		public Transform3D Transform;
+		public Transform3D Transform3D;
 
 		private Color diffuseColor;
 		private float alpha;
@@ -102,9 +102,9 @@ namespace WiFindUs.Eye.Wave
 			if (PolyPlane == null || PolyPlane.Mesh == null || MaterialMap.DefaultMaterial == null)
 				return;
 
-			PolyPlane.Mesh.ZOrder = Vector3.DistanceSquared(RenderManager.CurrentDrawingCamera3D.Position, Transform.Position);
-			Matrix localWorld = Transform.WorldTransform;
-			RenderManager.DrawMesh(PolyPlane.Mesh, MaterialMap.DefaultMaterial, ref localWorld);
+			PolyPlane.Mesh.ZOrder = Vector3.DistanceSquared(RenderManager.CurrentDrawingCamera3D.Position, Transform3D.Position);
+			Matrix l2w = Transform3D.WorldTransform;
+			RenderManager.DrawMesh(PolyPlane.Mesh, MaterialMap.DefaultMaterial, ref l2w);
 
 			if (RenderManager.DebugLines)
 				PolyPlane.DrawDebugLines();

@@ -81,8 +81,8 @@ namespace WiFindUs.Eye.Wave.Markers
 			entity.LocationChanged += LocationChanged;
 			entity.ActiveChanged += ActiveChanged;
 			entity.Updated += Updated;
+			MapScene.Terrain.Plane.BoundingBoxUpdated += Plane_BoundingBoxUpdated;
 			MapScene.Terrain.Source.ElevationStateChanged += Source_ElevationStateChanged;
-			MapScene.Terrain.Source.RegionChanged += Source_RegionChanged;
 
 			LocationChanged(entity);
 		}
@@ -97,14 +97,14 @@ namespace WiFindUs.Eye.Wave.Markers
 				(float)gameTime.TotalSeconds * MOVE_SPEED);
 		}
 
-		protected virtual void Source_RegionChanged(Tile source)
-		{
-			LocationChanged(entity);
-		}
-
 		protected void Source_ElevationStateChanged(Map source)
 		{
-			LocationChanged(entity);
+			destination = MapScene.LocationToVector(entity.Location);
+		}
+
+		protected void Plane_BoundingBoxUpdated(PolyPlane plane)
+		{
+			destination = MapScene.LocationToVector(entity.Location);
 		}
 
 		protected virtual void LocationChanged(ILocatable obj)

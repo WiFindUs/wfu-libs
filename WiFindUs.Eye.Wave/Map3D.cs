@@ -118,7 +118,7 @@ namespace WiFindUs.Eye.Wave
 			Debugger.T("entry");
 #endif
 			if (WFUApplication.Config != null)
-				BackBufferScale = WFUApplication.Config.Get("map.resolution_scale", 1.0f);
+				BackBufferScale = WFUApplication.Config.Get("map.resolution_scale", 1.0f).Clamp(0.1f,1.0f);
 			mapApp = new MapApplication(this,
 				Math.Max((int)((float)ClientRectangle.Width * scaleFactor), 1),
 				Math.Max((int)((float)ClientRectangle.Height * scaleFactor), 1)

@@ -22,9 +22,9 @@ namespace WiFindUs.Eye.Wave.Layers
 			renderState.SamplerMode = AddressMode.LinearClamp;
 			renderState.CullMode = CullMode.None;
 			renderState.FillMode = FillMode.Wireframe;
-			renderState.DepthMode = DepthMode.Read;
+			//renderState.DepthMode = DepthMode.Read;
 			renderState.MaxAnisotropy = AnisotropyLevel.Aniso1x;
-			renderState.DepthBias = DepthBias.Negative;
+			//renderState.DepthBias = DepthBias.Negative;
 		}
 
 		protected override void RestoreDevice()

@@ -22,7 +22,7 @@ namespace WiFindUs.Eye.Wave.Layers
 			renderState.SamplerMode = AddressMode.LinearClamp;
 			renderState.CullMode = CullMode.CounterClockWise;
 			renderState.FillMode = FillMode.Solid;
-			renderState.DepthMode = DepthMode.Read;
+			//renderState.DepthMode = DepthMode.Read;
 			renderState.MaxAnisotropy = AnisotropyLevel.Aniso1x;
 		}
 

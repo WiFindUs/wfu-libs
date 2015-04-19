@@ -30,7 +30,7 @@ namespace WiFindUs.Eye.Wave
 		private Vector3 northWest, southEast;
 		private MaterialsMap materialsMap;
 		private PolyPlane plane = null;
-		private float meterSize = 0.0f;
+		private float meterLength = 0.0f;
 		private volatile bool updatingTexture = false;
 		private volatile float textureTimer = 0.0f;
 		private volatile bool pendingTextureUpdate = false;
@@ -46,9 +46,15 @@ namespace WiFindUs.Eye.Wave
 		{
 			get { return source; }
 		}
-		internal float MeterSize
+
+		internal float MeterLength
 		{
-			get { return meterSize; }
+			get { return meterLength; }
+		}
+
+		internal PolyPlane Plane
+		{
+			get { return plane; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -81,7 +87,7 @@ namespace WiFindUs.Eye.Wave
 		internal Terrain(Map source)
 		{
 			this.source = source;
-			meterSize = SIZE / (float)source.Width;
+			meterLength = SIZE / (float)source.Width;
 			northWest = new Vector3(SIZE / -2.0f, 0.0f, SIZE / -2.0f);
 			southEast = new Vector3(SIZE / 2.0f, 0.0f, SIZE / 2.0f);
 
@@ -108,8 +114,9 @@ namespace WiFindUs.Eye.Wave
 			//create basic material shader
 			textureMaterial = new BasicMaterial(texture)
 			{
-				LayerType = typeof(TerrainLayer),
+				LayerType = DefaultLayers.Opaque,
 				LightingEnabled = true,
+				AmbientLightColor = Color.White * 0.05f
 			};
 
 			//location altitude ray
@@ -142,8 +149,6 @@ namespace WiFindUs.Eye.Wave
 
 		public Vector3 LocationToVector(ILocation loc)
 		{
-			if (source == null)
-				return Vector3.Zero;
 			Vector3 output = source.LocationToVector(northWest, southEast, loc);
 			if (source.ElevationState == Tile.LoadingState.Finished && source.Contains(loc))
 			{
@@ -152,9 +157,19 @@ namespace WiFindUs.Eye.Wave
 				float? result = Intersects(ref ray, out normal);
 				if (result.HasValue)
 					output.Y = (ray.Position + ray.Direction * result.Value).Y;
-
 			}
+			
 			return output;
+		}
+
+		public ILocation VectorToLocation(Vector3 vec)
+		{
+			return new Location(
+				source.NorthWest.Latitude - ((vec.Z - (Terrain.SIZE / -2f)) / Terrain.SIZE) * source.LatitudinalSpan,
+				source.NorthWest.Longitude + ((vec.X - (Terrain.SIZE / -2f)) / Terrain.SIZE) * source.LongitudinalSpan,
+				null, //accuracy
+				Map.ELEV_MIN + Map.ELEV_RANGE * (vec.Y / (Map.ELEV_RANGE * meterLength))
+				);
 		}
 
 		public float? Intersects(ref Ray ray, out Vector3 normal)
@@ -220,7 +235,7 @@ namespace WiFindUs.Eye.Wave
 						for (uint column = 0; column < plane.Subdivisions + 2; column++)
 						{
 							plane.SetVertexPosition(row, column,
-								meterSize * (float)source.Elevation(
+								meterLength * (float)source.Elevation(
 									source.NorthWest.Latitude.Value - latStep * (double)(plane.Subdivisions + 1 - row),
 									source.NorthWest.Longitude.Value + longStep * (double)column));
 						}
@@ -264,43 +279,57 @@ namespace WiFindUs.Eye.Wave
 			thread.Start();
 		}
 
-		private void UpdateTextureThread()
+		private unsafe void UpdateTextureThread()
 		{
 			lock (source.CompositeLock)
 			{			
-				//RenderManager.GraphicsDevice.Textures.DestroyTexture(texture);
-				unsafe
+				System.Drawing.Imaging.BitmapData bmd = source.Composite.LockBits(
+					new System.Drawing.Rectangle(0, 0, Map.COMPOSITE_SIZE, Map.COMPOSITE_SIZE),
+					System.Drawing.Imaging.ImageLockMode.ReadOnly,
+					source.Composite.PixelFormat);
+
+				int count = 4;
+				Thread[] threads = new Thread[count];
+				for (int i = 0; i < count; i++)
 				{
-					System.Drawing.Imaging.BitmapData bmd = source.Composite.LockBits(
-						new System.Drawing.Rectangle(0, 0, source.Composite.Width, source.Composite.Height),
-						System.Drawing.Imaging.ImageLockMode.ReadOnly,
-						source.Composite.PixelFormat);
-					for (int y = 0; y < bmd.Height; y++)
-					{
-						byte* row = (byte*)bmd.Scan0 + (y * bmd.Stride);
-						for (int x = 0; x < bmd.Width; x++)
-						{
-							if (WiFindUs.Forms.MainForm.HasClosed)
-							{
-								source.Composite.UnlockBits(bmd);
-								return;
-							}
-							
-							int ti = y * source.Composite.Width + x;
-							textureData[0][0][ti * 4] = row[x * 4 + 2];		//red
-							textureData[0][0][ti * 4 + 1] = row[x * 4 + 1];	//green
-							textureData[0][0][ti * 4 + 2] = row[x * 4];	//blue
-							textureData[0][0][ti * 4 + 3] = row[x * 4 + 3];	//alpha
-						}
-					}
-					source.Composite.UnlockBits(bmd);
+					object[] args = new object[] { count, i, bmd };
+					threads[i] = new Thread(new ParameterizedThreadStart(UpdateTextureSubThread));
+					threads[i].IsBackground = true;
+					threads[i].Start(args);
 				}
+				for (int i = 0; i < count; i++)
+					threads[i].Join();
+
+				source.Composite.UnlockBits(bmd);
+
 				texture.Data = textureData;
 				RenderManager.GraphicsDevice.Textures.UploadTexture(texture);
 			}
 
 			updatingTexture = false;
 			textureTimer = 0.0f;
+		}
+
+		private unsafe void UpdateTextureSubThread(object argsArray)
+		{
+			object[] args = argsArray as object[];
+			int count = (int)args[0];
+			int index = (int)args[1];
+			System.Drawing.Imaging.BitmapData bmd = args[2] as System.Drawing.Imaging.BitmapData;
+
+			for (int y = index; y < Map.COMPOSITE_SIZE; y += count)
+			{
+				byte* row = (byte*)bmd.Scan0 + (y * bmd.Stride);
+				for (int x = 0; x < Map.COMPOSITE_SIZE; x++)
+				{
+					int ti = y * Map.COMPOSITE_SIZE + x;
+					textureData[0][0][ti * 4] = row[x * 4 + 2];		//red
+					textureData[0][0][ti * 4 + 1] = row[x * 4 + 1];	//green
+					textureData[0][0][ti * 4 + 2] = row[x * 4];	//blue
+					textureData[0][0][ti * 4 + 3] = row[x * 4 + 3];	//alpha
+				}
+			}
+
 		}
 	}
 }

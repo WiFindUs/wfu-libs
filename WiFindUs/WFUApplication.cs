@@ -44,9 +44,10 @@ namespace WiFindUs
 		private static SplashForm splashForm = null;
 		private static bool splashLoadingFinished = false;
 		private static string googleAPIKey = "AIzaSyDLmgbA9m1Qk23yJHRriXoOyy5XGiPZXM8";
-		private static Action<MainForm> mainLaunchAction = null;
+		private static Action<MainForm> runApplicationDelegate = null;
 		private static volatile Dictionary<int, string> threadAliases = new Dictionary<int, string>();
 		private static bool administrator = false;
+		private static bool runCalled = false;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -189,13 +190,13 @@ namespace WiFindUs
 		}
 
 		/// <summary>
-		/// The default config file to load, if any. Delimit multiple config files with a bar character (|) Will default to "wfu.conf" if not set.
+		/// The default config file to load, if any. Delimit multiple config files with a bar character (|).
 		/// </summary>
 		public static string ConfigFilePath
 		{
 			get
 			{
-				return configPaths.Length == 0 ? "wfu.conf" : configPaths;
+				return configPaths.Length == 0 ? WFUApplication.Name.ToLower() + ".conf" : configPaths;
 			}
 			set
 			{
@@ -443,10 +444,10 @@ namespace WiFindUs
 		/// <summary>
 		/// The action used to trigger the main application loop.
 		/// </summary>
-		public static Action<MainForm> MainLaunchAction
+		public static Action<MainForm> RunApplicationDelegate
 		{
-			get { return mainLaunchAction; }
-			set { if (!readOnly) mainLaunchAction = value; }
+			get { return runApplicationDelegate; }
+			set { if (!readOnly) runApplicationDelegate = value; }
 		}
 
 		/// <summary>
@@ -455,6 +456,14 @@ namespace WiFindUs
 		public static Random Random
 		{
 			get { return random; }
+		}
+
+		/// <summary>
+		/// Whether or not RunApplicationDefault has been called.
+		/// </summary>
+		public static bool RunApplicationDefaultCalled
+		{
+			get { return runCalled; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -526,10 +535,11 @@ namespace WiFindUs
 			MainForm form = (MainForm)formType.GetConstructor(new Type[] { }).Invoke(new object[] { });
 			StartSplashLoading(form.LoadingTasks);
 			Debugger.V("Invoking Main() launch action...");
-			if (mainLaunchAction == null)
-				DefaultMainLaunch(form);
+			if (runApplicationDelegate != null)
+				runApplicationDelegate(form);
 			else
-				mainLaunchAction(form);
+				RunApplicationDefault(form);
+				
 
 			Debugger.V("Application terminating...");
 
@@ -566,14 +576,17 @@ namespace WiFindUs
 			return id.ToString("D2");
 		}
 
+		public static void RunApplicationDefault(MainForm mainForm)
+		{
+			if (runCalled)
+				return;
+			runCalled = true;
+			Application.Run(mainForm);
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		private static void DefaultMainLaunch(MainForm mainForm)
-		{
-			Application.Run(mainForm);
-		}
 
 		private static bool CreateMutex()
 		{

@@ -19,12 +19,15 @@ namespace WiFindUs.Eye
 		public event Action<Map> ElevationStateChanged;
 		public event Action<Map> CompositeImageChanged;
 
+
+
 		//elevation
+		public const double ELEV_MIN = -50.0;
+		public const double ELEV_MAX = 2500.0;
+		public const double ELEV_RANGE = ELEV_MAX - ELEV_MIN;
 		private const int ELEV_SAMPLE_COUNT = 128;
 		private const int ELEV_SAMPLE_SIZE = 8;
 		private const int ELEV_SIZE = ELEV_SAMPLE_COUNT * ELEV_SAMPLE_SIZE;
-		private const double ELEV_MIN = -50.0;
-		private const double ELEV_MAX = 2500.0;
 		private static readonly string ELEV_URL
 			= "https://maps.googleapis.com/maps/api/elevation/json?path=enc:{0}&samples={1}&key={2}";
 		private static readonly Regex PATTERN_ELEV_STATUS
@@ -49,8 +52,10 @@ namespace WiFindUs.Eye
 		private object compositeLock = new object();
 		private readonly int[] totalTiles;
 		private readonly int[] visibleTiles;
+
+		//threads
 		private readonly List<Thread> imageThreads = new List<Thread>();
-		private Thread elevationThread = null;
+		private Thread elevationThread = null;		
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -120,9 +125,10 @@ namespace WiFindUs.Eye
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
 
-		public Map() : base(null,null,0)
+		public Map(uint levelCount = 5)
+			: base(null, null, 0, levelCount)
 		{
-			totalTiles = new int[ZoomLevelCount];
+			totalTiles = new int[LevelCount];
 			visibleTiles = new int[totalTiles.Length];
 			for (uint i = 0; i < totalTiles.Length; i++ )
 			{
@@ -152,7 +158,7 @@ namespace WiFindUs.Eye
 			uint val = (uint)((col.A << 24) | (col.R << 16) |
 					(col.G << 8) | (col.B << 0));
 
-			return ELEV_MIN + ((double)val / (double)0xFFFFFFFF) * (ELEV_MAX - ELEV_MIN);
+			return ELEV_MIN + ((double)val / (double)0xFFFFFFFF) * ELEV_RANGE;
 		}
 
 		public override string ToString()
@@ -179,24 +185,30 @@ namespace WiFindUs.Eye
 				.Reverse()
 				.ToList();
 
-			//downloads
-			if (downloads.Count > 0)
-			{
-				Thread thread = new Thread(new ParameterizedThreadStart(DownloadImagesThread));
-				thread.IsBackground = true;
-				imageThreads.Add(thread);
-				thread.Start(downloads);
-			}
-
 			//loads
 			while (loads.Count > 0)
 			{
-				int count = Math.Min(50, loads.Count);
+				int count = Math.Min(100, loads.Count);
 				List<Tile> subLoads = loads.GetRange(0, count);
 				loads.RemoveRange(0, count);
 
 				Thread thread = new Thread(new ParameterizedThreadStart(LoadImagesThread));
 				thread.IsBackground = true;
+				thread.Priority = ThreadPriority.BelowNormal;
+				imageThreads.Add(thread);
+				thread.Start(subLoads);
+			}
+
+			//downloads
+			while (downloads.Count > 0)
+			{
+				int count = Math.Min(50, downloads.Count);
+				List<Tile> subLoads = downloads.GetRange(0, count);
+				downloads.RemoveRange(0, count);
+				
+				Thread thread = new Thread(new ParameterizedThreadStart(DownloadImagesThread));
+				thread.IsBackground = true;
+				thread.Priority = ThreadPriority.BelowNormal;
 				imageThreads.Add(thread);
 				thread.Start(subLoads);
 			}
@@ -207,6 +219,7 @@ namespace WiFindUs.Eye
 
 			elevationThread = new Thread(new ThreadStart(ElevationThread));
 			elevationThread.IsBackground = true;
+			elevationThread.Priority = ThreadPriority.BelowNormal;
 			elevationThread.Start();
 		}
 
@@ -290,12 +303,25 @@ namespace WiFindUs.Eye
 #if DEBUG
 			Debugger.T("enter");
 #endif
+			//wait for a little while to allow more existing tiles to load
+			//(allows for more obscuring, skipping unnecessary downloads)
+
+			int timer = 0;
+			while (timer < 7500)
+			{
+				Thread.Sleep(250);
+				timer += 250;
+				if (WiFindUs.Forms.MainForm.HasClosed)
+					return;
+			}
+
 			List<Tile> tileList = listObj as List<Tile>;
 			foreach (Tile tile in tileList)
 			{
 				tile.downloadRetries = 0;
 				DownloadImage(tile);
 			}
+
 
 			lock (imageThreads)
 			{
@@ -581,7 +607,7 @@ namespace WiFindUs.Eye
 					Rectangle radRect = new Rectangle(x, y, ELEV_SAMPLE_SIZE, ELEV_SAMPLE_SIZE);
 
 					//get colour values
-					uint cval = (uint)(((elev - ELEV_MIN) / (ELEV_MAX - ELEV_MIN)) * (double)0xFFFFFFFF);
+					uint cval = (uint)(((elev - ELEV_MIN) / ELEV_RANGE) * (double)0xFFFFFFFF);
 					Color col = Color.FromArgb((byte)(cval >> 24), (byte)(cval >> 16), (byte)(cval >> 8), (byte)(cval >> 0));
 
 					//paint heightmap

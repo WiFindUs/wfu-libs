@@ -19,12 +19,18 @@ namespace WiFindUs.Eye.Wave
 {
 	public class PolyPlane : BaseModel
 	{
+		public event Action<PolyPlane> BoundingBoxUpdated;
+		
 		[RequiredComponent]
 		public Transform3D Transform3D;
 		[RequiredComponent]
 		public MaterialsMap Material;
 		public readonly float Size;
 		public readonly uint Subdivisions;
+		public Color DebugNormalColor = Color.Red;
+		public Color DebugSegmentColor = Color.Magenta;
+		public Color DebugBoxColor = Color.Cyan;
+		public readonly bool Clockwise;
 
 		private readonly uint vertexCount;
 		private readonly uint triangleCount;
@@ -38,8 +44,9 @@ namespace WiFindUs.Eye.Wave
 		private DynamicVertexBuffer vertexBuffer;
 		private DynamicIndexBuffer indexBuffer;
 		private BoundingBox boundingBox;
-		private readonly FaceBoundingBox[] faceBoundingBoxes;
-		private const uint FBB_SIZE = 8;
+		private readonly Segment[] segments;
+		private const uint SEGMENT_SIZE = 8;
+		
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -64,14 +71,21 @@ namespace WiFindUs.Eye.Wave
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
 
-		public PolyPlane(Vector3? normal = null, float size = 1.0f, uint subdivs = 0)
+		public PolyPlane(Vector3? normal = null, float size = 1.0f, uint subdivs = 0, bool cw = true)
 		{
 			//orientation
-			Size = size;
-			Normal = normal ?? Vector3.Up;
+			Clockwise = cw;
+			Size = Math.Max(1.0f, size);
+			if (normal.HasValue)
+			{ 
+				normal.Value.Normalize();
+				Normal = normal.Value;
+			}
+			else
+				Normal = Vector3.Up;
 			side1 = new Vector3(Normal.Y, Normal.Z, Normal.X) * (Size / 2.0f);
 			side2 = Vector3.Cross(Normal, side1);
-			Subdivisions = subdivs;
+			Subdivisions = Math.Min(subdivs, 2046);
 			uint faceCols = Subdivisions + 1;
 
 			//work out extremes
@@ -84,27 +98,27 @@ namespace WiFindUs.Eye.Wave
 			triangleCount = faceCols * faceCols * 2;
 			indexCount = triangleCount * 3;
 
-			//bounding boxes
+			//segment boxes for broad-phase intersection testing
 			BoundingBox = boundingBox = new BoundingBox();
-			if (Subdivisions >= FBB_SIZE * 2 - 1)
+			if (Subdivisions >= SEGMENT_SIZE * 2 - 1)
 			{
-				uint bbCols = (faceCols / FBB_SIZE) + (faceCols % FBB_SIZE == 0 ? 0u : 1u);
-				faceBoundingBoxes = new FaceBoundingBox[bbCols * bbCols];
+				uint bbCols = (faceCols / SEGMENT_SIZE) + (faceCols % SEGMENT_SIZE == 0 ? 0u : 1u);
+				segments = new Segment[bbCols * bbCols];
 				uint index = 0;
-				for (uint row = 0; row < faceCols; row += FBB_SIZE)
+				for (uint row = 0; row < faceCols; row += SEGMENT_SIZE)
 				{
-					for (uint column = 0; column < faceCols; column += FBB_SIZE)
+					for (uint column = 0; column < faceCols; column += SEGMENT_SIZE)
 					{
-						faceBoundingBoxes[index] = new FaceBoundingBox(
+						segments[index] = new Segment(
 							row, column,
-							Math.Min(FBB_SIZE, faceCols - column),
-							Math.Min(FBB_SIZE, faceCols - row));
+							Math.Min(SEGMENT_SIZE, faceCols - column),
+							Math.Min(SEGMENT_SIZE, faceCols - row));
 						index++;
 					}
 				}
 			}
 			else
-				faceBoundingBoxes = null;
+				segments = null;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -195,11 +209,12 @@ namespace WiFindUs.Eye.Wave
 			{
 				normal = Vector3.Zero;
 				return null;
-			}
+			}			
 
-			//check outer bounding box
+			//check outer bounding box (transform to world)
+			Matrix l2w = Transform3D.WorldTransform;
 			float? result;
-			boundingBox.Intersects(ref ray, out result);
+			boundingBox.Transform(ref l2w).Intersects(ref ray, out result);
 			if (!result.HasValue)
 			{
 				normal = Vector3.Zero;
@@ -208,22 +223,23 @@ namespace WiFindUs.Eye.Wave
 
 			//get local ray
 			Matrix w2l = Transform3D.WorldToLocalTransform;
-			Matrix l2w = Transform3D.WorldTransform;
 			Vector3 rayStart, rayDir;
 			Vector3.Transform(ref ray.Direction, ref w2l, out rayDir);
 			Vector3.Transform(ref ray.Position, ref w2l, out rayStart);
 
-			if (faceBoundingBoxes != null)
+			//if we're segmented, check only triangles within intersected segment
+			if (segments != null)
 			{
-				for (uint i = 0; i < faceBoundingBoxes.Length; i++)
+				for (uint i = 0; i < segments.Length; i++)
 				{
-					faceBoundingBoxes[i].BoundingBox.Intersects(ref ray, out result);
+					segments[i].BoundingBox
+						.Transform(ref l2w).Intersects(ref ray, out result);
 					if (!result.HasValue)
 						continue;
 
 					result = IntersectsFacesLocal(ref rayStart, ref rayDir,
-						faceBoundingBoxes[i].Row, faceBoundingBoxes[i].Column,
-						faceBoundingBoxes[i].Width, faceBoundingBoxes[i].Height,
+						segments[i].Row, segments[i].Column,
+						segments[i].Width, segments[i].Height,
 						out normal);
 					if (result.HasValue)
 					{
@@ -232,7 +248,7 @@ namespace WiFindUs.Eye.Wave
 					}
 				}
 			}
-			else
+			else //otherwise just brute-force it
 			{
 				result = IntersectsFacesLocal(ref rayStart, ref rayDir, 0, 0, (Subdivisions + 1), (Subdivisions + 1), out normal);
 				if (result.HasValue)
@@ -248,27 +264,32 @@ namespace WiFindUs.Eye.Wave
 
 		public void UpdateBoundingBox()
 		{
-			Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-			Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-			for (int i = 0; i < vertices.Length; i++)
+			boundingBox.Min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+			boundingBox.Max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+
+			//if we're segmented, do segments first and use those for faster updating of the main bounding box
+			if (segments != null)
 			{
-				Vector3.Min(ref min, ref vertices[i].Position, out min);
-				Vector3.Max(ref max, ref vertices[i].Position, out max);
+				for (int i = 0; i < segments.Length; i++)
+				{
+					segments[i].Update(Subdivisions, ref vertices);
+					Vector3.Min(ref boundingBox.Min, ref segments[i].BoundingBox.Min, out boundingBox.Min);
+					Vector3.Max(ref boundingBox.Max, ref segments[i].BoundingBox.Max, out boundingBox.Max);
+				}
 			}
-			Matrix l2w = Transform3D.WorldTransform;
-			Vector3.Transform(ref min, ref l2w, out min);
-			Vector3.Transform(ref max, ref l2w, out max);
-			boundingBox.Min = min;
-			boundingBox.Max = max;
+			else //otherwise just brute-force it
+			{
+				for (int i = 0; i < vertices.Length; i++)
+				{
+					Vector3.Min(ref boundingBox.Min, ref vertices[i].Position, out boundingBox.Min);
+					Vector3.Max(ref boundingBox.Max, ref vertices[i].Position, out boundingBox.Max);
+				}
+			}
 			BoundingBox = boundingBox;
-
-			if (faceBoundingBoxes != null)
-			{
-				for (int i = 0; i < faceBoundingBoxes.Length; i++)
-					faceBoundingBoxes[i].Update(Subdivisions, ref l2w, ref vertices);
-			}
-
 			BoundingBoxRefreshed = true;
+
+			if (BoundingBoxUpdated != null)
+				BoundingBoxUpdated(this);
 		}
 
 
@@ -309,19 +330,17 @@ namespace WiFindUs.Eye.Wave
 				uint rowHighStart = (row + 1) * (Subdivisions + 2); //first index of top line
 
 				//create triangles from left to right
-				//uses anticlockwise winding order for both
 				for (uint column = 0; column < (Subdivisions + 1); column++)
 				{
 					//triangle 0 (top triangle)
 					indices[idx++] = (ushort)(rowLowStart + column); //bottom-left
-					indices[idx++] = (ushort)(rowHighStart + column + 1); //top-right
-					indices[idx++] = (ushort)(rowHighStart + column); //top-left
+					indices[idx++] = (ushort)(rowHighStart + column + (Clockwise ? 0 : 1));
+					indices[idx++] = (ushort)(rowHighStart + column + (Clockwise ? 1 : 0));
 
 					//triangle 1 (bottom triangle)
 					indices[idx++] = (ushort)(rowLowStart + column); //bottom-left
-					indices[idx++] = (ushort)(rowLowStart + column + 1); //bottom-right
-					indices[idx++] = (ushort)(rowHighStart + column + 1); //top right
-					
+					indices[idx++] = (ushort)((Clockwise ? rowHighStart : rowLowStart) + column + 1);
+					indices[idx++] = (ushort)((Clockwise ? rowLowStart : rowHighStart) + column + 1);
 				}
 			}
 			indexBuffer = new DynamicIndexBuffer(indices);
@@ -354,7 +373,6 @@ namespace WiFindUs.Eye.Wave
 		internal void DrawDebugLines()
 		{
 			Matrix l2w = Transform3D.WorldTransform;
-			Color color = Color.Red;
 			float length = (Size / (float)(Subdivisions + 1)) * 0.5f;
 			uint index = 0;
 			for (uint row = 0; row < (Subdivisions + 2); row++)
@@ -365,20 +383,21 @@ namespace WiFindUs.Eye.Wave
 					Vector3 end = vertices[index].Position + (vertices[index].Normal * length);
 					Vector3.Transform(ref start, ref l2w, out start);
 					Vector3.Transform(ref end, ref l2w, out end);
-					RenderManager.LineBatch3D.DrawLine(ref start, ref end, ref color);
+					RenderManager.LineBatch3D.DrawLine(ref start, ref end, ref DebugNormalColor);
 					index++;
 				}
 			}
 
-			color = Color.Cyan;
-			RenderManager.LineBatch3D.DrawBoundingBox(ref boundingBox, ref color);
+			BoundingBox bb = boundingBox.Transform(ref l2w);
+			RenderManager.LineBatch3D.DrawBoundingBox(ref bb, ref DebugBoxColor);
 
-
-			if (faceBoundingBoxes != null)
+			if (segments != null)
 			{
-				color = Color.Magenta;
-				for (int i = 0; i < faceBoundingBoxes.Length; i++)
-					RenderManager.LineBatch3D.DrawBoundingBox(ref faceBoundingBoxes[i].BoundingBox, ref color);
+				for (int i = 0; i < segments.Length; i++)
+				{
+					bb = segments[i].BoundingBox.Transform(ref l2w);
+					RenderManager.LineBatch3D.DrawBoundingBox(ref bb, ref DebugSegmentColor);
+				}
 			}
 		}
 
@@ -389,10 +408,20 @@ namespace WiFindUs.Eye.Wave
 			
 			uint bl = row * (Subdivisions + 2) + column;
 			uint tl = bl + (Subdivisions + 2);
+			uint tr = tl + 1;
+			uint br = bl + 1;
 
 			v0 = bl;
-			v1 = (top ? tl : bl) + 1;
-			v2 = top ? tl : tl + 1;
+			if (top)
+			{
+				v1 = Clockwise ? tl : tr;
+				v2 = Clockwise ? tr : tl;
+			}
+			else
+			{
+				v1 = Clockwise ? tr : br;
+				v2 = Clockwise ? br : tr;
+			}
 		}
 
 		private Vector3 CalculateFaceNormal(uint row, uint column, bool top)
@@ -409,16 +438,17 @@ namespace WiFindUs.Eye.Wave
 
 		private Vector3 CalculateFaceNormal(ref Vector3 v0, ref Vector3 v1, ref Vector3 v2)
 		{
-			Vector3 a = v0 - v1;
+			Vector3 a = v0 - (Clockwise ? v2 : v1);
 			a.Normalize();
-			Vector3 b = v0 - v2;
+			Vector3 b = v0 - (Clockwise ? v1 : v2);
 			b.Normalize();
 			Vector3.Cross(ref a, ref b, out b);
 			b.Normalize();
 			return b;
 		}
 
-		private float? IntersectsFacesLocal(ref Vector3 rayStart, ref Vector3 rayDir, uint row, uint col, uint width, uint height, out Vector3 normal)
+		private float? IntersectsFacesLocal(ref Vector3 rayStart, ref Vector3 rayDir,
+			uint row, uint col, uint width, uint height, out Vector3 normal)
 		{
 			float? result;
 			for (uint r = row; r < row + height; r++)
@@ -452,7 +482,7 @@ namespace WiFindUs.Eye.Wave
 		}
 
 		//adapted from http://geomalgorithms.com/a06-_intersect-2.html
-		private float? IntersectsFaceLocal(ref Vector3 rayStart, ref Vector3 rayDir,
+		private static float? IntersectsFaceLocal(ref Vector3 rayStart, ref Vector3 rayDir,
 			ref Vector3 v0, ref Vector3 v1, ref Vector3 v2, out Vector3 normal)
 		{
 			// get triangle edge vectors and plane normal
@@ -501,7 +531,7 @@ namespace WiFindUs.Eye.Wave
 			return result;
 		}
 
-		private class FaceBoundingBox
+		private class Segment
 		{
 			public readonly uint Row;
 			public readonly uint Column;
@@ -509,7 +539,7 @@ namespace WiFindUs.Eye.Wave
 			public readonly uint Height;
 			public BoundingBox BoundingBox;
 
-			public FaceBoundingBox(uint r, uint c, uint w, uint h)
+			public Segment(uint r, uint c, uint w, uint h)
 			{
 				Row = r;
 				Column = c;
@@ -518,23 +548,19 @@ namespace WiFindUs.Eye.Wave
 				BoundingBox = new BoundingBox();
 			}
 
-			public void Update(uint subdivs, ref Matrix LocalToWorld, ref VertexPositionNormalColorTexture[] verts)
+			public void Update(uint subdivs, ref VertexPositionNormalColorTexture[] verts)
 			{
-				Vector3 min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
-				Vector3 max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+				BoundingBox.Min = new Vector3(float.MaxValue, float.MaxValue, float.MaxValue);
+				BoundingBox.Max = new Vector3(float.MinValue, float.MinValue, float.MinValue);
 				for (uint row = Row; row <= (Row + Height); row++ )
 				{
 					for (uint column = Column; column <= (Column + Width); column++)
 					{
 						uint index = (subdivs + 2) * row + column;
-						Vector3.Min(ref min, ref verts[index].Position, out min);
-						Vector3.Max(ref max, ref verts[index].Position, out max);
+						Vector3.Min(ref BoundingBox.Min, ref verts[index].Position, out BoundingBox.Min);
+						Vector3.Max(ref BoundingBox.Max, ref verts[index].Position, out BoundingBox.Max);
 					}
 				}
-				Vector3.Transform(ref min, ref LocalToWorld, out min);
-				Vector3.Transform(ref max, ref LocalToWorld, out max);
-				BoundingBox.Min = min;
-				BoundingBox.Max = max;
 			}
 		}
 	}

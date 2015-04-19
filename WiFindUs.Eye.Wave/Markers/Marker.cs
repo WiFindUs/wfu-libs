@@ -10,7 +10,7 @@ namespace WiFindUs.Eye.Wave.Markers
 {
 	public abstract class Marker : MapBehavior
 	{
-		private List<BoxCollider> colliders = new List<BoxCollider>();
+		private CylindricalCollider cylindricalCollider;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -23,45 +23,15 @@ namespace WiFindUs.Eye.Wave.Markers
 			get { return 1.0f; }
 		}
 
-		/////////////////////////////////////////////////////////////////////
-		// PUBLIC METHODS
-		/////////////////////////////////////////////////////////////////////
-
-		public float? Intersects(ref Ray ray)
+		public CylindricalCollider CylindricalCollider
 		{
-			if (ray == null || colliders.Count == 0)
-				return null;
-			foreach (BoxCollider collider in colliders)
-			{
-				float? result = collider.Intersects(ref ray);
-				if (result.HasValue)
-					return result;
-			}
-			return null;
+			get { return cylindricalCollider; }
+			internal set { cylindricalCollider = value; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		protected BoxCollider AddCollider(BoxCollider collider)
-		{
-			if (collider == null)
-				return null;
-			if (colliders.Contains(collider))
-				return collider;
-			colliders.Add(collider);
-			collider.DebugLineColor = Color.Cyan;
-			return collider;
-		}
-
-		protected BoxCollider RemoveCollider(BoxCollider collider)
-		{
-			if (collider == null)
-				return null;
-			colliders.Remove(collider);
-			return collider;
-		}
 
 		protected override void Update(TimeSpan gameTime)
 		{

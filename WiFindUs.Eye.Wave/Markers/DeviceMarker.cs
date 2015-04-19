@@ -35,9 +35,12 @@ namespace WiFindUs.Eye.Wave.Markers
 		public static Entity Create(Device device)
 		{
 			DeviceMarker marker = new DeviceMarker(device);
+
 			return new Entity()
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
+				.AddComponent(marker.CylindricalCollider = new CylindricalCollider(12.0f, 4.0f, 6.0f))
+				.AddComponent(new CylindricalColliderRenderer(2, 5))
 				//spike
 				.AddChild
 				(
@@ -56,7 +59,6 @@ namespace WiFindUs.Eye.Wave.Markers
 					}))
 					.AddComponent(Model.CreateCone(8f, 6f, 8))
 					.AddComponent(new ModelRenderer())
-					.AddComponent(marker.AddCollider(new BoxCollider()))
 				)
 				//core
 				.AddChild

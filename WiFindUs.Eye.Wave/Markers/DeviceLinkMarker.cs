@@ -114,7 +114,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				ToMarker = null;
 
 			if (toNode == null || toNode.Entity == null || toNode.Entity != fromDevice.Entity.Node)
-				ToMarker = this.MapScene.GetNodeMarker(fromDevice.Entity.Node);
+				ToMarker = MapScene.Markers.OfType<NodeMarker>().Where(mk => mk.Entity == fromDevice.Entity.Node).FirstOrDefault();
+			
 
 			UpdateMarkerState();
 		}

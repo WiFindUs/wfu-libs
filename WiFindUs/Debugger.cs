@@ -26,16 +26,9 @@ namespace WiFindUs
 			All = 63
 		};
 
-		public const int MAX_HISTORY_LENGTH = 2048;
+		public static event Action<DebuggerLogItem> OnDebugOutput;
 
-		private static Verbosity allowedFlags;
-		private static StreamWriter outFile = null;
-		private static DateTime runningSince;
-		private static PerformanceCounter cpuCounter;
-		private static PerformanceCounter ramCounter;
-		private static LinkedList<DebuggerLogItem> logHistory = new LinkedList<DebuggerLogItem>();
-
-		public static readonly Dictionary<Debugger.Verbosity, Color> Colours = new Dictionary<Debugger.Verbosity, Color>()
+		internal static readonly Dictionary<Debugger.Verbosity, Color> Colours = new Dictionary<Debugger.Verbosity, Color>()
 		{
 			{ Debugger.Verbosity.Verbose, ColorTranslator.FromHtml("#999999")},
 			{ Debugger.Verbosity.Information, ColorTranslator.FromHtml("#FFFFFF")},
@@ -44,36 +37,63 @@ namespace WiFindUs
 			{ Debugger.Verbosity.Exception, ColorTranslator.FromHtml("#df3f26")},
 			{ Debugger.Verbosity.Console, ColorTranslator.FromHtml("#1c97ea")}
 		};
+		
+		private const int MAX_HISTORY_LENGTH = 2048;
+		private static Verbosity allowedFlags;
+		private static StreamWriter outFile = null;
+		private static DateTime runningSince;
+		private static PerformanceCounter cpuCounter;
+		private static PerformanceCounter ramCounter;
+		private static LinkedList<DebuggerLogItem> logHistory = new LinkedList<DebuggerLogItem>();
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public static event Action<DebuggerLogItem> OnDebugOutput;
+		/// <summary>
+		/// The initialization state of the Debugger.
+		/// </summary>
+		public static bool Initialized
+		{
+			get { return outFile != null; }
+		}
+
+		/// <summary>
+		/// The date and time the application was launched.
+		/// </summary>
 		public static DateTime RunningSince
 		{
 			get { return runningSince; }
 		}
-		public static bool Initialized
-		{
-			get
-			{
-				return outFile != null;
-			}
-		}
+
+		/// <summary>
+		/// The current CPU usage, as a percentage.
+		/// </summary>
 		public static float ProcessorUsage
 		{
 			get { return Initialized ? cpuCounter.NextValue() : 0.0f; }
 		}
+
+		/// <summary>
+		/// The current system RAM usage, as a percentage.
+		/// </summary>
 		public static float MemoryUsage
 		{
 			get { return Initialized ? ramCounter.NextValue() : 0.0f; }
 		}
+
+		/// <summary>
+		/// The length of time the system has been turned on.
+		/// </summary>
 		public static TimeSpan SystemUptime
 		{
 			get { return new TimeSpan(0, 0, 0, 0, Environment.TickCount); }
 		}
-		public static DebuggerLogItem[] LogHistory
+
+		/// <summary>
+		/// The Debugger's current history.
+		/// </summary>
+		internal static DebuggerLogItem[] LogHistory
 		{
 			get
 			{
@@ -83,6 +103,10 @@ namespace WiFindUs
 				return array;
 			}
 		}
+
+		/// <summary>
+		/// The set of allowed message verbosities the Debugger was configured with at initialization.
+		/// </summary>
 		public static Verbosity AllowedVerbosities
 		{
 			get { return Debugger.allowedFlags; }
@@ -92,7 +116,7 @@ namespace WiFindUs
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public static void Initialize(string path, Verbosity allowedFlags)
+		internal static void Initialize(string path, Verbosity allowedFlags)
 		{
 			if (Initialized || !WFUApplication.Running || allowedFlags == Verbosity.None)
 				return;
@@ -163,41 +187,62 @@ namespace WiFindUs
 			outFile = null;
 		}
 
-		public static void V(string text, params object[] args)
+		/// <summary>
+		/// Logs a formatted string with a verbosity level of Verbose.
+		/// </summary>
+		/// <returns>True</returns>
+		public static bool V(string text, params object[] args)
 		{
-			if (!allowedFlags.HasFlag(Verbosity.Verbose))
-				return;
-			Log(Verbosity.Verbose, text, args);
+			if (allowedFlags.HasFlag(Verbosity.Verbose))
+				Log(Verbosity.Verbose, text, args);
+			return true;
 		}
 
-		public static void I(string text, params object[] args)
+		/// <summary>
+		/// Logs a formatted string with a verbosity level of Information.
+		/// </summary>
+		/// <returns>True</returns>
+		public static bool I(string text, params object[] args)
 		{
-			if (!allowedFlags.HasFlag(Verbosity.Information))
-				return;
-			Log(Verbosity.Information, text, args);
+			if (allowedFlags.HasFlag(Verbosity.Information))
+				Log(Verbosity.Information, text, args);
+			return true;
 		}
 
-		public static void W(string text, params object[] args)
+		/// <summary>
+		/// Logs a formatted string with a verbosity level of Warning.
+		/// </summary>
+		/// <returns>True</returns>
+		public static bool W(string text, params object[] args)
 		{
-			if (!allowedFlags.HasFlag(Verbosity.Warning))
-				return;
-			Log(Verbosity.Warning, text, args);
+			if (allowedFlags.HasFlag(Verbosity.Warning))
+				Log(Verbosity.Warning, text, args);
+			return true;
 		}
 
-		public static void E(string text, params object[] args)
+		/// <summary>
+		/// Logs a formatted string with a verbosity level of Error.
+		/// </summary>
+		/// <returns>True</returns>
+		public static bool E(string text, params object[] args)
 		{
-			if (!allowedFlags.HasFlag(Verbosity.Error))
-				return;
-			Log(Verbosity.Error, text, args);
+			if (allowedFlags.HasFlag(Verbosity.Error))
+				Log(Verbosity.Error, text, args);
+			return true;
 		}
 
-		public static void Ex(Exception e, bool printStackTrace = false,
+		/// <summary>
+		/// Logs an exception.
+		/// </summary>
+		/// <returns>True</returns>
+		public static bool Ex(Exception e, bool printStackTrace = false,
 			[CallerMemberName] string memberName = "",
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
 		{
 			if (!allowedFlags.HasFlag(Verbosity.Exception))
-				return;
+				return true;
+
 			StringBuilder sb = new StringBuilder("EXCEPTION THROWN!");
 			sb.AppendLine("  Calling Member: " + memberName);
 			sb.AppendLine("  Source File: " + sourceFilePath);
@@ -223,25 +268,26 @@ namespace WiFindUs
 					sb.AppendLine("    " + stackFrame.ToString());
 			}
 			Log(Verbosity.Exception, sb.ToString());
+			return true;
 		}
 
-		public static void C(string text, params object[] args)
+		public static bool C(string text, params object[] args)
 		{
-			if (!allowedFlags.HasFlag(Verbosity.Console))
-				return;
-			Log(Verbosity.Console, text, args);
+			if (allowedFlags.HasFlag(Verbosity.Console))
+				Log(Verbosity.Console, text, args);
+			return true;
 		}
 
 #if DEBUG
 		/// <summary>
-		/// Debug only flow tracing-method.
+		/// Logs trace information about the caller.
 		/// </summary>
-		public static void T(string text = "",
+		public static bool T(string text = "",
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
 		{
-			V("[TRACE] {0}:{1} {2} {3}", Path.GetFileName(sourceFilePath), sourceLineNumber, memberName, text);
+			return V("[TRACE] {0}:{1} {2} {3}", Path.GetFileName(sourceFilePath), sourceLineNumber, memberName, text);
 		}
 #endif
 

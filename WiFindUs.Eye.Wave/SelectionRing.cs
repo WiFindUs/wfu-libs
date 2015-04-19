@@ -47,7 +47,7 @@ namespace WiFindUs.Eye.Wave
 			ring.points = new Entity[points];
 			ring.matte = new BasicMaterial(MapScene.WhiteTexture)
 			{
-				LayerType = typeof(Overlays),
+				LayerType = typeof(NonPremultipliedAlpha),
 				LightingEnabled = true,
 				AmbientLightColor = Color.White * 0.75f,
 				Alpha = 0.0f,

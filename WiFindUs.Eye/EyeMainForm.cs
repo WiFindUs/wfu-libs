@@ -124,9 +124,9 @@ namespace WiFindUs.Eye
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public EyeMainForm()
+		public EyeMainForm(uint mapLevels = 5)
 		{
-			map = new Map();
+			map = new Map(mapLevels);
 			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			WiFindUs.Eye.NodeLink.OnNodeLinkLoaded += OnNodeLinkLoaded;
@@ -207,14 +207,11 @@ namespace WiFindUs.Eye
 			timer.Enabled = true;
 
 			//set tile centre
-			if (WFUApplication.Config != null)
-			{
-				ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
-				if (location == null)
-					Debugger.E("Could not parse map.center from config files!");
-				else
-					map.Center = location;
-			}
+			ILocation location = WFUApplication.Config.Get("map.center", (ILocation)null);
+			if (location == null)
+				Debugger.E("Could not parse map.center from config files!");
+			else
+				map.Center = location;
 		}
 
 		protected override void OnDisposing()

@@ -38,6 +38,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				//base
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
+				.AddComponent(marker.CylindricalCollider = new CylindricalCollider(28.0f, 7.0f, 14.0f))
+				.AddComponent(new CylindricalColliderRenderer(2,5))
 				//spike
 				.AddChild
 				(
@@ -56,7 +58,6 @@ namespace WiFindUs.Eye.Wave.Markers
 					}))
 					.AddComponent(Model.CreateCone(14f, 8f, 8))
 					.AddComponent(new ModelRenderer())
-					.AddComponent(marker.AddCollider(new BoxCollider()))
 				)
 				//core
 				.AddChild
@@ -93,7 +94,6 @@ namespace WiFindUs.Eye.Wave.Markers
 						}))
 						.AddComponent(Model.CreateTorus(14f, 2, 12))
 						.AddComponent(new ModelRenderer())
-						.AddComponent(marker.AddCollider(new BoxCollider()))
 					)
 				)
 				//selection

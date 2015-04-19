@@ -135,7 +135,8 @@ namespace WiFindUs.Eye.Wave
 			float? result = MapScene.Terrain.Intersects(ref ray, out normal);
 			if (!result.HasValue)
 			{
-				result = MapScene.GroundPlane.Intersects(ref ray);
+				Plane gp = MapScene.GroundPlane;
+				ray.Intersects(ref gp, out result);
 				if (result.HasValue)
 					normal = Vector3.Up;
 			}
@@ -158,42 +159,10 @@ namespace WiFindUs.Eye.Wave
 			return vec == null ? null : MapScene.VectorToLocation(vec.Value);
 		}
 
-		public T[] MarkersFromScreenRay<T>(int x, int y, bool visibleOnly = true) where T : Marker
-		{
-			if (MapScene.AllMarkers.Count == 0)
-				return new T[0];
-
-			List<T> markers = new List<T>();
-
-			//set up ray
-			ConfigureScreenRay(x, y);
-
-			//check nodes
-			foreach (Marker marker in MapScene.AllMarkers)
-			{
-				if (marker.Transform3D == null || (!marker.Owner.IsVisible && visibleOnly))
-					continue;
-
-				T typedMarker = marker as T;
-				if (typedMarker == null || markers.Contains(typedMarker))
-					continue;
-
-				float? val;
-				if ((val = marker.Intersects(ref ray)).HasValue && val.Value >= 0.0f)
-					markers.Add(typedMarker);
-			}
-
-			//sort based on distance
-			return markers.OrderBy(o =>
-			{
-				return Vector3.DistanceSquared(o.Transform3D.Position, ray.Position);
-			}).ToArray();
-		}
-
 		public void TrackSelectedMarkers()
 		{
 			//get all active, selected markers which have a valid location
-			IEntityMarker[] selectedMarkers = MapScene.AllMarkers
+			IEntityMarker[] selectedMarkers = MapScene.Markers
 				.OfType<IEntityMarker>()
 				.Where(mk => mk.Updateable.Active
 					&& mk.Selectable.Selected
@@ -286,9 +255,6 @@ namespace WiFindUs.Eye.Wave
 			//look at target
 			camera.LookAt = Vector3.Lerp(camera.LookAt, targetVector,
 				(float)gameTime.TotalSeconds * CAMERA_SPEED);
-
-			//tile layer
-			MapScene.VisibleLevel = (uint)((1.0f - zoom) * (float)Tile.ZoomLevelCount);
 
 			//marker scale
 			MapScene.MarkerScale = MIN_MARKER_SCALE + (MAX_MARKER_SCALE - MIN_MARKER_SCALE) * zoom;
