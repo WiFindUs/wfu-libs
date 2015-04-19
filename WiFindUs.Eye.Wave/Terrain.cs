@@ -288,16 +288,17 @@ namespace WiFindUs.Eye.Wave
 					System.Drawing.Imaging.ImageLockMode.ReadOnly,
 					source.Composite.PixelFormat);
 
-				int count = 4;
-				Thread[] threads = new Thread[count];
-				for (int i = 0; i < count; i++)
+				int count = 5;
+				Thread[] threads = new Thread[count-1];
+				for (int i = 0; i < count-1; i++)
 				{
 					object[] args = new object[] { count, i, bmd };
 					threads[i] = new Thread(new ParameterizedThreadStart(UpdateTextureSubThread));
 					threads[i].IsBackground = true;
 					threads[i].Start(args);
 				}
-				for (int i = 0; i < count; i++)
+				UpdateTextureRows(bmd, count - 1, count);
+				for (int i = 0; i < count - 1; i++)
 					threads[i].Join();
 
 				source.Composite.UnlockBits(bmd);
@@ -317,7 +318,12 @@ namespace WiFindUs.Eye.Wave
 			int index = (int)args[1];
 			System.Drawing.Imaging.BitmapData bmd = args[2] as System.Drawing.Imaging.BitmapData;
 
-			for (int y = index; y < Map.COMPOSITE_SIZE; y += count)
+			UpdateTextureRows(bmd, index, count);
+		}
+
+		private unsafe void UpdateTextureRows(System.Drawing.Imaging.BitmapData bmd, int rowStart, int rowStep)
+		{
+			for (int y = rowStart; y < Map.COMPOSITE_SIZE; y += rowStep)
 			{
 				byte* row = (byte*)bmd.Scan0 + (y * bmd.Stride);
 				for (int x = 0; x < Map.COMPOSITE_SIZE; x++)
@@ -329,7 +335,6 @@ namespace WiFindUs.Eye.Wave
 					textureData[0][0][ti * 4 + 3] = row[x * 4 + 3];	//alpha
 				}
 			}
-
 		}
 	}
 }
