@@ -46,7 +46,7 @@ namespace WiFindUs.Eye.Controls
 				return String.Format("{0}\n{1}\n\n",
 					node.Number.HasValue ? "Assigned to station #" + node.Number.Value : "Not assigned to station.",
 					!node.Active ? "Inactive." :
-						(node.GPSD.GetValueOrDefault() ? (node.HasLatLong ? WiFindUs.Eye.Location.ToString(node) : "Waiting for accurate location...")
+						(node.GPSD.GetValueOrDefault() ? (node.HasLatLong ? WiFindUs.Location.ToString(node) : "Waiting for accurate location...")
 							: "GPS not running."));
 			}
 		}

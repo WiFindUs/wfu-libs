@@ -482,12 +482,12 @@ namespace WiFindUs.Eye.Wave
 		}
 
 		//adapted from http://geomalgorithms.com/a06-_intersect-2.html
-		private static float? IntersectsFaceLocal(ref Vector3 rayStart, ref Vector3 rayDir,
+		private float? IntersectsFaceLocal(ref Vector3 rayStart, ref Vector3 rayDir,
 			ref Vector3 v0, ref Vector3 v1, ref Vector3 v2, out Vector3 normal)
 		{
 			// get triangle edge vectors and plane normal
-			Vector3 u = v1 - v0;
-			Vector3 v = v2 - v0;
+			Vector3 u = (Clockwise ? v2 : v1) - v0;
+			Vector3 v = (Clockwise ? v1 : v2) - v0;
 			Vector3.Cross(ref u, ref v, out normal);
 
 			Vector3 w0 = rayStart - v0;

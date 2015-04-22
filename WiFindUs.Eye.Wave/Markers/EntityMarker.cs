@@ -52,7 +52,36 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected override float ScaleMultiplier
 		{
-			get { return entity.Selected ? 1.25f : 1.0f; }
+			get { return entity.Selected || CursorOver ? 1.25f : 1.0f; }
+		}
+
+		public bool CameraTracking
+		{
+			get
+			{
+				return MapScene.Camera != null
+					&& MapScene.Camera.TrackingTarget == this.Entity;
+			}
+			set
+			{
+				if (MapScene.Camera == null)
+					return;
+				
+				if (value && !CameraTracking)
+					MapScene.Camera.TrackingTarget = this.Entity;
+				else if (!value && CameraTracking)
+					MapScene.Camera.TrackingTarget = null;
+			}
+		}
+
+		public bool EntityActive
+		{
+			get { return entity.Active; }
+		}
+
+		public bool EntityWaiting
+		{
+			get { return !entity.Active && entity.LastUpdatedSecondsAgo < (entity.TimeoutLength * 5);  }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -113,7 +142,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			destination = MapScene.LocationToVector(entity.Location);
-			if (lastLocation == null || WiFindUs.Eye.Location.Distance(entity.Location, lastLocation) > 50.0)
+			if (lastLocation == null || WiFindUs.Location.Distance(entity.Location, lastLocation) > 50.0)
 				Transform3D.Position = destination;
 			lastLocation = new Location(entity.Location);
 		}
@@ -140,7 +169,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			bool active = MapScene.Terrain != null
 				&& MapScene.Terrain.Source != null
 				&& entity.Location.HasLatLong
-				&& (entity.Active || entity.LastUpdatedSecondsAgo < (entity.TimeoutLength * 5));
+				&& (EntityActive || EntityWaiting);
 
 			IsOwnerActive = active;
 			if (IsOwnerVisible != active)
@@ -149,6 +178,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				if (VisibleChanged != null)
 					VisibleChanged(this);
 			}
+			if (!IsOwnerActive && CameraTracking)
+				CameraTracking = false;
 		}
 	}
 }

@@ -2,9 +2,12 @@
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
+using WaveEngine.Components.UI;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
+using WaveEngine.Framework.Services;
+using WaveEngine.Framework.UI;
 using WaveEngine.Materials;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
@@ -17,6 +20,8 @@ namespace WiFindUs.Eye.Wave.Markers
 		private BasicMaterial spikeMat, ringMat, coreMat;
 		private float fader = 0.0f;
 		private Color colour = new Color(0, 175, 255);
+		private StackPanel uiPanel;
+		private TextBlock text, subtext;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -31,10 +36,10 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public static Entity Create(Node node)
+		public static NodeMarker Create(Node node)
 		{
 			NodeMarker marker = new NodeMarker(node);
-			return new Entity()
+			Entity entity = new Entity()
 				//base
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
@@ -54,7 +59,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						Alpha = 0.75f
+						Alpha = 0.5f
 					}))
 					.AddComponent(Model.CreateCone(14f, 8f, 8))
 					.AddComponent(new ModelRenderer())
@@ -72,7 +77,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						Alpha = 0.75f
+						Alpha = 0.5f
 					}))
 					.AddComponent(Model.CreateSphere(4f, 4))
 					.AddComponent(new ModelRenderer())
@@ -90,14 +95,48 @@ namespace WiFindUs.Eye.Wave.Markers
 							LayerType = typeof(NonPremultipliedAlpha),
 							LightingEnabled = true,
 							AmbientLightColor = Color.White * 0.75f,
-							Alpha = 0.25f
+							Alpha = 0.5f
 						}))
 						.AddComponent(Model.CreateTorus(14f, 2, 12))
 						.AddComponent(new ModelRenderer())
 					)
 				)
 				//selection
-				.AddChild(SelectionRing.Create(node));
+				.AddChild(SelectionRing.Create(node).Owner);
+
+			//ui
+			marker.UIEntity = (marker.uiPanel = new StackPanel()
+			{
+				Orientation = Orientation.Vertical,
+				BackgroundColor = Themes.Theme.Current.Background.Dark.Colour.Wave(200),
+				IsBorder = false,
+				Opacity = 0.0f,
+				Width = 100.0f,
+				Height = 40.0f,
+			}).Entity;
+			marker.uiPanel.Add(marker.text = new TextBlock()
+			{
+				Text = "This is text on line 1",
+				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
+				Width = marker.uiPanel.Width,
+				Height = 17.0f,
+				TextAlignment = TextAlignment.Center,
+				TextWrapping = false,
+				IsBorder = false
+			});
+			marker.uiPanel.Add(marker.subtext = new TextBlock()
+			{
+				Text = "this is some sub text",
+				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
+				Width = marker.uiPanel.Width * (1.0f / SUBTEXT_SCALE),
+				Height = 15.0f * (1.0f / SUBTEXT_SCALE),
+				TextAlignment = TextAlignment.Center,
+				TextWrapping = false,
+				IsBorder = false
+			});
+			marker.UIEntity.FindComponent<Transform2D>().LocalScale = new Vector2(UI_SCALE);
+			marker.subtext.Entity.FindComponent<Transform2D>().LocalScale = new Vector2(SUBTEXT_SCALE);
+			return marker;
 		}
 
 		internal NodeMarker(Node n) : base(n) { }
@@ -113,13 +152,11 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			float secs = (float)gameTime.TotalSeconds;
-			float targetAlpha = (Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity ? 1.0f : 0.75f);
-			spikeMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED);
-			coreMat.Alpha = spikeMat.Alpha;
-			ringMat.Alpha = spikeMat.Alpha * 0.75f;
-			spikeMat.DiffuseColor = Color.Lerp(spikeMat.DiffuseColor,
-				!Entity.Active ? Color.Black : colour, secs * COLOUR_SPEED);
-			ringMat.DiffuseColor = spikeMat.DiffuseColor;
+			float targetAlpha = Entity.Active && (Entity.Selected || CameraTracking || CursorOver) ? 1.0f : 0.5f;
+			spikeMat.Alpha = coreMat.Alpha = ringMat.Alpha =
+				spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
+			spikeMat.DiffuseColor = ringMat.DiffuseColor
+				= Color.Lerp(spikeMat.DiffuseColor, !Entity.Active ? Color.Black : colour, secs * COLOUR_SPEED);
 			if (Entity.Active)
 			{
 				coreMat.DiffuseColor = Color.White.Coserp(colour, fader += secs * 2.0f);
@@ -129,6 +166,13 @@ namespace WiFindUs.Eye.Wave.Markers
 				   ringTransform.Rotation.Z
 					);
 			}
+
+			//ui
+			float uiAlpha = Entity.Selected || CursorOver ? 1.0f : (EntityWaiting ? 0.5f : 0.0f);
+			if (UITransform != null && uiAlpha > 0.0f)
+				UITransform.Position
+					= ScreenPosition.Add(uiPanel.Width * UI_SCALE * -0.5f, 3.0f);
+			uiPanel.Opacity = uiPanel.Opacity.Lerp(uiAlpha, secs * FADE_SPEED).Clamp(0.0f,1.0f);
 		}
 
 		protected override void ActiveChanged(IUpdateable obj)
@@ -144,6 +188,32 @@ namespace WiFindUs.Eye.Wave.Markers
 					);
 				coreMat.DiffuseColor = Color.White;
 			}
+
+			UpdateUI();
+		}
+
+		protected override void CursorOverChanged(bool cursorOver)
+		{
+			base.CursorOverChanged(cursorOver);
+
+			UpdateUI();
+		}
+
+		protected override void SelectedChanged(ISelectable obj)
+		{
+			base.SelectedChanged(obj);
+
+			UpdateUI();
+		}
+
+		/////////////////////////////////////////////////////////////////////
+		// PRIVATE METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		private void UpdateUI()
+		{
+			text.Text = "#" + (entity.Number.HasValue ? entity.Number.Value.ToString() : "??");
+			subtext.Text = "ID: " + entity.ID.ToString("X");
 		}
 	}
 }

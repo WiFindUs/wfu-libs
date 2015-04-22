@@ -83,12 +83,15 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public static Entity Create(ILinkableMarker fromMarker, ILinkableMarker toMarker, Type linkMarkerType)
+		public static T Create<T>(ILinkableMarker fromMarker, ILinkableMarker toMarker)
+			 where T : LinkMarker, new()
 		{
-			LinkMarker marker = (LinkMarker)linkMarkerType.GetConstructor(
-				new Type[] { typeof(ILinkableMarker), typeof(ILinkableMarker) })
-				.Invoke(new object[] { fromMarker, toMarker });
-			return new Entity()
+			T marker = new T()
+			{
+				FromMarker = fromMarker,
+				ToMarker = toMarker
+			};
+			Entity entity = new Entity()
 				//base
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
@@ -108,18 +111,17 @@ namespace WiFindUs.Eye.Wave.Markers
 					.AddComponent(Model.CreateCylinder(1f, 1f, 6))
 					.AddComponent(new ModelRenderer())
 				);
+
+			return marker;
 		}
 
-		public static Entity Create(ILinkableMarker fromMarker, ILinkableMarker markerB)
-		{
-			return Create(fromMarker, markerB, typeof(LinkMarker));
-		}
-
-		public LinkMarker(ILinkableMarker fromMarker, ILinkableMarker toMarker)
+		internal LinkMarker(ILinkableMarker fromMarker, ILinkableMarker toMarker)
 		{
 			FromMarker = fromMarker;
 			ToMarker = toMarker;
 		}
+
+		public LinkMarker() { }
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS

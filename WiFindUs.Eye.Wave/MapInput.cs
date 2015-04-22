@@ -33,11 +33,15 @@ namespace WiFindUs.Eye.Wave
 		{
 			public readonly int DeltaX;
 			public readonly int DeltaY;
+			public readonly bool DeltaZero;
+			public readonly float DeltaLength;
 			public MouseMoveEventArgs(int x, int y, int dx, int dy)
 				: base(x, y)
 			{
 				DeltaX = dx;
 				DeltaY = dy;
+				DeltaZero = dx == 0 && dy == 0;
+				DeltaLength = DeltaZero ? 0.0f : (float)Math.Sqrt((dx * dx) + (dy * dy));
 			}
 		}
 		public class MouseWheelEventArgs : MouseEventArgs

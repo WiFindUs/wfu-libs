@@ -63,7 +63,6 @@ namespace WiFindUs.Forms
 				return;
 
 			Icon = WFUApplication.Icon;
-			WFUApplication.SetThreadAlias("UI");
 		}
 
 		/////////////////////////////////////////////////////////////////////

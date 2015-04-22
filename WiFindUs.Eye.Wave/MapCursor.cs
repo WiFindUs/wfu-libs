@@ -13,6 +13,7 @@ using WaveEngine.Components.Graphics3D;
 using WiFindUs.Eye.Wave.Layers;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Framework.Physics3D;
+using WaveEngine.Components.UI;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -25,22 +26,29 @@ namespace WiFindUs.Eye.Wave
 		private Transform3D coreTransform, spikeTransform, ringTransform;
 		private BasicMaterial matte;
 		private Vector3 destination = Vector3.Zero;
-		private float[] xOffsets = new float[12], zOffsets = new float[12];
 		private float fader = 0.0f;
+		internal TextBox PositionText;
 		[RequiredComponent]
 		public CylindricalCollider CylindricalCollider;
+		internal readonly List<Marker> AllMarkersAtCursor = new List<Marker>();
 
 		public Vector3 Normal
 		{
 			set
 			{
-				Vector3 up = Vector3.Up;
-				Quaternion rot;
-				Quaternion.CreateFromTwoVectors(ref up, ref value, out rot);
-				Vector3 euler;
-				Quaternion.ToEuler(ref rot, out euler);
-
-				ringTransform.Rotation = euler;
+				if (value.Equals(Vector3.Up))
+				{
+					ringTransform.Rotation = new Vector3(0f, 90.0f.ToRadians(), 0f);
+				}
+				else
+				{
+					Vector3 up = Vector3.Up;
+					Quaternion rot;
+					Quaternion.CreateFromTwoVectors(ref up, ref value, out rot);
+					Vector3 euler;
+					Quaternion.ToEuler(ref rot, out euler);
+					ringTransform.Rotation = euler;
+				}
 			}
 		}
 
@@ -48,7 +56,7 @@ namespace WiFindUs.Eye.Wave
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public static Entity Create()
+		public static MapCursor Create()
 		{
 			MapCursor cursor = new MapCursor();
 			cursor.matte = new BasicMaterial(MapScene.WhiteTexture)
@@ -59,23 +67,14 @@ namespace WiFindUs.Eye.Wave
 				DiffuseColor = Color.Gold
 			};
 
-			cursor.xOffsets[0] = 0.0f;
-			cursor.zOffsets[0] = 0.0f;
-			for (int i = 0; i < cursor.xOffsets.Length - 1; i++)
-			{
-				double pc = Math.PI * 2.0 * (i / (double)(cursor.xOffsets.Length - 1));
-				cursor.xOffsets[i + 1] = (float)Math.Cos(pc) * (RING_DIAMETER/2.0f);
-				cursor.zOffsets[i + 1] = (float)Math.Sin(pc) * (RING_DIAMETER / 2.0f);
-			}
-
-			return new Entity()
+			Entity entity = new Entity()
 				.AddComponent(new Transform3D()
 				{
 					Position = Vector3.Zero
 				})
 				.AddComponent(cursor)
-				//clolider
-				.AddComponent(new CylindricalCollider(40.0f, RING_DIAMETER/2.0f,20.0f))
+				//collider
+				.AddComponent(new CylindricalCollider(40.0f, RING_DIAMETER / 2.0f, 20.0f))
 				.AddComponent(new CylindricalColliderRenderer())
 				//spike
 				.AddChild
@@ -101,7 +100,7 @@ namespace WiFindUs.Eye.Wave
 					.AddComponent(new MaterialsMap(cursor.matte))
 					.AddComponent(Model.CreateSphere(1f, 3))
 					.AddComponent(new ModelRenderer())
-				//ring
+					//ring
 					.AddChild
 					(
 						new Entity("ring")
@@ -115,22 +114,41 @@ namespace WiFindUs.Eye.Wave
 						.AddComponent(new ModelRenderer())
 					)
 				);
+
+			//position text
+			cursor.UIEntity = (cursor.PositionText = new TextBox("position")
+			{
+				HorizontalAlignment = WaveEngine.Framework.UI.HorizontalAlignment.Left,
+				VerticalAlignment = WaveEngine.Framework.UI.VerticalAlignment.Bottom,
+				TextWrapping = false,
+				IsBorder = false,
+				Opacity = 0.0f,
+				Text = "",
+				IsReadOnly = true,
+				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
+				Background = Themes.Theme.Current.Background.Dark.Colour.Wave(200),
+				TextAlignment = TextAlignment.Left,
+				Width = 290.0f,
+				Height = 24.0f
+			}).Entity;
+			cursor.UIEntity.FindComponent<Transform2D>().LocalScale = new Vector2(UI_SCALE);
+
+			return cursor;
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		public T[] MarkersAtCursor<T>(bool visibleOnly = true) where T : Marker
+		public IEnumerable<T> MarkersAtCursor<T>() where T : Marker
 		{
 			if (CylindricalCollider == null || MapScene.Markers.Count == 0)
 				return new T[0];
 
-			return MapScene.Markers.Where(m => m.Transform3D != null && m.CylindricalCollider != null && (m.Owner.IsVisible || !visibleOnly))
+			return MapScene.Markers.Where(m => m.Transform3D != null && m.CylindricalCollider != null && m.Owner.IsVisible)
 				.OfType<T>()
 				.Where(m => m.CylindricalCollider.Intersects(CylindricalCollider))
-				.OrderBy(m => { return Vector3.DistanceSquared(m.CylindricalCollider.Position, CylindricalCollider.Position); })
-				.ToArray();
+				.OrderBy(m => { return Vector3.DistanceSquared(m.CylindricalCollider.Position, CylindricalCollider.Position); });
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -139,12 +157,17 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void Update(TimeSpan gameTime)
 		{
+			bool visible = MapScene.Input.MouseInsideHost && !MapScene.Input.MousePanning;
 			float secs = (float)gameTime.TotalSeconds;
 
+			//get markers under cursor
+			AllMarkersAtCursor.Clear();
+			if (visible)
+				AllMarkersAtCursor.AddRange(MarkersAtCursor<Marker>());
+			
 			//alpha
-			matte.Alpha = matte.Alpha.Lerp(MapScene.Input.MouseInsideHost
-				&& !MapScene.Input.MousePanning
-				? 0.8f : 0.0f, secs * FADE_SPEED);
+			matte.Alpha = matte.Alpha.Lerp(visible ? 0.8f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
+			PositionText.Opacity = PositionText.Opacity.Lerp(visible ? 1.0f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 			
 			//scale
 			float scale = MapScene.MarkerScale * BASE_SCALE;

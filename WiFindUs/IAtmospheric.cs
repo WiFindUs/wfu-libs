@@ -1,5 +1,5 @@
 ﻿
-namespace WiFindUs.Eye
+namespace WiFindUs
 {
 	public interface IAtmospheric
 	{

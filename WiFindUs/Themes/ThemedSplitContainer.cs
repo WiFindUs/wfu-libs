@@ -139,7 +139,7 @@ namespace WiFindUs.Themes
 
 		private void InvalidateNonPanelArea()
 		{
-			Region region = new Region(Bounds);
+			System.Drawing.Region region = new System.Drawing.Region(Bounds);
 			region.Xor(Panel1.Bounds);
 			region.Xor(Panel2.Bounds);
 			Invalidate(region);

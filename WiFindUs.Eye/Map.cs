@@ -19,8 +19,6 @@ namespace WiFindUs.Eye
 		public event Action<Map> ElevationStateChanged;
 		public event Action<Map> CompositeImageChanged;
 
-
-
 		//elevation
 		public const double ELEV_MIN = -50.0;
 		public const double ELEV_MAX = 2500.0;
@@ -52,6 +50,8 @@ namespace WiFindUs.Eye
 		private object compositeLock = new object();
 		private readonly int[] totalTiles;
 		private readonly int[] visibleTiles;
+		private object skipListLock = new object();
+		private readonly List<String> skipList = new List<String>();
 
 		//threads
 		private readonly List<Thread> imageThreads = new List<Thread>();
@@ -98,7 +98,7 @@ namespace WiFindUs.Eye
 
 		internal string ElevationFilename
 		{
-			get { return String.Format("{0}_elevation.png", Root.FilenameLatLong); }
+			get { return "elevation.png"; }
 		}
 
 		internal List<Tile> AllTiles
@@ -119,6 +119,16 @@ namespace WiFindUs.Eye
 		public Object ElevationLock
 		{
 			get { return elevationLock; }
+		}
+
+		internal String SkipListFilename
+		{
+			get { return "skiplist.txt"; }
+		}
+
+		internal string SkipListPath
+		{
+			get { return System.IO.Path.Combine(RootDirectory, SkipListFilename); }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -173,10 +183,16 @@ namespace WiFindUs.Eye
 				throw new InvalidOperationException("You may not start loading operations - the tile is currently in a threaded state.");
 
 			Debugger.V("Map: starting load operations");
-			
+			lock (skipListLock)
+			{
+				skipList.Clear();
+				if (File.Exists(SkipListPath))
+					skipList.AddRange(File.ReadAllLines(SkipListPath));
+			}
 			var orderedTiles = allTiles
 				.OrderBy((tile) => tile.Level)
-				.Where((tile) => tile.ImageState == LoadingState.Waiting);
+				.Where((tile) => tile.ImageState == LoadingState.Waiting
+					&& !skipList.Exists(s => s.ToLower().CompareTo(tile.ImageFilename.ToLower()) == 0));
 			List<Tile> downloads = orderedTiles
 				.Where((tile) => !File.Exists(tile.ImagePath))
 				.ToList();
@@ -184,6 +200,7 @@ namespace WiFindUs.Eye
 				.Where((tile) => File.Exists(tile.ImagePath))
 				.Reverse()
 				.ToList();
+			Debugger.V("Map: {0} downloads, {1} loads ({2} in skiplist)", downloads.Count, loads.Count, skipList.Count);
 
 			//loads
 			while (loads.Count > 0)
@@ -429,7 +446,7 @@ namespace WiFindUs.Eye
 			}
 			else
 			{
-				Debugger.E("Error downloading map tile texture {0}", tile.ImageFilename);
+				Debugger.E("Error downloading map image {0}", tile.ImageFilename);
 				tile.ImageState = LoadingState.ErrorDownloading;
 				try { File.Delete(tile.ImagePath); }
 				catch { }
@@ -445,10 +462,10 @@ namespace WiFindUs.Eye
 				return;
 			}
 
+			System.Drawing.Bitmap image = null;
 			try
 			{
 				//get source image
-				System.Drawing.Bitmap image;
 				try
 				{
 					image = new System.Drawing.Bitmap(tile.ImagePath);
@@ -457,7 +474,7 @@ namespace WiFindUs.Eye
 				{
 					if (tile.downloadRetries >= 3)
 					{
-						Debugger.E("Error loading map tile texture {0}: file was corrupt.", tile.ImageFilename);
+						Debugger.E("Error loading map image {0}: file was corrupt.", tile.ImageFilename);
 						tile.ImageState = LoadingState.ErrorLoading;
 						return;
 					}
@@ -467,7 +484,7 @@ namespace WiFindUs.Eye
 						try { File.Delete(tile.ImagePath); }
 						catch
 						{
-							Debugger.E("Error deleting corrupt map tile texture {0}", tile.ImageFilename);
+							Debugger.E("Error deleting corrupt map image {0}", tile.ImageFilename);
 							tile.ImageState = LoadingState.ErrorLoading;
 							return;
 						}
@@ -478,44 +495,87 @@ namespace WiFindUs.Eye
 					return;
 				}
 
-				bool tileWasVisible = tile.VisibleInComposite;
-				tile.ImageState = LoadingState.Finished;
-
-				//check if the composite has changed
-				if (tileWasVisible != tile.VisibleInComposite)
+				//check to see if it's a "sorry we have no imagery here" image
+				if (CheckForMissingMapImagery(image))
 				{
-					lock (CompositeLock)
+					tile.ImageState = LoadingState.Error;
+					
+					if (image != null)
+						image.Dispose();
+					image = null;
+					
+					//add the file to the skip list
+					lock (skipListLock)
 					{
-						//update the tile layers
-						visibleTiles[tile.Level] += (tileWasVisible ? -1 : 1);
-						paintLayers[tile.Level].visible = visibleTiles[tile.Level] > 0;
-						if (paintLayers[tile.Level].visible)
-							paintLayers[tile.Level].Paint(tile, image);
+						skipList.Add(tile.ImageFilename);
+						try { File.WriteAllLines(SkipListPath, skipList); }
+						catch (Exception e)
+						{
+							Debugger.E("Error writing map image skip list: {0}", e.Message);
+						}
+					}
 
-						//repaint the composite
-						if (composite != null)
-							composite.Paint(paintLayers);
-
-						//fire event handler
-						if (CompositeImageChanged != null)
-							CompositeImageChanged(this);
+					//delete the file
+					if (File.Exists(tile.ImagePath))
+					{
+						try { File.Delete(tile.ImagePath); }
+						catch (Exception e)
+						{
+							Debugger.E("Error deleting skipped image : {0}", e.Message);
+						}
 					}
 				}
-				image.Dispose();
-				image = null;
+				else
+				{
+					bool tileWasVisible = tile.VisibleInComposite;
+					tile.ImageState = LoadingState.Finished;
 
+					//check if the composite has changed
+					if (tileWasVisible != tile.VisibleInComposite)
+					{
+						lock (CompositeLock)
+						{
+							//update the tile layers
+							visibleTiles[tile.Level] += (tileWasVisible ? -1 : 1);
+							if (paintLayers != null)
+							{
+								TilePaintLayer pl = paintLayers[tile.Level];
+								if (pl != null)
+								{
+									pl.visible = visibleTiles[tile.Level] > 0;
+									if (pl.visible)
+										pl.Paint(tile, image);
+								}
+							}
 
-				return;
+							//repaint the composite
+							if (composite != null)
+								composite.Paint(paintLayers);
+
+							//fire event handler
+							if (CompositeImageChanged != null)
+								CompositeImageChanged(this);
+						}
+					}
+				}
 			}
 			catch (FileNotFoundException)
 			{
-				Debugger.E("Error loading map tile texture {0}: file not found", tile.ImageFilename);
+				Debugger.E("Error loading map image {0}: file not found", tile.ImageFilename);
+				tile.ImageState = LoadingState.ErrorLoading;
 			}
 			catch (OutOfMemoryException)
 			{
-				Debugger.E("Error loading map tile texture {0}: out of system memory", tile.ImageFilename);
+				Debugger.E("Error loading map image {0}: out of system memory", tile.ImageFilename);
+				tile.ImageState = LoadingState.ErrorLoading;
 			}
-			tile.ImageState = LoadingState.ErrorLoading;
+			finally
+			{
+				if (image != null)
+					image.Dispose();
+				image = null;
+			}
+			
 		}
 
 		private void DownloadElevation()
@@ -622,6 +682,26 @@ namespace WiFindUs.Eye
 				ElevationImage = bmp;
 				ElevationState = LoadingState.Finished;
 			}
+		}
+
+		private bool CheckForMissingMapImagery(Bitmap bitmap)
+		{
+			int xStep = bitmap.Width / 5;
+			int yStep = bitmap.Height / 5;
+			int matches = 0;
+			int checks = 0;
+			for (int r = 1; r <= 4; r++)
+			{
+				for (int c = 1; c <= 4; c++)
+				{
+					checks++;
+					Color col = bitmap.GetPixel(xStep * c, yStep * r);
+					if (col.R.Between(223,228) && col.G.Between(223,228) && col.B.Between(223,228))
+						matches++;
+				}
+			}
+
+			return ((float)matches / checks) >= 0.8f;
 		}
 
 		private void LoadElevation()

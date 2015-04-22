@@ -26,7 +26,7 @@ namespace WiFindUs
 			All = 63
 		};
 
-		public static event Action<DebuggerLogItem> OnDebugOutput;
+		public static event Action<LogItem> OnDebugOutput;
 
 		internal static readonly Dictionary<Debugger.Verbosity, Color> Colours = new Dictionary<Debugger.Verbosity, Color>()
 		{
@@ -44,7 +44,7 @@ namespace WiFindUs
 		private static DateTime runningSince;
 		private static PerformanceCounter cpuCounter;
 		private static PerformanceCounter ramCounter;
-		private static LinkedList<DebuggerLogItem> logHistory = new LinkedList<DebuggerLogItem>();
+		private static LinkedList<LogItem> logHistory = new LinkedList<LogItem>();
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -93,11 +93,11 @@ namespace WiFindUs
 		/// <summary>
 		/// The Debugger's current history.
 		/// </summary>
-		internal static DebuggerLogItem[] LogHistory
+		internal static LogItem[] LogHistory
 		{
 			get
 			{
-				DebuggerLogItem[] array = null;
+				LogItem[] array = null;
 				lock (logHistory)
 					array = logHistory.ToArray();
 				return array;
@@ -118,7 +118,7 @@ namespace WiFindUs
 
 		internal static void Initialize(string path, Verbosity allowedFlags)
 		{
-			if (Initialized || !WFUApplication.Running || allowedFlags == Verbosity.None)
+			if (Initialized || WFUApplication.Running || allowedFlags == Verbosity.None)
 				return;
 
 			//initialization
@@ -146,46 +146,24 @@ namespace WiFindUs
 			foreach (string s in assemblyOutput)
 				sb.Append("\n    " + s);
 			V(sb.ToString());
-			V("Windows version: " + Environment.OSVersion.ToString());
-			V("Dot NET version: " + Environment.Version.ToString());
-			V("Machine name: " + Environment.MachineName);
-			V("User Name: " + Environment.UserName);
-			V("Processor Count: " + Environment.ProcessorCount.ToString());
-			V("Processor Usage: " + cpuCounter.NextValue() + "%");
-			V("Available RAM: " + ramCounter.NextValue() + "Mb");
+			V("Windows version: {0}", Environment.OSVersion.ToString());
+			V("Dot NET version: {0}", Environment.Version.ToString());
+			V("Machine name: {0}", Environment.MachineName);
+			V("User Name: {0}", Environment.UserName);
+			V("Processor Count: {0}", Environment.ProcessorCount.ToString());
+			V("Processor Usage: {0}", cpuCounter.NextValue() + "%");
+			V("Available RAM: {0}", ramCounter.NextValue() + "Mb");
 			sb = new StringBuilder("System monitors:");
 			for (int i = 0; i < Screen.AllScreens.Length; i++)
 				sb.Append(String.Format("\n    [{0}]: {1}{2}", i, Screen.AllScreens[i].Bounds, Screen.AllScreens[i].Primary ? " (primary)" : ""));
 			V(sb.ToString());
 			TimeSpan uptime = SystemUptime;
-			V(String.Format("System uptime: {0} hours, {1} minutes, {2} seconds.", uptime.Hours, uptime.Minutes, uptime.Seconds));
+			V("System uptime: {0} hours, {1} minutes, {2} seconds.", uptime.Hours, uptime.Minutes, uptime.Seconds);
 		}
 
 		/////////////////////////////////////////////////////////////////////
 		// PUBLIC METHODS
 		/////////////////////////////////////////////////////////////////////
-
-		public static void Dispose()
-		{
-			if (!Initialized || !WFUApplication.Running)
-				return;
-
-			if (OnDebugOutput != null)
-				OnDebugOutput = null;
-
-			V("Freeing Debugger resources...");
-			cpuCounter.Dispose();
-			ramCounter.Dispose();
-			logHistory.Clear();
-			V("Freed OK.");
-
-			I(WFUApplication.Name + " logging session closed.");
-
-			outFile.Flush();
-			outFile.Close();
-			outFile.Dispose();
-			outFile = null;
-		}
 
 		/// <summary>
 		/// Logs a formatted string with a verbosity level of Verbose.
@@ -302,7 +280,7 @@ namespace WiFindUs
 				text = String.Format(text, args);
 
 			//generate string
-			DebuggerLogItem logItem = new DebuggerLogItem(verbosity, text);
+			LogItem logItem = new LogItem(verbosity, text);
 			string itemText = logItem.ToString();
 
 #if DEBUG
@@ -337,6 +315,83 @@ namespace WiFindUs
 					OnDebugOutput(logItem);
 				}
 				catch (ObjectDisposedException) { }
+			}
+		}
+
+		internal static void Dispose()
+		{
+			if (!Initialized || WFUApplication.Running)
+				return;
+
+			if (OnDebugOutput != null)
+				OnDebugOutput = null;
+
+			V("Freeing Debugger resources...");
+			cpuCounter.Dispose();
+			ramCounter.Dispose();
+			logHistory.Clear();
+			V("Freed OK.");
+
+			I(WFUApplication.Name + " logging session closed.");
+
+			outFile.Flush();
+			outFile.Close();
+			outFile.Dispose();
+			outFile = null;
+		}
+
+		public class LogItem
+		{
+			private Verbosity verbosity;
+			private string threadAlias;
+			private DateTime timestamp;
+			private string message = "";
+
+			public Verbosity Verbosity
+			{
+				get { return verbosity; }
+			}
+
+			public string ThreadAlias
+			{
+				get { return threadAlias; }
+			}
+
+			public DateTime Timestamp
+			{
+				get { return timestamp; }
+			}
+
+			public string Message
+			{
+				get { return message; }
+			}
+
+			public LogItem(Verbosity verbosity, string message)
+			{
+				if (verbosity != Verbosity.Console
+					&& verbosity != Verbosity.Error
+					&& verbosity != Verbosity.Exception
+					&& verbosity != Verbosity.Information
+					&& verbosity != Verbosity.Verbose
+					&& verbosity != Verbosity.Warning)
+					throw new InvalidOperationException("Cannot have a verbosity with a combination of flags!");
+				if (verbosity == Verbosity.None)
+					throw new InvalidOperationException("Must have a verbosity!");
+
+				this.verbosity = verbosity;
+				this.message = message ?? "";
+				threadAlias = WFUApplication.GetThreadAlias();
+				timestamp = DateTime.Now;
+			}
+
+			public override string ToString()
+			{
+				return String.Format("[{0}, {1}, {2}] {3}",
+					timestamp.ToString("H:mm:ss"),
+					threadAlias,
+					Enum.GetName(typeof(Verbosity), verbosity).Substring(0, 1),
+					message);
 			}
 		}
 	}

@@ -40,7 +40,7 @@ namespace WiFindUs.Eye.Wave
 			this.selectable = selectable;
 		}
 
-		public static Entity Create(ISelectable selectable,
+		public static SelectionRing Create(ISelectable selectable,
 			float yOffset = 10.0f, uint points = 16, float radius = 10.0f, float thickness = 1.5f)
 		{
 			SelectionRing ring = new SelectionRing(selectable);
@@ -75,7 +75,8 @@ namespace WiFindUs.Eye.Wave
 						.AddComponent(new ModelRenderer())
 					);
 			}
-			return entity;
+
+			return ring;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -90,7 +91,7 @@ namespace WiFindUs.Eye.Wave
 				Transform3D.LocalRotation.Y + ROTATE_SPEED * secs * 0.5f,
 				Transform3D.LocalRotation.Z);
 
-			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 0.6f : 0.0f, secs * FADE_SPEED);
+			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 0.6f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 		}
 	}
 }

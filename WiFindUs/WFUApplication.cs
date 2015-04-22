@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -391,9 +392,7 @@ namespace WiFindUs
 			get
 			{
 				List<Func<bool>> tasks = new List<Func<bool>>();
-				tasks.Add(InitializeDebugger);
 				tasks.Add(CheckAppDataPath);
-				tasks.Add(LoadConfigFiles);
 				return tasks;
 			}
 		}
@@ -481,7 +480,10 @@ namespace WiFindUs
 				throw new InvalidOperationException("A WFUApplication is already running.");
 			SetThreadAlias("EN");
 
-			//check command line for debug flags
+			//initialize debugger
+			Debugger.Initialize(LogPath, Debugger.Verbosity.All);
+
+			//check command line for debug flags and config arguments
 			if (args == null)
 				args = new String[] { };
 			for (int i = 0; i < args.Length; i++)
@@ -506,6 +508,9 @@ namespace WiFindUs
 				Free();
 				return;
 			}
+
+			//loading config
+			LoadConfigFiles();
 
 			//initialize form type
 			Type formType = MainFormType;
@@ -558,13 +563,13 @@ namespace WiFindUs
 			splashForm.Show();
 		}
 
-		public static void SetThreadAlias(string alias, bool replaceOnlyIfNotPresent = true)
+		public static void SetThreadAlias(string alias)
 		{
-			int id = Thread.CurrentThread.ManagedThreadId;
 			if (alias == null || (alias = alias.Trim()).Length == 0)
-				threadAliases.Remove(id);
-			else if (!replaceOnlyIfNotPresent || !threadAliases.ContainsKey(id))
-				threadAliases[id] = alias;
+				return;
+
+			int id = Thread.CurrentThread.ManagedThreadId;
+			threadAliases[id] = alias;
 		}
 
 		public static string GetThreadAlias()
@@ -574,6 +579,13 @@ namespace WiFindUs
 			if (threadAliases.TryGetValue(id, out alias))
 				return alias;
 			return id.ToString("D2");
+		}
+
+		public static void ClearThreadAlias()
+		{
+			int id = Thread.CurrentThread.ManagedThreadId;
+			if (threadAliases.ContainsKey(id))
+				threadAliases.Remove(id);
 		}
 
 		public static void RunApplicationDefault(MainForm mainForm)
@@ -611,15 +623,10 @@ namespace WiFindUs
 			return true;
 		}
 
-		private static bool InitializeDebugger()
-		{
-			splashForm.Status = "Initializing debugger";
-			Debugger.Initialize(LogPath, Debugger.Verbosity.All);
-			return true;
-		}
-
 		private static bool CheckAppDataPath()
 		{
+			WFUApplication.SetThreadAlias("UI");
+			
 			splashForm.Status = "Verifying file paths";
 
 			//check data directory
@@ -643,11 +650,10 @@ namespace WiFindUs
 			return true;
 		}
 
-		private static bool LoadConfigFiles()
+		private static void LoadConfigFiles()
 		{
-			splashForm.Status = "Loading configuration files";
-
-			String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+			String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
+				.Where(f => File.Exists(f)).ToArray();
 			config = new ConfigFile(files);
 #if DEBUG
 			config.LogMissingKeys = config.Get("config.log_missing_keys", true);
@@ -660,12 +666,12 @@ namespace WiFindUs
 #else
 			config.LogMissingKeys = config.Get("config.log_missing_keys", false);
 #endif
-
-			return true;
 		}
 
 		private static void Free()
 		{
+			running = false;
+
 			Theme.Current = null; //disposes if assigned
 
 			if (imageLoader != null)
@@ -683,8 +689,6 @@ namespace WiFindUs
 			}
 
 			Debugger.Dispose();
-
-			running = false;
 		}
 	}
 }

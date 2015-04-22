@@ -53,8 +53,10 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public NodeLinkMarker(ILinkableMarker fromNode, ILinkableMarker toNode)
-			: base(fromNode, toNode) { }
+		internal NodeLinkMarker(ILinkableMarker fromDevice, ILinkableMarker toNode)
+			: base(fromDevice, toNode) { }
+
+		public NodeLinkMarker() : base() { }
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
@@ -74,7 +76,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 
 			float secs = (float)gameTime.TotalSeconds;
-			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.35f : 0.0f, secs * FADE_SPEED);
+			Alpha = Alpha.Lerp(link.Start.Selected || link.End.Selected ? 0.35f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 			Colour = Color.Lerp(Colour,
 				!toNode.Entity.Active || !fromNode.Entity.Active ? inactiveLinkColour : currentColor,
 				secs * COLOUR_SPEED);

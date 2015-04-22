@@ -77,8 +77,8 @@ namespace WiFindUs.Controls
 		public void RegenerateFromHistory()
 		{
 			Clear();
-			DebuggerLogItem[] items = Debugger.LogHistory;
-			foreach (DebuggerLogItem item in items)
+			Debugger.LogItem[] items = Debugger.LogHistory;
+			foreach (Debugger.LogItem item in items)
 				if (allowedVerbosities.HasFlag(item.Verbosity))
 					PrintLogItem(item);
 			SendMessage(Handle, 277, (IntPtr)7, IntPtr.Zero);
@@ -98,7 +98,7 @@ namespace WiFindUs.Controls
 			Theme.ThemeChanged += ApplyTheme;
 		}
 
-		protected virtual void OnDebugOutput(DebuggerLogItem logItem)
+		protected virtual void OnDebugOutput(Debugger.LogItem logItem)
 		{
 			if (!Visible || !allowedVerbosities.HasFlag(logItem.Verbosity))
 				return;
@@ -107,7 +107,7 @@ namespace WiFindUs.Controls
 			{
 				try
 				{
-					Invoke(new Action<DebuggerLogItem>(OnDebugOutput), new object[] { logItem });
+					Invoke(new Action<Debugger.LogItem>(OnDebugOutput), new object[] { logItem });
 				}
 				catch (Exception) { }
 				return;
@@ -136,7 +136,7 @@ namespace WiFindUs.Controls
 		// PRIVATE METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		private void PrintLogItem(DebuggerLogItem logItem)
+		private void PrintLogItem(Debugger.LogItem logItem)
 		{
 			//delete a big chunk of the text, keeping only the last third
 			if (Lines.Length >= MAX_LINES)

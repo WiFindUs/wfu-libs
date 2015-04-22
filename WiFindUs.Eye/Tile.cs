@@ -247,7 +247,7 @@ namespace WiFindUs.Eye
 
 		internal string RootDirectory
 		{
-			get { return System.IO.Path.Combine(MAPS_DIR, Root.FilenameLatLong + Path.DirectorySeparatorChar); }
+			get { return System.IO.Path.Combine(MAPS_DIR, Root.FilenameLatLong); }
 		}
 
 		internal string ImagePath
@@ -281,7 +281,7 @@ namespace WiFindUs.Eye
 		internal Tile(Map root, Tile parent, uint childIndex, uint levelCount)
 		{
 			LevelCount = Math.Max(levelCount,
-				Math.Min(levelCount, WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MAX_ZOOM - WiFindUs.Eye.Region.GOOGLE_MAPS_TILE_MIN_ZOOM));
+				Math.Min(levelCount, WiFindUs.Region.GOOGLE_MAPS_TILE_MAX_ZOOM - WiFindUs.Region.GOOGLE_MAPS_TILE_MIN_ZOOM));
 			this.parent = parent;
 			bool isRoot = parent == null;
 			this.root = isRoot ? this as Map : root;
@@ -329,12 +329,12 @@ namespace WiFindUs.Eye
 
 		public bool Contains(double latitude, double longitude)
 		{
-			return WiFindUs.Eye.Region.Contains(region, latitude, longitude);
+			return WiFindUs.Region.Contains(region, latitude, longitude);
 		}
 
 		public bool Contains(ILocation location)
 		{
-			return WiFindUs.Eye.Region.Contains(region, location);
+			return WiFindUs.Region.Contains(region, location);
 		}
 
 		public Point LocationToScreen(Rectangle screenBounds, double latitude, double longitude)
@@ -414,14 +414,14 @@ namespace WiFindUs.Eye
 #if DEBUG
 			//paint some debug stuff
 			g.CompositingMode = CompositingMode.SourceOver;
-			using (Brush b = new SolidBrush(debugColours[level % debugColours.Length]))
+			using (Brush b = new SolidBrush(debugColours[Level % debugColours.Length]))
 				g.FillRectangle(b, rect);
 
 			using (StringFormat sf = new StringFormat(StringFormat.GenericTypographic))
 			{
 				sf.Alignment = StringAlignment.Center;
 				sf.LineAlignment = StringAlignment.Center;
-				g.DrawString(String.Format("Level\n{0}", level),
+				g.DrawString(String.Format("Level\n{0}", Level),
 				WiFindUs.Themes.Theme.Current.Titles.Large.Bold,
 				Brushes.White, rect.X + rect.Width / 2, rect.Y + rect.Height / 2,
 				sf);

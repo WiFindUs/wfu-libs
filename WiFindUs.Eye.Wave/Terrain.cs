@@ -61,7 +61,7 @@ namespace WiFindUs.Eye.Wave
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
 
-		public static Entity Create()
+		public static Terrain Create()
 		{
 			Map source = (WFUApplication.MainForm as EyeMainForm).Map;
 			if (source == null)
@@ -81,7 +81,7 @@ namespace WiFindUs.Eye.Wave
 				.AddComponent(terrain.materialsMap = new MaterialsMap(terrain.textureMaterial))
 				.AddComponent(terrain);
 
-			return entity;
+			return terrain;
 		}
 
 		internal Terrain(Map source)
@@ -235,9 +235,9 @@ namespace WiFindUs.Eye.Wave
 						for (uint column = 0; column < plane.Subdivisions + 2; column++)
 						{
 							plane.SetVertexPosition(row, column,
-								meterLength * (float)source.Elevation(
+								meterLength * (float)(source.Elevation(
 									source.NorthWest.Latitude.Value - latStep * (double)(plane.Subdivisions + 1 - row),
-									source.NorthWest.Longitude.Value + longStep * (double)column));
+									source.NorthWest.Longitude.Value + longStep * (double)column) - Map.ELEV_MIN));
 						}
 					}
 				}

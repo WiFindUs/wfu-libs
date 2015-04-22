@@ -17,6 +17,8 @@ using System.IO;
 using WaveEngine.Materials;
 using WiFindUs.Themes;
 using System.Linq;
+using WaveEngine.Components.UI;
+using WaveEngine.Framework.UI;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -147,7 +149,7 @@ namespace WiFindUs.Eye.Wave
 		public ILocation VectorToLocation(Vector3 vec)
 		{
 			if (terrain == null)
-				return WiFindUs.Eye.Location.EMPTY;
+				return WiFindUs.Location.EMPTY;
 			return terrain.VectorToLocation(vec);
 		}
 
@@ -181,39 +183,31 @@ namespace WiFindUs.Eye.Wave
 				FarPlane = MapCamera.MAX_ZOOM * 3.0f,
 				ClearFlags = ClearFlags.All,
 			};
-			camera.Entity.AddComponent(cameraController = new WiFindUs.Eye.Wave.MapCamera());
+			camera.Entity.AddComponent(cameraController = new MapCamera());
 			EntityManager.Add(camera);
 			RenderManager.SetFrustumCullingCamera(camera.Entity);
+			EntityManager.Add(cameraController.UIEntity);
 
 			//create global lighting
 			Debugger.V("MapScene: creating lighting");
-			DirectionalLight skylight = new DirectionalLight("SkyLight", new Vector3(1));
-			EntityManager.Add(skylight);
+			EntityManager.Add(new DirectionalLight("sun", new Vector3(1)));
 
-			//create terrain tiles
-			Debugger.V("MapScene: creating tiles");
-			Entity tileEntity = Terrain.Create();
-			terrain = tileEntity.FindComponent<Terrain>();
-			EntityManager.Add(tileEntity);
+			//create terrain
+			Debugger.V("MapScene: creating terrain");
+			EntityManager.Add((terrain = Terrain.Create()).Owner);
 
 			//add scene behaviours
 			Debugger.V("MapScene: creating behaviours");
 			AddSceneBehavior(inputBehaviour = new MapInput(hostControl), SceneBehavior.Order.PostUpdate);
 
-			//apply theme
-			ApplyTheme(Theme.Current);
-			Theme.ThemeChanged += ApplyTheme;
-
 			//create cursor
-			Entity cursorEntity = MapCursor.Create();
-			cursor = cursorEntity.FindComponent<MapCursor>();
-			EntityManager.Add(cursorEntity);
+			EntityManager.Add((cursor = MapCursor.Create()).Owner);
+			EntityManager.Add(cursor.UIEntity);
 		}
 
 		protected override void Start()
 		{
 			base.Start();
-			//Tiles((tile) => tile.CalculatePosition());
 			EyeMainForm eyeForm = (WFUApplication.MainForm as EyeMainForm);
 
 			//load existing devices
@@ -246,6 +240,10 @@ namespace WiFindUs.Eye.Wave
 			//start scene
 			if (SceneStarted != null)
 				SceneStarted(this);
+
+			//apply theme
+			ApplyTheme(Theme.Current);
+			Theme.ThemeChanged += ApplyTheme;
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -255,29 +253,27 @@ namespace WiFindUs.Eye.Wave
 		private void Device_OnDeviceLoaded(Device device)
 		{
 			//device entity
-			Entity entity = DeviceMarker.Create(device);
-			DeviceMarker marker = entity.FindComponent<DeviceMarker>();
+			DeviceMarker marker = DeviceMarker.Create(device);
 			markers.Add(marker);
-			EntityManager.Add(entity);
+			EntityManager.Add(marker.Owner);
 			device.SelectionGroup = SelectionGroup;
+			EntityManager.Add(marker.UIEntity);
 
 			//device link
-			entity = LinkMarker.Create(marker, null, typeof(DeviceLinkMarker));
-			DeviceLinkMarker linkMarker = entity.FindComponent<DeviceLinkMarker>();
+			DeviceLinkMarker linkMarker = LinkMarker.Create<DeviceLinkMarker>(marker, null);
 			linkMarker.Diameter = 0.5f;
 			linkMarker.Colour = Color.Lime;
 			markers.Add(linkMarker);
-			EntityManager.Add(entity);
+			EntityManager.Add(linkMarker.Owner);
 		}
 
 		private void Node_OnNodeLoaded(Node node)
 		{
-			//node entity
-			Entity entity = NodeMarker.Create(node);
-			NodeMarker marker = entity.FindComponent<NodeMarker>();
+			NodeMarker marker = NodeMarker.Create(node);
 			markers.Add(marker);
-			EntityManager.Add(entity);
+			EntityManager.Add(marker.Owner);
 			node.SelectionGroup = SelectionGroup;
+			EntityManager.Add(marker.UIEntity);
 		}
 
 		private void NodeLink_OnNodeLinkLoaded(NodeLink nodeLink)
@@ -296,11 +292,10 @@ namespace WiFindUs.Eye.Wave
 			if (link != null)
 				return;
 
-			Entity entity = LinkMarker.Create(A, B, typeof(NodeLinkMarker));
-			link = entity.FindComponent<NodeLinkMarker>();
+			link = LinkMarker.Create<NodeLinkMarker>(A, B);
 			markers.Add(link);
 			link.NodeLink = nodeLink;
-			EntityManager.Add(entity);
+			EntityManager.Add(link.Owner);
 		}
 	}
 }

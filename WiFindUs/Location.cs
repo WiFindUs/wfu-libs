@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Eye
+namespace WiFindUs
 {
 	/// <summary>
 	/// An immutable packet of data describing an object's location.
@@ -16,6 +16,7 @@ namespace WiFindUs.Eye
 		private static readonly Location GPS_BONYTHON_PARK = new Location(-34.9165, 138.581479);
 		private static readonly Location GPS_MORPHETTVILLE = new Location(-34.977575, 138.54267);
 		private static readonly Location GPS_WAYVILLE = new Location(-34.945508, 138.5866207);
+		private static readonly Location GPS_OAKBANK = new Location(-34.977024, 138.844749);
 
 		private static readonly double EARTH_RADIUS_MEAN = 6378.1370;
 		private static readonly double EPSILON_HORIZONTAL = 0.00000001;
@@ -51,8 +52,8 @@ namespace WiFindUs.Eye
 		{
 			get
 			{
-				return latitude.HasValue
-					&& longitude.HasValue;
+				return latitude.HasValue && !Double.IsNaN(latitude.Value)
+					&& longitude.HasValue && !Double.IsNaN(longitude.Value);
 			}
 		}
 
@@ -60,10 +61,9 @@ namespace WiFindUs.Eye
 		{
 			get
 			{
-				return !latitude.HasValue
-					&& !longitude.HasValue
-					&& !accuracy.HasValue
-					&& !altitude.HasValue;
+				return !HasLatLong
+					&& (!accuracy.HasValue || Double.IsNaN(accuracy.Value))
+					&& (!altitude.HasValue || Double.IsNaN(altitude.Value));
 			}
 		}
 
@@ -230,6 +230,8 @@ namespace WiFindUs.Eye
 					return GPS_PARKSIDE;
 				case "bonython":
 					return GPS_BONYTHON_PARK;
+				case "oakbank":
+					return GPS_OAKBANK;
 			}
 
 			return null;
@@ -238,10 +240,11 @@ namespace WiFindUs.Eye
 		public static string ToString(ILocation location)
 		{
 			if (location == null)
-				return "{ null }";
-			
-			return "{" + location.Latitude.GetValueOrDefault()
-				+ ", " + location.Longitude.GetValueOrDefault() + "}";
+				return "null";
+
+			return String.Format("Lat: {0:0.######}, Long: {1:0.######}",
+				location.Latitude.GetValueOrDefault(),
+				location.Longitude.GetValueOrDefault());
 		}
 
 		public override string ToString()

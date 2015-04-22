@@ -43,9 +43,9 @@ namespace WiFindUs.Eye.Controls
 		public ILocation ScreenToLocation(Point point)
 		{
 			if (source == null)
-				return WiFindUs.Eye.Location.EMPTY;
+				return WiFindUs.Location.EMPTY;
 
-			return new WiFindUs.Eye.Location(
+			return new WiFindUs.Location(
 				source.NorthWest.Latitude - ((point.Y - mapArea.Top) / (float)mapArea.Height) * source.LatitudinalSpan,
 				source.NorthWest.Longitude + ((point.X - mapArea.Left) / (float)mapArea.Width) * source.LongitudinalSpan
 				);

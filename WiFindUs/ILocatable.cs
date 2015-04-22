@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WiFindUs.Eye
+namespace WiFindUs
 {
 	public interface ILocatable
 	{

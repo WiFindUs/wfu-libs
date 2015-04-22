@@ -176,7 +176,7 @@ namespace WiFindUs.Eye
 
 		public double DistanceTo(ILocation other)
 		{
-			return WiFindUs.Eye.Location.Distance(this, other);
+			return WiFindUs.Location.Distance(this, other);
 		}
 
 		public void CheckActive()

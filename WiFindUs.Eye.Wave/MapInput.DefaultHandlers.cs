@@ -73,7 +73,8 @@ namespace WiFindUs.Eye.Wave
 			{
 				if ((ShiftOnly || NoModifiers) && MouseInsideHost)
 				{
-					MapScene.Camera.TrackingTarget = null;
+					if (NoModifiers)
+						MapScene.Camera.TrackingTarget = null;
 					mousePanning = true;
 					args.Handled = true;
 				}
@@ -106,7 +107,8 @@ namespace WiFindUs.Eye.Wave
 		protected virtual void OnMouseWheel(MouseWheelEventArgs args)
 		{
 			//mouse zoom
-			MapScene.Camera.Zoom -= args.Delta * 0.05f;
+			if (args.Delta != 0)
+				MapScene.Camera.Zoom -= args.Delta * 0.05f;
 			args.Handled = true;
 		}
 
@@ -114,25 +116,39 @@ namespace WiFindUs.Eye.Wave
 		{
 			if (mousePanning)
 			{
-				//mouse tilt
-				if (ShiftOnly)
-					MapScene.Camera.Tilt -= args.DeltaY * 0.01f;
-				else
+				if (!args.DeltaZero)
 				{
-					//mouse pan
-					float diff = 1.0f + MapScene.Camera.Zoom;
-					MapScene.Camera.Target = MapScene.VectorToLocation(
-						MapScene.Camera.TargetVector - new Vector3(args.DeltaX * diff, 0.0f, args.DeltaY * diff));
+					//mouse tilt
+					if (ShiftOnly)
+						MapScene.Camera.Tilt -= args.DeltaY * 0.01f;
+					else
+					{
+						//mouse pan
+						float diff = 1.0f + MapScene.Camera.Zoom;
+						MapScene.Camera.Target = MapScene.VectorToLocation(
+							MapScene.Camera.TargetVector - new Vector3(args.DeltaX * diff, 0.0f, args.DeltaY * diff));
+					}
 				}
 			}
 			else
 			{
 				Vector3 normal;
 				Vector3? pos = MapScene.Camera.VectorFromScreenRay(args.MouseX, args.MouseY, out normal);
-				if (pos.HasValue)
+				if (pos.HasValue && pos.Value.Y < Scene.RenderManager.ActiveCamera3D.Position.Y)
 				{
 					MapScene.Cursor.Transform3D.Position = pos.Value;
 					MapScene.Cursor.Normal = normal;
+					ILocation loc = MapScene.VectorToLocation(pos.Value);
+					if (loc != null && loc.HasLatLong)
+					{
+						MapScene.Cursor.PositionText.Text = String.Format(
+							"{0:0.000000}, {1:0.000000}, {2:0.0}m",
+							loc.Latitude.GetValueOrDefault(),
+							loc.Longitude.GetValueOrDefault(),
+							loc.Altitude.GetValueOrDefault(Map.ELEV_MIN));
+					}
+					else
+						MapScene.Cursor.PositionText.Text = "";
 				}
 			}
 
@@ -148,7 +164,7 @@ namespace WiFindUs.Eye.Wave
 			{
 				args.Handled = true;
 
-				ISelectable[] selectables = MapScene.Cursor.MarkersAtCursor<Marker>()
+				ISelectable[] selectables = MapScene.Cursor.AllMarkersAtCursor
 					.OfType<IEntityMarker>()
 					.Where(mk => mk.Locatable.Location.HasLatLong)
 					.Select<IEntityMarker,ISelectable>(mk => mk.Selectable)
@@ -161,7 +177,7 @@ namespace WiFindUs.Eye.Wave
 					return;
 				}
 
-				if (Control)
+				if (Control || Shift)
 				{
 					
 					if (selectables.Length == 1)
@@ -200,6 +216,7 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void Update(TimeSpan gameTime)
 		{
+			WaveServices.Layout.PerformLayout();
 			if (!HostHasFocus)
 				return;
 			

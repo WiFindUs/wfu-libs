@@ -24,8 +24,10 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public DeviceLinkMarker(ILinkableMarker fromDevice, ILinkableMarker toNode)
+		internal DeviceLinkMarker(ILinkableMarker fromDevice, ILinkableMarker toNode)
 			: base(fromDevice, toNode) { }
+
+		public DeviceLinkMarker() : base() { }
 
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
@@ -98,7 +100,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 			if (!Owner.IsVisible)
 				return;
-			Alpha = Alpha.Lerp(fromDevice.Selected || toNode.Selected ? 0.35f : 0.0f, secs * FADE_SPEED);
+			Alpha = Alpha.Lerp(fromDevice.Selected || toNode.Selected ? 0.35f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 			Colour = Color.Lerp(Colour,
 				!fromDevice.Entity.Active || !toNode.Entity.Active ? inactiveLinkColour : Color.Yellow,
 				secs * COLOUR_SPEED);

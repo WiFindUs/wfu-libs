@@ -1,7 +1,7 @@
 ﻿using System;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Eye
+namespace WiFindUs
 {
 	/// <summary>
 	/// An immutable packet of data describing the atmospheric condition at an object's location.

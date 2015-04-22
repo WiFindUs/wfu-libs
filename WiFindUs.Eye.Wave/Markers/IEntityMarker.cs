@@ -8,5 +8,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		ISelectable Selectable { get; }
 		ILocatable Locatable { get; }
 		IUpdateable Updateable { get; }
+		bool EntityActive { get; }
+		bool EntityWaiting { get; }
 	}
 }

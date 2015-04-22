@@ -94,7 +94,7 @@ namespace WiFindUs.Themes
 
 		protected override void OnPaint(PaintEventArgs e)
 		{
-			Region iRegion = new Region(e.ClipRectangle);
+			System.Drawing.Region iRegion = new System.Drawing.Region(e.ClipRectangle);
 			e.Graphics.FillRegion(new SolidBrush(this.BackColor), iRegion);
 			if (this.Items.Count > 0)
 			{

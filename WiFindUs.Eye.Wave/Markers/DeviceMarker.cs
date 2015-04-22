@@ -3,6 +3,7 @@ using System.Net;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
+using WaveEngine.Components.UI;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
@@ -18,6 +19,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		private BasicMaterial spikeMat, coreMat;
 		private Color colour = Color.White;
 		private float fader = 0.0f;
+		private StackPanel uiPanel;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -32,11 +34,11 @@ namespace WiFindUs.Eye.Wave.Markers
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
 
-		public static Entity Create(Device device)
+		public static DeviceMarker Create(Device device)
 		{
 			DeviceMarker marker = new DeviceMarker(device);
 
-			return new Entity()
+			Entity entity = new Entity()
 				.AddComponent(new Transform3D())
 				.AddComponent(marker)
 				.AddComponent(marker.CylindricalCollider = new CylindricalCollider(12.0f, 4.0f, 6.0f))
@@ -55,7 +57,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						Alpha = 0.75f
+						Alpha = 0.5f
 					}))
 					.AddComponent(Model.CreateCone(8f, 6f, 8))
 					.AddComponent(new ModelRenderer())
@@ -73,13 +75,28 @@ namespace WiFindUs.Eye.Wave.Markers
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
 						AmbientLightColor = Color.White * 0.75f,
-						Alpha = 0.75f
+						Alpha = 0.5f
 					}))
 					.AddComponent(Model.CreateSphere(3f, 4))
 					.AddComponent(new ModelRenderer())
 				)
 				//selection
-				.AddChild(SelectionRing.Create(device, 6.0f, 10, 7f));
+				.AddChild(SelectionRing.Create(device, 6.0f, 10, 7f).Owner);
+
+			//ui
+			marker.UIEntity = (marker.uiPanel = new StackPanel()
+			{
+				Orientation = Orientation.Vertical,
+				BackgroundColor = Themes.Theme.Current.Background.Dark.Colour.Wave(200),
+				IsBorder = false,
+				Opacity = 0.0f,
+				HorizontalAlignment = WaveEngine.Framework.UI.HorizontalAlignment.Left,
+				VerticalAlignment = WaveEngine.Framework.UI.VerticalAlignment.Top
+			}).Entity;
+			marker.uiPanel.Add(new TextBlock() { Text = "adasdasdasd" });
+			marker.UIEntity.FindComponent<Transform2D>().LocalScale = new Vector2(UI_SCALE);
+
+			return marker;
 		}
 
 		internal DeviceMarker(Device d) : base(d) { }
@@ -104,13 +121,15 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 			
 			float secs = (float)gameTime.TotalSeconds;
-			float targetAlpha = !Entity.Active ? 0.5f : (Entity.Selected || MapScene.Camera.TrackingTarget == this.Entity ? 1.0f : 0.75f);
-			spikeMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED);
-			coreMat.Alpha = spikeMat.Alpha;
+			float targetAlpha = Entity.Active && (Entity.Selected || CameraTracking || CursorOver) ? 1.0f : 0.5f;
+			spikeMat.Alpha = coreMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 			spikeMat.DiffuseColor = Color.Lerp(spikeMat.DiffuseColor,
 				!Entity.Active ? Color.DimGray : colour, secs * COLOUR_SPEED);
 			if (Entity.Active)
 				coreMat.DiffuseColor = Color.White.Coserp(Color.Cyan, fader += secs);
+
+			//ui 
+			uiPanel.Opacity = uiPanel.Opacity.Lerp(Entity.Selected || CursorOver ? 1.0f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 		}
 
 		/////////////////////////////////////////////////////////////////////

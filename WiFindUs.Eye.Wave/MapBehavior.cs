@@ -1,4 +1,5 @@
-﻿using WaveEngine.Components.Graphics3D;
+﻿using WaveEngine.Common.Math;
+using WaveEngine.Components.Graphics3D;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 
@@ -13,9 +14,13 @@ namespace WiFindUs.Eye.Wave
 		protected const float ROTATE_SPEED	= 5f * SPEED_SCALE;
 		protected const float COLOUR_SPEED	= FADE_SPEED * 0.15f;
 		protected const float CAMERA_SPEED	= MOVE_SPEED * 3.0f;
+		protected const float UI_SCALE		= 0.85f;
+		protected const float SUBTEXT_SCALE = 0.85f;
 
 		private Transform3D transform;
 		private MapScene scene;
+		private Entity uiEntity;
+		private Transform2D uiTransform;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -30,6 +35,24 @@ namespace WiFindUs.Eye.Wave
 		{
 			get { return transform; }
 			internal set { if (transform == null) transform = value; }
+		}
+
+		public Entity UIEntity
+		{
+			get { return uiEntity; }
+			internal set
+			{
+				if (uiEntity == null)
+					uiEntity = value;
+				if (uiEntity != null)
+					UITransform = uiEntity.FindComponent<Transform2D>();
+			}
+		}
+
+		public Transform2D UITransform
+		{
+			get { return uiTransform; }
+			private set { if (uiTransform == null) uiTransform = value; }
 		}
 
 		public bool IsOwnerVisible
@@ -51,6 +74,16 @@ namespace WiFindUs.Eye.Wave
 				if (value == Owner.IsActive)
 					return;
 				Owner.IsActive = value;
+			}
+		}
+
+		public Vector2 ScreenPosition
+		{
+			get
+			{
+				if (transform == null)
+					return Vector2.Zero;
+				return transform.ScreenCoords(RenderManager.ActiveCamera3D);
 			}
 		}
 

@@ -229,7 +229,7 @@ namespace WiFindUs.Themes
 
 		private void InvalidateNonPanelArea()
 		{
-			Region region = new Region(Bounds);
+			System.Drawing.Region region = new System.Drawing.Region(Bounds);
 			if (TabPages.Count > 0)
 				region.Xor(SelectedTab.Bounds);
 			Invalidate(region);

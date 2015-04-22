@@ -59,7 +59,7 @@ namespace WiFindUs.Eye.Controls
 					!device.Active ? "Inactive." :
 						(!device.GPSEnabled.GetValueOrDefault() ? "GPS disabled." :
 							(!device.GPSHasFix.GetValueOrDefault() ? "Waiting for GPS fix..." :
-								(!device.HasLatLong ? "Waiting for accurate location..." : WiFindUs.Eye.Location.ToString(device)))));
+								(!device.HasLatLong ? "Waiting for accurate location..." : WiFindUs.Location.ToString(device)))));
 			}
 		}
 

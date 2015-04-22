@@ -1,7 +1,7 @@
 ﻿using System;
 using WiFindUs.Extensions;
 
-namespace WiFindUs.Eye
+namespace WiFindUs
 {
 	/// <summary>
 	/// An immutable packet of data describing a rectangular area bound by GPS coordinates, with the primary purpose of mapping those coordinates to a screen space.
@@ -330,7 +330,7 @@ namespace WiFindUs.Eye
 
 		public double DistanceTo(ILocation other)
 		{
-			return WiFindUs.Eye.Location.Distance(this, other);
+			return WiFindUs.Location.Distance(this, other);
 		}
 
 		public static string ToString(IRegion region)
@@ -349,7 +349,7 @@ namespace WiFindUs.Eye
 				return null;
 			if (!location.HasLatLong)
 				throw new ArgumentOutOfRangeException("location", "Location must contain latitude and longitude.");
-			return new WiFindUs.Eye.Location(
+			return new WiFindUs.Location(
 				location.Latitude.Value.Clamp(region.SouthEast.Latitude.Value, region.NorthWest.Latitude.Value),
 				location.Longitude.Value.Clamp(region.NorthWest.Longitude.Value, region.SouthEast.Longitude.Value),
 				location.Accuracy,
