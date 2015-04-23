@@ -21,7 +21,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		private ILocation lastLocation;
 		private Vector3 destination;
 		internal readonly StackPanel UIPanel;
-		internal readonly TextBlock UIText, UISubtext;
+		internal readonly TextBox UIText, UISubtext;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -105,27 +105,31 @@ namespace WiFindUs.Eye.Wave.Markers
 				Opacity = 0.0f,
 				Width = 100.0f,
 				Height = 40.0f,
-				//BackgroundColor = Themes.Theme.Current.Background.Dark.Colour.Wave()
 			}).Entity;
-			UIPanel.Add(UIText = new TextBlock()
+			UIPanel.Add(UIText = new TextBox()
 			{
 				Text = "This is text on line 1",
 				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
 				Width = UIPanel.Width,
-				Height = 17.0f,
+				Height = 22.0f,
 				TextAlignment = TextAlignment.Center,
 				TextWrapping = false,
-				IsBorder = false
+				IsBorder = false,
+				Background = Themes.Theme.Current.Background.Dark.Colour.Wave(),
+				IsReadOnly = true
 			});
-			UIPanel.Add(UISubtext = new TextBlock()
+			UIPanel.Add(UISubtext = new TextBox()
 			{
 				Text = "this is some sub text",
 				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
 				Width = UIPanel.Width * (1.0f / SUBTEXT_SCALE),
-				Height = 15.0f * (1.0f / SUBTEXT_SCALE),
+				Height = 16.0f * (1.0f / SUBTEXT_SCALE),
 				TextAlignment = TextAlignment.Center,
 				TextWrapping = false,
 				IsBorder = false,
+				Background = Themes.Theme.Current.Background.Dark.Colour.Wave(),
+				IsReadOnly = true,
+				Margin = new WaveEngine.Framework.UI.Thickness(0.0f,-4.0f,0.0f,0.0f)
 			});
 			UIEntity.WithComponent<Transform2D>(t => t.LocalScale = new Vector2(UI_SCALE));
 			UISubtext.Entity.WithComponent<Transform2D>(t => t.LocalScale = new Vector2(SUBTEXT_SCALE));
