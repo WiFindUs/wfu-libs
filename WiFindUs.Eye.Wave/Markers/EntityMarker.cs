@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using WaveEngine.Common.Graphics;
 using WaveEngine.Common.Math;
 using WaveEngine.Components.Graphics3D;
+using WaveEngine.Components.UI;
 using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Physics3D;
@@ -15,44 +16,41 @@ namespace WiFindUs.Eye.Wave.Markers
 		where T : class, ILocatable, ISelectable, IUpdateable
 	{
 		public event Action<EntityMarker<T>> VisibleChanged;
-		
-		protected readonly T entity;
+
+		internal readonly T Entity;
 		private ILocation lastLocation;
 		private Vector3 destination;
+		internal readonly StackPanel UIPanel;
+		internal readonly TextBlock UIText, UISubtext;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		public T Entity
-		{
-			get { return entity; }
-		}
-
 		public ILocatable Locatable
 		{
-			get { return entity; }
+			get { return Entity; }
 		}
 
 		public IUpdateable Updateable
 		{
-			get { return entity; }
+			get { return Entity; }
 		}
 
 		public ISelectable Selectable
 		{
-			get { return entity; }
+			get { return Entity; }
 		}
 
 		public override bool Selected
 		{
-			get { return entity.Selected; }
-			set { entity.Selected = value; }
+			get { return Entity.Selected; }
+			set { Entity.Selected = value; }
 		}
 
 		protected override float ScaleMultiplier
 		{
-			get { return entity.Selected || CursorOver ? 1.25f : 1.0f; }
+			get { return Entity.Selected || CursorOver ? 1.25f : 1.0f; }
 		}
 
 		public bool CameraTracking
@@ -60,7 +58,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			get
 			{
 				return MapScene.Camera != null
-					&& MapScene.Camera.TrackingTarget == this.Entity;
+					&& MapScene.Camera.TrackingTarget == Entity;
 			}
 			set
 			{
@@ -68,7 +66,7 @@ namespace WiFindUs.Eye.Wave.Markers
 					return;
 				
 				if (value && !CameraTracking)
-					MapScene.Camera.TrackingTarget = this.Entity;
+					MapScene.Camera.TrackingTarget = Entity;
 				else if (!value && CameraTracking)
 					MapScene.Camera.TrackingTarget = null;
 			}
@@ -76,12 +74,17 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public bool EntityActive
 		{
-			get { return entity.Active; }
+			get { return Entity.Active; }
 		}
 
 		public bool EntityWaiting
 		{
-			get { return !entity.Active && entity.LastUpdatedSecondsAgo < (entity.TimeoutLength * 5);  }
+			get { return !Entity.Active && Entity.LastUpdatedSecondsAgo < (Entity.TimeoutLength * 5); }
+		}
+
+		public bool EntitySelected
+		{
+			get { return Entity.Selected; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -92,7 +95,40 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			if (entity == null)
 				throw new ArgumentNullException("entity", "Entity cannot be null!");
-			this.entity = entity;
+			Entity = entity;
+
+			//ui
+			UIEntity = (UIPanel = new StackPanel()
+			{
+				Orientation = Orientation.Vertical,
+				IsBorder = false,
+				Opacity = 0.0f,
+				Width = 100.0f,
+				Height = 40.0f,
+				//BackgroundColor = Themes.Theme.Current.Background.Dark.Colour.Wave()
+			}).Entity;
+			UIPanel.Add(UIText = new TextBlock()
+			{
+				Text = "This is text on line 1",
+				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
+				Width = UIPanel.Width,
+				Height = 17.0f,
+				TextAlignment = TextAlignment.Center,
+				TextWrapping = false,
+				IsBorder = false
+			});
+			UIPanel.Add(UISubtext = new TextBlock()
+			{
+				Text = "this is some sub text",
+				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
+				Width = UIPanel.Width * (1.0f / SUBTEXT_SCALE),
+				Height = 15.0f * (1.0f / SUBTEXT_SCALE),
+				TextAlignment = TextAlignment.Center,
+				TextWrapping = false,
+				IsBorder = false,
+			});
+			UIEntity.WithComponent<Transform2D>(t => t.LocalScale = new Vector2(UI_SCALE));
+			UISubtext.Entity.WithComponent<Transform2D>(t => t.LocalScale = new Vector2(SUBTEXT_SCALE));
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -103,60 +139,68 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			base.Initialize();
 
-			LocationChanged(entity);
+			LocationChanged(Entity);
 			UpdateMarkerState();
 
-			entity.SelectedChanged += SelectedChanged;
-			entity.LocationChanged += LocationChanged;
-			entity.ActiveChanged += ActiveChanged;
-			entity.Updated += Updated;
+			Entity.SelectedChanged += SelectedChanged;
+			Entity.LocationChanged += LocationChanged;
+			Entity.ActiveChanged += ActiveChanged;
+			Entity.Updated += Updated;
 			MapScene.Terrain.Plane.BoundingBoxUpdated += Plane_BoundingBoxUpdated;
 			MapScene.Terrain.Source.ElevationStateChanged += Source_ElevationStateChanged;
 
-			LocationChanged(entity);
+			LocationChanged(Entity);
 		}
 
 		protected override void Update(TimeSpan gameTime)
 		{
 			base.Update(gameTime);
-			if (!Owner.IsVisible)
+			if (!IsOwnerVisible)
 				return;
-			
-			Transform3D.Position = Vector3.Lerp(Transform3D.Position, destination,
-				(float)gameTime.TotalSeconds * MOVE_SPEED);
+
+			float secs = (float)gameTime.TotalSeconds;
+
+			//position
+			Transform3D.Position = Vector3.Lerp(Transform3D.Position, destination, secs * MOVE_SPEED);
+
+			//ui
+			float uiAlpha = EntitySelected || CursorOver ? 1.0f : (EntityWaiting ? 0.5f : 0.0f);
+			if (UITransform != null && uiAlpha > 0.0f)
+				UITransform.Position = ScreenPosition.Add(UIPanel.Width * UI_SCALE * -0.5f, 3.0f);
+			UIPanel.Opacity = UIPanel.Opacity.Lerp(uiAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 		}
 
 		protected void Source_ElevationStateChanged(Map source)
 		{
-			destination = MapScene.LocationToVector(entity.Location);
+			destination = MapScene.LocationToVector(Entity.Location);
 		}
 
 		protected void Plane_BoundingBoxUpdated(PolyPlane plane)
 		{
-			destination = MapScene.LocationToVector(entity.Location);
+			destination = MapScene.LocationToVector(Entity.Location);
 		}
 
 		protected virtual void LocationChanged(ILocatable obj)
 		{
-			if (!entity.Location.HasLatLong)
+			if (!Entity.Location.HasLatLong)
 				return;
 
-			destination = MapScene.LocationToVector(entity.Location);
-			if (lastLocation == null || WiFindUs.Location.Distance(entity.Location, lastLocation) > 50.0)
+			destination = MapScene.LocationToVector(Entity.Location);
+			if (lastLocation == null || WiFindUs.Location.Distance(Entity.Location, lastLocation) > 50.0)
 				Transform3D.Position = destination;
-			lastLocation = new Location(entity.Location);
+			lastLocation = new Location(Entity.Location);
 		}
 
 		protected virtual void SelectedChanged(ISelectable obj)
 		{
-			if (obj != entity)
-				return;
 			UpdateMarkerState();
+			UpdateUI();
 		}
 
 		protected virtual void ActiveChanged(IUpdateable obj)
 		{
 			UpdateMarkerState();
+			UpdateUI();
 		}
 
 		protected virtual void Updated(IUpdateable obj)
@@ -164,11 +208,17 @@ namespace WiFindUs.Eye.Wave.Markers
 			UpdateMarkerState();
 		}
 
+		protected override void CursorOverChanged(bool cursorOver)
+		{
+			base.CursorOverChanged(cursorOver);
+			UpdateUI();
+		}
+
 		protected virtual void UpdateMarkerState()
 		{
 			bool active = MapScene.Terrain != null
 				&& MapScene.Terrain.Source != null
-				&& entity.Location.HasLatLong
+				&& Entity.Location.HasLatLong
 				&& (EntityActive || EntityWaiting);
 
 			IsOwnerActive = active;
@@ -180,6 +230,11 @@ namespace WiFindUs.Eye.Wave.Markers
 			}
 			if (!IsOwnerActive && CameraTracking)
 				CameraTracking = false;
+		}
+
+		protected virtual void UpdateUI()
+		{
+
 		}
 	}
 }

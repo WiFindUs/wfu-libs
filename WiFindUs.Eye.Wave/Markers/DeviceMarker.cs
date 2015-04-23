@@ -16,10 +16,8 @@ namespace WiFindUs.Eye.Wave.Markers
 	public class DeviceMarker : EntityMarker<Device>, ILinkableMarker
 	{
 		private Transform3D coreTransform;
-		private BasicMaterial spikeMat, coreMat;
+		private BasicMaterial matte;
 		private Color colour = Color.White;
-		private float fader = 0.0f;
-		private StackPanel uiPanel;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -52,7 +50,7 @@ namespace WiFindUs.Eye.Wave.Markers
 						Position = new Vector3(0.0f, 5.0f, 0.0f),
 						Rotation = new Vector3(180.0f.ToRadians(), 0f, 0f)
 					})
-					.AddComponent(new MaterialsMap(marker.spikeMat = new BasicMaterial(MapScene.WhiteTexture)
+					.AddComponent(new MaterialsMap(marker.matte = new BasicMaterial(MapScene.WhiteTexture)
 					{
 						LayerType = typeof(NonPremultipliedAlpha),
 						LightingEnabled = true,
@@ -70,31 +68,12 @@ namespace WiFindUs.Eye.Wave.Markers
 					{
 						LocalPosition = new Vector3(0.0f, 11.0f, 0.0f)
 					})
-					.AddComponent(new MaterialsMap(marker.coreMat = new BasicMaterial(MapScene.WhiteTexture)
-					{
-						LayerType = typeof(NonPremultipliedAlpha),
-						LightingEnabled = true,
-						AmbientLightColor = Color.White * 0.75f,
-						Alpha = 0.5f
-					}))
+					.AddComponent(new MaterialsMap(marker.matte))
 					.AddComponent(Model.CreateSphere(3f, 4))
 					.AddComponent(new ModelRenderer())
 				)
 				//selection
 				.AddChild(SelectionRing.Create(device, 6.0f, 10, 7f).Owner);
-
-			//ui
-			marker.UIEntity = (marker.uiPanel = new StackPanel()
-			{
-				Orientation = Orientation.Vertical,
-				BackgroundColor = Themes.Theme.Current.Background.Dark.Colour.Wave(200),
-				IsBorder = false,
-				Opacity = 0.0f,
-				HorizontalAlignment = WaveEngine.Framework.UI.HorizontalAlignment.Left,
-				VerticalAlignment = WaveEngine.Framework.UI.VerticalAlignment.Top
-			}).Entity;
-			marker.uiPanel.Add(new TextBlock() { Text = "adasdasdasd" });
-			marker.UIEntity.FindComponent<Transform2D>().LocalScale = new Vector2(UI_SCALE);
 
 			return marker;
 		}
@@ -108,28 +87,29 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Initialize()
 		{
 			base.Initialize();
-			entity.OnDeviceUserChanged += OnDeviceUserChanged;
-			entity.OnDeviceGPSEnabledChanged += OnDeviceGPSStateChanged;
-			entity.OnDeviceGPSHasFixChanged += OnDeviceGPSStateChanged;
+			Entity.OnDeviceUserChanged += OnDeviceUserChanged;
+			Entity.OnDeviceGPSEnabledChanged += OnDeviceGPSStateChanged;
+			Entity.OnDeviceGPSHasFixChanged += OnDeviceGPSStateChanged;
 			UpdateMarkerState();
 		}
 
 		protected override void Update(TimeSpan gameTime)
 		{
 			base.Update(gameTime);
-			if (!Owner.IsVisible)
+			if (!IsOwnerVisible)
 				return;
 			
 			float secs = (float)gameTime.TotalSeconds;
 			float targetAlpha = Entity.Active && (Entity.Selected || CameraTracking || CursorOver) ? 1.0f : 0.5f;
-			spikeMat.Alpha = coreMat.Alpha = spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
-			spikeMat.DiffuseColor = Color.Lerp(spikeMat.DiffuseColor,
+			matte.Alpha = matte.Alpha.Lerp(targetAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
+			matte.DiffuseColor = Color.Lerp(matte.DiffuseColor,
 				!Entity.Active ? Color.DimGray : colour, secs * COLOUR_SPEED);
-			if (Entity.Active)
-				coreMat.DiffuseColor = Color.White.Coserp(Color.Cyan, fader += secs);
+		}
 
-			//ui 
-			uiPanel.Opacity = uiPanel.Opacity.Lerp(Entity.Selected || CursorOver ? 1.0f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
+		protected override void UpdateUI()
+		{
+			UIText.Text = Entity.User != null ? Entity.User.ShortName : "Device";
+			UISubtext.Text = "ID: " + Entity.ID.ToString("X");
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -139,11 +119,29 @@ namespace WiFindUs.Eye.Wave.Markers
 		private void OnDeviceUserChanged(Device device)
 		{
 			UpdateMarkerState();
+			UpdateUI();
+			UpdateUserType();
 		}
 
 		private void OnDeviceGPSStateChanged(Device device)
 		{
 			UpdateMarkerState();
+		}
+
+		private void UpdateUserType()
+		{
+			if (WFUApplication.Config == null
+				|| Entity == null
+				|| Entity.User == null
+				|| Entity.User.Type == null
+				|| Entity.User.Type.Length == 0)
+			{
+				colour = Color.White;
+				return;
+			}
+
+			colour = ((System.Drawing.Color)WFUApplication.Config.Get("type_" + Entity.User.Type.ToLower().Trim(),
+				System.Drawing.Color.White)).Wave();
 		}
 	}
 }

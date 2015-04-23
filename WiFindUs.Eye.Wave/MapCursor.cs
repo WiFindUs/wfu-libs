@@ -145,7 +145,7 @@ namespace WiFindUs.Eye.Wave
 			if (CylindricalCollider == null || MapScene.Markers.Count == 0)
 				return new T[0];
 
-			return MapScene.Markers.Where(m => m.Transform3D != null && m.CylindricalCollider != null && m.Owner.IsVisible)
+			return MapScene.Markers.Where(m => m.Transform3D != null && m.CylindricalCollider != null && m.IsOwnerVisible)
 				.OfType<T>()
 				.Where(m => m.CylindricalCollider.Intersects(CylindricalCollider))
 				.OrderBy(m => { return Vector3.DistanceSquared(m.CylindricalCollider.Position, CylindricalCollider.Position); });

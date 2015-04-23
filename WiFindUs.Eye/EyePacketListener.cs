@@ -13,7 +13,7 @@ namespace WiFindUs.Eye
 	{
 		public const int PORT_FIRST = 33339;
 		public const int PORT_LAST = 33345;
-		public const int PORT_COUNT = PORT_LAST - PORT_FIRST;
+		public const int PORT_COUNT = PORT_LAST - PORT_FIRST + 1;
 
 		public event Action<EyePacketListener, DevicePacket> DevicePacketReceived;
 		public event Action<EyePacketListener, NodePacket> NodePacketReceived;

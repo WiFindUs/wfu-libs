@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WaveEngine.Common.Math;
+using WaveEngine.Framework;
 using WaveEngine.Framework.Graphics;
 using WaveEngine.Framework.Managers;
 using WaveEngine.Framework.Services;
@@ -65,20 +66,6 @@ namespace WiFindUs.Eye.Wave
 			return Sys(color, color.A);
 		}
 
-		public static bool SetVisible(this WaveEngine.Framework.Entity entity, bool visible)
-		{
-			if (visible != entity.IsVisible)
-				entity.IsVisible = visible;
-			return visible;
-		}
-
-		public static bool SetActive(this WaveEngine.Framework.Entity entity, bool active)
-		{
-			if (active != entity.IsActive)
-				entity.IsActive = active;
-			return active;
-		}
-
 		public static WaveEngine.Common.Graphics.Color Coserp(this WaveEngine.Common.Graphics.Color start,
 			WaveEngine.Common.Graphics.Color finish, float amount)
 		{
@@ -113,6 +100,15 @@ namespace WiFindUs.Eye.Wave
 		public static Vector2 Subtract(this Vector2 v2, float x, float y)
 		{
 			return Add(v2, -x, -y);
+		}
+
+		public static void WithComponent<T>(this Entity entity, Action<T> action) where T : Component
+		{
+			if (entity == null || action == null)
+				return;
+			T t = entity.FindComponent<T>();
+			if (t != null)
+				action(t);
 		}
 	}
 }

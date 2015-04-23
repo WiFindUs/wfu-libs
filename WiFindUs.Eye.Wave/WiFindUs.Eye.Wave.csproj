@@ -70,6 +70,7 @@
     <Compile Include="MapInput.DefaultHandlers.cs" />
     <Compile Include="MapSceneBehavior.cs" />
     <Compile Include="MapCursor.cs" />
+    <Compile Include="MapUISorter.cs" />
     <Compile Include="Terrain.cs" />
     <Compile Include="Markers\IEntityMarker.cs" />
     <Compile Include="PolyPlane.cs" />

@@ -25,6 +25,11 @@ namespace WiFindUs.Eye
 			}
 		}
 
+		public string ShortName
+		{
+			get { return String.Format("{0} {1}", NameFirst, NameLast.Length == 0 ? "" : NameLast.Substring(0, 1)); }
+		}
+
 		public bool Loaded
 		{
 			get { return loaded; }

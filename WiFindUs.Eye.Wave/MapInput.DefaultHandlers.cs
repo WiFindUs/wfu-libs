@@ -216,7 +216,6 @@ namespace WiFindUs.Eye.Wave
 
 		protected override void Update(TimeSpan gameTime)
 		{
-			WaveServices.Layout.PerformLayout();
 			if (!HostHasFocus)
 				return;
 			

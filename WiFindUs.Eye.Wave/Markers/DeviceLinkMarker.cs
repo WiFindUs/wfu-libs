@@ -157,8 +157,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				&& toNode != null
 				&& fromDevice.Owner != null
 				&& toNode.Owner != null
-				&& fromDevice.Owner.IsVisible
-				&& toNode.Owner.IsVisible
+				&& fromDevice.IsOwnerVisible
+				&& toNode.IsOwnerVisible
 				&& toNode.Entity.AccessPoint.GetValueOrDefault()
 				&& (toNode.Entity.Selected || fromDevice.Entity.Selected)
 			);

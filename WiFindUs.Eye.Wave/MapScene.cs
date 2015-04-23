@@ -85,7 +85,7 @@ namespace WiFindUs.Eye.Wave
 			{
 				if (value.Tolerance(markerScale, 0.01f))
 					return;
-				markerScale = value;
+				markerScale = value.Clamp(0.01f,5.0f);
 			}
 		}
 
@@ -160,15 +160,14 @@ namespace WiFindUs.Eye.Wave
 		protected override void CreateScene()
 		{
 			//create basic white texture
-			Texture2D tex;
-			using (System.Drawing.Bitmap bmp = new System.Drawing.Bitmap(8,8))
+			WhiteTexture = new Texture2D()
 			{
-				using (System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(bmp))
-					g.Clear(System.Drawing.Color.White);
-				using (Stream stream = bmp.GetStream())
-					tex = Texture2D.FromFile(RenderManager.GraphicsDevice, stream);
-			}
-			WhiteTexture = tex;
+				Width = 1,
+				Height = 1,
+				Levels = 1,
+				Data = new byte[1][][] { new byte[1][] { new byte[] { 255, 255, 255, 255 } } },
+			};
+			WaveServices.GraphicsDevice.Textures.UploadTexture(WhiteTexture);
 		
 			//add custom layers
 			RenderManager.RegisterLayerAfter(new NonPremultipliedAlpha(this.RenderManager), DefaultLayers.Opaque);
@@ -199,8 +198,10 @@ namespace WiFindUs.Eye.Wave
 			//add scene behaviours
 			Debugger.V("MapScene: creating behaviours");
 			AddSceneBehavior(inputBehaviour = new MapInput(hostControl), SceneBehavior.Order.PostUpdate);
+			AddSceneBehavior(new MapUISorter(), SceneBehavior.Order.PostUpdate);
 
 			//create cursor
+			Debugger.V("MapScene: creating cursor");
 			EntityManager.Add((cursor = MapCursor.Create()).Owner);
 			EntityManager.Add(cursor.UIEntity);
 		}

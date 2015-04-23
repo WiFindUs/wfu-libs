@@ -20,8 +20,6 @@ namespace WiFindUs.Eye.Wave.Markers
 		private BasicMaterial spikeMat, ringMat, coreMat;
 		private float fader = 0.0f;
 		private Color colour = new Color(0, 175, 255);
-		private StackPanel uiPanel;
-		private TextBlock text, subtext;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -103,39 +101,7 @@ namespace WiFindUs.Eye.Wave.Markers
 				)
 				//selection
 				.AddChild(SelectionRing.Create(node).Owner);
-
-			//ui
-			marker.UIEntity = (marker.uiPanel = new StackPanel()
-			{
-				Orientation = Orientation.Vertical,
-				BackgroundColor = Themes.Theme.Current.Background.Dark.Colour.Wave(200),
-				IsBorder = false,
-				Opacity = 0.0f,
-				Width = 100.0f,
-				Height = 40.0f,
-			}).Entity;
-			marker.uiPanel.Add(marker.text = new TextBlock()
-			{
-				Text = "This is text on line 1",
-				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
-				Width = marker.uiPanel.Width,
-				Height = 17.0f,
-				TextAlignment = TextAlignment.Center,
-				TextWrapping = false,
-				IsBorder = false
-			});
-			marker.uiPanel.Add(marker.subtext = new TextBlock()
-			{
-				Text = "this is some sub text",
-				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
-				Width = marker.uiPanel.Width * (1.0f / SUBTEXT_SCALE),
-				Height = 15.0f * (1.0f / SUBTEXT_SCALE),
-				TextAlignment = TextAlignment.Center,
-				TextWrapping = false,
-				IsBorder = false
-			});
-			marker.UIEntity.FindComponent<Transform2D>().LocalScale = new Vector2(UI_SCALE);
-			marker.subtext.Entity.FindComponent<Transform2D>().LocalScale = new Vector2(SUBTEXT_SCALE);
+			
 			return marker;
 		}
 
@@ -148,7 +114,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void Update(TimeSpan gameTime)
 		{
 			base.Update(gameTime);
-			if (!Owner.IsVisible)
+			if (!IsOwnerVisible)
 				return;
 
 			float secs = (float)gameTime.TotalSeconds;
@@ -166,13 +132,6 @@ namespace WiFindUs.Eye.Wave.Markers
 				   ringTransform.Rotation.Z
 					);
 			}
-
-			//ui
-			float uiAlpha = Entity.Selected || CursorOver ? 1.0f : (EntityWaiting ? 0.5f : 0.0f);
-			if (UITransform != null && uiAlpha > 0.0f)
-				UITransform.Position
-					= ScreenPosition.Add(uiPanel.Width * UI_SCALE * -0.5f, 3.0f);
-			uiPanel.Opacity = uiPanel.Opacity.Lerp(uiAlpha, secs * FADE_SPEED).Clamp(0.0f,1.0f);
 		}
 
 		protected override void ActiveChanged(IUpdateable obj)
@@ -206,14 +165,10 @@ namespace WiFindUs.Eye.Wave.Markers
 			UpdateUI();
 		}
 
-		/////////////////////////////////////////////////////////////////////
-		// PRIVATE METHODS
-		/////////////////////////////////////////////////////////////////////
-
-		private void UpdateUI()
+		protected override void UpdateUI()
 		{
-			text.Text = "#" + (entity.Number.HasValue ? entity.Number.Value.ToString() : "??");
-			subtext.Text = "ID: " + entity.ID.ToString("X");
+			UIText.Text = (Entity.Number.HasValue ? Entity.Number.Value.ToString() : "??");
+			UISubtext.Text = "ID #" + Entity.ID.ToString("X");
 		}
 	}
 }
