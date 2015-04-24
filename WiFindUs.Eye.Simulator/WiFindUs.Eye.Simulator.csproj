@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C0256143-E51B-4B8E-95BD-D9CA97D737B3}</ProjectGuid>
+    <ProjectGuid>{8389952D-F9FB-42D3-BCAC-3E0F4E04948E}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>WiFindUs.Eye.Dispatcher</RootNamespace>
-    <AssemblyName>Ubi</AssemblyName>
+    <RootNamespace>WiFindUs.Eye.Simulator</RootNamespace>
+    <AssemblyName>EyeSim</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -22,7 +22,6 @@
     <DefineConstants>TRACE;DEBUG;PROFILE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -33,14 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>WiFindUs.Eye.Dispatcher.Program</StartupObject>
-  </PropertyGroup>
-  <PropertyGroup>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>wfu-globe.ico</ApplicationIcon>
@@ -56,28 +48,16 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="WaveEngine.Common, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Wave Engine\v1.0\Lib\Windows\WaveEngine.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="WaveEngine.Framework, Version=1.4.2.0, Culture=neutral, PublicKeyToken=6e72eaf7d6c3c55b, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\Program Files (x86)\Wave Engine\v1.0\Lib\Windows\WaveEngine.Framework.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DeviceGroupActionSubscriber.cs" />
-    <Compile Include="DispatcherForm.cs">
+    <Compile Include="SimulatorForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="DispatcherForm.Designer.cs">
-      <DependentUpon>DispatcherForm.cs</DependentUpon>
+    <Compile Include="SimulatorForm.Designer.cs">
+      <DependentUpon>SimulatorForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="DispatcherForm.resx">
-      <DependentUpon>DispatcherForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -88,9 +68,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="eye.conf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="SimulatorForm.resx">
+      <DependentUpon>SimulatorForm.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -105,10 +85,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\WiFindUs.Eye.Wave\WiFindUs.Eye.Wave.csproj">
-      <Project>{218e7f4e-c133-441a-83a0-242e40a9bede}</Project>
-      <Name>WiFindUs.Eye.Wave</Name>
-    </ProjectReference>
+    <Content Include="wfu-globe.ico" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\WiFindUs.Eye\WiFindUs.Eye.csproj">
       <Project>{87c53e35-435b-42a3-9c15-b9aaec2c8b34}</Project>
       <Name>WiFindUs.Eye</Name>
@@ -118,14 +97,7 @@
       <Name>WiFindUs</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="wfu-globe.ico" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

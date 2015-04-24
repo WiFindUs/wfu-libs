@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using WiFindUs.Forms;
 using WiFindUs.IO;
 using WiFindUs.Themes;
+using System.Text.RegularExpressions;
 
 namespace WiFindUs
 {
@@ -49,6 +50,8 @@ namespace WiFindUs
 		private static volatile Dictionary<int, string> threadAliases = new Dictionary<int, string>();
 		private static bool administrator = false;
 		private static bool runCalled = false;
+		public static readonly Regex CLEAN_FILENAME = new Regex(@"\s+|[\\.+-:?<>{}() ]+",
+			RegexOptions.Compiled);
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -181,7 +184,7 @@ namespace WiFindUs
 		{
 			get
 			{
-				return logPath.Length == 0 ? Name + "_log.txt" : logPath;
+				return logPath.Length == 0 ? CLEAN_FILENAME.Replace(Name.ToLower(), "") + ".log" : logPath;
 			}
 			set
 			{
@@ -197,7 +200,7 @@ namespace WiFindUs
 		{
 			get
 			{
-				return configPaths.Length == 0 ? WFUApplication.Name.ToLower() + ".conf" : configPaths;
+				return configPaths.Length == 0 ? CLEAN_FILENAME.Replace(Name.ToLower(),"") + ".conf" : configPaths;
 			}
 			set
 			{
@@ -471,7 +474,7 @@ namespace WiFindUs
 
 		/// <summary>
 		/// Runs your WFUApplication. Handles parsing of command line arguments, loading of
-		/// config files, and initialization of the main form.
+		/// config files, and initialization ofi the main form.
 		/// </summary>
 		/// <param name="args">The command line arguments from Main().</param>
 		public static void Run(String[] args)
@@ -624,9 +627,7 @@ namespace WiFindUs
 		}
 
 		private static bool CheckAppDataPath()
-		{
-			WFUApplication.SetThreadAlias("UI");
-			
+		{		
 			splashForm.Status = "Verifying file paths";
 
 			//check data directory
@@ -655,17 +656,15 @@ namespace WiFindUs
 			String[] files = ConfigFilePath.Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries)
 				.Where(f => File.Exists(f)).ToArray();
 			config = new ConfigFile(files);
+			config.LogMissingKeys = config.Get("config.log_missing_keys", false);
 #if DEBUG
-			config.LogMissingKeys = config.Get("config.log_missing_keys", true);
-
 			String[] configs = config.ToString().Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			StringBuilder sb = new StringBuilder("Loaded configuration:");
 			foreach (String s in configs)
 				sb.Append("\n    " + s);
 			Debugger.V(sb.ToString());
-#else
-			config.LogMissingKeys = config.Get("config.log_missing_keys", false);
 #endif
+			
 		}
 
 		private static void Free()

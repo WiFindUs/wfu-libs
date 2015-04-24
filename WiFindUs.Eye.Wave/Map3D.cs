@@ -165,7 +165,7 @@ namespace WiFindUs.Eye.Wave
 			if (Scene == null || design)
 			{
 				e.Graphics.Clear(design ? SystemColors.InactiveCaption : Theme.Current.Background.Dark.Colour);
-				string text = design ? "Wave Engine 3D Map Control" : "Waiting for map scene to initialize...";
+				string text = design ? "3D Map Control" : "Waiting for map scene to initialize...";
 				var sizeText = e.Graphics.MeasureString(text, Font);
 				e.Graphics.DrawString(text,
 					design ? SystemFonts.DefaultFont : Theme.Current.Controls.Large.Bold,

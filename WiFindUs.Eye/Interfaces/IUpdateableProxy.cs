@@ -1,5 +1,5 @@
 ﻿
-namespace WiFindUs.Eye.Wave
+namespace WiFindUs.Eye
 {
 	public interface IUpdateableProxy
 	{

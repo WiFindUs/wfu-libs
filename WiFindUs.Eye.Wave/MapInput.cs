@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Services;
 
 namespace WiFindUs.Eye.Wave
 {
@@ -544,12 +540,18 @@ namespace WiFindUs.Eye.Wave
 
 		private void UpdateMousePosition(System.Windows.Forms.MouseEventArgs e)
 		{
-			if (mouseX == e.X && mouseY == e.Y)
+			float ratioX = (float)hostControl.BackBufferWidth / (float)hostControl.Width;
+			float ratioY = (float)hostControl.BackBufferHeight / (float)hostControl.Height;
+
+			int realX = (int)(e.X * ratioX);
+			int realY = (int)(e.Y * ratioY);
+
+			if (mouseX == realX && mouseY == realY)
 				return;
-			int deltaX = e.X - mouseX;
-			int deltaY = e.Y - mouseY;
-			mouseX = e.X;
-			mouseY = e.Y;
+			int deltaX = realX - mouseX;
+			int deltaY = realY - mouseY;
+			mouseX = realX;
+			mouseY = realY;
 			MouseMoveEventArgs args = new MouseMoveEventArgs(mouseX, mouseY, deltaX, deltaY);
 			if (MouseMove != null)
 				MouseMove(this, args);

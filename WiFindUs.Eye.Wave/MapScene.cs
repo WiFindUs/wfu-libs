@@ -212,29 +212,38 @@ namespace WiFindUs.Eye.Wave
 			EyeMainForm eyeForm = (WFUApplication.MainForm as EyeMainForm);
 
 			//load existing devices
-			foreach (Device device in eyeForm.Devices)
+			lock (eyeForm.DevicesLock)
 			{
-				if (!device.Loaded)
-					continue;
-				Device_OnDeviceLoaded(device);
+				foreach (Device device in eyeForm.Devices)
+				{
+					if (!device.Loaded)
+						continue;
+					Device_OnDeviceLoaded(device);
+				}
 			}
 			Device.OnDeviceLoaded += Device_OnDeviceLoaded;
 
 			//load existing nodes
-			foreach (Node node in eyeForm.Nodes)
+			lock (eyeForm.NodesLock)
 			{
-				if (!node.Loaded)
-					continue;
-				Node_OnNodeLoaded(node);
+				foreach (Node node in eyeForm.Nodes)
+				{
+					if (!node.Loaded)
+						continue;
+					Node_OnNodeLoaded(node);
+				}
 			}
 			Node.OnNodeLoaded += Node_OnNodeLoaded;
 
 			//load existing node links
-			foreach (NodeLink nodeLink in eyeForm.NodeLinks)
+			lock (eyeForm.NodeLinksLock)
 			{
-				if (!nodeLink.Loaded)
-					continue;
-				NodeLink_OnNodeLinkLoaded(nodeLink);
+				foreach (NodeLink nodeLink in eyeForm.NodeLinks)
+				{
+					if (!nodeLink.Loaded)
+						continue;
+					NodeLink_OnNodeLinkLoaded(nodeLink);
+				}
 			}
 			NodeLink.OnNodeLinkLoaded += NodeLink_OnNodeLinkLoaded;
 

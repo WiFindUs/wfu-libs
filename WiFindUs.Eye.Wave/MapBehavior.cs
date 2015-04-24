@@ -10,10 +10,10 @@ namespace WiFindUs.Eye.Wave
 		protected const float SPEED_SCALE	= 1f;
 		protected const float FADE_SPEED	= 10f * SPEED_SCALE;
 		protected const float SCALE_SPEED	= 15f * SPEED_SCALE;
-		protected const float MOVE_SPEED	= 5f * SPEED_SCALE;
+		protected const float MOVE_SPEED	= 2f * SPEED_SCALE;
 		protected const float ROTATE_SPEED	= 5f * SPEED_SCALE;
 		protected const float COLOUR_SPEED	= FADE_SPEED * 0.15f;
-		protected const float CAMERA_SPEED	= MOVE_SPEED * 3.0f;
+		protected const float CAMERA_SPEED	= 15f * SPEED_SCALE;
 		protected const float UI_SCALE		= 0.85f;
 		protected const float SUBTEXT_SCALE = 0.85f;
 

@@ -73,8 +73,6 @@ namespace WiFindUs.Eye.Wave
 			{
 				if ((ShiftOnly || NoModifiers) && MouseInsideHost)
 				{
-					if (NoModifiers)
-						MapScene.Camera.TrackingTarget = null;
 					mousePanning = true;
 					args.Handled = true;
 				}
@@ -124,6 +122,7 @@ namespace WiFindUs.Eye.Wave
 					else
 					{
 						//mouse pan
+						MapScene.Camera.TrackingEntity = null;
 						float diff = 1.0f + MapScene.Camera.Zoom;
 						MapScene.Camera.Target = MapScene.VectorToLocation(
 							MapScene.Camera.TargetVector - new Vector3(args.DeltaX * diff, 0.0f, args.DeltaY * diff));
@@ -232,7 +231,7 @@ namespace WiFindUs.Eye.Wave
 					moveDelta.Z += 1.0f;
 				moveDelta.Normalize();
 				moveDelta *= (float)gameTime.TotalSeconds * 1000.0f;
-				MapScene.Camera.TrackingTarget = null;
+				MapScene.Camera.TrackingEntity = null;
 				MapScene.Camera.Target = MapScene.VectorToLocation(
 					MapScene.Camera.TargetVector + moveDelta);
 

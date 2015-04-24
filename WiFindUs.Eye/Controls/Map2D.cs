@@ -9,7 +9,7 @@ using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
-	public class Map2D : ThemedControl
+	public partial class Map2D : ThemedControl
 	{
 		private Rectangle mapArea = Rectangle.Empty;
 		private Map source;
@@ -69,7 +69,7 @@ namespace WiFindUs.Eye.Controls
 			{
 				pevent.Graphics.Clear(SystemColors.InactiveCaption);
 
-				string text = "Wave Engine 2D Map Control";
+				string text = "2D Map Control";
 				var sizeText = pevent.Graphics.MeasureString(text, Font);
 				pevent.Graphics.DrawString(text,
 					SystemFonts.DefaultFont,
@@ -89,52 +89,6 @@ namespace WiFindUs.Eye.Controls
 			pevent.Graphics.DrawImageSafe(source.Composite, mapArea,
 				Theme.Current.Background.Light.Brush, CompositingMode.SourceCopy);
 
-		}
-
-		protected override void OnPaint(PaintEventArgs e)
-		{
-			base.OnPaint(e);
-
-			//e.Graphics.Clear(Theme.Current.Background.Dark.Colour);
-			//if (source == null || source.ImageState != Tile.LoadingState.Finished)
-			///{
-			//	e.Graphics.FillRectangle(Theme.Current.Background.Light.Brush, mapArea);
-			//	return;
-			//}
-
-			//draw base image
-			//e.Graphics.DrawImageSafe(source.Image, mapArea, Brushes.White, CompositingMode.SourceCopy);
-
-			/*
-			//get frustum coords
-			ILocation nw = hostControl.Scene.Camera.FrustumNorthWest;
-			ILocation ne = hostControl.Scene.Camera.FrustumNorthEast;
-			ILocation sw = hostControl.Scene.Camera.FrustumSouthWest;
-			ILocation se = hostControl.Scene.Camera.FrustumSouthEast;
-
-			//generate frustum poly
-			Point[] points = new Point[4];
-			points[0] = nw == null
-				? new Point(mapArea.Left - 5000, mapArea.Top - 5000) : LocationToScreen(nw);
-			points[1] = ne == null
-				? new Point(mapArea.Right + 5000, mapArea.Top - 5000) : LocationToScreen(ne);
-			points[2] = se == null
-				? new Point(mapArea.Right, mapArea.Bottom) : LocationToScreen(se);
-			points[3] = sw == null
-				? new Point(mapArea.Left, mapArea.Bottom) : LocationToScreen(sw);
-
-			//darken non-focal area
-			GraphicsPath path = new GraphicsPath();
-			path.AddPolygon(points);
-			System.Drawing.Region region = new System.Drawing.Region(path);
-			region.Xor(ClientRectangle);
-			using (Brush b = new SolidBrush(Color.FromArgb(100, 0, 0, 0)))
-				e.Graphics.FillRegion(b, region);
-
-			//draw frustum
-			using (Pen p = new Pen(Color.FromArgb(140, 255, 255, 255), 1f))
-				e.Graphics.DrawPolygon(p, points);
-			 * */
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
@@ -178,5 +132,7 @@ namespace WiFindUs.Eye.Controls
 				ClientRectangle.Height / 2 - size / 2,
 				size, size);
 		}
+
+
 	}
 }

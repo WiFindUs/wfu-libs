@@ -20,8 +20,6 @@ namespace WiFindUs.Eye.Dispatcher
 		private Rectangle oldBounds;
 		//private ActionPanel actionPanel;
 		private MapForm mapForm;
-		private BaseForm consoleForm;
-		private ConsolePanel console;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -108,30 +106,18 @@ namespace WiFindUs.Eye.Dispatcher
 			get { return mapForm == null ? false : mapForm.Visible; }
 			set
 			{
-				if (FullScreen || value == mapForm.Visible)
+				if (value == mapForm.Visible)
 					return;
+
+				bool fs = FullScreen;
+				FullScreen = false;
 				this.SuspendAllLayout();
 				if (mapForm.Visible)
 					mapForm.Hide();
 				else
 					mapForm.Show(this);
 				this.ResumeAllLayout();
-			}
-		}
-
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public bool ShowConsole
-		{
-			get { return consoleForm == null ? false : consoleForm.Visible; }
-			set
-			{
-				if (value == consoleForm.Visible)
-					return;
-				if (consoleForm.Visible)
-					consoleForm.Hide();
-				else
-					consoleForm.Show(this);
+				FullScreen = fs;
 			}
 		}
 
@@ -145,7 +131,7 @@ namespace WiFindUs.Eye.Dispatcher
 			Debugger.T("entry");
 #endif
 			InitializeComponent();
-			if (DesignMode)
+			if (IsDesignMode)
 				return;
 
 			//title
@@ -164,26 +150,6 @@ namespace WiFindUs.Eye.Dispatcher
 			};
 			mapForm.VisibleChanged += mapForm_VisibleChanged;
 			mapForm.KeyDown += TestKeys;
-
-			//console form
-			consoleForm = new BaseForm()
-			{
-				HideOnClose = true,
-				WindowState = FormWindowState.Normal,
-				MinimumSize = new System.Drawing.Size(400, 300),
-				Text = "Console",
-				HelpButton = false,
-				KeyPreview = true,
-				StartPosition = FormStartPosition.Manual
-			};
-			consoleForm.Controls.Add(console = new ConsolePanel()
-			{
-				Dock = DockStyle.Fill
-			});
-			consoleForm.KeyDown += TestKeys;
-
-			//key preview for alt-enter
-			KeyPreview = true;
 
 			//controls
 			listDevices.SelectionGroup = map3D.SelectionGroup;
@@ -230,14 +196,6 @@ namespace WiFindUs.Eye.Dispatcher
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
-		protected override void OnKeyDown(KeyEventArgs e)
-		{
-			TestKeys(this, e);
-
-			if (!e.Handled)
-				base.OnKeyDown(e);
-		}
-
 		protected override void OnFirstShown(EventArgs e)
 		{
 #if DEBUG
@@ -245,12 +203,6 @@ namespace WiFindUs.Eye.Dispatcher
 #endif
 			SetApplicationStatus("Initializing 3D scene...", Theme.Current.Warning.Mid.Colour);
 			base.OnFirstShown(e);
-
-			//set up console form
-			consoleForm.ApplyWindowStateFromConfig("console");
-#if DEBUG
-			ShowConsole = true;
-#endif
 
 			//set up map form
 			mapForm.ApplyWindowStateFromConfig("map");
@@ -389,7 +341,7 @@ namespace WiFindUs.Eye.Dispatcher
 			 * */
 		}
 
-		private void TestKeys(object sender, KeyEventArgs e)
+		protected override void TestKeys(object sender, KeyEventArgs e)
 		{
 			if (!FirstShown)
 				return;
@@ -402,7 +354,7 @@ namespace WiFindUs.Eye.Dispatcher
 					case Keys.Enter: //Keys.Return is the same, apparently
 						FullScreen = !FullScreen;
 						e.Handled = true;
-						break;
+						return;
 				}
 			}
 			//NO MODIFIER
@@ -413,19 +365,16 @@ namespace WiFindUs.Eye.Dispatcher
 					case Keys.F2:
 						DebugMode = !DebugMode;
 						e.Handled = true;
-						break;
+						return;
 
 					case Keys.F3:
 						ShowMapInWindow = !ShowMapInWindow;
 						e.Handled = true;
-						break;
-
-					case Keys.F5:
-						ShowConsole = !ShowConsole;
-						e.Handled = true;
-						break;
+						return;
 				}
 			}
+
+			base.TestKeys(sender, e);
 		}
 	}
 }

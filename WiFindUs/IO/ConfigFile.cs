@@ -43,10 +43,10 @@ namespace WiFindUs.IO
 			= new Regex("(" + NUM + ")(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?(?:\\s*,\\s*(" + NUM + "))?",
 				RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-		private volatile ConcurrentDictionary<String, List<String>> kvps = new ConcurrentDictionary<String, List<String>>();
-		private volatile List<String> lastKVPS = null;
-		private volatile string lastKey = "";
-		private object threadLock = new Object();
+		private Dictionary<String, List<String>> kvps = new Dictionary<String, List<String>>();
+		private List<String> lastKVPS = null;
+		private string lastKey = "";
+		private object dictionaryLock = new Object();
 		private bool logMissing = false;
 
 		/////////////////////////////////////////////////////////////////////
@@ -59,22 +59,24 @@ namespace WiFindUs.IO
 			{
 				//check key for validity
 				key = CheckKey(key);
-
-				//check if it was the same as the last lookup (during a loop or something)
-				if (lastKey != null && lastKVPS != null
-						&& lastKey.Length > 0 && lastKey.CompareTo(key) == 0)
-					return lastKVPS;
-
-				List<String> values;
-				lock (threadLock)
+				
+				List<String> output = null;
+				lock (dictionaryLock)
 				{
-					//otherwise do a new lookup
-					if (!kvps.TryGetValue(key, out values))
-						kvps[key] = values = new List<String>();
-					lastKey = key;
-					lastKVPS = values;
+					//check if it was the same as the last lookup (during a loop or something)
+					if (lastKey != null && lastKVPS != null
+							&& lastKey.Length > 0 && lastKey.CompareTo(key) == 0)
+						output = lastKVPS;
+					else
+					{
+						//otherwise do a new lookup
+						if (!kvps.TryGetValue(key, out output))
+							kvps[key] = output = new List<String>();
+						lastKey = key;
+						lastKVPS = output;
+					}
 				}
-				return values;
+				return output;
 			}
 		}
 
@@ -176,9 +178,9 @@ namespace WiFindUs.IO
 				return "";
 			
 			System.Text.StringBuilder sb = new System.Text.StringBuilder();
-			lock (threadLock)
+			List<String> output = new List<string>();
+			lock (dictionaryLock)
 			{
-				List<String> output = new List<string>();
 				foreach (KeyValuePair<String, List<String>> kvp in kvps)
 				{
 					if (kvp.Key == null || kvp.Value == null || kvp.Value.Count == 0)
@@ -191,10 +193,10 @@ namespace WiFindUs.IO
 						output.Add(kvp.Key + (kvp.Value.Count > 1 ? "[" + i + "]" : "") + ": " + value);
 					}
 				}
-				output.Sort();
-				for (int i = 0; i < output.Count; i++)
-					sb.Append((i > 0 ? "\n" : "") + output[i]);
 			}
+			output.Sort();
+			for (int i = 0; i < output.Count; i++)
+				sb.Append((i > 0 ? "\n" : "") + output[i]);
 			return sb.ToString();
 		}
 
@@ -733,7 +735,7 @@ namespace WiFindUs.IO
 			index = index < 0 ? values.Count : index;
 
 			//add value, resize array if necessary
-			lock (threadLock)
+			lock (dictionaryLock)
 			{
 				if (index >= values.Count)
 				{
@@ -760,7 +762,7 @@ namespace WiFindUs.IO
 			if (index >= values.Count)
 			{
 				if (logMissing)
-					Debugger.V("ConfigFile: Attempt to access undefined key \"{0}{1}\" was ignored.", key,
+					Debugger.W("Config: Attempt to access undefined key \"{0}{1}\" was ignored.", key,
 						index == 0 ? "" : String.Format("[{0}]", index));
 				return "";
 			}

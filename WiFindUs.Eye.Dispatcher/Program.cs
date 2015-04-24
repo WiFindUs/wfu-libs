@@ -12,6 +12,7 @@ namespace WiFindUs.Eye.Dispatcher
 			WFUApplication.Description = "First-Responder Asset Management System";
 			WFUApplication.MainFormType = typeof(DispatcherForm);
 			WFUApplication.RunApplicationDelegate = WaveMainForm.RunApplication;
+			WFUApplication.ConfigFilePath = "eye.conf";
 			WFUApplication.Run(args);
 		}
 	}

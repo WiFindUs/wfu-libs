@@ -27,7 +27,8 @@ namespace WiFindUs.Eye.Controls
 		{
 			get
 			{
-				return WFUApplication.Config.Get("type_" + user.Type + ".colour", Color.Red);
+				return user == null || user.Type == null || user.Type.Length == 0
+					? base.ImagePlaceholderColour : WFUApplication.Config.Get("type_" + user.Type + ".colour", Color.White);
 			}
 		}
 

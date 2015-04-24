@@ -58,7 +58,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			get
 			{
 				return MapScene.Camera != null
-					&& MapScene.Camera.TrackingTarget == Entity;
+					&& MapScene.Camera.TrackingEntity == this;
 			}
 			set
 			{
@@ -66,9 +66,9 @@ namespace WiFindUs.Eye.Wave.Markers
 					return;
 				
 				if (value && !CameraTracking)
-					MapScene.Camera.TrackingTarget = Entity;
+					MapScene.Camera.TrackingEntity = this;
 				else if (!value && CameraTracking)
-					MapScene.Camera.TrackingTarget = null;
+					MapScene.Camera.TrackingEntity = null;
 			}
 		}
 
@@ -136,6 +136,15 @@ namespace WiFindUs.Eye.Wave.Markers
 		}
 
 		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		public override string ToString()
+		{
+			return Entity.ToString();
+		}
+
+		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
@@ -152,8 +161,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			Entity.Updated += Updated;
 			MapScene.Terrain.Plane.BoundingBoxUpdated += Plane_BoundingBoxUpdated;
 			MapScene.Terrain.Source.ElevationStateChanged += Source_ElevationStateChanged;
-
-			LocationChanged(Entity);
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -186,7 +193,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected virtual void LocationChanged(ILocatable obj)
 		{
-			if (!Entity.Location.HasLatLong)
+			if (!Entity.Location.HasLatLong || !MapScene.Terrain.Source.Contains(Entity.Location))
 				return;
 
 			destination = MapScene.LocationToVector(Entity.Location);
@@ -223,6 +230,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			bool active = MapScene.Terrain != null
 				&& MapScene.Terrain.Source != null
 				&& Entity.Location.HasLatLong
+				&& MapScene.Terrain.Source.Contains(Entity.Location)
 				&& (EntityActive || EntityWaiting);
 
 			IsOwnerActive = active;

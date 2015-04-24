@@ -75,6 +75,7 @@
     <Compile Include="IAtmosphere.cs" />
     <Compile Include="IAtmospheric.cs" />
     <Compile Include="ILocatable.cs" />
+    <Compile Include="ILocatableProxy.cs" />
     <Compile Include="ILocation.cs" />
     <Compile Include="IO\ConfigFile.cs" />
     <Compile Include="Debugger.cs" />

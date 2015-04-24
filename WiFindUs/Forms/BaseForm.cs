@@ -2,10 +2,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
-using WiFindUs.Controls;
-using WiFindUs.Extensions;
 using WiFindUs.Themes;
 
 namespace WiFindUs.Forms
@@ -93,21 +90,25 @@ namespace WiFindUs.Forms
 				{
 					case "one":
 					case "first":
+					case "1":
 						startScreen = Screen.AllScreens[0];
 						break;
 
 					case "two":
 					case "second":
+					case "2":
 						startScreen = Screen.AllScreens.Length > 1 ? Screen.AllScreens[1] : null;
 						break;
 
 					case "three":
 					case "third":
+					case "3":
 						startScreen = Screen.AllScreens.Length > 2 ? Screen.AllScreens[2] : null;
 						break;
 
 					case "fourth":
 					case "four":
+					case "4":
 						startScreen = Screen.AllScreens.Length > 3 ? Screen.AllScreens[3] : null;
 						break;
 
@@ -121,21 +122,20 @@ namespace WiFindUs.Forms
 			//check screen number
 			if (startScreen == null)
 			{
-				int configMonitor = WFUApplication.Config.Get(prefix + ".start_screen", -1);
-				Debugger.V("Start screen (" + prefix + "): " + configMonitor);
-				if (configMonitor >= 0)
-					startScreen = Screen.AllScreens.Length > configMonitor ? Screen.AllScreens[configMonitor] : null;
+				int configMonitor = WFUApplication.Config.Get(prefix + ".start_screen", 0) - 1;
+				startScreen = configMonitor < 0 || configMonitor >= Screen.AllScreens.Length
+					? null : Screen.AllScreens[configMonitor];
 			}
 
 			//use primary by default
 			if (startScreen == null)
 			{
-				Debugger.W("Could not find screen matching given criteria; will use primary screen.");
+				Debugger.W("{0}.start_screen: could not find screen matching given criteria; will use primary screen.", prefix);
 				startScreen = Screen.PrimaryScreen;
 			}
 			Location = new Point(startScreen.Bounds.Left + 10, startScreen.Bounds.Top + 10);
 			bool startMaximized = WFUApplication.Config.Get(prefix + ".start_maximized", false);
-			Debugger.V("Start maximized (" + prefix + "): " + startMaximized);
+			Debugger.V("{0}.start_maximized: {1}", prefix, startMaximized);
 			if (startMaximized)
 				WindowState = FormWindowState.Maximized;
 		}

@@ -15,13 +15,13 @@ namespace WiFindUs.Forms
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public virtual List<Func<bool>> LoadingTasks
 		{
 			get { return new List<Func<bool>>(); }
 		}
 
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		protected override bool ShowWithoutActivation
 		{
 			get { return false; }
@@ -34,6 +34,12 @@ namespace WiFindUs.Forms
 		public static bool HasClosed
 		{
 			get { return closed; }
+		}
+
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		protected virtual bool AutomaticallyApplyConfigState
+		{
+			get { return true; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -82,6 +88,16 @@ namespace WiFindUs.Forms
 			}
 		}
 
+		public static void SafeSleep(int ms)
+		{
+			while (ms > 0 && !HasClosed)
+			{
+				int wait = Math.Min(ms, 100);
+				Thread.Sleep(wait);
+				ms -= wait;
+			}
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
@@ -97,7 +113,8 @@ namespace WiFindUs.Forms
 			Debugger.T("entry");
 #endif
 			base.OnFirstShown(e);
-			ApplyWindowStateFromConfig("main");
+			if (AutomaticallyApplyConfigState)
+				ApplyWindowStateFromConfig("main");
 #if DEBUG
 			Debugger.T("exit");
 #endif

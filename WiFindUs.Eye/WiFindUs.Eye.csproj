@@ -69,6 +69,11 @@
     <Reference Include="System.Xml.Serialization" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\Map2D.EntityMarker.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Interfaces\ISelectableProxy.cs" />
+    <Compile Include="Interfaces\IUpdateableProxy.cs" />
     <Compile Include="Map.cs" />
     <Compile Include="Controls\ActionPanel.cs">
       <SubType>Component</SubType>

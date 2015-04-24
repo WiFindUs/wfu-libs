@@ -27,7 +27,7 @@ namespace WiFindUs.Eye.Wave
 		private ILocation target;
 		private Camera3D camera;
 		private Ray ray;
-		private ILocatable trackingTarget = null;
+		private IEntityMarker trackingEntity = null;
 		private TextBox trackingText;
 
 		/////////////////////////////////////////////////////////////////////
@@ -74,26 +74,27 @@ namespace WiFindUs.Eye.Wave
 			}
 		}
 
-		public ILocatable TrackingTarget
+		public IEntityMarker TrackingEntity
 		{
-			get { return trackingTarget; }
+			get { return trackingEntity; }
 			set
 			{
-				if (value == trackingTarget)
+				if (value == trackingEntity)
 					return;
-				if (trackingTarget != null)
-					trackingTarget.LocationChanged -= trackingTarget_LocationChanged;
-				trackingTarget = value;
-				if (trackingTarget != null)
+				if (trackingEntity != null)
+					trackingEntity.Locatable.LocationChanged -= trackingTarget_LocationChanged;
+				trackingEntity = value;
+				if (trackingEntity != null)
 				{
-					trackingTarget_LocationChanged(trackingTarget);
-					trackingTarget.LocationChanged += trackingTarget_LocationChanged;
+					trackingTarget_LocationChanged(trackingEntity.Locatable);
+					trackingEntity.Locatable.LocationChanged += trackingTarget_LocationChanged;
 					Tilt = 0.1f;
 					Zoom = Math.Min(Zoom, 0.1f);
-					trackingText.Text = String.Format("Tracking {0}",trackingTarget.ToString());
+					trackingText.Text = String.Format("Tracking {0}", trackingEntity.ToString());
+					trackingText.IsVisible = true;
 				}
 				else
-					trackingText.Text = "";
+					trackingText.IsVisible = false;
 			}
 		}
 
@@ -127,6 +128,11 @@ namespace WiFindUs.Eye.Wave
 			get { return LocationFromScreenRay(0, MapScene.BackBufferHeight); }
 		}
 
+		internal bool LerpMovement
+		{
+			get { return trackingEntity == null; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS/INITIALIZERS
 		/////////////////////////////////////////////////////////////////////
@@ -139,7 +145,6 @@ namespace WiFindUs.Eye.Wave
 				VerticalAlignment = WaveEngine.Framework.UI.VerticalAlignment.Bottom,
 				TextWrapping = false,
 				IsBorder = false,
-				Opacity = 0.0f,
 				Text = "",
 				IsReadOnly = true,
 				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
@@ -191,28 +196,28 @@ namespace WiFindUs.Eye.Wave
 
 		public void TrackSelectedMarkers()
 		{
-			//get all active, selected markers which have a valid location
+			//get all active, selected entity markers which have a valid location
 			IEntityMarker[] selectedMarkers = MapScene.Markers
 				.OfType<IEntityMarker>()
 				.Where(mk => (mk.EntityActive || mk.EntityWaiting)
-					&& mk.Selectable.Selected
+					&& mk.EntitySelected
 					&& mk.Locatable.Location.HasLatLong)
 				.ToArray();
 
 			//if none, clear selection
 			if (selectedMarkers == null || selectedMarkers.Length == 0)
 			{
-				TrackingTarget = null;
+				TrackingEntity = null;
 				return;
 			}
 
 			//find the current tracked object in the selection
 			int index = -1;
-			if (TrackingTarget != null)
+			if (TrackingEntity != null)
 			{
 				for (int i = 0; i < selectedMarkers.Length; i++)
 				{
-					if (TrackingTarget == selectedMarkers[i].Locatable)
+					if (TrackingEntity == selectedMarkers[i])
 					{
 						index = i;
 						break;
@@ -223,15 +228,15 @@ namespace WiFindUs.Eye.Wave
 			//if we have no current tracked object, or there was only selected object found,
 			//or the currently tracked object was not part of the selection,
 			//set the first selected object as the tracked object
-			if (TrackingTarget == null || selectedMarkers.Length == 1 || index == -1)
+			if (TrackingEntity == null || selectedMarkers.Length == 1 || index == -1)
 			{
-				TrackingTarget = selectedMarkers[0].Locatable;
+				TrackingEntity = selectedMarkers[0];
 				return;
 			}
 
 			//otherwise, we're a member of the set and progressing through a loop,
 			//so advance to the next selected object
-			TrackingTarget = selectedMarkers[(index + 1) % selectedMarkers.Length].Locatable;
+			TrackingEntity = selectedMarkers[(index + 1) % selectedMarkers.Length];
 		}
 
 		public void SnapToDestination()
@@ -257,18 +262,20 @@ namespace WiFindUs.Eye.Wave
 		{
 			float secs = (float)gameTime.TotalSeconds;
 			
-			//position
-			camera.Position = Vector3.Lerp(camera.Position, destination, secs * CAMERA_SPEED);
-
-			//look at target
-			camera.LookAt = Vector3.Lerp(camera.LookAt, targetVector, secs * CAMERA_SPEED);
+			//position and lookAt
+			if (LerpMovement)
+			{
+				camera.Position = Vector3.Lerp(camera.Position, destination, secs * CAMERA_SPEED);
+				camera.LookAt = Vector3.Lerp(camera.LookAt, targetVector, secs * CAMERA_SPEED);
+			}
+			else
+			{
+				camera.Position = destination;
+				camera.LookAt = targetVector;
+			}
 
 			//marker scale
 			MapScene.MarkerScale = MIN_MARKER_SCALE + (MAX_MARKER_SCALE - MIN_MARKER_SCALE) * zoom;
-
-			//ui text
-			trackingText.Opacity
-				= trackingText.Opacity.Lerp(trackingTarget != null ? 1.0f : 0.0f, secs * FADE_SPEED).Clamp(0.0f,1.0f);
 		}
 
 		/////////////////////////////////////////////////////////////////////
