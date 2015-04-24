@@ -360,5 +360,20 @@ namespace WiFindUs
 		{
 			return Clamp(this, location);
 		}
+
+		public static IRegion Shrink(IRegion region, double outputSizePercentage)
+		{
+			if (region == null)
+				return null;
+			outputSizePercentage = outputSizePercentage.Clamp(0.01, 10);
+			return new WiFindUs.Region(region.Center,
+				region.LatitudinalSpan * outputSizePercentage,
+				region.LongitudinalSpan * outputSizePercentage);
+		}
+
+		public IRegion Shrink(double outputSizePercentage)
+		{
+			return Shrink(this, outputSizePercentage);
+		}
 	}
 }

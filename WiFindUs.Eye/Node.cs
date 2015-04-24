@@ -9,6 +9,11 @@ namespace WiFindUs.Eye
 {
 	public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable, IActionSubscriber
 	{
+		public static readonly Color CHANNEL_1_COLOR = Color.FromArgb(255, 27, 109, 42);
+		public static readonly Color CHANNEL_6_COLOR = Color.FromArgb(255, 210, 35, 42);
+		public static readonly Color CHANNEL_11_COLOR = Color.FromArgb(255, 37, 64, 143);
+		public static readonly Color CHANNEL_NIL_COLOR = Color.FromArgb(255, 127, 127, 127);
+		
 		private const ulong TIMEOUT = 60;
 		public static event Action<Node> OnNodeLoaded;
 		public event Action<IUpdateable> ActiveChanged;
@@ -92,6 +97,30 @@ namespace WiFindUs.Eye
 		public ulong TimeoutLength
 		{
 			get { return TIMEOUT; }
+		}
+
+		public uint AccessPointChannel
+		{
+			get
+			{
+				uint num = Number.GetValueOrDefault();
+				return !AccessPoint.GetValueOrDefault() || !num.Between(1u, 254u) ?
+					0u : (num % 2 == 0 ? 6u : 11u);
+			}
+		}
+
+		public Color AccessPointColor
+		{
+			get
+			{
+				switch (AccessPointChannel)
+				{
+					case 11: return CHANNEL_11_COLOR;
+					case 6: return CHANNEL_6_COLOR;
+					case 1: return CHANNEL_1_COLOR;
+				}
+				return CHANNEL_NIL_COLOR;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////

@@ -352,6 +352,11 @@ namespace WiFindUs.Eye
 			return region == null ? Location.EMPTY : region.Clamp(location);
 		}
 
+		public IRegion Shrink(double outputSizePercentage)
+		{
+			return region == null ? null : region.Shrink(outputSizePercentage);
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////

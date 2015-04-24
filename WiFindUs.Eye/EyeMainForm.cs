@@ -86,6 +86,16 @@ namespace WiFindUs.Eye
 		}
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public virtual bool AutoShowConsole
+		{
+#if DEBUG
+			get { return true; }
+#else 
+			get { return false; }
+#endif
+		}
+
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public IEnumerable<Device> Devices
 		{
 			get { return databaseMode == DBMode.Server ? (IEnumerable<Device>)eyeContext.Devices : devices.Values; }
@@ -278,9 +288,7 @@ namespace WiFindUs.Eye
 
 			//set up console form
 			consoleForm.ApplyWindowStateFromConfig("console");
-#if DEBUG
-			ShowConsole = true;
-#endif
+			ShowConsole = AutoShowConsole;
 
 			//packet listener
 			if (eyeListener != null)
@@ -863,6 +871,8 @@ namespace WiFindUs.Eye
 
 		private void ActiveCheckThread()
 		{
+			WFUApplication.SetThreadAlias("AC");
+			Debugger.V("Eye entity active check thread started.");
 			while (!HasClosed)
 			{
 				lock (UpdateablesLock)
@@ -873,15 +883,19 @@ namespace WiFindUs.Eye
 
 				SafeSleep(1000);
 			}
+			Debugger.V("Eye entity active check thread terminated.");
 		}
 
 		private void DatabaseSubmitThread()
 		{
+			WFUApplication.SetThreadAlias("DB");
+			Debugger.V("Eye database modification submission thread started.");
 			while (!HasClosed)
 			{
 				SubmitDatabaseChanges();
 				SafeSleep(100000);
 			}
+			Debugger.V("Eye database modification submission thread terminated.");
 		}
 	}
 }

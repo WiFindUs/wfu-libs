@@ -145,9 +145,10 @@ namespace WiFindUs.Eye.Wave
 							loc.Latitude.GetValueOrDefault(),
 							loc.Longitude.GetValueOrDefault(),
 							loc.Altitude.GetValueOrDefault(Map.ELEV_MIN));
+						MapScene.Cursor.PositionText.IsVisible = true;
 					}
 					else
-						MapScene.Cursor.PositionText.Text = "";
+						MapScene.Cursor.PositionText.IsVisible = false;
 				}
 			}
 

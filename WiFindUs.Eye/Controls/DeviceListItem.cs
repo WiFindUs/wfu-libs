@@ -141,17 +141,17 @@ namespace WiFindUs.Eye.Controls
 
 		private void device_Updated(IUpdateable obj)
 		{
-			this.RefreshThreadSafe();
+			this.InvalidateThreadSafe();
 		}
 
 		private void device_Changed(Device obj)
 		{
-			this.RefreshThreadSafe();
+			this.InvalidateThreadSafe();
 		}
 
 		private void device_LocationChanged(ILocatable obj)
 		{
-			this.RefreshThreadSafe();
+			this.InvalidateThreadSafe();
 		}
 	}
 }

@@ -17,9 +17,9 @@ namespace WiFindUs.Eye.Wave.Markers
 	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
 		private Transform3D ringTransform, coreTransform;
-		private BasicMaterial spikeMat, ringMat, coreMat;
+		private BasicMaterial spikeMat, coreMat;
 		private float fader = 0.0f;
-		private Color colour = new Color(0, 175, 255);
+		private Color channelColour = Node.CHANNEL_NIL_COLOR.Wave();
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -88,13 +88,7 @@ namespace WiFindUs.Eye.Wave.Markers
 							LocalPosition = new Vector3(0.0f, 0.0f, 0.0f),
 							Rotation = new Vector3(90.0f.ToRadians(), 0f, 0f)
 						})
-						.AddComponent(new MaterialsMap(marker.ringMat = new BasicMaterial(MapScene.WhiteTexture)
-						{
-							LayerType = typeof(NonPremultipliedAlpha),
-							LightingEnabled = true,
-							AmbientLightColor = Color.White * 0.75f,
-							Alpha = 0.5f
-						}))
+						.AddComponent(new MaterialsMap(marker.spikeMat))
 						.AddComponent(Model.CreateTorus(14f, 2, 12))
 						.AddComponent(new ModelRenderer())
 					)
@@ -111,6 +105,15 @@ namespace WiFindUs.Eye.Wave.Markers
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		protected override void Initialize()
+		{
+			base.Initialize();
+
+			APColorPropertyChanged(Entity);
+			Entity.OnNodeAccessPointChanged += APColorPropertyChanged;
+			Entity.OnNodeNumberChanged += APColorPropertyChanged;
+		}
+
 		protected override void Update(TimeSpan gameTime)
 		{
 			base.Update(gameTime);
@@ -119,13 +122,13 @@ namespace WiFindUs.Eye.Wave.Markers
 
 			float secs = (float)gameTime.TotalSeconds;
 			float targetAlpha = Entity.Active && (Entity.Selected || CameraTracking || CursorOver) ? 1.0f : 0.5f;
-			spikeMat.Alpha = coreMat.Alpha = ringMat.Alpha =
-				spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
-			spikeMat.DiffuseColor = ringMat.DiffuseColor
-				= Color.Lerp(spikeMat.DiffuseColor, !Entity.Active ? Color.Black : colour, secs * COLOUR_SPEED);
+			spikeMat.Alpha = coreMat.Alpha
+				= spikeMat.Alpha.Lerp(targetAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
+			spikeMat.DiffuseColor
+				= Color.Lerp(spikeMat.DiffuseColor, !Entity.Active ? Color.Black : channelColour, secs * COLOUR_SPEED);
 			if (Entity.Active)
 			{
-				coreMat.DiffuseColor = Color.White.Coserp(colour, fader += secs * 2.0f);
+				coreMat.DiffuseColor = Color.White.Coserp(channelColour, fader += secs * 2.0f);
 				ringTransform.Rotation = new Vector3(
 				   ringTransform.Rotation.X,
 				   ringTransform.Rotation.Y + ROTATE_SPEED * secs,
@@ -169,6 +172,11 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			UIText.Text = (Entity.Number.HasValue ? Entity.Number.Value.ToString() : "??");
 			UISubtext.Text = "ID #" + Entity.ID.ToString("X");
+		}
+
+		private void APColorPropertyChanged(Node node)
+		{
+			channelColour = Entity.AccessPointColor.Wave();
 		}
 	}
 }

@@ -122,14 +122,14 @@ namespace WiFindUs.Eye.Wave
 				VerticalAlignment = WaveEngine.Framework.UI.VerticalAlignment.Bottom,
 				TextWrapping = false,
 				IsBorder = false,
-				Opacity = 0.0f,
 				Text = "",
 				IsReadOnly = true,
 				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
 				Background = Themes.Theme.Current.Background.Dark.Colour.Wave(200),
 				TextAlignment = TextAlignment.Left,
 				Width = 290.0f,
-				Height = 24.0f
+				Height = 24.0f,
+				IsVisible = false
 			}).Entity;
 			cursor.UIEntity.FindComponent<Transform2D>().LocalScale = new Vector2(UI_SCALE);
 
@@ -167,7 +167,7 @@ namespace WiFindUs.Eye.Wave
 			
 			//alpha
 			matte.Alpha = matte.Alpha.Lerp(visible ? 0.8f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
-			PositionText.Opacity = PositionText.Opacity.Lerp(visible ? 1.0f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
+			PositionText.IsVisible = visible;
 			
 			//scale
 			float scale = MapScene.MarkerScale * BASE_SCALE;

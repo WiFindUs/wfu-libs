@@ -37,7 +37,7 @@ namespace WiFindUs.Forms
 		}
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		protected virtual bool AutomaticallyApplyConfigState
+		protected virtual bool AutoApplyConfigState
 		{
 			get { return true; }
 		}
@@ -113,7 +113,7 @@ namespace WiFindUs.Forms
 			Debugger.T("entry");
 #endif
 			base.OnFirstShown(e);
-			if (AutomaticallyApplyConfigState)
+			if (AutoApplyConfigState)
 				ApplyWindowStateFromConfig("main");
 #if DEBUG
 			Debugger.T("exit");

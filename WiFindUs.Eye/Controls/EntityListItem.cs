@@ -34,7 +34,7 @@ namespace WiFindUs.Eye.Controls
 				if (image == value)
 					return;
 				image = value;
-				Refresh();
+				this.InvalidateThreadSafe();
 			}
 		}
 
@@ -177,7 +177,7 @@ namespace WiFindUs.Eye.Controls
 		{
 			if (entity != this.entity)
 				return;
-			Refresh();
+			this.InvalidateThreadSafe();
 		}
 
 		private void CalculateHeight()

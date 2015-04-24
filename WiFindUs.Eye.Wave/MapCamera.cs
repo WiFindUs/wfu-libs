@@ -29,6 +29,7 @@ namespace WiFindUs.Eye.Wave
 		private Ray ray;
 		private IEntityMarker trackingEntity = null;
 		private TextBox trackingText;
+		private IRegion cameraClipRegion = null;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -65,7 +66,7 @@ namespace WiFindUs.Eye.Wave
 			get { return target; }
 			set
 			{
-				ILocation loc = MapScene.Terrain.Source.Clamp(value ?? MapScene.Terrain.Source.Center);
+				ILocation loc = cameraClipRegion.Clamp(value ?? MapScene.Terrain.Source.Center);
 				if (WiFindUs.Location.Equals(loc, target))
 					return;
 				target = loc;
@@ -151,7 +152,8 @@ namespace WiFindUs.Eye.Wave
 				Background = Themes.Theme.Current.Background.Dark.Colour.Wave(200),
 				TextAlignment = TextAlignment.Center,
 				Width = 200.0f,
-				Height = 24.0f
+				Height = 24.0f,
+				IsVisible = false
 			}).Entity;
 			UIEntity.FindComponent<Transform2D>().LocalScale = new Vector2(UI_SCALE); 
 		}
@@ -201,7 +203,8 @@ namespace WiFindUs.Eye.Wave
 				.OfType<IEntityMarker>()
 				.Where(mk => (mk.EntityActive || mk.EntityWaiting)
 					&& mk.EntitySelected
-					&& mk.Locatable.Location.HasLatLong)
+					&& mk.Locatable.Location.HasLatLong
+					&& MapScene.Terrain.Source.Contains(mk.Locatable.Location))
 				.ToArray();
 
 			//if none, clear selection
@@ -254,7 +257,7 @@ namespace WiFindUs.Eye.Wave
 			base.Initialize();
 			ray = new Ray();
 			camera = Owner.FindComponent<Camera3D>();
-
+			cameraClipRegion = MapScene.Terrain.Source.Region.Shrink(0.99);
 			UpdateMetrics();
 		}
 
@@ -284,7 +287,10 @@ namespace WiFindUs.Eye.Wave
 
 		private void trackingTarget_LocationChanged(ILocatable target)
 		{
-			Target = target.Location;
+			if (!target.Location.HasLatLong || !MapScene.Terrain.Source.Contains(target.Location))
+				TrackingEntity = null;
+			else
+				Target = target.Location;
 		}
 
 		private void UpdateMetrics()

@@ -102,13 +102,13 @@ namespace WiFindUs.Eye.Wave.Markers
 			{
 				Orientation = Orientation.Vertical,
 				IsBorder = false,
-				Opacity = 0.0f,
+				IsVisible = false,
 				Width = 100.0f,
 				Height = 40.0f,
 			}).Entity;
 			UIPanel.Add(UIText = new TextBox()
 			{
-				Text = "This is text on line 1",
+				Text = "",
 				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
 				Width = UIPanel.Width,
 				Height = 22.0f,
@@ -116,11 +116,12 @@ namespace WiFindUs.Eye.Wave.Markers
 				TextWrapping = false,
 				IsBorder = false,
 				Background = Themes.Theme.Current.Background.Dark.Colour.Wave(),
-				IsReadOnly = true
+				IsReadOnly = true,
+				IsVisible = false
 			});
 			UIPanel.Add(UISubtext = new TextBox()
 			{
-				Text = "this is some sub text",
+				Text = "",
 				Foreground = Themes.Theme.Current.Foreground.Light.Colour.Wave(),
 				Width = UIPanel.Width * (1.0f / SUBTEXT_SCALE),
 				Height = 16.0f * (1.0f / SUBTEXT_SCALE),
@@ -129,7 +130,8 @@ namespace WiFindUs.Eye.Wave.Markers
 				IsBorder = false,
 				Background = Themes.Theme.Current.Background.Dark.Colour.Wave(),
 				IsReadOnly = true,
-				Margin = new WaveEngine.Framework.UI.Thickness(0.0f,-4.0f,0.0f,0.0f)
+				Margin = new WaveEngine.Framework.UI.Thickness(0.0f,-4.0f,0.0f,0.0f),
+				IsVisible = false
 			});
 			UIEntity.WithComponent<Transform2D>(t => t.LocalScale = new Vector2(UI_SCALE));
 			UISubtext.Entity.WithComponent<Transform2D>(t => t.LocalScale = new Vector2(SUBTEXT_SCALE));
@@ -175,10 +177,9 @@ namespace WiFindUs.Eye.Wave.Markers
 			Transform3D.Position = Vector3.Lerp(Transform3D.Position, destination, secs * MOVE_SPEED);
 
 			//ui
-			float uiAlpha = EntitySelected || CursorOver ? 1.0f : (EntityWaiting ? 0.5f : 0.0f);
-			if (UITransform != null && uiAlpha > 0.0f)
+			UIPanel.IsVisible = UIText.IsVisible = UISubtext.IsVisible = EntitySelected || CursorOver;
+			if (UITransform != null && UIPanel.IsVisible)
 				UITransform.Position = ScreenPosition.Add(UIPanel.Width * UI_SCALE * -0.5f, 3.0f);
-			UIPanel.Opacity = UIPanel.Opacity.Lerp(uiAlpha, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
 		}
 
 		protected void Source_ElevationStateChanged(Map source)

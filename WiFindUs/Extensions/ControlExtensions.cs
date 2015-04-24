@@ -32,6 +32,25 @@ namespace WiFindUs.Extensions
 			}
 		}
 
+		public static void InvalidateThreadSafe(this Control control)
+		{
+			try
+			{
+				if (control.InvokeRequired)
+					control.Invoke(new Action(control.Invalidate));
+				else
+					control.Invalidate();
+			}
+			catch (ObjectDisposedException)
+			{
+				return;
+			}
+			catch (InvalidAsynchronousStateException)
+			{
+				return;
+			}
+		}
+
 		public static void SetText(this Control control, string text)
 		{
 			try

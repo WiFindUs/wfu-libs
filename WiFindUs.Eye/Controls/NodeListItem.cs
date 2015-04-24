@@ -16,15 +16,13 @@ namespace WiFindUs.Eye.Controls
 		// PROPERTIES
 		/////////////////////////////////////////////////////////////////////
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public Node Node
 		{
 			get { return node; }
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		protected override String EntityTitleString
 		{
 			get
@@ -35,8 +33,7 @@ namespace WiFindUs.Eye.Controls
 			}
 		}
 
-		[Browsable(false)]
-		[DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		protected override String EntityDetailString
 		{
 			get
@@ -49,6 +46,12 @@ namespace WiFindUs.Eye.Controls
 						(node.GPSD.GetValueOrDefault() ? (node.HasLatLong ? WiFindUs.Location.ToString(node) : "Waiting for accurate location...")
 							: "GPS not running."));
 			}
+		}
+
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		protected override Color ImagePlaceholderColour
+		{
+			get { return node.AccessPointColor; }
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -134,17 +137,17 @@ namespace WiFindUs.Eye.Controls
 
 		private void node_Updated(IUpdateable obj)
 		{
-			this.RefreshThreadSafe();
+			this.InvalidateThreadSafe();
 		}
 
 		private void node_Changed(Node obj)
 		{
-			this.RefreshThreadSafe();
+			this.InvalidateThreadSafe();
 		}
 
 		private void node_LocationChanged(ILocatable obj)
 		{
-			this.RefreshThreadSafe();
+			this.InvalidateThreadSafe();
 		}
 	}
 }

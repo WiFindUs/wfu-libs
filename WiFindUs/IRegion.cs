@@ -17,5 +17,6 @@ namespace WiFindUs
 		ILocation SouthWest { get; }
 		double Width { get; }
 		ILocation Clamp(ILocation location);
+		IRegion Shrink(double outputSizePercentage);
 	}
 }
