@@ -1,16 +1,10 @@
-USE wfu_eye_db;
-
-INSERT INTO wfu_eye_db.Nodes
-	(`ID`, `Created`, `Updated`, `Number`, `IPAddress`)
+INSERT INTO `wfu_eye_db`.`users`
+	(`ID`,`NameFirst`,`NameMiddle`,`NameLast`,`Type`)
 VALUES
-	(4832,1427627349,1427627423,7,NULL),
-	(8531,1426590596,1427631335,1,NULL),
-	(10790,1427108347,1427625139,2,NULL),
-	(11739,1427629587,1427630067,3,NULL),
-	(12405,1427624507,1427624662,5,NULL),
-	(13628,1426590573,1427631154,20,NULL),
-	(23450,1427631295,1427631330,21,NULL),
-	(27027,1426593775,1427211848,4,NULL),
-	(28370,1427625718,1427625848,6,NULL),
-	(30300,1427626617,1427626623,4,NULL),
-	(30943,1427628395,1427628624,8,NULL);
+	(1,"Mark","","Gillard","wfu"),
+	(2,"Greg","","Stevens","wfu"),
+	(3,"Hussein","","Al Hammad","wfu"),
+	(4,"Mitchell","","Templeton","wfu"),
+	(5,"Ben","","Quast","wfu"),
+	(6,"Hussein","","Al Hammad","wfu"),
+	(7,"Travis","","Grund","wfu");
