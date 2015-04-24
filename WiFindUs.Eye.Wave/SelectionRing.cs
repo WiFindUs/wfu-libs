@@ -38,6 +38,7 @@ namespace WiFindUs.Eye.Wave
 			if (selectable == null)
 				throw new ArgumentNullException("selectable", "Selectable cannot be null!");
 			this.selectable = selectable;
+			selectable.SelectedChanged += selectable_SelectedChanged;
 		}
 
 		public static SelectionRing Create(ISelectable selectable,
@@ -50,7 +51,7 @@ namespace WiFindUs.Eye.Wave
 				LayerType = typeof(NonPremultipliedAlpha),
 				LightingEnabled = true,
 				AmbientLightColor = Color.White * 0.75f,
-				Alpha = 0.0f,
+				Alpha = 0.6f,
 				DiffuseColor = Color.Gold
 			};
 
@@ -83,15 +84,29 @@ namespace WiFindUs.Eye.Wave
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
+		protected override void Initialize()
+		{
+			base.Initialize();
+			selectable_SelectedChanged(selectable);
+		}
+
 		protected override void Update(TimeSpan gameTime)
 		{
+			if (!IsOwnerVisible)
+				return;
+
 			float secs = (float)gameTime.TotalSeconds;
 			Transform3D.LocalRotation = new Vector3(
 				Transform3D.LocalRotation.X,
 				Transform3D.LocalRotation.Y + ROTATE_SPEED * secs * 0.5f,
 				Transform3D.LocalRotation.Z);
+		}
 
-			matte.Alpha = matte.Alpha.Lerp(selectable.Selected ? 0.6f : 0.0f, secs * FADE_SPEED).Clamp(0.0f, 1.0f);
+		private void selectable_SelectedChanged(ISelectable obj)
+		{
+			if (selectable != obj)
+				return;
+			IsOwnerActive = IsOwnerVisible = selectable.Selected;
 		}
 	}
 }

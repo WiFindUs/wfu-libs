@@ -184,20 +184,17 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		protected void Source_ElevationStateChanged(Map source)
 		{
-			destination = MapScene.LocationToVector(Entity.Location);
+			UpdateDestination();
 		}
 
 		protected void Plane_BoundingBoxUpdated(PolyPlane plane)
 		{
-			destination = MapScene.LocationToVector(Entity.Location);
+			UpdateDestination();
 		}
 
 		protected virtual void LocationChanged(ILocatable obj)
 		{
-			if (!Entity.Location.HasLatLong || !MapScene.Terrain.Source.Contains(Entity.Location))
-				return;
-
-			destination = MapScene.LocationToVector(Entity.Location);
+			UpdateDestination();
 			if (lastLocation == null || WiFindUs.Location.Distance(Entity.Location, lastLocation) > 50.0)
 				Transform3D.Position = destination;
 			lastLocation = new Location(Entity.Location);
@@ -248,6 +245,13 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected virtual void UpdateUI()
 		{
 
+		}
+
+		private void UpdateDestination()
+		{
+			if (!Entity.Location.HasLatLong || !MapScene.Terrain.Source.Contains(Entity.Location))
+				return;
+			destination = MapScene.LocationToVector(Entity.Location);
 		}
 	}
 }

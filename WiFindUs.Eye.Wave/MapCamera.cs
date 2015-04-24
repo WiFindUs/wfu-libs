@@ -279,6 +279,10 @@ namespace WiFindUs.Eye.Wave
 
 			//marker scale
 			MapScene.MarkerScale = MIN_MARKER_SCALE + (MAX_MARKER_SCALE - MIN_MARKER_SCALE) * zoom;
+
+			//tracking text
+			if (trackingEntity != null)
+				trackingText.Text = String.Format("Tracking {0}", trackingEntity.ToString());
 		}
 
 		/////////////////////////////////////////////////////////////////////

@@ -58,6 +58,12 @@ namespace WiFindUs.Eye.Wave
 			internal set { runApplicationCalled = value; }
 		}
 
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public override bool AutoStartPacketListeners
+		{
+			get { return false; }
+		}
+
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
 		/////////////////////////////////////////////////////////////////////
@@ -136,12 +142,13 @@ namespace WiFindUs.Eye.Wave
 #if DEBUG
 			DebugMode = true;
 #endif
+			if (ListenForPackets)
+				StartPacketListeners();
 		}
 
 		protected virtual void OnDebugModeChanged()
 		{
 
 		}
-
 	}
 }

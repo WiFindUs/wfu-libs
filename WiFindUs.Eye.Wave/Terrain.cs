@@ -215,6 +215,7 @@ namespace WiFindUs.Eye.Wave
 			updatingElevation = true;
 			pendingElevationUpdate = false;
 			Thread thread = new Thread(new ThreadStart(UpdateElevationThread));
+			thread.Priority = ThreadPriority.BelowNormal;
 			thread.IsBackground = true;
 			thread.Start();
 		}
@@ -275,6 +276,7 @@ namespace WiFindUs.Eye.Wave
 			updatingTexture = true;
 			pendingTextureUpdate = false;
 			Thread thread = new Thread(new ThreadStart(UpdateTextureThread));
+			thread.Priority = ThreadPriority.BelowNormal;
 			thread.IsBackground = true;
 			thread.Start();
 		}
@@ -294,6 +296,7 @@ namespace WiFindUs.Eye.Wave
 				{
 					object[] args = new object[] { count, i, bmd };
 					threads[i] = new Thread(new ParameterizedThreadStart(UpdateTextureSubThread));
+					threads[i].Priority = ThreadPriority.BelowNormal;
 					threads[i].IsBackground = true;
 					threads[i].Start(args);
 				}

@@ -18,6 +18,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		private Transform3D coreTransform;
 		private BasicMaterial matte;
 		private Color colour = Color.White;
+		private User user;
 
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES
@@ -27,6 +28,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		{
 			get { return coreTransform.Position; }
 		}
+
 
 		/////////////////////////////////////////////////////////////////////
 		// CONSTRUCTORS
@@ -81,12 +83,22 @@ namespace WiFindUs.Eye.Wave.Markers
 		internal DeviceMarker(Device d) : base(d) { }
 
 		/////////////////////////////////////////////////////////////////////
+		// PUBLIC METHODS
+		/////////////////////////////////////////////////////////////////////
+
+		public override string ToString()
+		{
+			return Entity.User != null ? Entity.User.FullName : "Device #" + Entity.ID.ToString("X");
+		}
+
+		/////////////////////////////////////////////////////////////////////
 		// PROTECTED METHODS
 		/////////////////////////////////////////////////////////////////////
 
 		protected override void Initialize()
 		{
 			base.Initialize();
+			OnDeviceUserChanged(Entity);
 			Entity.OnDeviceUserChanged += OnDeviceUserChanged;
 			Entity.OnDeviceGPSEnabledChanged += OnDeviceGPSStateChanged;
 			Entity.OnDeviceGPSHasFixChanged += OnDeviceGPSStateChanged;
@@ -109,7 +121,7 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void UpdateUI()
 		{
 			UIText.Text = Entity.User != null ? Entity.User.ShortName : "Device";
-			UISubtext.Text = "ID: " + Entity.ID.ToString("X");
+			UISubtext.Text = "ID #" + Entity.ID.ToString("X");
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -118,8 +130,34 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		private void OnDeviceUserChanged(Device device)
 		{
-			UpdateMarkerState();
+			if (user == device.User)
+				return;
+			if (user != null)
+			{
+				user.OnUserFirstNameChanged -= DeviceUserNameChanged;
+				user.OnUserLastNameChanged -= DeviceUserNameChanged;
+				user.OnUserMiddleNameChanged -= DeviceUserNameChanged;
+				user.OnUserTypeChanged -= DeviceUserTypeChanged;
+			}
+			user = device.User;
 			UpdateUI();
+			UpdateUserType();
+			if (user != null)
+			{
+				user.OnUserFirstNameChanged += DeviceUserNameChanged;
+				user.OnUserLastNameChanged += DeviceUserNameChanged;
+				user.OnUserMiddleNameChanged += DeviceUserNameChanged;
+				user.OnUserTypeChanged += DeviceUserTypeChanged;
+			}
+		}
+
+		private void DeviceUserNameChanged(User user)
+		{
+			UpdateUI();
+		}
+
+		private void DeviceUserTypeChanged(User user)
+		{
 			UpdateUserType();
 		}
 
@@ -140,8 +178,9 @@ namespace WiFindUs.Eye.Wave.Markers
 				return;
 			}
 
-			colour = ((System.Drawing.Color)WFUApplication.Config.Get("type_" + Entity.User.Type.ToLower().Trim(),
+			colour = ((System.Drawing.Color)WFUApplication.Config.Get("type_" + Entity.User.Type.ToLower().Trim() + ".colour",
 				System.Drawing.Color.White)).Wave();
+			Debugger.C("{0}, {1}, {2}, {3}", colour.A, colour.R, colour.G, colour.B);
 		}
 	}
 }

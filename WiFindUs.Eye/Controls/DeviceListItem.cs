@@ -30,7 +30,7 @@ namespace WiFindUs.Eye.Controls
 			get
 			{
 				return device.User == null || device.User.Type == null || device.User.Type.Length == 0
-					? base.ImagePlaceholderColour : WFUApplication.Config.Get("type_" + device.User.Type + ".colour", Color.White);
+					? base.ImagePlaceholderColour : WFUApplication.Config.Get("type_" + device.User.Type.ToLower().Trim() + ".colour", Color.White);
 			}
 		}
 

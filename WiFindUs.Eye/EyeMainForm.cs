@@ -74,6 +74,12 @@ namespace WiFindUs.Eye
 		}
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+		public virtual bool AutoStartPacketListeners
+		{
+			get { return true; }
+		}
+
+		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		protected virtual uint MapLevels
 		{
 			get { return (uint)Math.Max(WFUApplication.Config.Get("map.levels", 1), 1);  }
@@ -139,7 +145,7 @@ namespace WiFindUs.Eye
 				tasks.Add(PreCacheNodeLinks);
 				tasks.Add(PreCacheWaypoints);
 				tasks.Add(TerminateDatabaseConnection);
-				tasks.Add(StartPacketListeners);
+				tasks.Add(CreatePacketListeners);
 				return tasks;
 			}
 		}
@@ -290,13 +296,6 @@ namespace WiFindUs.Eye
 			consoleForm.ApplyWindowStateFromConfig("console");
 			ShowConsole = AutoShowConsole;
 
-			//packet listener
-			if (eyeListener != null)
-			{
-				eyeListener.DevicePacketReceived += DevicePacketReceived;
-				eyeListener.NodePacketReceived += NodePacketReceived;
-			}
-
 			//attach server periodic submit thread
 			Thread thread;
 			if (DatabaseMode == DBMode.Server && eyeContext != null)
@@ -310,7 +309,6 @@ namespace WiFindUs.Eye
 
 			//start active check thread
 			thread = new Thread(new ThreadStart(ActiveCheckThread));
-			thread.Priority = ThreadPriority.BelowNormal;
 			thread.IsBackground = true;
 			thread.Start();
 
@@ -320,6 +318,11 @@ namespace WiFindUs.Eye
 				Debugger.E("Could not parse map.center from config files!");
 			else
 				map.Center = location;
+
+			//start listeners
+			if (ListenForPackets && eyeListener != null && !eyeListener.Listening
+				&& AutoStartPacketListeners)
+				eyeListener.Start();
 		}
 
 		protected override void OnDisposing()
@@ -377,6 +380,13 @@ namespace WiFindUs.Eye
 
 			if (!e.Handled)
 				base.OnKeyDown(e);
+		}
+
+		protected void StartPacketListeners()
+		{
+			if (!ListenForPackets || eyeListener == null || eyeListener.Listening)
+				return;
+			eyeListener.Start();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -658,7 +668,7 @@ namespace WiFindUs.Eye
 		/// <returns></returns>
 		private bool PreCacheUsers()
 		{
-			if (databaseMode == DBMode.Server)
+			if (databaseMode == DBMode.None)
 				return true;
 			WFUApplication.SplashStatus = "Pre-caching users";
 			try
@@ -681,7 +691,7 @@ namespace WiFindUs.Eye
 
 		private bool PreCacheDevices()
 		{
-			if (databaseMode == DBMode.Server)
+			if (databaseMode == DBMode.None)
 				return true;
 			WFUApplication.SplashStatus = "Pre-caching devices";
 			try
@@ -821,16 +831,18 @@ namespace WiFindUs.Eye
 			return true;
 		}
 
-		private bool StartPacketListeners()
+		private bool CreatePacketListeners()
 		{
 			if (!ListenForPackets)
 				return true;
 
-			WFUApplication.SplashStatus = "Starting packet listeners";
+			WFUApplication.SplashStatus = "Creating packet listeners";
 			try
 			{
-				eyeListener = new EyePacketListener();
+				eyeListener = new EyePacketListener(false);
 				eyeListener.LogPackets = WFUApplication.Config.Get("listener.log_packets", false);
+				eyeListener.DevicePacketReceived += DevicePacketReceived;
+				eyeListener.NodePacketReceived += NodePacketReceived;
 			}
 			catch (ArgumentOutOfRangeException ex)
 			{
