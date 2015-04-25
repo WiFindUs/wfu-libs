@@ -88,7 +88,10 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		public override string ToString()
 		{
-			return Entity.User != null ? Entity.User.FullName : "Device #" + Entity.ID.ToString("X");
+			return Entity.User != null
+				? Entity.User.FullName + " (" + (Entity.User.Type == null || Entity.User.Type.Length == 0
+					? "User ID #" + Entity.User.ID.ToString("X") : Entity.User.Type) + ")"
+				: "Device ID #" + Entity.ID.ToString("X");
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -103,6 +106,7 @@ namespace WiFindUs.Eye.Wave.Markers
 			Entity.OnDeviceGPSEnabledChanged += OnDeviceGPSStateChanged;
 			Entity.OnDeviceGPSHasFixChanged += OnDeviceGPSStateChanged;
 			UpdateMarkerState();
+			UpdateUI();
 		}
 
 		protected override void Update(TimeSpan gameTime)
@@ -121,7 +125,11 @@ namespace WiFindUs.Eye.Wave.Markers
 		protected override void UpdateUI()
 		{
 			UIText.Text = Entity.User != null ? Entity.User.ShortName : "Device";
-			UISubtext.Text = "ID #" + Entity.ID.ToString("X");
+			UISubtext.Text = Entity.User != null
+				? (Entity.User.Type == null || Entity.User.Type.Length == 0
+					? "ID #" + Entity.User.ID.ToString("X") : Entity.User.Type)
+				: " ID #" + Entity.ID.ToString("X");
+			UpdateUserType();
 		}
 
 		/////////////////////////////////////////////////////////////////////
@@ -141,7 +149,6 @@ namespace WiFindUs.Eye.Wave.Markers
 			}
 			user = device.User;
 			UpdateUI();
-			UpdateUserType();
 			if (user != null)
 			{
 				user.OnUserFirstNameChanged += DeviceUserNameChanged;
@@ -158,7 +165,7 @@ namespace WiFindUs.Eye.Wave.Markers
 
 		private void DeviceUserTypeChanged(User user)
 		{
-			UpdateUserType();
+			UpdateUI();
 		}
 
 		private void OnDeviceGPSStateChanged(Device device)
@@ -174,13 +181,14 @@ namespace WiFindUs.Eye.Wave.Markers
 				|| Entity.User.Type == null
 				|| Entity.User.Type.Length == 0)
 			{
-				colour = Color.White;
+				UISubtext.Foreground = colour = Color.White;
 				return;
 			}
 
-			colour = ((System.Drawing.Color)WFUApplication.Config.Get("type_" + Entity.User.Type.ToLower().Trim() + ".colour",
+			UISubtext.Foreground = colour
+				= ((System.Drawing.Color)WFUApplication.Config.Get("type_" + Entity.User.Type.ToLower().Trim() + ".colour",
 				System.Drawing.Color.White)).Wave();
-			Debugger.C("{0}, {1}, {2}, {3}", colour.A, colour.R, colour.G, colour.B);
+
 		}
 	}
 }
