@@ -1,11 +1,6 @@
-﻿using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-
-namespace WiFindUs.Eye.Wave
+﻿namespace WiFindUs.Eye.Wave
 {
-	public abstract class MapBehavior : Behavior
+    public abstract class MapBehavior : Behavior
 	{
 		protected const float SPEED_SCALE	= 1f;
 		protected const float FADE_SPEED	= 10f * SPEED_SCALE;

@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WiFindUs.Eye
 {
-	public partial class NodeLink
+    public partial class NodeLink
 	{
 		public static event Action<NodeLink> OnNodeLinkLoaded;
 		public event Action<NodeLink> OnNodeLinkActiveChanged;

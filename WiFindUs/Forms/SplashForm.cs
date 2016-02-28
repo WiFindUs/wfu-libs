@@ -4,13 +4,12 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
-using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Themes;
 
 namespace WiFindUs.Forms
 {
-	public partial class SplashForm : BaseForm
+    public partial class SplashForm : BaseForm
 	{
 		private Image logo = null;
 		private Rectangle activeArea = Rectangle.Empty;

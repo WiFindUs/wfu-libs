@@ -1,13 +1,11 @@
 // File created: 3/26/2015 3:17:34 PM by marzer
 
-using System;
 using WiFindUs.Extensions;
-using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Forms;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class MapForm : BaseForm
+    public class MapForm : BaseForm
 	{
 		private Map3D map;
 

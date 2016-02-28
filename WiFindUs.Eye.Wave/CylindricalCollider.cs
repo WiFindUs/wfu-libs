@@ -1,16 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class CylindricalCollider : Component
+    public class CylindricalCollider : Component
 	{
 		[RequiredComponent]
 		public Transform3D Transform3D;

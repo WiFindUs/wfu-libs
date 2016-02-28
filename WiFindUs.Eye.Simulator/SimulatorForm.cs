@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Simulator
 {
-	public partial class SimulatorForm : EyeMainForm
+    public partial class SimulatorForm : EyeMainForm
 	{
 		private readonly List<IPacketFactory> packetFactories = new List<IPacketFactory>();
 		private readonly object PacketFactoryLock = new object();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -9,7 +8,7 @@ using System.Threading;
 
 namespace WiFindUs.Eye
 {
-	public class EyePacketListener : IDisposable
+    public class EyePacketListener : IDisposable
 	{
 		public const int PORT_FIRST = 33339;
 		public const int PORT_LAST = 33345;

@@ -1,9 +1,8 @@
 ﻿using System;
-using WaveEngine.Adapter;
 
 namespace WiFindUs.Eye.Wave.Adapter
 {
-	public class MapApplication : FormApplication
+    public class MapApplication : FormApplication
 	{
 		public event Action<MapScene> SceneStarted;
 		public event Action<MapApplication> ScreenResized;

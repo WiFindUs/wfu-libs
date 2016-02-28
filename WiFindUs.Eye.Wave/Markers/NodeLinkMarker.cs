@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Materials;
 using WiFindUs.Extensions;
-using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class NodeLinkMarker : LinkMarker
+    public class NodeLinkMarker : LinkMarker
 	{
 		private NodeMarker fromNode, toNode;
 		private NodeLink link;

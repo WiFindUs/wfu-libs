@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Net;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-	public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable, IActionSubscriber
+    public partial class Node : SelectableEntity, ILocatable, ILocation, IUpdateable, IActionSubscriber
 	{
 		public static readonly Color CHANNEL_1_COLOR = Color.FromArgb(255, 27, 109, 42);
 		public static readonly Color CHANNEL_6_COLOR = Color.FromArgb(255, 210, 35, 42);

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Drawing;
-using System.Net;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-	public partial class Device
+    public partial class Device
 		: SelectableEntity, ILocatable, ILocation, IAtmospheric, IAtmosphere, IBatteryStats, IUpdateable, IActionSubscriber
 	{
 		private const ulong TIMEOUT = 60;

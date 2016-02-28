@@ -1,13 +1,11 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using WiFindUs.Controls;
 using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
-	public class ActionPanel : ThemedPanel
+    public class ActionPanel : ThemedPanel
 	{
 		private IActionSubscriber actionSubscriber;
 		private uint rows, cols;

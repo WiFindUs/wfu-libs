@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Drawing;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Themes
 {
-	public class ThemeFontSet : IDisposable
+    public class ThemeFontSet : IDisposable
 	{
 		public enum Size
 		{

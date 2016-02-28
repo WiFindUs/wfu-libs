@@ -1,14 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Physics3D;
-using WaveEngine.Materials;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public abstract class Marker : MapBehavior
+    public abstract class Marker : MapBehavior
 	{
 		private CylindricalCollider cylindricalCollider;
 		private bool cursorOver = false;

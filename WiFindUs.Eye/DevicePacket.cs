@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Net;
 
 namespace WiFindUs.Eye
 {
-	public class DevicePacket : EyePacket, ILocation, IBatteryStats
+    public class DevicePacket : EyePacket, ILocation, IBatteryStats
 	{
 		private double? latitude, longitude, altitude, accuracy, batteryLevel;
 		private bool? charging;

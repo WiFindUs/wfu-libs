@@ -1,9 +1,8 @@
-﻿using System;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace WiFindUs.Themes
 {
-	public interface ITheme
+    public interface ITheme
 	{
 		ThemeColourSet Foreground { get; }
 		ThemeColourSet Background { get; }

@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Windows.Forms;
-using WaveEngine.Adapter.Win32;
-using WiFindUs.Eye.Wave.Adapter;
-using WiFindUs.Eye.Wave;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class WaveMainForm : EyeMainForm
+    public class WaveMainForm : EyeMainForm
 	{
 		private Map3D map3D = null;
 		private static bool runApplicationCalled = false;

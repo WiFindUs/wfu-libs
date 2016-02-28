@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -7,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace WiFindUs.IO
 {
-	public class ConfigFile
+    public class ConfigFile
 	{
 		protected static readonly Regex KEY
 			= new Regex("[a-zA-Z0-9_\\-.]+", RegexOptions.Compiled);

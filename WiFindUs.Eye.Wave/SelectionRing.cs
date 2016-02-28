@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Materials;
 using WiFindUs.Eye.Wave.Layers;
-using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class SelectionRing : MapBehavior
+    public class SelectionRing : MapBehavior
 	{
 		protected readonly ISelectable selectable;
 		private Entity[] points;

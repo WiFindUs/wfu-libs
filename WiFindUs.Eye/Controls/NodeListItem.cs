@@ -2,13 +2,12 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
-	public class NodeListItem : EntityListItem
+    public class NodeListItem : EntityListItem
 	{
 		private Node node;
 

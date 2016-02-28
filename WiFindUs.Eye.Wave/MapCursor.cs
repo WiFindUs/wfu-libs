@@ -1,23 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Materials;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Extensions;
-using WaveEngine.Components.Graphics3D;
 using WiFindUs.Eye.Wave.Layers;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Framework.Physics3D;
-using WaveEngine.Components.UI;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class MapCursor : MapBehavior
+    public class MapCursor : MapBehavior
 	{
 		protected const float BASE_SCALE = 1.5f;
 		protected const float RING_DIAMETER = 16f;

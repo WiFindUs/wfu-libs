@@ -1,18 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Materials;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class PolyPlaneRenderer : Drawable3D
+    public class PolyPlaneRenderer : Drawable3D
 	{
 		[RequiredComponent]
 		public PolyPlane PolyPlane;

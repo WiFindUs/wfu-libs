@@ -1,9 +1,6 @@
-﻿using System;
-using System.Drawing;
-
-namespace WiFindUs.Themes
+﻿namespace WiFindUs.Themes
 {
-	public interface IThemeable
+    public interface IThemeable
 	{
 		void ApplyTheme(ITheme theme);
 	}

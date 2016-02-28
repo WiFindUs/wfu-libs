@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
-	public class EntityList : ThemedFlowLayoutPanel
+    public class EntityList : ThemedFlowLayoutPanel
 	{
 		private ISelectableGroup selectionGroup = null;
 		private ISelectableGroup defaultSelectionGroup = new SelectableEntityGroup();

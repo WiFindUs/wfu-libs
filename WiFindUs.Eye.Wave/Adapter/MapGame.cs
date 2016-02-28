@@ -1,11 +1,8 @@
 ﻿using System;
-using WaveEngine.Common;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Services;
 
 namespace WiFindUs.Eye.Wave.Adapter
 {
-	public class MapGame : Game
+    public class MapGame : Game
 	{
 		public event Action<MapScene> SceneStarted;
 		private MapScene scene;

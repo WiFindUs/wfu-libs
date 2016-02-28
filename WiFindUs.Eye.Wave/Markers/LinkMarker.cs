@@ -1,21 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Materials;
 using WiFindUs.Eye.Wave.Layers;
 using WiFindUs.Extensions;
-using System.Reflection;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class LinkMarker : Marker
+    public class LinkMarker : Marker
 	{
 		private ILinkableMarker fromMarker, toMarker;
 		private Transform3D linkTransform;

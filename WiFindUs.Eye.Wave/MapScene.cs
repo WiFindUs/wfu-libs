@@ -1,28 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Cameras;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Physics3D;
-using WaveEngine.Framework.Services;
-using WiFindUs.Controls;
-using WiFindUs.Eye.Wave.Adapter;
 using WiFindUs.Eye.Wave.Markers;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
-using System.IO;
-using WaveEngine.Materials;
 using WiFindUs.Themes;
 using System.Linq;
-using WaveEngine.Components.UI;
-using WaveEngine.Framework.UI;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class MapScene : Scene, IThemeable
+    public class MapScene : Scene, IThemeable
 	{
 		public event Action<MapScene> SceneStarted;
 

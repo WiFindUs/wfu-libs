@@ -6,12 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 namespace WiFindUs
 {
-	public static class Debugger
+    public static class Debugger
 	{
 		[Flags]
 		public enum Verbosity

@@ -1,23 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Graphics.VertexFormats;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Components.Primitives;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Managers;
-using WaveEngine.Framework.Services;
-using WaveEngine.Graphics;
-using WaveEngine.Materials;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class PolyPlane : BaseModel
+    public class PolyPlane : BaseModel
 	{
 		public event Action<PolyPlane> BoundingBoxUpdated;
 		

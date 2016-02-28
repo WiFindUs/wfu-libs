@@ -1,23 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Physics3D;
-using WaveEngine.Materials;
-using WiFindUs.Eye.Wave.Layers;
 using WiFindUs.Extensions;
-using System.IO;
 using System.Threading;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class Terrain : MapBehavior
+    public class Terrain : MapBehavior
 	{
 		public const float SIZE = 2048.0f;
 		public const int RESOLUTION = 7; //subdivisions = (2 ^ RESOLUTION)-2

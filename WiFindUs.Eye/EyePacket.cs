@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Net;
 using System.Text.RegularExpressions;
 
 namespace WiFindUs.Eye
 {
-	public abstract class EyePacket
+    public abstract class EyePacket
 	{
 		private static readonly Regex PACKET_KVP
 			= new Regex("^([a-zA-Z0-9_\\-.]+)\\s*[:=]\\s*(.+)\\s*$", RegexOptions.Compiled);

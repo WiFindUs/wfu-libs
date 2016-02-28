@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Services;
 using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Wave
 {
-	public partial class MapInput : MapSceneBehavior
+    public partial class MapInput : MapSceneBehavior
 	{
 		private bool mousePanning = false;
 

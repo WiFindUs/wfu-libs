@@ -9,12 +9,11 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-	public class Map : Tile
+    public class Map : Tile
 	{
 		public event Action<Map> ElevationStateChanged;
 		public event Action<Map> CompositeImageChanged;

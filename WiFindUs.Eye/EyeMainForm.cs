@@ -1,6 +1,4 @@
-﻿using Devart.Data.Linq;
-using System;
-using System.Collections.Concurrent;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -12,7 +10,7 @@ using WiFindUs.Forms;
 
 namespace WiFindUs.Eye
 {
-	public class EyeMainForm : MainForm
+    public class EyeMainForm : MainForm
 	{
 		public enum DBMode
 		{
@@ -220,7 +218,7 @@ namespace WiFindUs.Eye
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			WiFindUs.Eye.NodeLink.OnNodeLinkLoaded += OnNodeLinkLoaded;
 			WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
-			WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
+            User.OnUserLoaded += OnUserLoaded;
 		}
 
 		/////////////////////////////////////////////////////////////////////

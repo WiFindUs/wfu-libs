@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Net;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Components.UI;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Physics3D;
-using WaveEngine.Materials;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class DeviceMarker : EntityMarker<Device>, ILinkableMarker
+    public class DeviceMarker : EntityMarker<Device>, ILinkableMarker
 	{
 		private Transform3D coreTransform;
 		private BasicMaterial matte;

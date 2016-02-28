@@ -4,11 +4,10 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
-using WiFindUs.Themes;
 
 namespace WiFindUs.Themes
 {
-	public class ThemedTabControl : TabControl, IThemeable
+    public class ThemedTabControl : TabControl, IThemeable
 	{
 		private int hoverIndex = -1;
 

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Text.RegularExpressions;
 
 namespace WiFindUs.Eye
 {
-	public class NodePacket : EyePacket, ILocation
+    public class NodePacket : EyePacket, ILocation
 	{
 		private const ulong FLAG_MESH_POINT		= 1;
 		private const ulong FLAG_ACCESS_POINT	= 2;

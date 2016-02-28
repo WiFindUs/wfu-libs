@@ -1,11 +1,6 @@
-﻿using System;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-
-namespace WiFindUs.Eye.Wave.Markers
+﻿namespace WiFindUs.Eye.Wave.Markers
 {
-	public interface IEntityMarker
+    public interface IEntityMarker
 	{
 		ISelectable Selectable { get; }
 		ILocatable Locatable { get; }

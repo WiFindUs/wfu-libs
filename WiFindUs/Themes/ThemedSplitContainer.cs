@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Themes
 {
-	public class ThemedSplitContainer : SplitContainer, IThemeable
+    public class ThemedSplitContainer : SplitContainer, IThemeable
 	{
 		private bool mouseOverSplitter = false;
 

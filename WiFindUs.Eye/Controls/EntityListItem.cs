@@ -2,13 +2,12 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Controls
 {
-	public class EntityListItem : ThemedPanel
+    public class EntityListItem : ThemedPanel
 	{
 		private ISelectable entity;
 		private Image image;

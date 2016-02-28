@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Managers;
-
-namespace WiFindUs.Eye.Wave.Layers
+﻿namespace WiFindUs.Eye.Wave.Layers
 {
-	public class Wireframes : Layer
+    public class Wireframes : Layer
 	{
 		public Wireframes(RenderManager renderManager)
 			: base(renderManager)

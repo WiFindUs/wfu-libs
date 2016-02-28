@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
 namespace WiFindUs
 {
-	public static class CursorManager
+    public static class CursorManager
 	{
 		private static bool hidden = false;
 		private static bool clipped = false;
@@ -18,7 +12,7 @@ namespace WiFindUs
 		{
 			if (hidden)
 				return;
-			System.Windows.Forms.Cursor.Hide();
+            Cursor.Hide();
 			hidden = true;
 		}
 
@@ -26,7 +20,7 @@ namespace WiFindUs
 		{
 			if (!hidden)
 				return;
-			System.Windows.Forms.Cursor.Show();
+            Cursor.Show();
 			hidden = false;
 		}
 
@@ -35,7 +29,7 @@ namespace WiFindUs
 			if (clipped)
 				return;
 			clipped = true;
-			System.Windows.Forms.Cursor.Clip = clipRect;
+            Cursor.Clip = clipRect;
 		}
 
 		public static void Clip(Control control)
@@ -48,31 +42,31 @@ namespace WiFindUs
 			if (!clipped)
 				return;
 			clipped = false;
-			System.Windows.Forms.Cursor.Clip = Rectangle.Empty;
+            Cursor.Clip = Rectangle.Empty;
 		}
 
 		public static void Shift(int dx, int dy)
 		{
 			Point newP = new Point(
-				System.Windows.Forms.Cursor.Position.X + dx,
-				System.Windows.Forms.Cursor.Position.Y + dy
+                Cursor.Position.X + dx,
+                Cursor.Position.Y + dy
 				);
 
-			Debugger.C("{0} + {1},{2} = {3}", System.Windows.Forms.Cursor.Position, dx, dy, newP);
-			
+			Debugger.C("{0} + {1},{2} = {3}", Cursor.Position, dx, dy, newP);
 
 
-			System.Windows.Forms.Cursor.Position = newP;
+
+            Cursor.Position = newP;
 		}
 
 		public static void Set(int x, int y)
 		{
-			System.Windows.Forms.Cursor.Position = new Point(x, y);
+            Cursor.Position = new Point(x, y);
 		}
 
 		public static void Center(Rectangle r)
 		{
-			System.Windows.Forms.Cursor.Position = new Point(r.Left + r.Width/2, r.Top+r.Height/2);
+            Cursor.Position = new Point(r.Left + r.Width/2, r.Top+r.Height/2);
 		}
 
 		public static void Center(Control control)

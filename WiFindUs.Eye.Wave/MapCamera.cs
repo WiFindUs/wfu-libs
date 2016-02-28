@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework.Graphics;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Markers;
-using WaveEngine.Common.System;
-using WaveEngine.Framework.Services;
-using WaveEngine.Components.UI;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class MapCamera : MapBehavior
+    public class MapCamera : MapBehavior
 	{
 		private const float MIN_ZOOM = 128.0f;
 		internal const float MAX_ZOOM = Terrain.SIZE * 1.5f;

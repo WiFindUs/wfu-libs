@@ -1,11 +1,6 @@
-﻿using System;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-
-namespace WiFindUs.Eye.Wave
+﻿namespace WiFindUs.Eye.Wave
 {
-	public abstract class MapSceneBehavior : SceneBehavior
+    public abstract class MapSceneBehavior : SceneBehavior
 	{
 		private MapScene scene;
 

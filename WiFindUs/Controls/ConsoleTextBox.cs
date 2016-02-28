@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -9,7 +8,7 @@ using WiFindUs.Themes;
 
 namespace WiFindUs.Controls
 {
-	public class ConsoleTextBox : RichTextBox, IThemeable
+    public class ConsoleTextBox : RichTextBox, IThemeable
 	{
 		private const int MAX_LINES = 4096;
 		private Debugger.Verbosity allowedVerbosities = Debugger.Verbosity.All ^ Debugger.Verbosity.Verbose;

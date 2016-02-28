@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using WaveEngine.Adapter.Win32;
-using WaveEngine.Framework.Services;
-using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Adapter;
 using System.ComponentModel;
@@ -11,7 +8,7 @@ using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class Map3D : ThemedControl
+    public class Map3D : ThemedControl
 	{
 		public event Action<MapScene> SceneStarted;
 

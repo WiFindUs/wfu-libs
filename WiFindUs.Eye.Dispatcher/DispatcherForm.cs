@@ -1,20 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
-using WiFindUs.Controls;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Controls;
 using WiFindUs.Eye.Wave;
-using WiFindUs.Eye.Wave.Markers;
-using WiFindUs.Forms;
 using WiFindUs.Themes;
 
 namespace WiFindUs.Eye.Dispatcher
 {
-	public partial class DispatcherForm : WaveMainForm
+    public partial class DispatcherForm : WaveMainForm
 	{
 		private FormWindowState oldWindowState;
 		private Rectangle oldBounds;
@@ -142,7 +137,7 @@ namespace WiFindUs.Eye.Dispatcher
 			{
 				HideOnClose = true,
 				WindowState = FormWindowState.Normal,
-				MinimumSize = new System.Drawing.Size(800, 600),
+				MinimumSize = new Size(800, 600),
 				Text = "3D Map",
 				HelpButton = false,
 				KeyPreview = true,
@@ -157,9 +152,9 @@ namespace WiFindUs.Eye.Dispatcher
 			listIncidents.SelectionGroup = map3D.SelectionGroup;
 			listNodes.SelectionGroup = map3D.SelectionGroup;
 
-			//events
-			WiFindUs.Eye.Device.OnDeviceLoaded += OnDeviceLoaded;
-			WiFindUs.Eye.User.OnUserLoaded += OnUserLoaded;
+            //events
+            Device.OnDeviceLoaded += OnDeviceLoaded;
+            User.OnUserLoaded += OnUserLoaded;
 			WiFindUs.Eye.Waypoint.OnWaypointLoaded += OnWaypointLoaded;
 			WiFindUs.Eye.Node.OnNodeLoaded += OnNodeLoaded;
 			map3D.SelectionGroup.SelectionChanged += OnSelectionGroupSelectionChanged;

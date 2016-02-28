@@ -1,19 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Managers;
-using WaveEngine.Framework.Services;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave
 {
-	public static class WaveExtensions
+    public static class WaveExtensions
 	{
 		public static Texture2D Load(this GraphicsDevice device, string texturePath)
 		{

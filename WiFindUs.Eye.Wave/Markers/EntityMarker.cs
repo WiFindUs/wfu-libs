@@ -1,18 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Components.UI;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Physics3D;
-using WaveEngine.Materials;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public abstract class EntityMarker<T> : Marker, ISelectableProxy, ILocatableProxy, IUpdateableProxy, IEntityMarker
+    public abstract class EntityMarker<T> : Marker, ISelectableProxy, ILocatableProxy, IUpdateableProxy, IEntityMarker
 		where T : class, ILocatable, ISelectable, IUpdateable
 	{
 		public event Action<EntityMarker<T>> VisibleChanged;

@@ -1,20 +1,10 @@
 ﻿using System;
-using WaveEngine.Common.Graphics;
-using WaveEngine.Common.Math;
-using WaveEngine.Components.Graphics3D;
-using WaveEngine.Components.UI;
-using WaveEngine.Framework;
-using WaveEngine.Framework.Graphics;
-using WaveEngine.Framework.Physics3D;
-using WaveEngine.Framework.Services;
-using WaveEngine.Framework.UI;
-using WaveEngine.Materials;
 using WiFindUs.Extensions;
 using WiFindUs.Eye.Wave.Layers;
 
 namespace WiFindUs.Eye.Wave.Markers
 {
-	public class NodeMarker : EntityMarker<Node>, ILinkableMarker
+    public class NodeMarker : EntityMarker<Node>, ILinkableMarker
 	{
 		private Transform3D ringTransform, coreTransform;
 		private BasicMaterial spikeMat, coreMat;

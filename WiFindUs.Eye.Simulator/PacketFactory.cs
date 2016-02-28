@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye.Simulator
 {
-	public interface IPacketFactory
+    public interface IPacketFactory
 	{
 		string Packet { get; }
 	}

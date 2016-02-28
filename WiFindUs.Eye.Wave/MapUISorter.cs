@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using WaveEngine.Common.Math;
-using WaveEngine.Framework.Services;
 using WiFindUs.Eye.Wave.Markers;
 
 namespace WiFindUs.Eye.Wave
 {
-	public class MapUISorter : MapSceneBehavior
+    public class MapUISorter : MapSceneBehavior
 	{
 		protected override void Update(TimeSpan gameTime)
 		{

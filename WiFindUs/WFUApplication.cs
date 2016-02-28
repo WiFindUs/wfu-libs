@@ -474,7 +474,7 @@ namespace WiFindUs
 
 		/// <summary>
 		/// Runs your WFUApplication. Handles parsing of command line arguments, loading of
-		/// config files, and initialization ofi the main form.
+		/// config files, and initialization of the main form.
 		/// </summary>
 		/// <param name="args">The command line arguments from Main().</param>
 		public static void Run(String[] args)

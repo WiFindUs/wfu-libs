@@ -1,15 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Drawing;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using WiFindUs.Extensions;
-using WiFindUs.Themes;
 
 namespace WiFindUs.Themes
 {
-	public class ThemedForm : Form, IThemeable
+    public class ThemedForm : Form, IThemeable
 	{	
 		/////////////////////////////////////////////////////////////////////
 		// PROPERTIES

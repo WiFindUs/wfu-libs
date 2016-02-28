@@ -1,21 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Net;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using WiFindUs.Extensions;
 
 namespace WiFindUs.Eye
 {
-	public class Tile : IRegion, IDisposable
+    public class Tile : IRegion, IDisposable
 	{
 		public enum LoadingState : int
 		{

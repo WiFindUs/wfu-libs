@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 
 namespace WiFindUs.Forms
 {
-	public class MainForm : BaseForm, ISplashLoader
+    public class MainForm : BaseForm, ISplashLoader
 	{
 		private static volatile bool closed = false;
 		
